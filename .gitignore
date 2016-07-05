@@ -1,0 +1,8 @@
+*~
+.DS_Store
+*.pyc
+*.aux
+*.bbl
+*.blg
+paper.log
+paper.pdf
