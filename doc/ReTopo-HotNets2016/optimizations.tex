@@ -1,0 +1,72 @@
+\begin{figure*}[t]
+  \centering
+  \begin{tabular}{| l | c | c | c | c | c |}
+    \toprule
+    & Multicast & Network Reordering & Anycast & App Reordering & ADUs\\
+    \midrule
+    MapReduce & & & & &\\
+    DFS & & & & &\\
+    VM Migration & & & & &\\
+    Search & & & & &\\
+    Combined & & & & &\\
+    \bottomrule
+  \end{tabular}
+  \caption{Comparing workloads based on which optimizations will improve them.}
+  \label{tab:optimizations-to-workloads}
+\end{figure*}
+
+\newpage\phantom{t}
+\section{Optimizations}
+\label{sec:optimizations}
+
+\TODO{point to table.}
+
+
+\subsection{Network-level Optimizations}
+\label{sec:net_opts}
+
+\TODO{lead in.}
+
+{\bf Multicast:} Multicast allows for redundant copies of data to avoid
+transiting the NTS. Of the workloads describe in \S~\ref{sec:workloads}, DFS
+most clearly benefits from multicast. If destination nodes reside in different
+racks, the NTS must support multicast natively for there to be benefit, however,
+if the destination nodes are all in the same rack, having the ToRs support
+multicast is sufficient. \TODO{more... Also, is MC a ``network'' optimization or
+  more of an ``cross-layer'' optimization?}
+
+{\bf Network Reordering:} Network reordering focuses on moving data around in
+hosts buffers to better align with what the network chooses as a schedule for
+the next epoch. For example, if the network scheduler connects rack A to rack B,
+hosts in rack A should send off all stored data destined for hosts in rack B
+regardless of these packets spot in the transmission queue. \TODO{more...}
+
+\newpage\phantom{t}
+\subsection{Cross-layer Optimizations}
+\label{sec:cross_opts}
+
+The cross-layer optimizations we focus on look at the following: 1) who the
+application sends data to, 2) when the application sends data, 3) what data the
+application sends.
+
+{\bf Anycast:} The anycast optimization focuses on pushing the decision of
+destination node to the network. This allows the network scheduler to
+potentially avoid sending traffic between racks that are currently disconnected
+in the topology. For example, dynamically selecting which nodes to use in a
+MapReduce job to make better use of the network is a possibility when using
+anycast. \TODO{more...}
+
+{\bf Application Reordering:} Application reordering focuses on changing the
+order of the byte stream sent to the network. The network has a very limited
+view of future data transmission when compared to applications (especially large
+distributed applications like MapReduce). By rewriting applications to send
+bursts of traffic to specific destinations (or racks) rather than cycle through
+destinations we can greatly simplify network scheduling \TODO{more...}
+
+{\bf ADUs:} Application Data Units (ADUs) are markers placed in the application
+data stream to signal where the end of a ``chunk'' of data important to the
+application is. This for example could be the end of a query or
+transaction. These markers help atomicize each chunk of data transmitted; an
+application can proceed only if \emph{all} of the data in this ADU is
+transmitted. These markers provide very clear signals to the network
+scheduler. \TODO{more...}
