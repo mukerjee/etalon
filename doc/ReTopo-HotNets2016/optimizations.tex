@@ -20,7 +20,18 @@
 \label{sec:optimizations}
 
 \TODO{point to table.}
-
+\TODO{pitch this as a continuum of painfulness -- e.g., multicast requires
+  application restructuring and potentially changes to the fundamental
+  communication paradigm / algorithm, compared to ADUs which can be added to
+  send call boundaries, etc.} \srini{
+  need to have some general discussion of transparency vs. performance:
+  e.g. network level optimizations are transparent to higher layers. Also, while
+  ADUs pass information down - what is done with them is transparent. Modifying
+  application algorithms is the most intrusive but creates the greatest
+  opportunity. It might be worth creating some ``toy'' apps that highlight these
+  differences and are easy to simulate. E.g. aggregation - perhaps tree vs. ring
+  vs flood might provide some insights into their interactions with topology
+  limitations and technology capabilities. }
 
 \subsection{Network-level Optimizations}
 \label{sec:net_opts}
@@ -40,6 +51,8 @@ hosts buffers to better align with what the network chooses as a schedule for
 the next epoch. For example, if the network scheduler connects rack A to rack B,
 hosts in rack A should send off all stored data destined for hosts in rack B
 regardless of these packets spot in the transmission queue. \TODO{more...}
+\TODO{this needs a motivating scenario, maybe a figure. e.g., buffering of 30MB
+  per switch port is not that reasonable. 802.3q}
 
 \newpage\phantom{t}
 \subsection{Cross-layer Optimizations}
@@ -70,3 +83,4 @@ transaction. These markers help atomicize each chunk of data transmitted; an
 application can proceed only if \emph{all} of the data in this ADU is
 transmitted. These markers provide very clear signals to the network
 scheduler. \TODO{more...}
+\srini{should discuss coflow here}

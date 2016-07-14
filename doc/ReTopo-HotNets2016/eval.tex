@@ -2,6 +2,8 @@
 \section{Evaluation}
 \label{sec:eval}
 
+\TODO{try to push this earlier}
+
 In this evaluation we simulate datacenter networks with a variety of
 next-generation technologies with a wide variety of workloads. Our high-level
 goal is to examine how application completion time changes for these workloads
@@ -23,6 +25,13 @@ We simulate the various workloads as follows: \TODO{itemized list...}
 
 We simulate the various optimizations as follows: \TODO{itemized list...}
 
+\srini{Perhaps we don't need such a large scale simulation. Could we simulate
+  just one rack and abstract the others?
+
+  If the goal is to see the impact of ``intermittent'' connectivity on
+  applications, could we just take the link to the rack up/down? I guess this
+  doesn't model contention across racks (e.g. one-to-one mappings) - perhaps we
+  can address this statistically in simulation.}
 
 
 \newpage\phantom{t}
