@@ -1,0 +1,24 @@
+#!/bin/bash -ex
+# This runs within the EC2 instance to do basic setup
+
+# sudo without password
+sed -Ei 's/^(Defaults.*requiretty)/#\1/' /etc/sudoers
+
+# setup folders where code will live
+mkdir -p /home/ec2-user/dc
+chown ec2-user:ec2-user -R /home/ec2-user/dc
+
+# add static route through switch
+SUBNET="172.31.16.0/20"
+ELASTIC_IP_DNS="ec2-52-44-13-67.compute-1.amazonaws.com"
+
+echo "#!/bin/bash
+sudo ip route del " $SUBNET "
+sudo ip route add `getent hosts " $ELASTIC_IP_DNS " | cut -f1 -d' '` dev eth0
+getent hosts " $ELASTIC_IP_DNS " | cut -f1 -d' ' | sudo xargs ip route add " $SUBNET " via" > /etc/init.d/add_route
+
+chmod +x /etc/init.d/add_route
+ln -s /etc/init.d/add_route /etc/rc3.d/S91add-route
+
+# get tools
+yum -y install emacs
