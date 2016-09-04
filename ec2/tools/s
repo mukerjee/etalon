@@ -19,7 +19,7 @@ def main():
     for machine in machines:
         handle, hostname = [m.strip() for m in machine.split('#')]
         if handle == sys.argv[1]:
-            os.system('ssh ec2-user@%s' % (hostname))
+            os.system('ssh -o StrictHostKeyChecking=no ec2-user@%s' % (hostname))
 
 if __name__ == '__main__':
     main()

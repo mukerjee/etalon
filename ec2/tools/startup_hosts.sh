@@ -13,12 +13,15 @@ SUBNET="172.31.16.0/20"
 ELASTIC_IP_DNS="ec2-52-44-13-67.compute-1.amazonaws.com"
 
 echo "#!/bin/bash
-sudo ip route del " $SUBNET "
-sudo ip route add `getent hosts " $ELASTIC_IP_DNS " | cut -f1 -d' '` dev eth0
-getent hosts " $ELASTIC_IP_DNS " | cut -f1 -d' ' | sudo xargs ip route add " $SUBNET " via" > /etc/init.d/add_route
+sudo ip route del" $SUBNET "
+sudo ip route add \`getent hosts" $ELASTIC_IP_DNS "| cut -f1 -d' '\` dev eth0
+getent hosts" $ELASTIC_IP_DNS "| cut -f1 -d' ' | sudo xargs ip route add" $SUBNET "via" > /etc/init.d/add_route
 
 chmod +x /etc/init.d/add_route
 ln -s /etc/init.d/add_route /etc/rc3.d/S91add-route
+/etc/init.d/add_route
 
 # get tools
 yum -y install emacs
+yum -y --enablerepo=epel install iperf iperf3
+yum -y install tcpdump

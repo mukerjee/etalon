@@ -57,7 +57,7 @@ def main():
     nodes = [line.split('#') for line in lines]
 
     total = len(nodes)
-    cmd = commands[sys.argv[1]]
+    cmd = commands[sys.argv[1]] if sys.argv[1] in commands else sys.argv[1]
     print 'launching %s' % (cmd)
     for handle, hostname in nodes:
         try:
