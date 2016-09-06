@@ -22,6 +22,17 @@ ln -s /etc/init.d/add_route /etc/rc3.d/S91add-route
 /etc/init.d/add_route
 
 # get tools
+#yum -y upgrade
 yum -y install emacs
 yum -y --enablerepo=epel install iperf iperf3
 yum -y install tcpdump
+yum -y groupinstall "Development Tools"
+
+cd /lib/modules/4.4.11-23.53.amzn1.x86_64/
+unlink build
+sudo ln -s ../../../usr/src/kernels/4.4.19-29.55.amzn1.x86_64 build
+cd -
+
+# fix netfilter?
+
+#reboot

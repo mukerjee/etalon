@@ -14,9 +14,9 @@ from common import sshRun, run, NODES_FILE
 commands = {}
 commands['uname'] = '"uname -r"'
 commands['ls'] = '"sudo ls"'
-commands['update'] = ('rsync --rsh=\'ssh -o StrictHostKeyChecking=no -p %s\' '
-                      '-ar --files-from=../common/bin-files ../ '
-                      '%s@%s:~/dc/')
+commands['update'] = ("rsync --rsh='ssh -o StrictHostKeyChecking=no' "
+                      "-ar --files-from=../common/bin-files ../ "
+                      "ec2-user@%s:~/dc/")
 
 current = 1
 MAX_CONCURRENT = 10

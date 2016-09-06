@@ -31,13 +31,18 @@ def printTime(s):
 ##
 ## Running shell commands
 ##
-def run(cmd, printOutput=True, checkRC=True, redirect=PIPE):
+def run(cmd, printOutput=True, checkRC=True, redirect=PIPE, input=""):
     def preexec():  # don't forward signals
         os.setpgrp()
 
     out = ""
-    p = Popen(cmd, shell=True, stdout=redirect, stderr=STDOUT,
-              preexec_fn=preexec)
+    if input:
+        p = Popen(cmd, shell=True, stdout=redirect, stderr=STDOUT,
+                  stdin=PIPE, preexec_fn=preexec)
+        p.stdin.write(input)
+    else:
+        p = Popen(cmd, shell=True, stdout=redirect, stderr=STDOUT,
+                  preexec_fn=preexec)
     while redirect == PIPE:
         line = p.stdout.readline()  # this will block
         if not line:
@@ -47,7 +52,7 @@ def run(cmd, printOutput=True, checkRC=True, redirect=PIPE):
         out += line
     rc = p.poll()
     while rc is None:
-        time.sleep(1)
+        #time.sleep(1)
         rc = p.poll()
     if checkRC and rc != 0:
         raise Exception("subprocess.CalledProcessError: Command '%s'"

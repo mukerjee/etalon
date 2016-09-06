@@ -6,7 +6,7 @@ from launch_switch import launch_switch
 from launch_hosts import launch_hosts
 from describe_running_instances import describe_running_instances
 
-instance_type = 't2.micro'
+instance_type = 't2.micro'  # 'c4.8xlarge'
 host_count = 3
 
 spot = True
