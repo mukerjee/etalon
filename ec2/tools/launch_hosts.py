@@ -6,7 +6,7 @@ import json
 import base64
 
 # create an EC2 instance at a given region
-# usage: launch_hosts.py [count] [type]
+# usage: launch_hosts.py [count] [type] [spot]
 
 ami = 'ami-6869aa05'
 key = 'mukerjee-mba rsa'
@@ -59,4 +59,5 @@ def launch_hosts(it, c, spot=False):
 if __name__ == '__main__':
     c = int(sys.argv[1]) if len(sys.argv) > 1 else count
     it = sys.argv[2] if len(sys.argv) > 2 else instance_type
-    launch_hosts(it, c)
+    sp = sys.argv[3] if len(sys.argv) > 3 else False
+    launch_hosts(it, c, sp)

@@ -54,6 +54,7 @@ sysctl -p
 
 
 # get tools
+yum -y upgrade
 yum -y install emacs
 yum -y --enablerepo=epel install iperf iperf3
 yum -y install tcpdump
@@ -66,3 +67,8 @@ cd -
 
 # fix netfilter
 sed -i 's/limits\.h/linux\/kernel\.h/g' /usr/src/kernels/4.4.19-29.55.amzn1.x86_64/include/uapi/linux/netfilter_ipv4.h
+
+echo "PATH=\$HOME/dc/tools:\$PATH" >> ~/.bash_profile
+
+reboot
+

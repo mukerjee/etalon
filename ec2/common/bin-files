@@ -2,5 +2,10 @@
 ../common/rpyc
 ../common/handles.ec2
 ../common/tc_setup.py
+../tools/install.sh
 ../kernel/mangle/mangle-packet.c
 ../kernel/mangle/Makefile
+../kernel/remove-data/remove-data.c
+../kernel/remove-data/Makefile
+../kernel/add-data/add-data.c
+../kernel/add-data/Makefile
