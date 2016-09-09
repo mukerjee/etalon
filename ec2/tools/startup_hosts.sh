@@ -28,16 +28,11 @@ yum -y --enablerepo=epel install iperf iperf3
 yum -y install tcpdump
 yum -y groupinstall "Development Tools"
 
-cd /lib/modules/4.4.11-23.53.amzn1.x86_64/
-unlink build
-sudo ln -s ../../../usr/src/kernels/4.4.19-29.55.amzn1.x86_64 build
-cd -
-
 # fix netfilter
 sed -i 's/limits\.h/linux\/kernel\.h/g' /usr/src/kernels/4.4.19-29.55.amzn1.x86_64/include/uapi/linux/netfilter_ipv4.h
 
-echo "PATH=\$HOME/dc/tools:\$PATH" >> ~/.bash_profile
-echo "/etc/init.d/add_route" >> ~/.bash_profile
+echo "PATH=/home/ec2-user/dc/tools:\$PATH" >> /home/ec2-user/.bash_profile
+echo "/etc/init.d/add_route" >> /home/ec2-user/.bash_profile
 
 reboot
 

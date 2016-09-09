@@ -118,5 +118,5 @@ def launch_switch(it, spot=False):
 
     
 if __name__ == '__main__':
-    it = sys.argv[1] if len(sys.argv > 1) else instance_type
+    it = sys.argv[1] if len(sys.argv) > 1 else instance_type
     launch_switch(it)
