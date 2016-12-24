@@ -1,0 +1,303 @@
+diff --git a/snf/snf/sbin/myri_start_stop.orig b/snf/snf/sbin/myri_start_stop.orig
+index 1304b40..721c724 100755
+--- a/snf/snf/sbin/myri_start_stop.orig
++++ b/snf/snf/sbin/myri_start_stop.orig
+@@ -69,7 +69,7 @@ unload_myri() {
+ 	    break
+ 	done
+     fi
+-    awk '/^(myri|mx)/ { print $1 }' /proc/modules |
++    awk '/^(myri|mx)/ { print $1 }' /proc/modules | grep -v "mxm_wmi" |
+     while read module; do
+ 	echo "Removing $module"
+ 	/sbin/rmmod $module
+@@ -122,6 +122,17 @@ load_myri() {
+ 	fi
+ 	/sbin/insmod ${MYRI_MODULE_DIR}/${MYRI_DRIVER}.ko $params
+         ;;
++     3.*)
++	# the kernel zlib is only used on 2.6 (>= 2.6.10)
++	if /sbin/modinfo ${MYRI_MODULE_DIR}/${MYRI_DRIVER}.ko | grep ^depends: | grep zlib_inflate > /dev/null 2>&1 ; then
++          modprobe zlib_inflate
++	fi
++	# LRO is used on >= 2.6.24
++	if /sbin/modinfo ${MYRI_MODULE_DIR}/${MYRI_DRIVER}.ko | grep ^depends: | grep inet_lro > /dev/null 2>&1 ; then 
++	  modprobe inet_lro
++	fi
++	/sbin/insmod ${MYRI_MODULE_DIR}/${MYRI_DRIVER}.ko $params
++        ;;
+      *)
+        echo "ERROR: Don't know about kernel version `uname -r`" >&2
+        exit 1
+diff --git a/snf/snf/src/driver/linux/kbuild/mx.c b/snf/snf/src/driver/linux/kbuild/mx.c
+index 5c56815..0541834 100644
+--- a/snf/snf/src/driver/linux/kbuild/mx.c
++++ b/snf/snf/src/driver/linux/kbuild/mx.c
+@@ -207,8 +207,12 @@ module_param(myri_mx_mapper_path, charp, S_IRUGO);
+ 
+ module_param(myri_mac, charp, S_IRUGO);
+ 
++static DEFINE_SPINLOCK(mx_pin_lock);
++DEFINE_SPINLOCK(mx_print_lock);
++/*
+ static spinlock_t mx_pin_lock = SPIN_LOCK_UNLOCKED;
+ spinlock_t mx_print_lock = SPIN_LOCK_UNLOCKED;
++*/
+ 
+ static struct completion mx_watchdog_completion;
+ wait_queue_head_t mx_watchdog_queue;
+@@ -1329,7 +1333,8 @@ static int mx_linux_pci_driver_registered = 0;
+ void
+ mx_spin_lock_init(mx_spinlock_t *s, mx_instance_state_t *is, int unique, char *str)
+ {
+-  *s = SPIN_LOCK_UNLOCKED;
++  // *s = SPIN_LOCK_UNLOCKED;
++  spin_lock_init(s);
+ }
+ 
+ void
+@@ -2680,8 +2685,12 @@ mx_linux_create_instance (struct pci_dev *dev)
+ 
+   is->arch.irq = dev->irq;
+ 
++  /*
+   sprintf(is->arch.interrupt_string, "myri/myri%d", 
+ 	   mx_num_instances);
++  */
++  sprintf(is->arch.interrupt_string, "myri%d", 
++	   mx_num_instances);
+   
+   if (request_irq(is->arch.irq, (void *) mx_linux_intr,
+ 		  IRQF_SHARED, is->arch.interrupt_string, is) == 0) {
+diff --git a/snf/snf/src/driver/linux/kbuild/mx_ether.c b/snf/snf/src/driver/linux/kbuild/mx_ether.c
+index 3a0a053..37f9385 100644
+--- a/snf/snf/src/driver/linux/kbuild/mx_ether.c
++++ b/snf/snf/src/driver/linux/kbuild/mx_ether.c
+@@ -245,7 +245,7 @@ mx_encap(struct mx_ether *eth, struct sk_buff *skb)
+ 			idx = i & (NUM_TX - 1);
+ 			frag = &skb_shinfo(skb)->frags[f];
+ 			bus = pci_map_page(eth->is->arch.pci_dev,
+-					   frag->page,
++					   frag->page.p,
+ 					   frag->page_offset,
+ 					   frag->size,
+ 					   PCI_DMA_TODEVICE);
+@@ -562,7 +562,7 @@ mx_ether_get_frag_header(struct skb_frag_struct *frag, void **mac_hdr,
+ 	struct ethhdr *eh;
+ 	struct vlan_ethhdr *veh;
+ 	struct iphdr *iph;
+-	u8 *va = page_address(frag->page) + frag->page_offset;
++	u8 *va = page_address(frag->page.p) + frag->page_offset;
+ 
+ 	unsigned long ll_hlen;
+ 	__wsum csum = (__wsum) (unsigned long)priv;
+@@ -798,7 +798,7 @@ mx_ether_rx_done_page(struct mx_ether *eth, struct net_device *dev,
+ 	for (seg = 0, remainder = len; remainder > 0; seg++) {
+ 		mx_ether_unmap_rx_page(eth->is->arch.pci_dev,
+ 				       &rx->info[idx], bytes);
+-		rx_frags[seg].page = rx->info[idx].u.pg_info.page;
++		rx_frags[seg].page.p = rx->info[idx].u.pg_info.page;
+ 		rx_frags[seg].page_offset =
+ 			rx->info[idx].u.pg_info.page_offset;
+ 
+@@ -830,7 +830,7 @@ mx_ether_rx_done_page(struct mx_ether *eth, struct net_device *dev,
+ 		eth->arch.stats.rx_dropped++;
+ 		do {
+ 			seg--;
+-			put_page(rx_frags[seg].page);
++			put_page(rx_frags[seg].page.p);
+ 		} while (seg != 0);		
+ 		return;
+ 	}
+@@ -862,7 +862,7 @@ mx_ether_rx_done_page(struct mx_ether *eth, struct net_device *dev,
+ 	skb_shinfo(skb)->frags[0].size -= hlen;
+ 	skb_pull(skb, MCP_ETHER_PAD);
+ 	if (skb_shinfo(skb)->frags[0].size <= 0) {
+-		put_page(skb_shinfo(skb)->frags[0].page);
++		put_page(skb_shinfo(skb)->frags[0].page.p);
+ 		skb_shinfo(skb)->nr_frags = 0;
+ 	}
+ 	skb->protocol = eth_type_trans(skb, dev);
+@@ -1680,50 +1680,6 @@ mx_ether_set_pauseparam(struct net_device *netdev,
+ 	return 0;
+ }
+ 
+-static u32
+-mx_ether_get_rx_csum(struct net_device *netdev)
+-{
+-	struct mx_ether *eth = mx_netdev_priv(netdev);
+-
+-	if (eth->csum_flag & MCP_ETHER_FLAGS_CKSUM)
+-		return 1;
+-	else
+-		return 0;
+-}
+-
+-static int
+-mx_ether_set_rx_csum(struct net_device *netdev, u32 csum_enabled)
+-{
+-	struct mx_ether *eth = mx_netdev_priv(netdev);
+-
+-	if (csum_enabled)
+-		eth->csum_flag |= MCP_ETHER_FLAGS_CKSUM;
+-	else
+-		eth->csum_flag &= ~MCP_ETHER_FLAGS_CKSUM;
+-	return 0;
+-}
+-
+-static u32
+-mx_ether_get_tx_csum(struct net_device *netdev)
+-{
+-	if ((netdev->features & NETIF_F_IP_CSUM) != 0)
+-		return 1;
+-	else
+-		return 0;
+-}
+-
+-static int
+-mx_ether_set_tx_csum(struct net_device *netdev, u32 csum_enabled)
+-{
+-	if (csum_enabled)
+-		netdev->features |= NETIF_F_IP_CSUM;
+-	else
+-		netdev->features &= ~NETIF_F_IP_CSUM;
+-	return 0;
+-}
+-
+-
+-
+ static const char mx_eth_gstrings[][ETH_GSTRING_LEN] = {
+ 	"rx_packets", "tx_packets", "rx_bytes", "tx_bytes", "rx_errors",
+ 	"tx_errors", "rx_dropped", "tx_dropped", "multicast", "collisions",
+@@ -1811,14 +1767,14 @@ static MX_ETHTOOL_OPS_TYPE mx_ethtool_ops = {
+ 	.set_coalesce			= mx_ether_set_coalesce,
+ 	.get_pauseparam			= mx_ether_get_pauseparam,
+ 	.set_pauseparam			= mx_ether_set_pauseparam,
+-	.get_rx_csum			= mx_ether_get_rx_csum,
+-	.set_rx_csum			= mx_ether_set_rx_csum,
++	// .get_rx_csum			= mx_ether_get_rx_csum,
++	// .set_rx_csum			= mx_ether_set_rx_csum,
+ 	/* get_tx_csum, get_sg and get_tso are set by default since 2.6.24 */
+-	.get_tx_csum			= mx_ether_get_tx_csum,
+-	.set_tx_csum			= mx_ether_set_tx_csum,
+-	.get_sg				= ethtool_op_get_sg,
+-	.get_tso			= ethtool_op_get_tso,
+-	.set_sg				= ethtool_op_set_sg,
++	// .get_tx_csum			= mx_ether_get_tx_csum,
++	// .set_tx_csum			= mx_ether_set_tx_csum,
++	// .get_sg				= ethtool_op_get_sg,
++	// .get_tso			= ethtool_op_get_tso,
++	// .set_sg				= ethtool_op_set_sg,
+ 	.get_link			= ethtool_op_get_link,
+ 	.get_strings			= mx_ether_get_strings,
+ #ifdef HAVE_SSET_COUNT
+@@ -1850,7 +1806,6 @@ mx_ether_link_change_notify(mx_instance_state_t *is)
+ 		netif_carrier_off(is->ether->arch.dev);
+ }
+ 
+-#ifdef HAVE_NET_DEVICE_OPS
+ static const struct net_device_ops mx_netdev_ops = {
+ 	.ndo_init		= mx_ether_init,
+ 	.ndo_open		= mx_ether_open,
+@@ -1859,12 +1814,10 @@ static const struct net_device_ops mx_netdev_ops = {
+ 	.ndo_get_stats		= mx_ether_get_stats,
+ 	.ndo_validate_addr	= eth_validate_addr,
+ 	.ndo_change_mtu		= mx_ether_change_mtu,
+-	.ndo_set_multicast_list	= mx_ether_set_multicast_list,
++    .ndo_set_rx_mode = mx_ether_set_multicast_list, // was _set_multicast_list
+ 	.ndo_set_mac_address	= mx_ether_set_mac_address,
+ 	.ndo_tx_timeout		= mx_ether_timeout,
+ };
+-#endif
+-
+ 
+ int 
+ mx_ether_attach(mx_instance_state_t *is)
+@@ -1902,19 +1855,7 @@ mx_ether_attach(mx_instance_state_t *is)
+ 
+ 	mx_ether_link_change_notify(is);
+ 	dev->mtu = MX_MAX_ETHER_MTU - ETH_HLEN;
+-#ifdef HAVE_NET_DEVICE_OPS
+ 	dev->netdev_ops = &mx_netdev_ops;
+-#else
+-	dev->open = mx_ether_open;
+-	dev->stop = mx_ether_close;
+-	dev->hard_start_xmit = mx_ether_xmit;
+-	dev->get_stats = mx_ether_get_stats;
+-	dev->change_mtu = mx_ether_change_mtu;
+-	dev->set_multicast_list = mx_ether_set_multicast_list;
+-	dev->set_mac_address = mx_ether_set_mac_address;
+-	dev->init = mx_ether_init;
+-	dev->tx_timeout = mx_ether_timeout;
+-#endif
+ 	dev->base_addr = pci_resource_start(is->arch.pci_dev, 0);
+ 	dev->irq = is->arch.irq;
+ 	dev->watchdog_timeo = HZ * 2;
+@@ -2098,7 +2039,7 @@ myri_ether_soft_rx(mx_instance_state_t *is, myri_soft_rx_t *r)
+ 			copy = min(copylen, mx_ether_rx_alloc_size);
+ 			skb_shinfo(skb)->nr_frags++;
+ 			get_page(is->ether->arch.fake_page);
+-			skb_shinfo(skb)->frags[buf].page = is->ether->arch.fake_page;
++			skb_shinfo(skb)->frags[buf].page.p = is->ether->arch.fake_page;
+ 			skb_shinfo(skb)->frags[buf].page_offset = 0;
+ 			skb_shinfo(skb)->frags[buf].size = copy;
+ 			skb->data_len += copy;
+diff --git a/snf/snf/src/driver/linux/mal_checks.h b/snf/snf/src/driver/linux/mal_checks.h
+index 90af72f..78f1fb5 100644
+--- a/snf/snf/src/driver/linux/mal_checks.h
++++ b/snf/snf/src/driver/linux/mal_checks.h
+@@ -2,7 +2,7 @@
+ #define __MAL_CHECKS_H__ 1
+ 
+ /*
+- * This file has been generated with mal_check_headers.sh on Mon Apr 1 17:21:06 PDT 2013
++ * This file has been generated with mal_check_headers.sh on Mon Apr 1 17:23:33 PDT 2013
+  * It has been called with:
+  *   KSRC=/lib/modules/3.2.0-39-generic/source
+  *   KDIR=/lib/modules/3.2.0-39-generic/build
+diff --git a/snf/snf/src/driver/linux/mx_linux_compat.h b/snf/snf/src/driver/linux/mx_linux_compat.h
+index 25d0155..1be2b7f 100644
+--- a/snf/snf/src/driver/linux/mx_linux_compat.h
++++ b/snf/snf/src/driver/linux/mx_linux_compat.h
+@@ -20,11 +20,11 @@
+ 
+ #include "mal_checks.h"
+ #include <linux/version.h>
+-#ifndef AUTOCONF_INCLUDED
++// #ifndef AUTOCONF_INCLUDED
+ /* linux/config.h warns in 2.6.19 and does not exist after 2.6.20, do not include it anymore */
+ /* linux/autoconf.h is automatically included by kbuild since 2.6.15 anyway */
+-#include <linux/config.h>
+-#endif
++// #include <linux/config.h>
++// #endif
+ #include <linux/ioctl.h>
+ #include <linux/module.h>
+ #include <linux/kernel.h>
+@@ -48,7 +48,8 @@
+ #include <asm/mtrr.h>
+ #endif
+ #include <linux/mm.h>
+-#include <linux/smp_lock.h>
++// #include <linux/smp_lock.h>
++#include <linux/smp.h>
+ 
+ #ifndef UTS_RELEASE
+ #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,33)
+@@ -72,6 +73,7 @@
+ #include <linux/devfs_fs_kernel.h>
+ #endif
+ 
++/*
+ #if LINUX_VERSION_CODE < KERNEL_VERSION(2,4,0)
+ #warning "This driver does not support Linux 2.2.x or earlier."
+ #error "Please use Linux 2.4.x or 2.6.x."
+@@ -82,6 +84,8 @@
+ #else
+ #error "Unsupported Linux kernel release."
+ #endif
++*/
++#define LINUX_XX 300
+ 
+ /* PAGE_OFFSET should be the first physical page of memory, that
+    should works even if memory does not begin at physical address 0 */

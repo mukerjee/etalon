@@ -1,0 +1,102 @@
+#!/bin/sh
+
+# Note this is replaced by make install, not configure!
+export MYRI_MODULE_DIR=/opt/snf/sbin
+export MYRI_DRIVER=myri_snf
+
+unset PASSIVE
+unset MANUAL
+unset MODULE
+
+set -e
+
+if test ! -d ${MYRI_MODULE_DIR}; then
+    echo "Something bad happened with the install script"
+    echo "MYRI_MODULE_DIR isn't pointing to a valid directory"
+    exit 
+fi
+
+#process arguments
+for arg in "$@"; do
+    case $arg in
+	"--passive")
+	    PASSIVE=1
+	    ;;
+	"--manual")
+	    MANUAL=1
+	    ;;
+	"--module")
+	    MODULE=1
+	    ;;
+    esac
+done
+
+#create the files /etc/mx_mapper/{passive,mapper} if specified.
+if test "$MYRI_DRIVER" = myri_mx; then
+  if test ! -d "/etc/mx_mapper"; then
+      echo "/etc/mx_mapper didn't exist.  Creating it."
+      mkdir /etc/mx_mapper && chmod 655 /etc/mx_mapper
+  fi
+  if [ "$PASSIVE" ]; then
+      echo "Configuring a passive mapper"
+      touch /etc/mx_mapper/passive && chmod 644 /etc/mx_mapper/passive
+  else
+      rm -f /etc/mx_mapper/passive
+  fi
+  if [ "$MANUAL" ]; then
+      echo "Configuring a manual mapper"
+      echo "Mapper will not be started automatically!"
+      touch /etc/mx_mapper/manual && chmod 644 /etc/mx_mapper/manual
+  else
+      rm -f /etc/mx_mapper/manual
+  fi
+
+  if test -d "/etc/dev.d"; then
+    mkdir -p /etc/dev.d/mx 
+    cat <<EOF > /etc/dev.d/mx/10-mx_mapper.dev
+#!/bin/sh
+# Myricom MX device creation callback
+test "\$ACTION" = add || exit 0
+# Myricom MX start mapper on device creation
+case "\$DEVPATH" in
+ /class/mx/mxp*)
+   n=\`expr \$DEVPATH : '/class/mx/mxp\(.*\)'\`
+   $MYRI_MODULE_DIR/mx_start_mapper \$n;;
+esac
+EOF
+   chmod 755 /etc/dev.d/mx/10-mx_mapper.dev
+  fi
+   
+  if test -d "/etc/modprobe.d"; then
+   # rm old version that might have been left
+    rm -f /etc/modprobe.d/mx 
+    cat <<EOF > /etc/modprobe.d/mx.conf
+options $MYRI_DRIVER myri_mx_mapper_path=$MYRI_MODULE_DIR/mx_start_mapper
+remove $MYRI_DRIVER $MYRI_MODULE_DIR/mx_stop_mapper;modprobe -r --ignore-remove $MYRI_DRIVER
+EOF
+  fi
+fi
+
+echo "Creating myri devices"
+$MYRI_MODULE_DIR/myri_create_devs
+
+if test -d "/etc/init.d/"; then
+    echo "Installing init script as /etc/init.d/myri_start_stop"
+    cp ${MYRI_MODULE_DIR}/myri_start_stop /etc/init.d/myri_start_stop
+fi
+
+for module in gm $MYRI_DRIVER ; do 
+ if [ -r /etc/hotplug/blacklist ]  &&
+       ! grep -q "$module\$" /etc/hotplug/blacklist 2> /dev/null ; then
+    echo -e "# Myri autoloading not supported yet\n$module" >> /etc/hotplug/blacklist
+ fi
+done
+
+if test -n "$MODULE"; then
+  driver_dir="/lib/modules/`uname -r`/myri"
+  mkdir -p $driver_dir
+  cp $MYRI_MODULE_DIR/$MYRI_DRIVER.ko $driver_dir/.
+  depmod -a
+fi
+
+exit 0

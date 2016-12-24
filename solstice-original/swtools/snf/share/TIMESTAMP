@@ -1,0 +1,8 @@
+# Sat Nov  6 10:33:49 EDT 2010
+# target : snf
+# package: snf-1.1.0b3
+# HEAD   : 1ff97168f
+# tag    : snf-1_1_0b3
+# builder: csbell@mist08
+# build  : -c maint/snf-1_1 -o tmpS -t snf
+# host   : Linux mist08 2.6.18-164.el5 #1 SMP Mon Aug 16 15:04:53 EDT 2010 x86_64 x86_64 x86_64 GNU/Linux

@@ -1,0 +1,15 @@
+#ifndef MYRI_VERSION_H
+#define MYRI_VERSION_H
+
+#define MYRI_MAJOR_VERSION 1
+#define MYRI_MINOR_VERSION 1
+#define MYRI_TEENY_VERSION 0
+#define MYRI_VERSION_SUFFIX "b3"
+
+#define MYRI_VERSION_STR "1.1.0b3"
+#define MYRI_SHORT_VERSION_STR "1.1.0"
+#define MYRI_BUILD_STR "csbell@mist08:snf-1.1.0b3 Sat Nov  6 10:36:03 EDT 2010 1ff97168f"
+
+#define MYRI_LIB_MAJOR 0
+#define MYRI_LIB_MINOR 3
+#endif

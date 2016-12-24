@@ -1,0 +1,8 @@
+*.o.cmd
+*.o
+*.ko
+sbin/myri_start_stop
+*.ko.cmd
+*.mod.c
+*.order
+mal_checks.h

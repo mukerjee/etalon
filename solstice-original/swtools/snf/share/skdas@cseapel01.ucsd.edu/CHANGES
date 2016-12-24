@@ -1,0 +1,310 @@
+*******************************************
+
+        CHANGES file for Sniffer10G
+
+*******************************************
+
+*******************************************
+Sniffer10G 1.1.0b3 ( TBD )
+*******************************************
+BUG FIXES:
+1. Fix accounting of "SNF drop ring full" Firmware counter to
+   reflect dropped packets instead of dropped events.
+2. Fix sudden stall in packet capture that could occur under egregious 
+   circumstances where all rings stop consuming simulatenously.
+3. Fix theoretical bug where some extra interrupts can be generated
+   when an injection endpoint is unexpectedly closed.
+4. Fix counting of dropped packets at the PHY when the NIC is
+   seriously shorted in PCIe credits (observed on some dual-IOH systems).
+5. Fix timestamping state initialization bug that affected multiple rings
+   (introduced in b2).
+
+ENHANCEMENTS (since beta2):
+1. Add support for ptpv2d daemon.  It can currently be run in Ethernet
+   mode but not Sniffer mode.
+2. Make snf_recv_simple observe settings in the environment so that
+   it can be used to spawn multiple snf_recv_simple processes.
+3. Always trust kernel's implementation memcpy instead of handrolled
+   one.
+4. Allow 'rpmbuild -tb' to be run against the tarball to repackage
+   the rpm.
+
+USAGE: See comments below in 1.1.0b2.
+
+*******************************************
+Sniffer10G 1.1.0b2 ( August 9, 2010 )
+*******************************************
+1. Revamped Injection API to reflect independent RX and TX paths. 
+   snf_ring_inject is removed in favor of the following calls to implement
+   injection capability:
+     snf_inject_open
+     snf_inject_send
+     snf_inject_close
+
+2. Added experimental SNF kernel API (can be obtained by compiling the tarball
+   with --enable-snf-kernel-lib).  The API is the same as the userlevel API, but
+   has received much lighter testing than the userlevel API.
+
+3. Added a new snf_tap to demonstrate how one would use Sniffer10G for
+   record-and-play from one interface to another.  (See the snf_tap documentation
+   below).
+
+4. Source tarball is available upon approved requests, configure has its usual
+   options but these are relevant for Sniffer10G:
+   --enable-snf (not necessary, is enabled by default)
+   --enable-snf-libpcap compiles a libpcap with Sniffer10G support
+   --enable-snf-kernel-lib compiles experimental SNF kernel API in
+                           myri_snf.ko (Linux-only).
+
+The distribution contains a number of tests that demonstrate how the injection
+capability can be used.  These are available in source form under libsnf/tests
+or in binary compiled form in $PREFIX/bin/tests once the distribution is
+installed (or a binary RPM/FreeBSD package is used).
+
+  * snf_pktgen test can be used to inject packets much like a
+    packet generator and should be able to attain very high 
+    packet rates.
+  * snf_replay can replay .pcap files at very high rates (it
+    requires that libpcap which is enabled by default in the
+    Sniffer10G packages but requires --enable-snf-libpcap in
+    the tarball configure).
+  * snf_tap is a record-and-playback example of how one can
+    inspect and reinject traffic from one port to another in
+    either a unidirectional or bidirectional manner.  More details
+    below:
+
+EXAMPLE: snf_tap
+
+The distribution also provides a sample "snf_tap" test in libsnf/tests (in source
+form) or bin/tests/snf_tap (in binary form) to demonstrate how one can use the
+record-and-play functionality in Sniffer10G.  It can use multiple rings to receive
+and reinject the traffic from one or two directions.
+
+For example, to run a tap that would enable RSS on 4 threads in one direction and
+simply allow reinjection using 1 thread in the other direction, the following
+command can be used:
+
+./snf_tap -b 0:1:4:0x55 -b 1:0:1:0x1
+
+First direction:
+Forward packets from board 0 to board 1 using 4 rings/threads and bind them to
+affinity mask 0x55.  This 0x55 is the mask for cores residing on socket #0 of our
+systems but it is system-specific.  The handy hwloc tool can be used to discover
+the affinity mask for socket-specific cores in an OS and architecture independent
+manner.  One can use 'hwloc-calc socket:0' to get the affinity mask of all cores
+residing on socket #0.
+
+Second direction:
+Forward packets from board 1 to board 0 using 1 ring/thread and bind it to
+affinity mask 0x1 (core number 1 on socket 1 on our test system -- again, see
+/proc/cpuinfo on Linux or use hwloc, www.open-mpi.org/projects/hwloc).
+
+The tap just forwards the traffic.  Customers should add there own code to handle
+packets between snf_recv_ring and snf_inject_send.
+
+The "snf_tap" is also available as a kernel module if Sniffer10G is configured
+with --enable-snf-kernel-lib.  Implementers should refer to the test source code
+to control how traffic can be handled.
+
+*******************************************
+Sniffer10G 1.1.0b1 ( June 10, 2010 )
+*******************************************
+
+Sniffer10G 1.1.x series will introduce the following features:
+  1. Packet injection (snf_ring_inject)
+  2. New API calls, snf_ring_open_id(), snf_open_default().
+  3. Module configuration for multi-ring (easier for pcap applications)
+  4. More robust handling for abnormal termination in multi-ring
+
+1. Packet injection (snf_ring_inject)
+   With Sniffer 1.1 series, we introduce line-rate packet injection from the
+   host.  There are currently no restrictions on what can be re-injected in
+   terms of packets.  The interface follows the ring model used to receive
+   packets in Sniffer 1.0 with the added call of snf_ring_inject.  Inject-only
+   applications can open rings and use the injection capability much like a
+   packet generator (see snf_pktgen.c example).  Also, packets can be
+   re-injected after being modified by alterating between snf_ring_recv and
+   snf_ring_inject (see added -R option to snf_simple_recv.c and
+   snf_multi_recv.c).
+
+   NOTE: The new injection API is subject to change although it is unlikely.
+
+2. New API calls, snf_ring_open_id(), snf_open_default().
+   Normally, snf_ring_open() just asks the driver for the next available
+   unopened ring.  For users that want better control over process placement
+   and affinity for their rings, a ring ID from 0 to num-rings-1 can be
+   explicitly requested.  For example, a two-way tap that opens rings on two
+   devices may want ingress and egress packets of a particular flow to be
+   handled on rings that are allocated and have affinity to the same host CPU
+   core.
+
+   The snf_open_default() was added to better support sites that which to
+   configure Sniffer10G through module parameters.  The call ensures that
+   snf_open() is called with default parameters.
+
+3. Module configuration for multi-ring
+   New module parameters have been added to make it easier to configure a
+   system to operate with a given number of rings and with a particular capture
+   mode (instead of relying on environment variables).  See the Multiple Ring
+   Configuration section in the documentation.
+
+4. Multi-ring abnormal termination
+   In Sniffer 1.0, the multi-ring feature used futexes as a light-weight
+   mechanism to minimize the overhead of packet capture in userspace when
+   using shared multi-rings.  While the amount of time spent in
+   critical sections was minimized, it was possible for a userspace process to
+   exit while holding the futex (usually an abnormal exit that requires other
+   ring capture processes to be restarted).  Recent Linux kernels introduce
+   "robust futexes" but most distributions have not adopted this feature yet
+   (we also support other OSes that don't have anything like robust features).
+   Sniffer 1.1 takes a different approach in that critical sections are handled
+   by sharing more state between user-space and the driver such that abnormal
+   exits can be handled more gracefully.
+
+BUG FIXES (since 1.0.0):
+1. Fix Ethernet checksum offload (regular driver).
+
+ENHANCEMENTS (since 1.0.0):
+1. Add Ethernet Multicast filter.
+2. Add Ethernet driver promiscuous setting.
+3. Improve Ethernet driver receive performance.
+
+Sniffer10G 1.0.0 ( May 14, 2010 )
+-----------
+BUG FIXES:
+1. Fix where timestamp is taken in the library introduced in 0.10.1
+
+ENHANCEMENTS:
+1. Support for Linux kernel up to 2.6.33
+
+snf10g 0.10.2 ( May 10, 2010 )
+-----------
+BUG FIXES:
+1. Fix receive problems that would appear in many-gigabyte ring allocation
+   or in degenerate cases where one ring would consume one packet and then
+   none before a while.
+2. Fix initialization race in multi-process mode.
+3. Add support for 2.6.29-2.6.31 kernels.
+4. Add more robust mechanism for dealing with rings exiting abnormally
+   when other processes also own a ring
+
+ENHANCEMENTS:
+1. Support parsing of IPv6 packets in RSS
+2. Change default RSS mode to always parse IP packet format since the
+   resulting distribution is much better.
+3. Add packet duplication and private ring mode in snf_open.
+   a) SNF_F_RX_DUPLICATE causes incoming packets to be duplicated instead of
+      split across rings through RSS.
+   b) SNF_F_RX_PRIVATE prevents the use of shared ring references at the
+      cost of an additional copy.
+   ** More information in the documentation.
+4. Force libpcap to honor SNF_FLAGS= if it is set (this is included in the
+   libpcap we distribute, but not yet pushed upstream to the libpcap
+   maintainers).
+
+snf10g 0.10.1 ( April 9, 2010 )
+-----------
+BUG FIXES:
+1. Fix multi-ring hang that slipped in before GA.  The internal encoding for
+   structures that are shared between multiple rings needed an update after
+   a late firmware optimization.
+2. Removed the word "Beta" from the documentation that shipped to users
+3. Flow control setting fixes to ensure that flow control is never enabled
+   for SNF receive.
+
+snf10g 0.10.0 GA ( April 7, 2010 )
+-----------
+API CHANGES:
+1. Added a nic_bytes_recv counter to snf_ring_stats to count the number of
+   bytes received by the NIC.  This can be useful for users who want to
+   know how much traffic they are dropping (in bytes) rather than in
+   counts.  This count is incremented even though the receive queue in the
+   host is full (nic_pkt_overflow counts the number of packets that were
+   dropped by the HW and the number of bytes dropped by the HW cannot be
+   counted).
+
+ENHANCEMENTS:
+1. Package ships with libpcap-1.1, recently released.  SNF support is now
+   available from the mainline libpcap repo, so users can rebuild a libpcap
+   from git://bpf.tcpdump.org/libpcap.
+2. Clarify error messages and remove mention of "mx" in error messages and
+   status, all messages related to sniffer should appear with the myri_snf
+   mention in dmesg.
+3. Sniffer time synchronization between host and NIC has been revisted in
+   many respects and the synchronization should cause less outliers.
+4. Fixed a degenerative alignment problem that would cause DMA writes to 
+   stay unaligned during the entire application run.
+
+BUG FIXES:
+1. Fix rpm build procedures that could make the Linux RPM unusable on earlier
+   RHEL releases.
+2. Fix misclassification of bad CRC drops which were really overflow drops in
+   the HW.
+3. Fix false positive "Wrong network" messages reported by some customers.
+4. Many internal changes due to changes in internal SCM tools.
+
+snf10g 0.10.0rc4 ( February 18, 2010 )
+-----------
+ENCHANCEMENTS:
+1. First fully functional port to FreeBSD
+2. update to libpcap 1.1.0-PRE-GIT
+
+BUG FIXES:
+1. Fix FW timestamp initialization bug that occured intermittently.
+2. Update Linux's myri_bug_report
+
+snf10g 0.10.0rc3 ( January 11, 2010 )
+-----------
+NOTE: API Change in snf_ring_recv and snf_ring_cancel has been removed. libpcap
+users unaffected.
+
+ENHANCEMENTS:
+1. Change snf_ring_recv 'flags' parameter with a 'timeout_ms' parameter since
+   the only flag was "nonblock" and this caused problems for some libpcap
+   users.
+2. Fix libpcap to support blocking timeouts through snf_ring_recv.
+3. Internal cleanup of single and multi-ring support.
+4. Added a few more modes/tests to snf_multi_recv.c
+
+BUG FIXES:
+1. Internal corruption bug customers were unlikely to see unless using a custom
+   rss hashing function
+
+snf10g 0.10.0rc2 ( December 21, 2009 )
+-----------
+BUG FIXES:
+1. Handle parallel snort case where interface is only specified on the command
+   line and not a config file -- gory details are that libpcap calling
+   pcap_findalldevs and then opening devices defeats our goal of trying to
+   minimize problems that can arise if 2 parallel snort sessions are
+   simultaneously started.
+2. Add pcap/bpf.h to distribution and fix pcap.h being in PREFIX/include
+   instead of PREFIX/include/pcap
+3. Add -lrt so our distributed libpcap.so gets a DT_NEEDED for librt.
+
+snf10g 0.10.0rc1 ( December 15, 2009 )
+-----------
+BUG FIXES:
+No Known Bugs fixed in features made available in rc0.
+
+ENHANCEMENTS:
+1. Multi-ring support is added, both in process private and process-shared
+   modes (pshared).  At the Sniffer API level, users can start multiple
+   threads (probably as many threads as cores) and have each thread open a
+   different receive ring.  Internally, Sniffer will distribute packets to
+   multiple rings and maintain TCP/UDP flow affinity in the process. See
+   the documentation for more details and how to leverage this feature
+   from libpcap/snort/bro.
+2. The performance is up to 14.88Mpps, essentially maximum packet wire
+   rate for the smallest Ethernet packet sizes (64 bytes).
+3. FreeBSD 8.0 support has been added.
+
+snf10g 0.10.0rc0 ( November 6, 2009 )
+-----------
+NOTE: A new API (and new implementation) has been introduced
+to better support multicore systems by receiving packets
+into multiple rings (presumably one ring per core).  If only
+one ring is used, the API usage is similar to pre-0.10 with
+a few exceptions.  The single ring performance is now at
+about ~13Mpps. Refer to the included documentation for
+complete information on the new package.
