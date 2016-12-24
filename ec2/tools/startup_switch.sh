@@ -57,12 +57,14 @@ yum -y upgrade
 yum -y install emacs
 yum -y --enablerepo=epel install iperf iperf3
 yum -y install tcpdump
+yum -y install iptables-devel
 yum -y groupinstall "Development Tools"
 
 # fix netfilter
 sed -i 's/limits\.h/linux\/kernel\.h/g' /usr/src/kernels/4.4.19-29.55.amzn1.x86_64/include/uapi/linux/netfilter_ipv4.h
 
-echo "PATH=/home/ec2-user/dc/tools:\$PATH" >> /home/ec2-user/.bash_profile
+echo "PATH=~/dc/tools:\$PATH" >> /home/ec2-user/.bash_profile
+echo "cd ~/dc/common; sudo ./tc_setup.py; cd -" >> /home/ec2-user/.bash_profile
 
 reboot
 

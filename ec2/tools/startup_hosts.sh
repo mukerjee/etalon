@@ -31,7 +31,7 @@ yum -y groupinstall "Development Tools"
 # fix netfilter
 sed -i 's/limits\.h/linux\/kernel\.h/g' /usr/src/kernels/4.4.19-29.55.amzn1.x86_64/include/uapi/linux/netfilter_ipv4.h
 
-echo "PATH=/home/ec2-user/dc/tools:\$PATH" >> /home/ec2-user/.bash_profile
+echo "PATH=~/dc/tools:\$PATH" >> /home/ec2-user/.bash_profile
 echo "/etc/init.d/add_route" >> /home/ec2-user/.bash_profile
 
 reboot

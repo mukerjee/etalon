@@ -2,10 +2,13 @@
 ../common/rpyc
 ../common/handles.ec2
 ../common/tc_setup.py
+../common/iproute2-4.7.0
 ../tools/install.sh
-../kernel/mangle/mangle-packet.c
-../kernel/mangle/Makefile
 ../kernel/remove-data/remove-data.c
 ../kernel/remove-data/Makefile
 ../kernel/add-data/add-data.c
 ../kernel/add-data/Makefile
+../kernel/packet-schedule/packet-schedule.c
+../kernel/packet-schedule/Makefile
+../kernel/fifo_new/fifo_new.c
+../kernel/fifo_new/Makefile
