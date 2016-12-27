@@ -1,0 +1,112 @@
+body {
+    background: #fff;
+    margin: 0;
+    padding: 0;
+    font-size: .13in;
+    font-family: "Open Sans", "Helvetica";
+}
+
+div#left {
+    z-index: 1;
+    float: left;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 200px;
+    background: #eee;
+    color: #000;
+    height: 500px;
+    margin: 10px;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+svg {
+    z-index: 0;
+    margin-left: 240px;
+    background: #fff;
+    display: block;
+}
+
+div#main {
+    background: #fff;
+}
+
+rect.cellbox { fill: #f3f3f3; }
+rect.bar { fill: #933; }
+rect.bg, rect.fg { fill: #363; }
+line.axis { stroke: #666; stroke-width: 1; }
+line.grid { 
+    stroke: #999; 
+    stroke-width: 0.5; 
+    stroke-dasharray: 2,1; 
+}
+line.guide { 
+    stroke: #c66; 
+    stroke-width: 0.5; 
+    stroke-dasharray: 3,3; 
+}
+line.fence { stroke: #006; stroke-width: 0.5; }
+line.cursor { stroke: #f00; stroke-width: 0.5; }
+
+g.bar text.number { font-size: 10px; }
+g.bar text.title { text-anchor: end; }
+g.bar text.tlabel { text-anchor: middle; font-size: 10px; }
+g.bar line.tick { stroke: #333; stroke-width: 1; }
+/*
+g.elems { display: none; } 
+g.sums2 { display: none; }
+*/
+
+.from0 line.axis { stroke: #633; }
+.from1 line.axis { stroke: #363; }
+.from2 line.axis { stroke: #336; }
+.from3 line.axis { stroke: #636; }
+
+.to0 rect.bar { fill: #900; }
+.to1 rect.bar { fill: #090; }
+.to2 rect.bar { fill: #009; }
+.to3 rect.bar { fill: #f60; }
+.to4 rect.bar { fill: #06f; }
+.to5 rect.bar { fill: #60f; }
+.to6 rect.bar { fill: #0d6; }
+.to7 rect.bar { fill: #666; }
+
+.to0 rect.bgbar { fill: #fcc; }
+.to1 rect.bgbar { fill: #cfc; }
+.to2 rect.bgbar { fill: #ccf; }
+.to3 rect.bgbar { fill: #fec; }
+.to4 rect.bgbar { fill: #cef; }
+.to5 rect.bgbar { fill: #ecf; }
+.to6 rect.bgbar { fill: #cfe; }
+.to7 rect.bgbar { fill: #eee; }
+
+form input, form select {
+	font-family: "Open Sans", "Helvetica";
+}
+
+form input[type="button"] { 
+    padding-left: .1in; 
+    padding-right: .1in; 
+    padding-bottom: .03in; 
+    padding-top: .03in; 
+}
+
+form span.lab {
+	display: inline-block;
+	width: 100px;
+}
+
+form input[type="input"] {
+	width: 50px;
+}
+
+form div.buttons {
+	padding-top: .2in;
+}
+
+form div.visoptions {
+    padding-top: .2in;
+}
+
+g.fences { display: inline; }

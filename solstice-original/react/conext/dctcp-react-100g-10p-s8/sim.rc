@@ -1,0 +1,7 @@
+{
+    "Switch": "react",
+    "PackBw": 125,
+    "LoadScaler": 0.8,
+    "UnitScaler": 100,
+    "LinkScaler": 100
+}

@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+./skew.r && cp -v ./skew.pdf ~/papers/react/sched-notes/fig/skew-tcps.pdf

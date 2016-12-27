@@ -1,0 +1,3 @@
+sh8, sh16: small slots
+h8, h16, ...: big slots, non-zero nights
+nh8, nh16, nh128: big slots, non-zero nights

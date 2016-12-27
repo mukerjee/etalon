@@ -1,0 +1,10 @@
+{
+    "Nhost": 8,
+    "Switch": "react",
+    "PackBw": 125,
+    "Workload": "simple",
+    "LoadScaler": 1.0,
+    "UnitScaler": 100,
+    "LinkScaler": 10,
+    "NoBig": true
+}

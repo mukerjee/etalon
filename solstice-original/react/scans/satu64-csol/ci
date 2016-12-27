@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+./satu.r && cp -v ./satu.pdf ~/papers/react/sigcomm14/submission/fig/satu.pdf

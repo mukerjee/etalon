@@ -1,0 +1,11 @@
+{
+    "Nhost": 8,
+    "Switch": "preact",
+    "PackBw": 125,
+    "Workload": "simple",
+    "Tmax": 1000000,
+    "LoadScaler": 1.0,
+    "UnitScaler": 100,
+    "LinkScaler": 10,
+    "SafeBandw": true
+}

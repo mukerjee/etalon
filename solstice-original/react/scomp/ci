@@ -1,0 +1,3 @@
+#!/usr/bin/env bash
+
+./scomp.r && cp -v ./scomp.pdf ~/papers/react/sched-notes/fig/scomp.pdf
