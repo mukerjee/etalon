@@ -9,8 +9,8 @@ mkdir -p /home/ec2-user/dc
 chown ec2-user:ec2-user -R /home/ec2-user/dc
 
 # add static route through switch
-SUBNET="172.31.16.0/20"
-ELASTIC_IP_DNS="ec2-52-44-13-67.compute-1.amazonaws.com"
+SUBNET="172.31.20.0/20"
+ELASTIC_IP_DNS="ec2-54-175-9-172.compute-1.amazonaws.com"
 
 echo "#!/bin/bash
 sudo ip route del" $SUBNET "
