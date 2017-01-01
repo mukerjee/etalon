@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <linux/types.h>
 #include <string.h>
 
@@ -42,7 +43,7 @@
 /* for Queue */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
-#define NUM_THREADS     15
+#define NUM_THREADS     2 //15
 
 pthread_t threads[NUM_THREADS];
 
@@ -114,6 +115,7 @@ char * getText(unsigned char * data, char Size) {
 
 u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 
+	printf("analyzePacket\n");
 	//packet id in the queue
 	int id = 0;
 
@@ -121,7 +123,7 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 	struct nfqnl_msg_packet_hdr *ph;
 
 	//the packet
-	char *data;
+	unsigned char *data;
 
 	//packet size
 	int ret;
@@ -141,10 +143,8 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 
 		/* extracting the ipheader from packet */
 		struct sockaddr_in source, dest;
-		unsigned short iphdrlen;
 
 		struct iphdr *iph = ((struct iphdr *) data);
-		iphdrlen = iph->ihl * 4;
 
 		memset(&source, 0, sizeof(source));
 		source.sin_addr.s_addr = iph->saddr;
@@ -161,26 +161,6 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 		} else if (iph->protocol == 17) {
 			printUDP(data);
 		}
-
-		printf("|-Extracting Payload: \n");
-
-		char * text = getText(data, ret);
-
-		//filtering requests for facebook
-		if (text && text[0] != '\0') {
-			printf("\n %s \n", text);
-			ret = strstr(text, "facebook");
-			if (ret == 0)
-				//not found in string
-				*blockFlag = 0;
-			else
-				//found in string
-				*blockFlag = 1;
-		}
-
-		//release the packet
-		free(text);
-
 
 	}
 	//return the queue id
@@ -224,7 +204,6 @@ void *QueueThread(void *threadid) {
 	int fd;
 	int rv;
 	int ql;
-
 
 	printf("open handle to the netfilter_queue - > Thread: %d \n", tid);
 	h = nfq_open();
