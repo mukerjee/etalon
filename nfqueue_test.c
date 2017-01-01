@@ -47,72 +47,6 @@
 
 pthread_t threads[NUM_THREADS];
 
-void printTCP(unsigned char *buffer) {
-
-	unsigned short iphdrlen;
-
-	struct iphdr *iph = (struct iphdr *) (buffer + sizeof(struct ethhdr));
-	iphdrlen = iph->ihl * 4;
-
-	struct tcphdr *tcph = (struct tcphdr *) (buffer + iphdrlen
-			+ sizeof(struct ethhdr));
-
-	int header_size = sizeof(struct ethhdr) + iphdrlen + tcph->doff * 4;
-
-	printf("| Packet Type: TCP \n");
-	printf("|-Source Port      : %u\n", ntohs(tcph->source));
-	printf("|-Destination Port : %u\n", ntohs(tcph->dest));
-	printf("|-Sequence Number    : %u\n", ntohl(tcph->seq));
-	printf("|-Acknowledge Number : %u\n", ntohl(tcph->ack_seq));
-	printf("|-Header Length      : %d DWORDS or %d BYTES\n",
-			(unsigned int) tcph->doff, (unsigned int) tcph->doff * 4);
-	printf("|-CWR Flag : %d\n", (unsigned int) tcph->cwr);
-	printf("|-ECN Flag : %d\n", (unsigned int) tcph->ece);
-	printf("|-Urgent Flag          : %d\n", (unsigned int) tcph->urg);
-	printf("|-Acknowledgement Flag : %d\n", (unsigned int) tcph->ack);
-	printf("|-Push Flag            : %d\n", (unsigned int) tcph->psh);
-	printf("|-Reset Flag           : %d\n", (unsigned int) tcph->rst);
-	printf("|-Synchronise Flag     : %d\n", (unsigned int) tcph->syn);
-	printf("|-Finish Flag          : %d\n", (unsigned int) tcph->fin);
-	printf("|-Window         : %d\n", ntohs(tcph->window));
-	printf("|-Checksum       : %d\n", ntohs(tcph->check));
-	printf("|-Urgent Pointer : %d\n", tcph->urg_ptr);
-}
-
-void printUDP(unsigned char *buffer) {
-	unsigned short iphdrlen;
-
-	struct iphdr *iph = (struct iphdr *) (buffer + sizeof(struct ethhdr));
-	iphdrlen = iph->ihl * 4;
-
-	struct udphdr *udph = (struct udphdr*) (buffer + iphdrlen
-			+ sizeof(struct ethhdr));
-
-	int header_size = sizeof(struct ethhdr) + iphdrlen + sizeof udph;
-
-	printf("| Packet Type: UDP \n");
-	printf("|-Source Port      : %u\n", ntohs(udph->source));
-	printf("|-Destination Port : %u\n", ntohs(udph->dest));
-	printf("|-UDP Length : %u\n", ntohs(udph->len));
-	printf("|-UDP Checksum : %u\n", ntohs(udph->check));
-
-}
-
-char * getText(unsigned char * data, char Size) {
-
-	char * text = malloc(Size);
-	int i = 0;
-
-	for (i = 0; i < Size; i++) {
-		if (data[i] >= 32 && data[i] <= 128)
-			text[i] = (unsigned char) data[i];
-		else
-			text[i] = '.';
-	}
-	return text;
-
-}
-
 u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 
 	//packet id in the queue
@@ -141,7 +75,7 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 		printf("Packet Received: %d \n", ret);
 
 		/* extracting the ipheader from packet */
-		/*struct sockaddr_in source, dest;
+		struct sockaddr_in source, dest;
 
 		struct iphdr *iph = ((struct iphdr *) data);
 
@@ -153,18 +87,10 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 
 		printf("|-Source IP: %s\n", inet_ntoa(source.sin_addr));
 		printf("|-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
-		printf("|-Checking for Protocol: \n");
-
-		if (iph->protocol == 6) {
-			printTCP(data);
-		} else if (iph->protocol == 17) {
-			printUDP(data);
-		}*/
 
 	}
 	//return the queue id
 	return id;
-
 }
 
 int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *nfa,
@@ -183,9 +109,6 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 		return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 	else
 		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
-
-
-
 }
 
 void *QueueThread(void *threadid) {
@@ -193,7 +116,6 @@ void *QueueThread(void *threadid) {
 	//thread id
 	long tid;
 	tid = (long) threadid;
-
 
 	struct nfq_handle *h;
 	struct nfq_q_handle *qh;
@@ -204,7 +126,7 @@ void *QueueThread(void *threadid) {
 	int rv;
 	int ql;
 
-	printf("open handle to the netfilter_queue - > Thread: %d \n", tid);
+	printf("open handle to the netfilter_queue - > Thread: %ld \n", tid);
 	h = nfq_open();
 	if (!h) {
 		fprintf(stderr, "cannot open nfq_open()\n");
@@ -224,7 +146,7 @@ void *QueueThread(void *threadid) {
 	}
 
 	//connet the thread for specific socket
-	printf("binding this socket to queue '%d'\n", tid);
+	printf("binding this socket to queue '%ld'\n", tid);
 	qh = nfq_create_queue(h, tid, &packetHandler, NULL);
 	if (!qh) {
 		fprintf(stderr, "error during nfq_create_queue()\n");
@@ -233,9 +155,11 @@ void *QueueThread(void *threadid) {
 
 	//set queue length before start dropping packages
 	ql = nfq_set_queue_maxlen(qh, 100000);
+	if (ql == -1)
+		perror("nfq_set_queue_maxlen");
 
 	//set the queue for copy mode
-	if (nfq_set_mode(qh, NFQNL_COPY_META, 0xfffff) < 0) {
+	if (nfq_set_mode(qh, NFQNL_COPY_PACKET, sizeof(struct iphdr)) < 0) {
 		fprintf(stderr, "can't set packet_copy mode\n");
 		return NULL;
 	}
@@ -243,16 +167,12 @@ void *QueueThread(void *threadid) {
 	//getting the file descriptor
 	fd = nfq_fd(h);
 
-	while ((rv = recv(fd, buf, sizeof(buf), 0))){// && rv >= 0) {
-		if (rv < 0)
-			continue;
-		printf("pkt received in Thread: %d \n", tid);
+	while ((rv = recv(fd, buf, sizeof(buf), 0)) && rv >= 0) {
+		printf("pkt received in Thread: %ld\n", tid);
 		nfq_handle_packet(h, buf, rv);
 	}
 
-	printf("rv11: %d %d\n",rv, recv(fd, buf,sizeof(buf), 0));
-
-	printf("unbinding from queue Thread: %d  \n", tid);
+	printf("unbinding from queue Thread: %ld  \n", tid);
 	nfq_destroy_queue(qh);
 
 	printf("closing library handle\n");
@@ -260,32 +180,32 @@ void *QueueThread(void *threadid) {
 
 	return NULL;
 
-}
+	}
 
-int main(int argc, char *argv[]) {
+	int main(int argc, char *argv[]) {
 
-	//set process priority
-	setpriority(PRIO_PROCESS, 0, -20);
+		//set process priority
+		setpriority(PRIO_PROCESS, 0, -20);
 
-	int rc;
-	long balancerSocket;
-	for (balancerSocket = 0; balancerSocket < NUM_THREADS; balancerSocket++) {
-		printf("In main: creating thread %ld\n", balancerSocket);
+		int rc;
+		long balancerSocket;
+		for (balancerSocket = 0; balancerSocket < NUM_THREADS; balancerSocket++) {
+			printf("In main: creating thread %ld\n", balancerSocket);
 
-		//send the balancer socket for the queue
-		rc = pthread_create(&threads[balancerSocket], NULL, QueueThread,
-				(void *) balancerSocket);
+			//send the balancer socket for the queue
+			rc = pthread_create(&threads[balancerSocket], NULL, QueueThread,
+					(void *) balancerSocket);
 
-		if (rc) {
-			printf("ERROR; return code from pthread_create() is %d\n", rc);
-			exit(-1);
+			if (rc) {
+				printf("ERROR; return code from pthread_create() is %d\n", rc);
+				exit(-1);
+			}
 		}
-	}
 
-	while (1) {
-		sleep(10);
-	}
+		while (1) {
+			sleep(10);
+		}
 
-	//destroy all threads
-	pthread_exit(NULL);
-}
+		//destroy all threads
+		pthread_exit(NULL);
+	}
