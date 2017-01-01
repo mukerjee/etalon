@@ -180,32 +180,32 @@ void *QueueThread(void *threadid) {
 
 	return NULL;
 
+}
+
+int main(int argc, char *argv[]) {
+
+	//set process priority
+	setpriority(PRIO_PROCESS, 0, -20);
+
+	int rc;
+	long balancerSocket;
+	for (balancerSocket = 0; balancerSocket < NUM_THREADS; balancerSocket++) {
+		printf("In main: creating thread %ld\n", balancerSocket);
+
+		//send the balancer socket for the queue
+		rc = pthread_create(&threads[balancerSocket], NULL, QueueThread,
+				(void *) balancerSocket);
+
+		if (rc) {
+			printf("ERROR; return code from pthread_create() is %d\n", rc);
+			exit(-1);
+		}
 	}
 
-	int main(int argc, char *argv[]) {
-
-		//set process priority
-		setpriority(PRIO_PROCESS, 0, -20);
-
-		int rc;
-		long balancerSocket;
-		for (balancerSocket = 0; balancerSocket < NUM_THREADS; balancerSocket++) {
-			printf("In main: creating thread %ld\n", balancerSocket);
-
-			//send the balancer socket for the queue
-			rc = pthread_create(&threads[balancerSocket], NULL, QueueThread,
-					(void *) balancerSocket);
-
-			if (rc) {
-				printf("ERROR; return code from pthread_create() is %d\n", rc);
-				exit(-1);
-			}
-		}
-
-		while (1) {
-			sleep(10);
-		}
-
-		//destroy all threads
-		pthread_exit(NULL);
+	while (1) {
+		sleep(10);
 	}
+
+	//destroy all threads
+	pthread_exit(NULL);
+}
