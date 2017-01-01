@@ -115,7 +115,6 @@ char * getText(unsigned char * data, char Size) {
 
 u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 
-	printf("analyzePacket\n");
 	//packet id in the queue
 	int id = 0;
 
@@ -142,7 +141,7 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 		printf("Packet Received: %d \n", ret);
 
 		/* extracting the ipheader from packet */
-		struct sockaddr_in source, dest;
+		/*struct sockaddr_in source, dest;
 
 		struct iphdr *iph = ((struct iphdr *) data);
 
@@ -160,7 +159,7 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 			printTCP(data);
 		} else if (iph->protocol == 17) {
 			printUDP(data);
-		}
+		}*/
 
 	}
 	//return the queue id
@@ -236,7 +235,7 @@ void *QueueThread(void *threadid) {
 	ql = nfq_set_queue_maxlen(qh, 100000);
 
 	//set the queue for copy mode
-	if (nfq_set_mode(qh, NFQNL_COPY_PACKET, 0xffff) < 0) {
+	if (nfq_set_mode(qh, NFQNL_COPY_META, 0xfffff) < 0) {
 		fprintf(stderr, "can't set packet_copy mode\n");
 		return NULL;
 	}
@@ -244,10 +243,14 @@ void *QueueThread(void *threadid) {
 	//getting the file descriptor
 	fd = nfq_fd(h);
 
-	while ((rv = recv(fd, buf, sizeof(buf), 0)) && rv >= 0) {
+	while ((rv = recv(fd, buf, sizeof(buf), 0))){// && rv >= 0) {
+		if (rv < 0)
+			continue;
 		printf("pkt received in Thread: %d \n", tid);
 		nfq_handle_packet(h, buf, rv);
 	}
+
+	printf("rv11: %d %d\n",rv, recv(fd, buf,sizeof(buf), 0));
 
 	printf("unbinding from queue Thread: %d  \n", tid);
 	nfq_destroy_queue(qh);
