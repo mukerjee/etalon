@@ -1,3 +1,4 @@
+CC = g++
 CFLAGS = -Wall -O3 -Wno-unused-variable -Wno-unused-result 
 LDFLAGS = -lpthread -lnfnetlink -lnetfilter_queue
 NFQUEUE_TEST = nfqueue_test.o

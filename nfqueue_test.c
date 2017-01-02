@@ -17,6 +17,7 @@
 #include <arpa/inet.h>
 #include <linux/types.h>
 #include <string.h>
+#include <vector>
 
 /* for ethernet header */
 #include<net/ethernet.h>
@@ -97,13 +98,16 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 		void *data) {
 
 	printf("entering callback \n");
+	usleep(100);
 
 	//when to drop
 	int blockFlag = 0;
 
 	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa, &blockFlag);
-
+	//printf("%d\n",id);
+	//nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 	//this is the point where we decide the destiny of the packet
 	if (blockFlag == 0)
 		return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
@@ -132,6 +136,7 @@ void *QueueThread(void *threadid) {
 		fprintf(stderr, "cannot open nfq_open()\n");
 		return NULL;
 	}
+	nfnl_rcvbufsiz(nfq_nfnlh(h), sizeof(buf)*1024);
 
 	//unbinding previous procfs
 	if (nfq_unbind_pf(h, AF_INET) < 0) {
@@ -167,7 +172,9 @@ void *QueueThread(void *threadid) {
 	//getting the file descriptor
 	fd = nfq_fd(h);
 
-	while ((rv = recv(fd, buf, sizeof(buf), 0)) && rv >= 0) {
+	while ((rv = recv(fd, buf, sizeof(buf), 0))) {
+		if (rv < 0)
+			continue;
 		printf("pkt received in Thread: %ld\n", tid);
 		nfq_handle_packet(h, buf, rv);
 	}
