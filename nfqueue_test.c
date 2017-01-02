@@ -193,7 +193,7 @@ int main(int argc, char *argv[]) {
 
 	int rc;
 	long balancerSocket;
-	for (balancerSocket = 0; balancerSocket < NUM_THREADS; balancerSocket++) {
+	for (balancerSocket = 1; balancerSocket <= NUM_THREADS; balancerSocket++) {
 		printf("In main: creating thread %ld\n", balancerSocket);
 
 		//send the balancer socket for the queue
