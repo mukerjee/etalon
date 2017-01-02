@@ -105,9 +105,6 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 
 	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa, &blockFlag);
-	//printf("%d\n",id);
-	//nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
-	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 	//this is the point where we decide the destiny of the packet
 	if (blockFlag == 0)
 		return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
