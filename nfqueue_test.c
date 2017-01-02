@@ -1,15 +1,3 @@
-// * Notes:
-//complex implementation of libnetfilter_queue library,
-//using different threads for each queue, depends the iptables rules
-//for example:
-//#: iptables -A INPUT  -j NFQUEUE --queue-balance 0:3
-//#: iptables -A OUTPUT  -j NFQUEUE --queue-balance 4:8
-//the main function create array of threads, each threads
-//listen to different queue, when packet arrived to the queue
-//a callback function call and start to analyze the packet,
-//if the payload contain specific word or stream it's drop the packet
-//* Proxytype.blogspot.com *
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -44,9 +32,32 @@
 /* for Queue */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
+#include <sstream>
+#include <iostream>
+
 #define NUM_THREADS     2 //15
 
 pthread_t threads[NUM_THREADS];
+FILE *fp;
+
+int getNumQueuedPkt (int queue_id) {
+	char *token;
+	char buffer[1024]; 
+	size_t bytes_read;
+	char id[3];
+	char queue_len[10];
+	rewind(fp);
+	bytes_read = fread (buffer, 1, sizeof (buffer), fp);
+	buffer[bytes_read] = '\0';
+	//printf("%s\n",buffer);
+	char* new_str = strdup(buffer);
+	while ((token = strsep(&new_str, "\n")) != NULL) {
+		sscanf(token,"%s %*s %s", id, queue_len);
+		if (atoi(id) == queue_id) 
+			return atoi(queue_len);
+	}
+	return -1;
+}
 
 u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 
@@ -98,7 +109,8 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 		void *data) {
 
 	printf("entering callback \n");
-	usleep(100);
+	printf("queued: %d\n",getNumQueuedPkt(2));
+	usleep(10000);
 
 	//when to drop
 	int blockFlag = 0;
@@ -107,6 +119,7 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 	u_int32_t id = analyzePacket(nfa, &blockFlag);
 	//this is the point where we decide the destiny of the packet
 	if (blockFlag == 0)
+	//	return nfq_set_verdict(qh, id, NF_REPEAT, 0, NULL);
 		return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 	else
 		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
@@ -191,6 +204,12 @@ int main(int argc, char *argv[]) {
 	//set process priority
 	setpriority(PRIO_PROCESS, 0, -20);
 
+	fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
+	if (fp == NULL) {
+		perror("Failed to open /proc/net/netfilter/nfnetline_queue");
+		return 1;
+	}
+
 	int rc;
 	long balancerSocket;
 	for (balancerSocket = 1; balancerSocket <= NUM_THREADS; balancerSocket++) {
@@ -212,4 +231,5 @@ int main(int argc, char *argv[]) {
 
 	//destroy all threads
 	pthread_exit(NULL);
+	fclose(fp);
 }
