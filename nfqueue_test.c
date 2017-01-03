@@ -109,15 +109,24 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 		void *data) {
 
 	u_int16_t queue_num = ntohs(nfmsg->res_id);
-	printf("entering callback\n");
-	printf("queued: %d\n",getNumQueuedPkt(queue_num));
-	usleep(10000);
+	//printf("entering callback\n");
+	/*if (queue_num == 1 && getNumQueuedPkt(queue_num) > 0) {
+		system ("sudo ./tc.py --path circuit");
+	} else {
+		system ("sudo ./tc.py --path packet");
+	}*/
 
 	//when to drop
 	int blockFlag = 0;
 
 	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa, &blockFlag);
+	if (id%1000 == 0 && queue_num == 1 && getNumQueuedPkt(queue_num) > 0) {
+		system ("sudo ./tc.py --path circuit");
+	} else {
+		//system ("sudo ./tc.py --path packet");
+	}
+
 	//this is the point where we decide the destiny of the packet
 	if (blockFlag == 0)
 	//	return nfq_set_verdict(qh, id, NF_REPEAT, 0, NULL);
@@ -207,7 +216,7 @@ int main(int argc, char *argv[]) {
 
 	fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
 	if (fp == NULL) {
-		perror("Failed to open /proc/net/netfilter/nfnetline_queue");
+		perror("Failed to open /proc/net/netfilter/nfnetlink_queue");
 		return 1;
 	}
 
