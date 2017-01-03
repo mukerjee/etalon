@@ -35,7 +35,7 @@
 #include <sstream>
 #include <iostream>
 
-#define NUM_THREADS     2 //15
+#define NUM_THREADS     30 //15
 
 pthread_t threads[NUM_THREADS];
 FILE *fp;
