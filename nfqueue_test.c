@@ -40,7 +40,7 @@
 pthread_t threads[NUM_THREADS];
 FILE *fp;
 
-int getNumQueuedPkt (int queue_id) {
+int getNumQueuedPkt (u_int16_t queue_id) {
 	char *token;
 	char buffer[1024]; 
 	size_t bytes_read;
@@ -108,8 +108,9 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *nfa,
 		void *data) {
 
-	printf("entering callback \n");
-	printf("queued: %d\n",getNumQueuedPkt(2));
+	u_int16_t queue_num = ntohs(nfmsg->res_id);
+	printf("entering callback\n");
+	printf("queued: %d\n",getNumQueuedPkt(queue_num));
 	usleep(10000);
 
 	//when to drop
