@@ -46,6 +46,7 @@ unsigned int NUM_THREADS = 0;
 #define MAX_HOSTS 64
 
 pthread_t threads[MAX_HOSTS];
+pthread_t sched_thread;
 std::map<int, std::pair<std::string, std::string> > host_pair;
 std::vector<std::string> host_list;
 char PACKET_BW[10] = "10mbit";
@@ -220,17 +221,23 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 	printf("entering callback\n");
 	//when to drop
 	int blockFlag = 0;
+	//usleep(10000);
 
 	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa, &blockFlag);
 	
-	printf("Src: %s\tDest: %s\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str() );
+	printf("Src: %s\tDest: %s %d\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str(),id );
 
 	//this is the point where we decide the destiny of the packet
 	if (blockFlag == 0)
 		return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 	else
 		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+}
+
+void *SchedThread(void *threadid) {
+	while (1) {}
+	return NULL;	
 }
 
 void *QueueThread(void *threadid) {
@@ -248,8 +255,7 @@ void *QueueThread(void *threadid) {
 	int rv;
 	int ql;
 
-	printf("open handle to the netfilter_queue - > Thread: %ld \n", tid);
-	h = nfq_open();
+	printf("open handle to the netfilter_queue - > Thread: %ld \n", tid); h = nfq_open();
 	if (!h) {
 		fprintf(stderr, "cannot open nfq_open()\n");
 		return NULL;
@@ -364,6 +370,16 @@ int main(int argc, char *argv[]) {
 			printf("ERROR; return code from pthread_create() is %d\n", rc);
 			exit(-1);
 		}
+	}
+	printf("In main: creating scheduler thread\n");
+
+	//send the balancer socket for the queue
+	rc = pthread_create(&sched_thread, NULL, SchedThread,
+			(void *) 0);
+
+	if (rc) {
+		printf("ERROR; return code from pthread_create() is %d\n", rc);
+		exit(-1);
 	}
 	/*fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
 	if (fp == NULL) {
