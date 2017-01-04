@@ -58,6 +58,16 @@ std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
 
 FILE *fp;
 
+void printTM() {
+    system("clear");
+    for (unsigned int i=0; i<host_list.size(); i++) {
+        for (unsigned int j=0; j<host_list.size(); j++) {
+            printf("%6u ",traffic_matrix[host_list[i]][host_list[j]]);
+        }
+        printf("\n");
+    }
+}
+
 void setPath (std::string src, std::string dst, int cls) {
 	char cmd[512];
 	sprintf(cmd, "sudo iptables -t mangle -A POSTROUTING -o eth0 -s %s -d %s -j CLASSIFY --set-class 1:%d",
@@ -150,7 +160,7 @@ void initIPT () {
 }
 
 
-int getNumQueuedPkt (u_int16_t queue_id) {
+void getNumQueuedPkt (){//u_int16_t queue_id) {
 	char *token;
 	char buffer[1024]; 
 	size_t bytes_read;
@@ -162,10 +172,13 @@ int getNumQueuedPkt (u_int16_t queue_id) {
 	char* new_str = strdup(buffer);
 	while ((token = strsep(&new_str, "\n")) != NULL) {
 		sscanf(token,"%s %*s %s", id, queue_len);
-		if (atoi(id) == queue_id) 
-			return atoi(queue_len);
+        int num_queue = atoi(id);
+        traffic_matrix[host_pair[num_queue].first][host_pair[num_queue].second] = atoi(queue_len);
+
+		//if (atoi(id) == queue_id) 
+		//	return atoi(queue_len);
 	}
-	return -1;
+	//return -1;
 }
 
 u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
@@ -236,7 +249,11 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 }
 
 void *SchedThread(void *threadid) {
-	while (1) {}
+	while (1) {
+        usleep(10000);
+        getNumQueuedPkt ();
+        printTM();
+    }
 	return NULL;	
 }
 
