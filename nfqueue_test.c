@@ -309,11 +309,6 @@ void *QueueThread(void *threadid) {
 }
 
 void init() {
-	fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
-	if (fp == NULL) {
-		perror("Failed to open /proc/net/netfilter/nfnetlink_queue");
-		exit(1);
-	}
 
 	int read;
 	char *line = NULL;
@@ -332,6 +327,7 @@ void init() {
 	initIPT();
 	//sleep(1);
 	initPath();
+	
 }
 
 void 
@@ -357,7 +353,6 @@ int main(int argc, char *argv[]) {
 	long balancerSocket;
 	NUM_THREADS = NUM_HOSTS*(NUM_HOSTS-1);
 
-
 	for (balancerSocket = 1; balancerSocket <= NUM_THREADS; balancerSocket++) {
 		printf("In main: creating thread %ld\n", balancerSocket);
 
@@ -370,6 +365,11 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 	}
+	/*fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
+	if (fp == NULL) {
+		perror("Failed to open /proc/net/netfilter/nfnetlink_queue");
+		exit(1);
+	}*/
 
 	while (1) {
 		sleep(10);

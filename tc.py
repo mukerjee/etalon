@@ -9,7 +9,7 @@ PACKET_BW = '10mbit'
 CIRCUIT_BW = '100mbit'
 OTHER_BW = '1gbit'
 
-HOSTS = ["172.31.20.110", "172.31.20.108"]
+HOSTS = ["172.31.24.243", "172.31.24.242", "172.31.20.110", "172.31.20.109", "172.31.20.108", "172.31.20.107"]
 
 def setPath(src, dst, cls):
     os.system("sudo iptables -t mangle -A POSTROUTING -o eth0 -s %s -d %s -j CLASSIFY --set-class 1:%d"
