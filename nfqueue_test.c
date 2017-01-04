@@ -189,26 +189,26 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 		id = ntohl(ph->packet_id);
 
 	//get the length and the payload of the packet
-	ret = nfq_get_payload(tb, &data);
-	if (ret >= 0) {
-
-		printf("Packet Received: %d \n", ret);
-
-		/* extracting the ipheader from packet */
-		struct sockaddr_in source, dest;
-
-		struct iphdr *iph = ((struct iphdr *) data);
-
-		memset(&source, 0, sizeof(source));
-		source.sin_addr.s_addr = iph->saddr;
-
-		memset(&dest, 0, sizeof(dest));
-		dest.sin_addr.s_addr = iph->daddr;
-
-		printf("|-Source IP: %s\n", inet_ntoa(source.sin_addr));
-		printf("|-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
-
-	}
+//	ret = nfq_get_payload(tb, &data);
+//	if (ret >= 0) {
+//
+//		printf("Packet Received: %d \n", ret);
+//
+//		/* extracting the ipheader from packet */
+//		struct sockaddr_in source, dest;
+//
+//		struct iphdr *iph = ((struct iphdr *) data);
+//
+//		memset(&source, 0, sizeof(source));
+//		source.sin_addr.s_addr = iph->saddr;
+//
+//		memset(&dest, 0, sizeof(dest));
+//		dest.sin_addr.s_addr = iph->daddr;
+//
+//		printf("|-Source IP: %s\n", inet_ntoa(source.sin_addr));
+//		printf("|-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
+//
+//	}
 	//return the queue id
 	return id;
 }
@@ -223,11 +223,8 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 
 	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa, &blockFlag);
-	if (id%1000 == 0 && queue_num == 1 && getNumQueuedPkt(queue_num) > 0) {
-		//system ("sudo ./tc.py --path circuit");
-	} else {
-		//system ("sudo ./tc.py --path packet");
-	}
+	
+	printf("Src: %s\tDest: %s\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str() );
 
 	//this is the point where we decide the destiny of the packet
 	if (blockFlag == 0)
@@ -286,7 +283,7 @@ void *QueueThread(void *threadid) {
 		perror("nfq_set_queue_maxlen");
 
 	//set the queue for copy mode
-	if (nfq_set_mode(qh, NFQNL_COPY_PACKET, sizeof(struct iphdr)) < 0) {
+	if (nfq_set_mode(qh, NFQNL_COPY_META, 0xfffff) < 0) {
 		fprintf(stderr, "can't set packet_copy mode\n");
 		return NULL;
 	}
