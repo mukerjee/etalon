@@ -41,10 +41,11 @@
 #include <utility>
 #include <string>
 
-#define NUM_HOSTS 	2	
-#define NUM_THREADS     NUM_HOSTS*(NUM_HOSTS-1)
+unsigned int NUM_HOSTS  = 0;		
+unsigned int NUM_THREADS = 0;
+#define MAX_HOSTS 64
 
-pthread_t threads[NUM_THREADS];
+pthread_t threads[MAX_HOSTS];
 std::map<int, std::pair<std::string, std::string> > host_pair;
 std::vector<std::string> host_list;
 char PACKET_BW[10] = "10mbit";
@@ -64,8 +65,8 @@ void setPath (std::string src, std::string dst, int cls) {
 }
 
 void initPath() {
-	for (unsigned int i=0; i<host_list.size(); i++) {
-		for (unsigned int j=0; j<host_list.size(); j++) {
+	for (unsigned int i=0; i<NUM_HOSTS; i++) {
+		for (unsigned int j=0; j<NUM_HOSTS; j++) {
 			if (i == j) {
 				continue;
 			}
@@ -76,8 +77,8 @@ void initPath() {
 }	
 
 void initTM() {
-	for (unsigned int i=0; i<host_list.size(); i++) {
-		for (unsigned int j=0; j<host_list.size(); j++) {
+	for (unsigned int i=0; i<NUM_HOSTS; i++) {
+		for (unsigned int j=0; j<NUM_HOSTS; j++) {
 			traffic_matrix[host_list[i]][host_list[j]] = 0;
 		}
 	}
@@ -95,13 +96,13 @@ void initTC() {
 	sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:201 htb rate %s ceil %s", OTHER_BW, OTHER_BW);
 	system(cmd);
 
-	for (int i=1; i<=100; i++) {
+	for (unsigned int i=1; i<=NUM_HOSTS; i++) {
 		sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
 				i, PACKET_BW, PACKET_BW);
 		system (cmd);
 	}
 
-	for (int i=101; i<=200; i++) {
+	for (unsigned int i=101; i<=100+NUM_HOSTS; i++) {
 		sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
 				i, CIRCUIT_BW, CIRCUIT_BW);
 		system (cmd);
@@ -113,8 +114,8 @@ void initTC() {
 
 void clearIPT() {
 	int queue_num = 1;
-	for (unsigned int i=0; i<host_list.size(); i++) {
-		for (unsigned int j=0; j<host_list.size(); j++) {
+	for (unsigned int i=0; i<NUM_HOSTS; i++) {
+		for (unsigned int j=0; j<NUM_HOSTS; j++) {
 			if (i == j) {
 				continue;
 			}
@@ -130,8 +131,8 @@ void clearIPT() {
 void initIPT () {
 	clearIPT();
 	int queue_num = 1;
-	for (unsigned int i=0; i<host_list.size(); i++) {
-		for (unsigned int j=0; j<host_list.size(); j++) {
+	for (unsigned int i=0; i<NUM_HOSTS; i++) {
+		for (unsigned int j=0; j<NUM_HOSTS; j++) {
 			if (i == j) {
 				continue;
 			}
@@ -327,6 +328,7 @@ void init() {
 		host_list.push_back(std::string(host));
 	} 
 	fclose(f_host);
+	NUM_HOSTS = host_list.size();
 
 	initTC();
 	//sleep(1);
@@ -356,6 +358,7 @@ int main(int argc, char *argv[]) {
 
 	int rc;
 	long balancerSocket;
+	NUM_THREADS = NUM_HOSTS*(NUM_HOSTS-1);
 
 
 	for (balancerSocket = 1; balancerSocket <= NUM_THREADS; balancerSocket++) {
