@@ -1,4 +1,8 @@
-#!/bin/bash -ex
+#!/usr/bin/env python
+
+fn = 'startup_switch.sh'
+
+data = """#!/bin/bash -ex
 # This runs within the EC2 instance to do basic setup
 
 # sudo without password
@@ -68,3 +72,13 @@ echo "cd ~/dc/common; sudo ./tc_setup.py; cd -" >> /home/ec2-user/.bash_profile
 
 reboot
 
+"""
+
+
+def read():
+    return data
+
+
+def dump_file():
+    open("/tmp/" + fn, "w").write(data)
+    return "/tmp/" + fn

@@ -7,19 +7,13 @@ import os
 import time
 import base64
 
+from config import ami, key, sec_group, instance_type, subnet, \
+    elastic_id, group_name, spot, spot_price
+
+import startup_switch as data_file
+
 # create an EC2 instance at a given region
-# usage: launch_switch.py [type]
-
-ami = 'ami-6869aa05'
-key = 'mukerjee-mba rsa'
-sec_group = 'sg-13971669'
-data_file = 'startup_switch.sh'
-instance_type = 't2.micro'
-subnet = 'subnet-54415920'
-elastic_id = 'eipalloc-31a9130e'
-group_name = 'DC'
-
-spot_price = 0.50  # 50 cents
+# usage: launch_switch.py [type] [spot]
 
 
 def launch_switch(it, spot=False):
@@ -28,7 +22,7 @@ def launch_switch(it, spot=False):
             "ImageId": ami,
             "KeyName": key,
             "SecurityGroupIds": [sec_group],
-            "UserData": base64.b64encode(open(data_file).read()),
+            "UserData": base64.b64encode(data_file.read()),
             "InstanceType": it,
             "SubnetId": subnet,
             "Placement": {
@@ -49,7 +43,7 @@ def launch_switch(it, spot=False):
                "--image-id \"" + ami + "\" "
                "--key-name \"" + key + "\" "
                "--security-group-ids \"" + sec_group + "\" "
-               "--user-data \"file://" + data_file + "\" "
+               "--user-data \"file://" + data_file.dump_file() + "\" "
                "--instance-type \"" + it + "\" "
                "--subnet-id \"" + subnet + "\" "
                "--count 1 ")
@@ -69,8 +63,8 @@ def launch_switch(it, spot=False):
         while state != 'running':
             instance_data = json.loads(subprocess.check_output(
                 "aws ec2 describe-instances "
-                "--filters Name=spot-instance-request-id,Values="
-                + spot_id, shell=True))
+                "--filters Name=spot-instance-request-id,Values=" +
+                spot_id, shell=True))
 
             for set in instance_data['Reservations']:
                 for node in set['Instances']:
@@ -119,4 +113,5 @@ def launch_switch(it, spot=False):
     
 if __name__ == '__main__':
     it = sys.argv[1] if len(sys.argv) > 1 else instance_type
-    launch_switch(it)
+    sp = sys.argv[2] if len(sys.argv) > 2 else spot
+    launch_switch(it, sp)

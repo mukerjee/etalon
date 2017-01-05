@@ -1,4 +1,10 @@
-#!/bin/bash -ex
+#!/usr/bin/env python
+
+from config import elastic_ip
+
+fn = 'startup_hosts.sh'
+
+data = """#!/bin/bash -ex
 # This runs within the EC2 instance to do basic setup
 
 # sudo without password
@@ -10,7 +16,7 @@ chown ec2-user:ec2-user -R /home/ec2-user/dc
 
 # add static route through switch
 SUBNET="172.31.16.0/20"
-ELASTIC_IP_DNS="ec2-52-44-13-67.compute-1.amazonaws.com"
+ELASTIC_IP_DNS="%s"
 
 echo "#!/bin/bash
 sudo ip route del" $SUBNET "
@@ -36,3 +42,13 @@ echo "/etc/init.d/add_route" >> /home/ec2-user/.bash_profile
 
 reboot
 
+"""
+
+
+def read():
+    return data % elastic_ip
+
+
+def dump_file():
+    open("/tmp/" + fn, "w").write(data % elastic_ip)
+    return "/tmp/" + fn
