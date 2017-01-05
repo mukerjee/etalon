@@ -6,6 +6,7 @@
 #include <linux/types.h>
 #include <string.h>
 #include <vector>
+#include <queue>
 
 /* for interrupt handler*/
 #include <signal.h>
@@ -48,25 +49,33 @@ unsigned int NUM_THREADS = 0;
 
 pthread_t threads[MAX_HOSTS];
 pthread_t sched_thread;
+struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
+
 std::map<int, std::pair<std::string, std::string> > host_pair;
 std::vector<std::string> host_list;
-char PACKET_BW[10] = "1gbit";
-char CIRCUIT_BW[10] = "100mbit";
-char OTHER_BW[10] = "1gbit";
+const char PACKET_BW[10] = "10mbit";
+const char CIRCUIT_BW[10] = "100mbit";
+const char OTHER_BW[10] = "1gbit";
 
 //Traffic matrix
 std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
+std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix_pkt;
+std::map< int, std::queue<std::pair<char*, int> > > pkt_queue;
 
 FILE *fp;
 
 void printTM() {
+    unsigned int max = 0;
     system("clear");
     for (unsigned int i=0; i<host_list.size(); i++) {
         for (unsigned int j=0; j<host_list.size(); j++) {
+            if (max < traffic_matrix[host_list[i]][host_list[j]])
+                max  = traffic_matrix[host_list[i]][host_list[j]];
             printf("%6u ",traffic_matrix[host_list[i]][host_list[j]]);
         }
         printf("\n");
     }
+    printf("MAX: %u\n", max);
 }
 
 void setPath (std::string src, std::string dst, int cls) {
@@ -92,6 +101,7 @@ void initTM() {
 	for (unsigned int i=0; i<NUM_HOSTS; i++) {
 		for (unsigned int j=0; j<NUM_HOSTS; j++) {
 			traffic_matrix[host_list[i]][host_list[j]] = 0;
+			traffic_matrix_pkt[host_list[i]][host_list[j]] = 0;
 		}
 	}
 }
@@ -161,7 +171,7 @@ void initIPT () {
 }
 
 
-void getNumQueuedPkt (){//u_int16_t queue_id) {
+/*void getNumQueuedPkt (){//u_int16_t queue_id) {
 	char *token;
 	char buffer[102400]; 
 	size_t bytes_read;
@@ -180,7 +190,7 @@ void getNumQueuedPkt (){//u_int16_t queue_id) {
 		//	return atoi(queue_len);
 	}
 	//return -1;
-}
+}*/
 
 u_int32_t analyzePacket(struct nfq_data *tb) {
 
@@ -224,7 +234,9 @@ u_int32_t analyzePacket(struct nfq_data *tb) {
 //		printf("|-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
 //
 //	}
-	//return the queue id
+	//return the q
+    //char* pkt = malloc(rv);
+    //memcpy(pkt, buf, rv);ueue id
 	return id;
 }
 
@@ -232,16 +244,9 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 		void *data) {
 
 	u_int16_t queue_num = ntohs(nfmsg->res_id);
-	//printf("entering callback\n");
-	//when to drop
-	//usleep(10000);
-
+    
 	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa);
-	while (!go){
-		usleep(1);
-		//printf("no send\n");;
-	}	
 	//printf("Src: %s\tDest: %s %d\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str(),id );
 
 	//this is the point where we decide the destiny of the packet
@@ -250,16 +255,27 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 }
 
 void *SchedThread(void *threadid) {
+    std::map< std::string, std::map<std::string, unsigned int> > tmp_TM;
+    std::map< std::string, std::map<std::string, unsigned int> > tmp_TM_pkt;
 	while (1) {
         usleep(3000);
-        getNumQueuedPkt ();
-	//do schedule here
-        printTM();
-	if (go == 0)
-		go = 1;
-	else
-		go = 0;
-	//printf("%d\n",go);
+        //Take a snapshot of TM
+        tmp_TM.insert(traffic_matrix.begin(), traffic_matrix.end());
+        tmp_TM_pkt.insert(traffic_matrix_pkt.begin(), traffic_matrix_pkt.end());
+        //convert map to 2d array
+        //call solstice
+        //set tc
+        //printTM();
+        //transmit
+        //pkt_queue[0].front()
+        /*for (int i=0; i<NUM_HOSTS; i++) {
+            for (int j=0; j<NUM_HOSTS; j++) {
+                if (i==j) continue;
+
+
+                //nfq_handle_packet(h, buf, rv);
+            }
+        }*/
     }
 	return NULL;	
 }
@@ -270,7 +286,6 @@ void *QueueThread(void *threadid) {
 	long tid;
 	tid = (long) threadid;
 
-	struct nfq_handle *h;
 	struct nfq_q_handle *qh;
 	char buf[128000] __attribute__ ((aligned));
 
@@ -279,29 +294,30 @@ void *QueueThread(void *threadid) {
 	int rv;
 	int ql;
 
-	printf("open handle to the netfilter_queue - > Thread: %ld \n", tid); h = nfq_open();
-	if (!h) {
+	printf("open handle to the netfilter_queue - > Thread: %ld \n", tid); 
+    h[tid] = nfq_open();
+	if (!h[tid]) {
 		fprintf(stderr, "cannot open nfq_open()\n");
 		return NULL;
 	}
 	//increase the recv buffer size of nfqueue
-	nfnl_rcvbufsiz(nfq_nfnlh(h), sizeof(buf)*1024);
+	nfnl_rcvbufsiz(nfq_nfnlh(h[tid]), sizeof(buf)*1024);
 
 	//unbinding previous procfs
-	if (nfq_unbind_pf(h, AF_INET) < 0) {
+	if (nfq_unbind_pf(h[tid], AF_INET) < 0) {
 		fprintf(stderr, "error during nfq_unbind_pf()\n");
 		return NULL;
 	}
 
 	//binding the netlink procfs
-	if (nfq_bind_pf(h, AF_INET) < 0) {
+	if (nfq_bind_pf(h[tid], AF_INET) < 0) {
 		fprintf(stderr, "error during nfq_bind_pf()\n");
 		return NULL;
 	}
 
 	//connet the thread for specific socket
 	printf("binding this socket to queue '%ld'\n", tid);
-	qh = nfq_create_queue(h, tid, &packetHandler, NULL);
+	qh = nfq_create_queue(h[tid], tid, &packetHandler, NULL);
 	if (!qh) {
 		fprintf(stderr, "error during nfq_create_queue()\n");
 		return NULL;
@@ -319,7 +335,7 @@ void *QueueThread(void *threadid) {
 	}
 
 	//getting the file descriptor
-	fd = nfq_fd(h);
+	fd = nfq_fd(h[tid]);
 
 	while ((rv = recv(fd, buf, sizeof(buf), 0))) {
 		if (rv < 0)
@@ -328,15 +344,19 @@ void *QueueThread(void *threadid) {
         // accumulate (buf, rv) to some queue
         // accumulat size
 		//printf("pkt received in Thread: %ld %d\n", tid, rv);
-        	//traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88);
-		nfq_handle_packet(h, buf, rv);
+        traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88); //only payload size
+        traffic_matrix_pkt[host_pair[tid].first][host_pair[tid].second] ++; //only payload size
+        char* pkt = (char*)malloc(rv);
+        memcpy(pkt, buf, rv);
+        pkt_queue[tid].push(std::make_pair(pkt, rv));
+        nfq_handle_packet(h[tid], buf, rv);
 	}
 
 	printf("unbinding from queue Thread: %ld  \n", tid);
 	nfq_destroy_queue(qh);
 
 	printf("closing library handle\n");
-	nfq_close(h);
+	nfq_close(h[tid]);
 
 	return NULL;
 
