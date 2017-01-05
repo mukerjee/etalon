@@ -324,6 +324,9 @@ void *QueueThread(void *threadid) {
 	while ((rv = recv(fd, buf, sizeof(buf), 0))) {
 		if (rv < 0)
 			continue;
+        // if (accum == 1) {
+        // accumulate (buf, rv) to some queue
+        // accumulat size
 		//printf("pkt received in Thread: %ld %d\n", tid, rv);
         	//traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88);
 		nfq_handle_packet(h, buf, rv);
