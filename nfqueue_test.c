@@ -41,6 +41,7 @@
 #include <utility>
 #include <string>
 
+int go = 0;
 unsigned int NUM_HOSTS  = 0;		
 unsigned int NUM_THREADS = 0;
 #define MAX_HOSTS 64
@@ -49,7 +50,7 @@ pthread_t threads[MAX_HOSTS];
 pthread_t sched_thread;
 std::map<int, std::pair<std::string, std::string> > host_pair;
 std::vector<std::string> host_list;
-char PACKET_BW[10] = "10mbit";
+char PACKET_BW[10] = "1gbit";
 char CIRCUIT_BW[10] = "100mbit";
 char OTHER_BW[10] = "1gbit";
 
@@ -162,7 +163,7 @@ void initIPT () {
 
 void getNumQueuedPkt (){//u_int16_t queue_id) {
 	char *token;
-	char buffer[1024]; 
+	char buffer[102400]; 
 	size_t bytes_read;
 	char id[3];
 	char queue_len[10];
@@ -181,7 +182,7 @@ void getNumQueuedPkt (){//u_int16_t queue_id) {
 	//return -1;
 }
 
-u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
+u_int32_t analyzePacket(struct nfq_data *tb) {
 
 	//packet id in the queue
 	int id = 0;
@@ -203,7 +204,7 @@ u_int32_t analyzePacket(struct nfq_data *tb, int *blockFlag) {
 		id = ntohl(ph->packet_id);
 
 	//get the length and the payload of the packet
-//	ret = nfq_get_payload(tb, &data);
+	//printf("SIZE: %d\n",nfq_get_payload(tb, &data));
 //	if (ret >= 0) {
 //
 //		printf("Packet Received: %d \n", ret);
@@ -231,28 +232,34 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 		void *data) {
 
 	u_int16_t queue_num = ntohs(nfmsg->res_id);
-	printf("entering callback\n");
+	//printf("entering callback\n");
 	//when to drop
-	int blockFlag = 0;
 	//usleep(10000);
 
 	//analyze the packet and return the packet id in the queue
-	u_int32_t id = analyzePacket(nfa, &blockFlag);
-	
-	printf("Src: %s\tDest: %s %d\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str(),id );
+	u_int32_t id = analyzePacket(nfa);
+	while (!go){
+		usleep(1);
+		//printf("no send\n");;
+	}	
+	//printf("Src: %s\tDest: %s %d\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str(),id );
 
 	//this is the point where we decide the destiny of the packet
-	if (blockFlag == 0)
-		return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
-	else
-		return nfq_set_verdict(qh, id, NF_DROP, 0, NULL);
+	//printf("send\n");
+	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
 void *SchedThread(void *threadid) {
 	while (1) {
-        usleep(10000);
+        usleep(3000);
         getNumQueuedPkt ();
+	//do schedule here
         printTM();
+	if (go == 0)
+		go = 1;
+	else
+		go = 0;
+	//printf("%d\n",go);
     }
 	return NULL;	
 }
@@ -306,7 +313,7 @@ void *QueueThread(void *threadid) {
 		perror("nfq_set_queue_maxlen");
 
 	//set the queue for copy mode
-	if (nfq_set_mode(qh, NFQNL_COPY_META, 0xfffff) < 0) {
+	if (nfq_set_mode(qh, NFQNL_COPY_PACKET, 0xfffff) < 0) {
 		fprintf(stderr, "can't set packet_copy mode\n");
 		return NULL;
 	}
@@ -317,7 +324,8 @@ void *QueueThread(void *threadid) {
 	while ((rv = recv(fd, buf, sizeof(buf), 0))) {
 		if (rv < 0)
 			continue;
-		printf("pkt received in Thread: %ld\n", tid);
+		//printf("pkt received in Thread: %ld %d\n", tid, rv);
+        	//traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88);
 		nfq_handle_packet(h, buf, rv);
 	}
 
@@ -346,9 +354,7 @@ void init() {
 	NUM_HOSTS = host_list.size();
 
 	initTC();
-	//sleep(1);
 	initIPT();
-	//sleep(1);
 	initPath();
 	
 }
@@ -388,6 +394,7 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 	}
+	sleep(2);
 	printf("In main: creating scheduler thread\n");
 
 	//send the balancer socket for the queue
@@ -398,11 +405,12 @@ int main(int argc, char *argv[]) {
 		printf("ERROR; return code from pthread_create() is %d\n", rc);
 		exit(-1);
 	}
-	/*fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
+
+	fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
 	if (fp == NULL) {
 		perror("Failed to open /proc/net/netfilter/nfnetlink_queue");
 		exit(1);
-	}*/
+	}
 
 	while (1) {
 		sleep(10);
