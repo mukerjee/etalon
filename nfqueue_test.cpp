@@ -43,6 +43,11 @@
 #include <string>
 #include <algorithm>
 
+struct pkt_queue {
+    int queue_id;
+    std::queue<std::pair<char*, int> > pkt_queue;
+};
+
 int stop = 0;
 unsigned int max_demand = 0;
 unsigned int NUM_HOSTS  = 0;		
@@ -221,30 +226,6 @@ u_int32_t analyzePacket(struct nfq_data *tb) {
 	if (ph)
 		id = ntohl(ph->packet_id);
 
-	//get the length and the payload of the packet
-	//printf("SIZE: %d\n",nfq_get_payload(tb, &data));
-//	if (ret >= 0) {
-//
-//		printf("Packet Received: %d \n", ret);
-//
-//		/* extracting the ipheader from packet */
-//		struct sockaddr_in source, dest;
-//
-//		struct iphdr *iph = ((struct iphdr *) data);
-//
-//		memset(&source, 0, sizeof(source));
-//		source.sin_addr.s_addr = iph->saddr;
-//
-//		memset(&dest, 0, sizeof(dest));
-//		dest.sin_addr.s_addr = iph->daddr;
-//
-//		printf("|-Source IP: %s\n", inet_ntoa(source.sin_addr));
-//		printf("|-Destination IP: %s\n", inet_ntoa(dest.sin_addr));
-//
-//	}
-	//return the q
-    //char* pkt = malloc(rv);
-    //memcpy(pkt, buf, rv);ueue id
 	return id;
 }
 
@@ -253,12 +234,7 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 
 	u_int16_t queue_num = ntohs(nfmsg->res_id);
     
-	//analyze the packet and return the packet id in the queue
 	u_int32_t id = analyzePacket(nfa);
-	//printf("Src: %s\tDest: %s %d\n",host_pair[queue_num].first.c_str(), host_pair[queue_num].second.c_str(),id );
-
-	//this is the point where we decide the destiny of the packet
-	//printf("send\n");
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
