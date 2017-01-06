@@ -3,11 +3,11 @@
 ami = 'ami-6869aa05'
 key = 'daehyeok-workstation rsa'
 sec_group = 'sg-13971669'
-instance_type = 't2.micro'
+instance_type = 'c4.8xlarge'
 subnet = 'subnet-54415920'
-elastic_id = 'eipalloc-31a9130e'
-elastic_ip = 'ec2-54-164-9-196.compute-1.amazonaws.com'
-host_count = 3
+elastic_id = 'eipalloc-bf0cd381'
+elastic_ip = 'ec2-34-196-30-45.compute-1.amazonaws.com'
+host_count = 2
 group_name = 'DC'
 
 spot = True
