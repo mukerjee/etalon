@@ -41,8 +41,10 @@
 #include <map>
 #include <utility>
 #include <string>
+#include <algorithm>
 
-int go = 0;
+int stop = 0;
+unsigned int max_demand = 0;
 unsigned int NUM_HOSTS  = 0;		
 unsigned int NUM_THREADS = 0;
 #define MAX_HOSTS 64
@@ -52,6 +54,7 @@ pthread_t sched_thread;
 struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 
 std::map<int, std::pair<std::string, std::string> > host_pair;
+int host_to_queueid[MAX_HOSTS][MAX_HOSTS];
 std::vector<std::string> host_list;
 const char PACKET_BW[10] = "10mbit";
 const char CIRCUIT_BW[10] = "100mbit";
@@ -69,13 +72,13 @@ void printTM() {
     system("clear");
     for (unsigned int i=0; i<host_list.size(); i++) {
         for (unsigned int j=0; j<host_list.size(); j++) {
-            if (max < traffic_matrix[host_list[i]][host_list[j]])
-                max  = traffic_matrix[host_list[i]][host_list[j]];
-            printf("%6u ",traffic_matrix[host_list[i]][host_list[j]]);
+            if (max_demand < traffic_matrix_pkt[host_list[i]][host_list[j]])
+                max_demand  = traffic_matrix_pkt[host_list[i]][host_list[j]];
+            printf("%6u ",traffic_matrix_pkt[host_list[i]][host_list[j]]);
         }
         printf("\n");
     }
-    printf("MAX: %u\n", max);
+    printf("MAX: %u\n", max_demand);
 }
 
 void setPath (std::string src, std::string dst, int cls) {
@@ -98,12 +101,16 @@ void initPath() {
 }	
 
 void initTM() {
+    int qnum = 1;
 	for (unsigned int i=0; i<NUM_HOSTS; i++) {
 		for (unsigned int j=0; j<NUM_HOSTS; j++) {
 			traffic_matrix[host_list[i]][host_list[j]] = 0;
 			traffic_matrix_pkt[host_list[i]][host_list[j]] = 0;
+            std::queue< std::pair<char*, int> >  empty2;
+            std::swap(pkt_queue[qnum++], empty2);
 		}
 	}
+    
 }
 
 void clearTC() {
@@ -160,6 +167,7 @@ void initIPT () {
 			}
 			char cmd[512];
 			sprintf(cmd, "sudo iptables -I FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
+            host_to_queueid[i][j] = queue_num;
 			system(cmd);
 
 			host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
@@ -254,28 +262,43 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
+void *transmitThread(void *queue) {
+    return NULL;
+}
+
 void *SchedThread(void *threadid) {
     std::map< std::string, std::map<std::string, unsigned int> > tmp_TM;
     std::map< std::string, std::map<std::string, unsigned int> > tmp_TM_pkt;
+    std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
+
 	while (1) {
         usleep(3000);
+        stop = 1;
         //Take a snapshot of TM
-        tmp_TM.insert(traffic_matrix.begin(), traffic_matrix.end());
-        tmp_TM_pkt.insert(traffic_matrix_pkt.begin(), traffic_matrix_pkt.end());
+        for (int i=0; i<NUM_HOSTS; i++) {
+            for (int j=0; j<NUM_HOSTS; j++) {
+                int queue_id = host_to_queueid[i][j];
+                tmp_TM[host_list[i]][host_list[j]] = traffic_matrix[host_list[i]][host_list[j]];
+                tmp_pkt_queue[queue_id] = pkt_queue[queue_id];
+            }
+        }
+        initTM();
+        //printTM();
+        stop = 0;
         //convert map to 2d array
         //call solstice
         //set tc
-        //printTM();
         //transmit
-        //pkt_queue[0].front()
-        /*for (int i=0; i<NUM_HOSTS; i++) {
+        for (int i=0; i<NUM_HOSTS; i++) {
             for (int j=0; j<NUM_HOSTS; j++) {
                 if (i==j) continue;
-
-
-                //nfq_handle_packet(h, buf, rv);
+                int queue_id = host_to_queueid[i][j];
+                while(!tmp_pkt_queue[queue_id].empty()) {
+                    nfq_handle_packet(h[queue_id], tmp_pkt_queue[queue_id].front().first, tmp_pkt_queue[queue_id].front().second);
+                    tmp_pkt_queue[queue_id].pop();
+                }
             }
-        }*/
+        }
     }
 	return NULL;	
 }
@@ -340,16 +363,13 @@ void *QueueThread(void *threadid) {
 	while ((rv = recv(fd, buf, sizeof(buf), 0))) {
 		if (rv < 0)
 			continue;
-        // if (accum == 1) {
-        // accumulate (buf, rv) to some queue
-        // accumulat size
+        while (stop == 1) {}
 		//printf("pkt received in Thread: %ld %d\n", tid, rv);
         traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88); //only payload size
         traffic_matrix_pkt[host_pair[tid].first][host_pair[tid].second] ++; //only payload size
         char* pkt = (char*)malloc(rv);
         memcpy(pkt, buf, rv);
         pkt_queue[tid].push(std::make_pair(pkt, rv));
-        nfq_handle_packet(h[tid], buf, rv);
 	}
 
 	printf("unbinding from queue Thread: %ld  \n", tid);
@@ -376,6 +396,7 @@ void init() {
 	fclose(f_host);
 	NUM_HOSTS = host_list.size();
 
+    initTM();
 	initTC();
 	initIPT();
 	initPath();
@@ -417,10 +438,9 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 	}
-	sleep(2);
+    sleep(1);
 	printf("In main: creating scheduler thread\n");
 
-	//send the balancer socket for the queue
 	rc = pthread_create(&sched_thread, NULL, SchedThread,
 			(void *) 0);
 
@@ -429,11 +449,11 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
+	/*fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
 	if (fp == NULL) {
 		perror("Failed to open /proc/net/netfilter/nfnetlink_queue");
 		exit(1);
-	}
+	}*/
 
 	while (1) {
 		sleep(10);
