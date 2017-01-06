@@ -252,6 +252,7 @@ void *xmitThread(void *_queue) {
 void *SchedThread(void *threadid) {
     std::map< std::string, std::map<std::string, unsigned int> > tmp_TM;
     std::map< std::string, std::map<std::string, unsigned int> > tmp_TM_pkt;
+    //std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
     struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
 	while (1) {
@@ -277,14 +278,18 @@ void *SchedThread(void *threadid) {
         int rc;
         for (int i=1; i<=NUM_THREADS; i++) {
             if (tmp_pkt_queue[i]._queue.size() == 0) continue;
-            rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
+            while(!tmp_pkt_queue[i]._queue.empty()) {
+                nfq_handle_packet(h[tmp_pkt_queue[i]._id], tmp_pkt_queue[i]._queue.front().first, tmp_pkt_queue[i]._queue.front().second);
+                tmp_pkt_queue[i]._queue.pop();
+            }
+            /*rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
                     &tmp_pkt_queue[i]);
 
             if (rc) {
                 printf("ERROR; return code from pthread_create() is %d\n", rc);
                 exit(-1);
 
-            }
+            }*/
         }
     }
 	return NULL;	
@@ -345,9 +350,7 @@ void *QueueThread(void *threadid) {
 	}
 
 	//getting the file descriptor
-	fd = nfq_fd(h[tid]);
-
-	while ((rv = recv(fd, buf, sizeof(buf), 0))) {
+	fd = nfq_fd(h[tid]); while ((rv = recv(fd, buf, sizeof(buf), 0))) {
 		if (rv < 0)
 			continue;
         while (stop == 1) {}
@@ -435,12 +438,6 @@ int main(int argc, char *argv[]) {
 		printf("ERROR; return code from pthread_create() is %d\n", rc);
 		exit(-1);
 	}
-
-	/*fp = fopen("/proc/net/netfilter/nfnetlink_queue","r");
-	if (fp == NULL) {
-		perror("Failed to open /proc/net/netfilter/nfnetlink_queue");
-		exit(1);
-	}*/
 
 	while (1) {
 		sleep(10);
