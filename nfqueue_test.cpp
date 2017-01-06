@@ -43,9 +43,9 @@
 #include <string>
 #include <algorithm>
 
-struct pkt_queue {
-    int queue_id;
-    std::queue<std::pair<char*, int> > pkt_queue;
+struct _pkt_queue {
+    int _id;
+    std::queue<std::pair<char*, int> > _queue;
 };
 
 int stop = 0;
@@ -54,7 +54,8 @@ unsigned int NUM_HOSTS  = 0;
 unsigned int NUM_THREADS = 0;
 #define MAX_HOSTS 64
 
-pthread_t threads[MAX_HOSTS];
+pthread_t threads[MAX_HOSTS*MAX_HOSTS];
+pthread_t xmit_thread[MAX_HOSTS*MAX_HOSTS];
 pthread_t sched_thread;
 struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 
@@ -238,14 +239,20 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
-void *transmitThread(void *queue) {
+void *xmitThread(void *_queue) {
+    struct _pkt_queue *pkt_queue = (struct _pkt_queue*)_queue;
+    int queue_id = pkt_queue->_id;
+    while(!pkt_queue->_queue.empty()) {
+        nfq_handle_packet(h[queue_id], pkt_queue->_queue.front().first, pkt_queue->_queue.front().second);
+        pkt_queue->_queue.pop();
+    }
     return NULL;
 }
 
 void *SchedThread(void *threadid) {
     std::map< std::string, std::map<std::string, unsigned int> > tmp_TM;
     std::map< std::string, std::map<std::string, unsigned int> > tmp_TM_pkt;
-    std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
+    struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
 	while (1) {
         usleep(3000);
@@ -253,9 +260,11 @@ void *SchedThread(void *threadid) {
         //Take a snapshot of TM
         for (int i=0; i<NUM_HOSTS; i++) {
             for (int j=0; j<NUM_HOSTS; j++) {
+                if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
                 tmp_TM[host_list[i]][host_list[j]] = traffic_matrix[host_list[i]][host_list[j]];
-                tmp_pkt_queue[queue_id] = pkt_queue[queue_id];
+                tmp_pkt_queue[queue_id]._id = queue_id;
+                tmp_pkt_queue[queue_id]._queue = pkt_queue[queue_id];
             }
         }
         initTM();
@@ -265,14 +274,16 @@ void *SchedThread(void *threadid) {
         //call solstice
         //set tc
         //transmit
-        for (int i=0; i<NUM_HOSTS; i++) {
-            for (int j=0; j<NUM_HOSTS; j++) {
-                if (i==j) continue;
-                int queue_id = host_to_queueid[i][j];
-                while(!tmp_pkt_queue[queue_id].empty()) {
-                    nfq_handle_packet(h[queue_id], tmp_pkt_queue[queue_id].front().first, tmp_pkt_queue[queue_id].front().second);
-                    tmp_pkt_queue[queue_id].pop();
-                }
+        int rc;
+        for (int i=1; i<=NUM_THREADS; i++) {
+            if (tmp_pkt_queue[i]._queue.size() == 0) continue;
+            rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
+                    &tmp_pkt_queue[i]);
+
+            if (rc) {
+                printf("ERROR; return code from pthread_create() is %d\n", rc);
+                exit(-1);
+
             }
         }
     }
