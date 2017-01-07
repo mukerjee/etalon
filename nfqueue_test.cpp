@@ -88,134 +88,134 @@ void printTM() {
 }
 
 void setPath (std::string src, std::string dst, int cls) {
-	char cmd[512];
-	sprintf(cmd, "sudo iptables -t mangle -A POSTROUTING -o eth0 -s %s -d %s -j CLASSIFY --set-class 1:%d",
-			src.c_str(), dst.c_str(), cls+1);
-	system(cmd);
+    char cmd[512];
+    sprintf(cmd, "sudo iptables -t mangle -A POSTROUTING -o eth0 -s %s -d %s -j CLASSIFY --set-class 1:%d",
+            src.c_str(), dst.c_str(), cls+1);
+    system(cmd);
 }
 
 void initPath() {
-	for (unsigned int i=0; i<NUM_HOSTS; i++) {
-		for (unsigned int j=0; j<NUM_HOSTS; j++) {
-			if (i == j) {
-				continue;
-			}
-			// using packet path by default
-			setPath (host_list[i], host_list[j], j);
-		}
-	}
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
+            if (i == j) {
+                continue;
+            }
+            // using packet path by default
+            setPath (host_list[i], host_list[j], j);
+        }
+    }
 }	
 
 void initTM() {
     int qnum = 1;
-	for (unsigned int i=0; i<NUM_HOSTS; i++) {
-		for (unsigned int j=0; j<NUM_HOSTS; j++) {
-			traffic_matrix[host_list[i]][host_list[j]] = 0;
-			traffic_matrix_pkt[host_list[i]][host_list[j]] = 0;
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
+            traffic_matrix[host_list[i]][host_list[j]] = 0;
+            traffic_matrix_pkt[host_list[i]][host_list[j]] = 0;
             std::queue< std::pair<char*, int> >  empty2;
             std::swap(pkt_queue[qnum++], empty2);
-		}
-	}
-    
+        }
+    }
+
 }
 
 void clearTC() {
-	system ("sudo tc qdisc del dev eth0 root");
+    system ("sudo tc qdisc del dev eth0 root");
 }
 
 void initTC() {
-	clearTC();
+    clearTC();
 
-	char cmd[512];
-	system("tc qdisc add dev eth0 root handle 1: htb default 201");
-	sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:201 htb rate %s ceil %s", OTHER_BW, OTHER_BW);
-	system(cmd);
+    char cmd[512];
+    system("tc qdisc add dev eth0 root handle 1: htb default 201");
+    sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:201 htb rate %s ceil %s", OTHER_BW, OTHER_BW);
+    system(cmd);
 
-	for (unsigned int i=1; i<=NUM_HOSTS; i++) {
-		sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
-				i, PACKET_BW, PACKET_BW);
-		system (cmd);
-	}
+    for (unsigned int i=1; i<=NUM_HOSTS; i++) {
+        sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
+                i, PACKET_BW, PACKET_BW);
+        system (cmd);
+    }
 
-	for (unsigned int i=101; i<=100+NUM_HOSTS; i++) {
-		sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
-				i, CIRCUIT_BW, CIRCUIT_BW);
-		system (cmd);
-	}
-	printf("============TC initialized===========\n");
-	system("tc qdisc show");
-	system("tc class show dev eth0");
+    for (unsigned int i=101; i<=100+NUM_HOSTS; i++) {
+        sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
+                i, CIRCUIT_BW, CIRCUIT_BW);
+        system (cmd);
+    }
+    printf("============TC initialized===========\n");
+    system("tc qdisc show");
+    system("tc class show dev eth0");
 }
 
 void clearIPT() {
-	int queue_num = 1;
-	for (unsigned int i=0; i<NUM_HOSTS; i++) {
-		for (unsigned int j=0; j<NUM_HOSTS; j++) {
-			if (i == j) {
-				continue;
-			}
-			char cmd[512];
-			sprintf(cmd, "sudo iptables -D FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
-			system(cmd);
-			host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
+    int queue_num = 1;
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
+            if (i == j) {
+                continue;
+            }
+            char cmd[512];
+            sprintf(cmd, "sudo iptables -D FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
+            system(cmd);
+            host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
 
-		}
-	}		
+        }
+    }		
 }
 
 void initIPT () {
-	clearIPT();
-	int queue_num = 1;
-	for (unsigned int i=0; i<NUM_HOSTS; i++) {
-		for (unsigned int j=0; j<NUM_HOSTS; j++) {
-			if (i == j) {
-				continue;
-			}
-			char cmd[512];
-			sprintf(cmd, "sudo iptables -I FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
+    clearIPT();
+    int queue_num = 1;
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
+            if (i == j) {
+                continue;
+            }
+            char cmd[512];
+            sprintf(cmd, "sudo iptables -I FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
             host_to_queueid[i][j] = queue_num;
-			system(cmd);
+            system(cmd);
 
-			host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
+            host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
 
-		}
-	}		
-	printf("=============== NFQUEUE initialized ================\n");
-	system("sudo iptables -nvL");
+        }
+    }		
+    printf("=============== NFQUEUE initialized ================\n");
+    system("sudo iptables -nvL");
 }
 
 
 u_int32_t analyzePacket(struct nfq_data *tb) {
 
-	//packet id in the queue
-	int id = 0;
+    //packet id in the queue
+    int id = 0;
 
-	//the queue header
-	struct nfqnl_msg_packet_hdr *ph;
+    //the queue header
+    struct nfqnl_msg_packet_hdr *ph;
 
-	//the packet
-	unsigned char *data;
+    //the packet
+    unsigned char *data;
 
-	//packet size
-	int ret;
+    //packet size
+    int ret;
 
-	//extracting the queue header
-	ph = nfq_get_msg_packet_hdr(tb);
+    //extracting the queue header
+    ph = nfq_get_msg_packet_hdr(tb);
 
-	//getting the id of the packet in the queue
-	if (ph)
-		id = ntohl(ph->packet_id);
+    //getting the id of the packet in the queue
+    if (ph)
+        id = ntohl(ph->packet_id);
 
-	return id;
+    return id;
 }
 
 int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_data *nfa,
-		void *data) {
+        void *data) {
 
-	u_int16_t queue_num = ntohs(nfmsg->res_id);
-    
-	u_int32_t id = analyzePacket(nfa);
-	return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
+    u_int16_t queue_num = ntohs(nfmsg->res_id);
+
+    u_int32_t id = analyzePacket(nfa);
+    return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
 void *xmitThread(void *_queue) {
@@ -234,7 +234,7 @@ void *SchedThread(void *threadid) {
     //std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
     struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
-	while (1) {
+    while (1) {
         usleep(3000);
         stop = 1;
         //Take a snapshot of TM
@@ -262,164 +262,165 @@ void *SchedThread(void *threadid) {
                 tmp_pkt_queue[i]._queue.pop();
             }
             /*rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
-                    &tmp_pkt_queue[i]);
+              &tmp_pkt_queue[i]);
 
-            if (rc) {
-                printf("ERROR; return code from pthread_create() is %d\n", rc);
-                exit(-1);
+              if (rc) {
+              printf("ERROR; return code from pthread_create() is %d\n", rc);
+              exit(-1);
 
-            }*/
+              }*/
         }
     }
-	return NULL;	
+    return NULL;	
 }
 
 void *QueueThread(void *threadid) {
 
-	//thread id
-	long tid;
-	tid = (long) threadid;
+    //thread id
+    long tid;
+    tid = (long) threadid;
 
-	struct nfq_q_handle *qh;
-	char buf[128000] __attribute__ ((aligned));
+    struct nfq_q_handle *qh;
+    char buf[128000] __attribute__ ((aligned));
 
-	//pointers and descriptors
-	int fd;
-	int rv;
-	int ql;
+    //pointers and descriptors
+    int fd;
+    int rv;
+    int ql;
 
-	printf("open handle to the netfilter_queue - > Thread: %ld \n", tid); 
+    printf("open handle to the netfilter_queue - > Thread: %ld \n", tid); 
     h[tid] = nfq_open();
-	if (!h[tid]) {
-		fprintf(stderr, "cannot open nfq_open()\n");
-		return NULL;
-	}
-	//increase the recv buffer size of nfqueue
-	nfnl_rcvbufsiz(nfq_nfnlh(h[tid]), sizeof(buf)*1024);
+    if (!h[tid]) {
+        fprintf(stderr, "cannot open nfq_open()\n");
+        return NULL;
+    }
+    //increase the recv buffer size of nfqueue
+    nfnl_rcvbufsiz(nfq_nfnlh(h[tid]), sizeof(buf)*1024);
 
-	//unbinding previous procfs
-	if (nfq_unbind_pf(h[tid], AF_INET) < 0) {
-		fprintf(stderr, "error during nfq_unbind_pf()\n");
-		return NULL;
-	}
+    //unbinding previous procfs
+    if (nfq_unbind_pf(h[tid], AF_INET) < 0) {
+        fprintf(stderr, "error during nfq_unbind_pf()\n");
+        return NULL;
+    }
 
-	//binding the netlink procfs
-	if (nfq_bind_pf(h[tid], AF_INET) < 0) {
-		fprintf(stderr, "error during nfq_bind_pf()\n");
-		return NULL;
-	}
+    //binding the netlink procfs
+    if (nfq_bind_pf(h[tid], AF_INET) < 0) {
+        fprintf(stderr, "error during nfq_bind_pf()\n");
+        return NULL;
+    }
 
-	//connet the thread for specific socket
-	printf("binding this socket to queue '%ld'\n", tid);
-	qh = nfq_create_queue(h[tid], tid, &packetHandler, NULL);
-	if (!qh) {
-		fprintf(stderr, "error during nfq_create_queue()\n");
-		return NULL;
-	}
+    //connet the thread for specific socket
+    printf("binding this socket to queue '%ld'\n", tid);
+    qh = nfq_create_queue(h[tid], tid, &packetHandler, NULL);
+    if (!qh) {
+        fprintf(stderr, "error during nfq_create_queue()\n");
+        return NULL;
+    }
 
-	//set queue length before start dropping packages
-	ql = nfq_set_queue_maxlen(qh, 100000);
-	if (ql == -1)
-		perror("nfq_set_queue_maxlen");
+    //set queue length before start dropping packages
+    ql = nfq_set_queue_maxlen(qh, 100000);
+    if (ql == -1)
+        perror("nfq_set_queue_maxlen");
 
-	//set the queue for copy mode
-	if (nfq_set_mode(qh, NFQNL_COPY_PACKET, 0xfffff) < 0) {
-		fprintf(stderr, "can't set packet_copy mode\n");
-		return NULL;
-	}
+    //set the queue for copy mode
+    if (nfq_set_mode(qh, NFQNL_COPY_PACKET, 0xfffff) < 0) {
+        fprintf(stderr, "can't set packet_copy mode\n");
+        return NULL;
+    }
 
-	//getting the file descriptor
-	fd = nfq_fd(h[tid]); while ((rv = recv(fd, buf, sizeof(buf), 0))) {
-		if (rv < 0)
-			continue;
+    //getting the file descriptor
+    fd = nfq_fd(h[tid]); 
+    while ((rv = recv(fd, buf, sizeof(buf), 0))) {
+        if (rv < 0)
+            continue;
         while (stop == 1) {}
-		//printf("pkt received in Thread: %ld %d\n", tid, rv);
+        //printf("pkt received in Thread: %ld %d\n", tid, rv);
         traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88); //only payload size
         traffic_matrix_pkt[host_pair[tid].first][host_pair[tid].second] ++; //only payload size
         char* pkt = (char*)malloc(rv);
         memcpy(pkt, buf, rv);
         pkt_queue[tid].push(std::make_pair(pkt, rv));
-	}
+    }
 
-	printf("unbinding from queue Thread: %ld  \n", tid);
-	nfq_destroy_queue(qh);
+    printf("unbinding from queue Thread: %ld  \n", tid);
+    nfq_destroy_queue(qh);
 
-	printf("closing library handle\n");
-	nfq_close(h[tid]);
+    printf("closing library handle\n");
+    nfq_close(h[tid]);
 
-	return NULL;
+    return NULL;
 
 }
 
 void init() {
 
-	int read;
-	char *line = NULL;
-	size_t len = 0; 
-	FILE *f_host = fopen("./hosts.txt","r");
-	while ((read=getline(&line, &len, f_host))!=-1) {
-		char host[20];
-		sscanf(line,"%s", host);
-		host_list.push_back(std::string(host));
-	} 
-	fclose(f_host);
-	NUM_HOSTS = host_list.size();
+    int read;
+    char *line = NULL;
+    size_t len = 0; 
+    FILE *f_host = fopen("./hosts.txt","r");
+    while ((read=getline(&line, &len, f_host))!=-1) {
+        char host[20];
+        sscanf(line,"%s", host);
+        host_list.push_back(std::string(host));
+    } 
+    fclose(f_host);
+    NUM_HOSTS = host_list.size();
 
     initTM();
-	initTC();
-	initIPT();
-	initPath();
-	
+    initTC();
+    initIPT();
+    initPath();
+
 }
 
 void 
 intHandler(int signum) {
-	//destroy all threads
-	//pthread_exit(NULL);
-	clearIPT();
-	clearTC();
-	fclose(fp);
-	exit(0);
+    //destroy all threads
+    //pthread_exit(NULL);
+    clearIPT();
+    clearTC();
+    fclose(fp);
+    exit(0);
 }
 
 
 int main(int argc, char *argv[]) {
 
-	signal(SIGINT, intHandler);
-	//signal(SIGTERM, intHandler);
-	//set process priority
-	setpriority(PRIO_PROCESS, 0, -20);
-	init();
+    signal(SIGINT, intHandler);
+    //signal(SIGTERM, intHandler);
+    //set process priority
+    setpriority(PRIO_PROCESS, 0, -20);
+    init();
 
-	int rc;
-	long balancerSocket;
-	NUM_THREADS = NUM_HOSTS*(NUM_HOSTS-1);
+    int rc;
+    long balancerSocket;
+    NUM_THREADS = NUM_HOSTS*(NUM_HOSTS-1);
 
-	for (balancerSocket = 1; balancerSocket <= NUM_THREADS; balancerSocket++) {
-		printf("In main: creating thread %ld\n", balancerSocket);
+    for (balancerSocket = 1; balancerSocket <= NUM_THREADS; balancerSocket++) {
+        printf("In main: creating thread %ld\n", balancerSocket);
 
-		//send the balancer socket for the queue
-		rc = pthread_create(&threads[balancerSocket], NULL, QueueThread,
-				(void *) balancerSocket);
+        //send the balancer socket for the queue
+        rc = pthread_create(&threads[balancerSocket], NULL, QueueThread,
+                (void *) balancerSocket);
 
-		if (rc) {
-			printf("ERROR; return code from pthread_create() is %d\n", rc);
-			exit(-1);
-		}
-	}
+        if (rc) {
+            printf("ERROR; return code from pthread_create() is %d\n", rc);
+            exit(-1);
+        }
+    }
     sleep(1);
-	printf("In main: creating scheduler thread\n");
+    printf("In main: creating scheduler thread\n");
 
-	rc = pthread_create(&sched_thread, NULL, SchedThread,
-			(void *) 0);
+    rc = pthread_create(&sched_thread, NULL, SchedThread,
+            (void *) 0);
 
-	if (rc) {
-		printf("ERROR; return code from pthread_create() is %d\n", rc);
-		exit(-1);
-	}
+    if (rc) {
+        printf("ERROR; return code from pthread_create() is %d\n", rc);
+        exit(-1);
+    }
 
-	while (1) {
-		sleep(10);
-	}
+    while (1) {
+        sleep(10);
+    }
 
 }
