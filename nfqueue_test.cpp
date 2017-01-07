@@ -185,27 +185,6 @@ void initIPT () {
 }
 
 
-/*void getNumQueuedPkt (){//u_int16_t queue_id) {
-	char *token;
-	char buffer[102400]; 
-	size_t bytes_read;
-	char id[3];
-	char queue_len[10];
-	rewind(fp);
-	bytes_read = fread (buffer, 1, sizeof (buffer), fp);
-	buffer[bytes_read] = '\0';
-	char* new_str = strdup(buffer);
-	while ((token = strsep(&new_str, "\n")) != NULL) {
-		sscanf(token,"%s %*s %s", id, queue_len);
-        int num_queue = atoi(id);
-        traffic_matrix[host_pair[num_queue].first][host_pair[num_queue].second] = atoi(queue_len);
-
-		//if (atoi(id) == queue_id) 
-		//	return atoi(queue_len);
-	}
-	//return -1;
-}*/
-
 u_int32_t analyzePacket(struct nfq_data *tb) {
 
 	//packet id in the queue
