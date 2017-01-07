@@ -59,7 +59,7 @@ pthread_t xmit_thread[MAX_HOSTS*MAX_HOSTS];
 pthread_t sched_thread;
 struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 
-std::map<int, std::pair<std::string, std::string> > host_pair;
+std::map<int, std::pair<int, int> > host_pair;
 int host_to_queueid[MAX_HOSTS][MAX_HOSTS];
 std::vector<std::string> host_list;
 const char PACKET_BW[10] = "10mbit";
@@ -67,8 +67,10 @@ const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
 //Traffic matrix
-std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
-std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix_pkt;
+//std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
+//std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
+unsigned int traffic_matrix[MAX_HOSTS][MAX_HOSTS];
+unsigned int traffic_matrix_pkt[MAX_HOSTS][MAX_HOSTS];
 std::map< int, std::queue<std::pair<char*, int> > > pkt_queue;
 
 FILE *fp;
@@ -78,9 +80,9 @@ void printTM() {
     system("clear");
     for (unsigned int i=0; i<host_list.size(); i++) {
         for (unsigned int j=0; j<host_list.size(); j++) {
-            if (max_demand < traffic_matrix_pkt[host_list[i]][host_list[j]])
-                max_demand  = traffic_matrix_pkt[host_list[i]][host_list[j]];
-            printf("%6u ",traffic_matrix_pkt[host_list[i]][host_list[j]]);
+            if (max_demand < traffic_matrix_pkt[i][j])
+                max_demand  = traffic_matrix_pkt[i][j];
+            printf("%6u ",traffic_matrix_pkt[i][j]);
         }
         printf("\n");
     }
@@ -110,8 +112,8 @@ void initTM() {
     int qnum = 1;
     for (unsigned int i=0; i<NUM_HOSTS; i++) {
         for (unsigned int j=0; j<NUM_HOSTS; j++) {
-            traffic_matrix[host_list[i]][host_list[j]] = 0;
-            traffic_matrix_pkt[host_list[i]][host_list[j]] = 0;
+            traffic_matrix[i][j] = 0;
+            traffic_matrix_pkt[i][j] = 0;
             std::queue< std::pair<char*, int> >  empty2;
             std::swap(pkt_queue[qnum++], empty2);
         }
@@ -157,8 +159,6 @@ void clearIPT() {
             char cmd[512];
             sprintf(cmd, "sudo iptables -D FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
             system(cmd);
-            host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
-
         }
     }		
 }
@@ -176,7 +176,7 @@ void initIPT () {
             host_to_queueid[i][j] = queue_num;
             system(cmd);
 
-            host_pair[queue_num++] = std::make_pair(host_list[i], host_list[j]);
+            host_pair[queue_num++] = std::make_pair(i, j);
 
         }
     }		
@@ -229,8 +229,8 @@ void *xmitThread(void *_queue) {
 }
 
 void *SchedThread(void *threadid) {
-    std::map< std::string, std::map<std::string, unsigned int> > tmp_TM;
-    std::map< std::string, std::map<std::string, unsigned int> > tmp_TM_pkt;
+    unsigned int tmp_TM[NUM_HOSTS][NUM_HOSTS];
+    unsigned int tmp_TM_pkt[NUM_HOSTS][NUM_HOSTS];
     //std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
     struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
@@ -242,7 +242,7 @@ void *SchedThread(void *threadid) {
             for (int j=0; j<NUM_HOSTS; j++) {
                 if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
-                tmp_TM[host_list[i]][host_list[j]] = traffic_matrix[host_list[i]][host_list[j]];
+                tmp_TM[i][j] = traffic_matrix[i][j];
                 tmp_pkt_queue[queue_id]._id = queue_id;
                 tmp_pkt_queue[queue_id]._queue = pkt_queue[queue_id];
             }
