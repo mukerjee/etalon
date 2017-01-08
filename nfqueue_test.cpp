@@ -66,6 +66,9 @@ const char PACKET_BW[10] = "10mbit";
 const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
+int packet_cls[MAX_HOSTS];
+int circuit_cls[MAX_HOSTS][MAX_HOSTS];
+
 //Traffic matrix
 uint64_t traffic_matrix[MAX_HOSTS][MAX_HOSTS];
 uint64_t traffic_matrix_pkt[MAX_HOSTS][MAX_HOSTS];
@@ -127,20 +130,28 @@ void initTC() {
     clearTC();
 
     char cmd[512];
-    system("tc qdisc add dev eth0 root handle 1: htb default 201");
-    sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:201 htb rate %s ceil %s", OTHER_BW, OTHER_BW);
+    system("tc qdisc add dev eth0 root handle 1: htb default 65");
+    sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:65 htb rate %s ceil %s", OTHER_BW, OTHER_BW);
     system(cmd);
 
-    for (unsigned int i=1; i<=NUM_HOSTS; i++) {
+
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
         sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
                 i, PACKET_BW, PACKET_BW);
+        packet_cls[i] = i;
         system (cmd);
     }
 
-    for (unsigned int i=101; i<=100+NUM_HOSTS; i++) {
-        sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
-                i, CIRCUIT_BW, CIRCUIT_BW);
-        system (cmd);
+    int cls = 100;
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; i<NUM_HOSTS; i++) {
+            if (i==j)
+                continue;
+            sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
+                    cls, CIRCUIT_BW, CIRCUIT_BW);
+            system (cmd);
+            circuit_cls[i][j] = cls++;
+        }
     }
     printf("============TC initialized===========\n");
     system("tc qdisc show");
