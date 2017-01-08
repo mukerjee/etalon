@@ -67,10 +67,8 @@ const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
 //Traffic matrix
-//std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
-//std::map< std::string, std::map<std::string, unsigned int> > traffic_matrix;
-unsigned int traffic_matrix[MAX_HOSTS][MAX_HOSTS];
-unsigned int traffic_matrix_pkt[MAX_HOSTS][MAX_HOSTS];
+uint64_t traffic_matrix[MAX_HOSTS][MAX_HOSTS];
+uint64_t traffic_matrix_pkt[MAX_HOSTS][MAX_HOSTS];
 std::map< int, std::queue<std::pair<char*, int> > > pkt_queue;
 
 FILE *fp;
@@ -82,7 +80,7 @@ void printTM() {
         for (unsigned int j=0; j<host_list.size(); j++) {
             if (max_demand < traffic_matrix_pkt[i][j])
                 max_demand  = traffic_matrix_pkt[i][j];
-            printf("%6u ",traffic_matrix_pkt[i][j]);
+            printf("%6lu ",traffic_matrix_pkt[i][j]);
         }
         printf("\n");
     }
@@ -157,7 +155,7 @@ void clearIPT() {
                 continue;
             }
             char cmd[512];
-            sprintf(cmd, "sudo iptables -D FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num);
+            sprintf(cmd, "sudo iptables -D FORWARD -s %s -d %s -j NFQUEUE --queue-num %d", host_list[i].c_str(), host_list[j].c_str(), queue_num++);
             system(cmd);
         }
     }		
@@ -229,8 +227,8 @@ void *xmitThread(void *_queue) {
 }
 
 void *SchedThread(void *threadid) {
-    unsigned int tmp_TM[NUM_HOSTS][NUM_HOSTS];
-    unsigned int tmp_TM_pkt[NUM_HOSTS][NUM_HOSTS];
+    uint64_t tmp_TM[NUM_HOSTS][NUM_HOSTS];
+    uint64_t tmp_TM_pkt[NUM_HOSTS][NUM_HOSTS];
     //std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
     struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
@@ -250,8 +248,8 @@ void *SchedThread(void *threadid) {
         initTM();
         //printTM();
         stop = 0;
-        //convert map to 2d array
         //call solstice
+        // 
         //set tc
         //transmit
         int rc;
