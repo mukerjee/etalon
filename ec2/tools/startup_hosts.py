@@ -32,6 +32,7 @@ yum -y upgrade
 yum -y install emacs
 yum -y --enablerepo=epel install iperf iperf3
 yum -y install tcpdump
+yum -y install htop
 yum -y groupinstall "Development Tools"
 
 # fix netfilter
