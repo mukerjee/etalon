@@ -366,7 +366,7 @@ void init() {
     int read;
     char *line = NULL;
     size_t len = 0; 
-    FILE *f_host = fopen("./hosts.txt","r");
+    FILE *f_host = fopen("~/hosts.txt","r");
     while ((read=getline(&line, &len, f_host))!=-1) {
         char host[20];
         sscanf(line,"%s", host);
