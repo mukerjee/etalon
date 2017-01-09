@@ -57,17 +57,23 @@ unsigned int NUM_THREADS = 0;
 pthread_t threads[MAX_HOSTS*MAX_HOSTS];
 pthread_t xmit_thread[MAX_HOSTS*MAX_HOSTS];
 pthread_t sched_thread;
+
+/*mutexes*/
+pthread_mutex_t queue_mutex[MAX_HOSTS*MAX_HOSTS];
+
 struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 
 std::map<int, std::pair<int, int> > host_pair;
 int host_to_queueid[MAX_HOSTS][MAX_HOSTS];
 std::vector<std::string> host_list;
-const char PACKET_BW[10] = "10mbit";
+const char PACKET_BW[10] = "100mbit";
 const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
 int packet_cls[MAX_HOSTS];
 int circuit_cls[MAX_HOSTS][MAX_HOSTS];
+
+std::vector<uint32_t> ids [MAX_HOSTS];
 
 //Traffic matrix
 uint64_t traffic_matrix[MAX_HOSTS][MAX_HOSTS];
@@ -93,7 +99,8 @@ void printTM() {
 void setPath (std::string src, std::string dst, int cls) {
     char cmd[512];
     sprintf(cmd, "sudo iptables -t mangle -A POSTROUTING -o eth0 -s %s -d %s -j CLASSIFY --set-class 1:%d",
-            src.c_str(), dst.c_str(), cls+1);
+            src.c_str(), dst.c_str(), cls);
+
     system(cmd);
 }
 
@@ -104,7 +111,7 @@ void initPath() {
                 continue;
             }
             // using packet path by default
-            setPath (host_list[i], host_list[j], j);
+            setPath (host_list[i], host_list[j], j+1);
         }
     }
 }	
@@ -134,15 +141,14 @@ void initTC() {
     sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:65 htb rate %s ceil %s", OTHER_BW, OTHER_BW);
     system(cmd);
 
-
-    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+    for (unsigned int i=1; i<=NUM_HOSTS; i++) {
         sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
                 i, PACKET_BW, PACKET_BW);
         packet_cls[i] = i;
         system (cmd);
     }
 
-    int cls = 100;
+    int cls = 101;
     for (unsigned int i=0; i<NUM_HOSTS; i++) {
         for (unsigned int j=0; i<NUM_HOSTS; i++) {
             if (i==j)
@@ -223,7 +229,9 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
 
     u_int16_t queue_num = ntohs(nfmsg->res_id);
 
+
     u_int32_t id = analyzePacket(nfa);
+    ids[queue_num].push_back(id);
     return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
@@ -245,20 +253,27 @@ void *SchedThread(void *threadid) {
 
     while (1) {
         usleep(3000);
-        stop = 1;
+        //sched lock
         //Take a snapshot of TM
         for (int i=0; i<NUM_HOSTS; i++) {
             for (int j=0; j<NUM_HOSTS; j++) {
                 if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
+                pthread_mutex_lock(&queue_mutex[queue_id]);
                 tmp_TM[i][j] = traffic_matrix[i][j];
                 tmp_pkt_queue[queue_id]._id = queue_id;
                 tmp_pkt_queue[queue_id]._queue = pkt_queue[queue_id];
             }
         }
         initTM();
+        for (int i=0; i<NUM_HOSTS; i++) {
+            for (int j=0; j<NUM_HOSTS; j++) {
+                if (i==j) continue;
+                int queue_id = host_to_queueid[i][j];
+                pthread_mutex_unlock(&queue_mutex[queue_id]);
+            }
+        }
         //printTM();
-        stop = 0;
         //call solstice
         // 
         //set tc
@@ -280,6 +295,7 @@ void *SchedThread(void *threadid) {
               }*/
         }
     }
+    pthread_exit(NULL);
     return NULL;	
 }
 
@@ -342,13 +358,19 @@ void *QueueThread(void *threadid) {
     while ((rv = recv(fd, buf, sizeof(buf), 0))) {
         if (rv < 0)
             continue;
-        while (stop == 1) {}
-        //printf("pkt received in Thread: %ld %d\n", tid, rv);
-        traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88); //only payload size
-        traffic_matrix_pkt[host_pair[tid].first][host_pair[tid].second] ++; //only payload size
+        //nfq_handle_packet(h[tid], buf, rv);
+        //continue;
+        // wait (sem_sched)
+        //while (stop == 1) {usleep(1);}
         char* pkt = (char*)malloc(rv);
         memcpy(pkt, buf, rv);
+        //printf("pkt received in Thread: %ld %d\n", tid, rv);
+        pthread_mutex_lock(&queue_mutex[tid]);
+        traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88); //only payload size
+        traffic_matrix_pkt[host_pair[tid].first][host_pair[tid].second] ++; //only payload size
         pkt_queue[tid].push(std::make_pair(pkt, rv));
+        pthread_mutex_unlock(&queue_mutex[tid]);
+        //printf("tt %d: %d\n",tid, pkt_queue[tid].size());
     }
 
     printf("unbinding from queue Thread: %ld  \n", tid);
@@ -356,6 +378,7 @@ void *QueueThread(void *threadid) {
 
     printf("closing library handle\n");
     nfq_close(h[tid]);
+    pthread_exit(NULL);
 
     return NULL;
 
@@ -366,7 +389,7 @@ void init() {
     int read;
     char *line = NULL;
     size_t len = 0; 
-    FILE *f_host = fopen("~/hosts.txt","r");
+    FILE *f_host = fopen("/home/ec2-user/hosts.txt","r");
     while ((read=getline(&line, &len, f_host))!=-1) {
         char host[20];
         sscanf(line,"%s", host);
@@ -386,6 +409,14 @@ void
 intHandler(int signum) {
     //destroy all threads
     //pthread_exit(NULL);
+    //
+    uint32_t prev = 0;
+    for (int i=0; i<ids[3].size(); i++){
+        if (ids[3][i] != prev+1)
+            printf("something is wrong %d %d\n",ids[3][i], prev);
+        prev = ids[3][i];
+    }
+
     clearIPT();
     clearTC();
     fclose(fp);
