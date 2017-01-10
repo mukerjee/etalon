@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <assert.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <linux/types.h>
@@ -45,6 +46,11 @@
 
 #include "sols.h"
 
+#ifdef __APPLE__
+#define FMT_U64 "%llu"
+#else
+#define FMT_U64 "%lu"
+#endif
 struct _pkt_queue {
     int _id;
     std::queue<std::pair<char*, int> > _queue;
@@ -297,6 +303,27 @@ void *SchedThread(void *threadid) {
         //call solstice
         sols_schedule(&s);
         sols_check(&s);
+        
+        //printf("[demand]\n");
+        //mprint(&s.demand);
+
+        for (int i = 0; i < s.nday; i++) {
+            sols_day_t *day;
+            int src, dest;
+
+            day = &s.sched[i];
+            fprintf(fp, "day #%d: T=" FMT_U64 "\n", i, day->len);
+            for (int dest = 0; dest < NUM_HOSTS; dest++) {
+                src = day->input_ports[dest];
+                assert(src >= 0);
+                if (day->is_dummy[dest]) {
+                    fprintf(fp, "  (%d -> %d)\n", src, dest);
+                } else {
+                    fprintf(fp, "  %d -> %d\n", src, dest);
+                }
+            }
+        }
+        fprintf(fp, "\n\n");
         
         //printTM();
         //call solstice
