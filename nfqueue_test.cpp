@@ -81,17 +81,33 @@ std::vector<uint32_t> ids [MAX_HOSTS];
 uint64_t traffic_matrix[MAX_HOSTS][MAX_HOSTS];
 uint64_t traffic_matrix_pkt[MAX_HOSTS][MAX_HOSTS];
 std::map< int, std::queue<std::pair<char*, int> > > pkt_queue;
-uint64_t tmp_TM[MAX_HOSTS][MAX_HOSTS];
+
+//solstice
+sols_t s;
 
 FILE *fp;
 
-void printTM() {
+static void
+mset(sols_mat_t * m, uint64_t *d) {
+    int i, j;
+    uint64_t v;
+
+    for (i = 0; i < m->nhost; i++) {
+        for (j = 0; j < m->nhost; j++) {
+            v = d[i*m->nhost + j];
+            if (v == 0) continue;
+            sols_mat_set(m, i, j, v);
+        }
+    }
+}
+
+void printTM(uint64_t *tmp_TM) {
     unsigned int max = 0;
     for (unsigned int i=0; i<NUM_HOSTS; i++) {
         for (unsigned int j=0; j<NUM_HOSTS; j++) {
-            if (max_demand < tmp_TM[i][j])
-                max_demand  = tmp_TM[i][j];
-            fprintf(fp, "%6lu ",tmp_TM[i][j]);
+            if (max_demand < tmp_TM[i * NUM_HOSTS + j])
+                max_demand  = tmp_TM[i * NUM_HOSTS + j];
+            fprintf(fp, "%6lu ",tmp_TM[i * NUM_HOSTS + j]);
         }
         fprintf(fp,"\n");
     }
@@ -248,19 +264,20 @@ void *xmitThread(void *_queue) {
 }
 
 void *SchedThread(void *threadid) {
+    uint64_t tmp_TM [NUM_HOSTS*NUM_HOSTS];
     uint64_t tmp_TM_pkt[NUM_HOSTS][NUM_HOSTS];
     struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
     while (1) {
         usleep(3000);
-        //sched lock
+        
         //Take a snapshot of TM
         for (int i=0; i<NUM_HOSTS; i++) {
             for (int j=0; j<NUM_HOSTS; j++) {
                 if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
                 pthread_mutex_lock(&queue_mutex[queue_id]);
-                tmp_TM[i][j] = traffic_matrix[i][j];
+                tmp_TM[i * NUM_HOSTS + j] = traffic_matrix[i][j];
                 tmp_pkt_queue[queue_id]._id = queue_id;
                 tmp_pkt_queue[queue_id]._queue = pkt_queue[queue_id];
             }
@@ -273,7 +290,15 @@ void *SchedThread(void *threadid) {
                 pthread_mutex_unlock(&queue_mutex[queue_id]);
             }
         }
-        printTM();
+
+        // setup the demand
+        mset (&s.future, tmp_TM);
+
+        //call solstice
+        sols_schedule(&s);
+        sols_check(&s);
+        
+        //printTM();
         //call solstice
         // 
         //set tc
@@ -396,6 +421,13 @@ void init() {
     
     NUM_HOSTS = host_list.size();
 
+    sols_init(&s, NUM_HOSTS); /* init for 8 hosts */
+    s.night_len = 20; //20usec
+    s.week_len = 3000; //3msec
+    s.avg_day_len = 40;
+    s.min_day_len = 40;
+    s.day_len_align = 1;
+    
     initTM();
     initTC();
     initIPT();
