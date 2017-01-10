@@ -74,12 +74,16 @@ struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 std::map<int, std::pair<int, int> > host_pair;
 int host_to_queueid[MAX_HOSTS][MAX_HOSTS];
 std::vector<std::string> host_list;
-const char PACKET_BW[10] = "100mbit";
+const char PACKET_BW[10] = "10mbit";
 const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
+double circuit_bw = 1.250; //1.25 Bytes/usec == 100 mbps
+double packet_bw = 0.1250; //0.125 Bytes/usec == 10 mbps
+
 int packet_cls[MAX_HOSTS];
 int circuit_cls[MAX_HOSTS][MAX_HOSTS];
+int current_cls[MAX_HOSTS][MAX_HOSTS];
 
 std::vector<uint32_t> ids [MAX_HOSTS];
 
@@ -135,7 +139,8 @@ void initPath() {
                 continue;
             }
             // using packet path by default
-            setPath (host_list[i], host_list[j], circuit_cls[i][j]);
+            setPath (host_list[i], host_list[j], j+1);
+            //setPath (host_list[i], host_list[j], circuit_cls[i][j]);
         }
     }
 }	
@@ -174,7 +179,7 @@ void initTC() {
 
     int cls = 101;
     for (unsigned int i=0; i<NUM_HOSTS; i++) {
-        for (unsigned int j=0; i<NUM_HOSTS; j++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
             if (i==j)
                 continue;
             sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
@@ -304,13 +309,42 @@ void *SchedThread(void *threadid) {
         sols_schedule(&s);
         sols_check(&s);
         
-        //printf("[demand]\n");
-        //mprint(&s.demand);
-
-        //printTM();
+        //printTM(tmp_TM);
         //call solstice
         // 
         //set tc
+        if (1) {
+            double circuit_bytes[NUM_HOSTS][NUM_HOSTS];
+            for (int i = 0; i < s.nday; i++) {
+                sols_day_t *day;
+                int src, dest;
+
+                day = &s.sched[i];
+                //fprintf(fp, "day #%d: T=" FMT_U64 "\n", i, day->len);
+                double bytes = day->len * circuit_bw;
+
+                for (int dest = 0; dest < NUM_HOSTS; dest++) {
+                    src = day->input_ports[dest];
+                    assert(src >= 0);
+                    if (day->is_dummy[dest]) {
+                        //fprintf(fp, "  (%d -> %d)\n", src, dest);
+                        continue;
+                    } else {
+                        circuit_bytes[src][dest] += bytes;
+                        printf("%f\n",circuit_bytes[src][dest]);
+                        //fprintf(fp, "  %d -> %d\n", src, dest);
+                    }
+                }
+            }
+
+            for (int i=0; i<NUM_HOSTS; i++) {
+                for (int j=0; j<NUM_HOSTS; j++) {
+                    //if (circuit_bytes[i][j] > 1)
+                        //fprintf(fp,"%d -> %d: %f\n",i,j,circuit_bytes[i][j]);
+                }
+            }
+            //fprintf(fp, "\n\n");
+        } 
         //transmit
         int rc;
         int found = 0;
@@ -330,25 +364,6 @@ void *SchedThread(void *threadid) {
 
               }*/
         }
-        if (0) {
-        for (int i = 0; i < s.nday; i++) {
-            sols_day_t *day;
-            int src, dest;
-
-            day = &s.sched[i];
-            fprintf(fp, "day #%d: T=" FMT_U64 "\n", i, day->len);
-            for (int dest = 0; dest < NUM_HOSTS; dest++) {
-                src = day->input_ports[dest];
-                assert(src >= 0);
-                if (day->is_dummy[dest]) {
-                    fprintf(fp, "  (%d -> %d)\n", src, dest);
-                } else {
-                    fprintf(fp, "  %d -> %d\n", src, dest);
-                }
-            }
-        }
-        fprintf(fp, "\n\n");
-        } 
     }
     pthread_exit(NULL);
     return NULL;	
