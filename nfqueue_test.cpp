@@ -307,6 +307,30 @@ void *SchedThread(void *threadid) {
         //printf("[demand]\n");
         //mprint(&s.demand);
 
+        //printTM();
+        //call solstice
+        // 
+        //set tc
+        //transmit
+        int rc;
+        int found = 0;
+        for (int i=1; i<=NUM_THREADS; i++) {
+            if (tmp_pkt_queue[i]._queue.size() == 0) continue;
+            found = 1;
+            while(!tmp_pkt_queue[i]._queue.empty()) {
+                nfq_handle_packet(h[tmp_pkt_queue[i]._id], tmp_pkt_queue[i]._queue.front().first, tmp_pkt_queue[i]._queue.front().second);
+                tmp_pkt_queue[i]._queue.pop();
+            }
+            /*rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
+              &tmp_pkt_queue[i]);
+
+              if (rc) {
+              printf("ERROR; return code from pthread_create() is %d\n", rc);
+              exit(-1);
+
+              }*/
+        }
+        if (found) {
         for (int i = 0; i < s.nday; i++) {
             sols_day_t *day;
             int src, dest;
@@ -324,28 +348,7 @@ void *SchedThread(void *threadid) {
             }
         }
         fprintf(fp, "\n\n");
-        
-        //printTM();
-        //call solstice
-        // 
-        //set tc
-        //transmit
-        int rc;
-        for (int i=1; i<=NUM_THREADS; i++) {
-            if (tmp_pkt_queue[i]._queue.size() == 0) continue;
-            while(!tmp_pkt_queue[i]._queue.empty()) {
-                nfq_handle_packet(h[tmp_pkt_queue[i]._id], tmp_pkt_queue[i]._queue.front().first, tmp_pkt_queue[i]._queue.front().second);
-                tmp_pkt_queue[i]._queue.pop();
-            }
-            /*rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
-              &tmp_pkt_queue[i]);
-
-              if (rc) {
-              printf("ERROR; return code from pthread_create() is %d\n", rc);
-              exit(-1);
-
-              }*/
-        }
+        } 
     }
     pthread_exit(NULL);
     return NULL;	
