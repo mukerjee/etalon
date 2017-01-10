@@ -74,7 +74,7 @@ struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 std::map<int, std::pair<int, int> > host_pair;
 int host_to_queueid[MAX_HOSTS][MAX_HOSTS];
 std::vector<std::string> host_list;
-const char PACKET_BW[10] = "10mbit";
+const char PACKET_BW[10] = "100mbit";
 const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
@@ -135,7 +135,7 @@ void initPath() {
                 continue;
             }
             // using packet path by default
-            setPath (host_list[i], host_list[j], j+1);
+            setPath (host_list[i], host_list[j], circuit_cls[i][j]);
         }
     }
 }	
@@ -174,7 +174,7 @@ void initTC() {
 
     int cls = 101;
     for (unsigned int i=0; i<NUM_HOSTS; i++) {
-        for (unsigned int j=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; i<NUM_HOSTS; j++) {
             if (i==j)
                 continue;
             sprintf(cmd, "tc class add dev eth0 parent 1: classid 1:%d htb rate %s ceil %s",
@@ -330,7 +330,7 @@ void *SchedThread(void *threadid) {
 
               }*/
         }
-        if (found) {
+        if (0) {
         for (int i = 0; i < s.nday; i++) {
             sols_day_t *day;
             int src, dest;
