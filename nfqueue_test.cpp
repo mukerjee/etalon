@@ -66,7 +66,7 @@ struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
 std::map<int, std::pair<int, int> > host_pair;
 int host_to_queueid[MAX_HOSTS][MAX_HOSTS];
 std::vector<std::string> host_list;
-const char PACKET_BW[10] = "100mbit";
+const char PACKET_BW[10] = "10mbit";
 const char CIRCUIT_BW[10] = "100mbit";
 const char OTHER_BW[10] = "1gbit";
 
@@ -79,21 +79,21 @@ std::vector<uint32_t> ids [MAX_HOSTS];
 uint64_t traffic_matrix[MAX_HOSTS][MAX_HOSTS];
 uint64_t traffic_matrix_pkt[MAX_HOSTS][MAX_HOSTS];
 std::map< int, std::queue<std::pair<char*, int> > > pkt_queue;
+uint64_t tmp_TM[MAX_HOSTS][MAX_HOSTS];
 
 FILE *fp;
 
 void printTM() {
     unsigned int max = 0;
-    system("clear");
-    for (unsigned int i=0; i<host_list.size(); i++) {
-        for (unsigned int j=0; j<host_list.size(); j++) {
-            if (max_demand < traffic_matrix_pkt[i][j])
-                max_demand  = traffic_matrix_pkt[i][j];
-            printf("%6lu ",traffic_matrix_pkt[i][j]);
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
+            if (max_demand < tmp_TM[i][j])
+                max_demand  = tmp_TM[i][j];
+            fprintf(fp, "%6lu ",tmp_TM[i][j]);
         }
-        printf("\n");
+        fprintf(fp,"\n");
     }
-    printf("MAX: %u\n", max_demand);
+    fprintf(fp, "MAX: %u\n\n\n", max_demand);
 }
 
 void setPath (std::string src, std::string dst, int cls) {
@@ -246,9 +246,7 @@ void *xmitThread(void *_queue) {
 }
 
 void *SchedThread(void *threadid) {
-    uint64_t tmp_TM[NUM_HOSTS][NUM_HOSTS];
     uint64_t tmp_TM_pkt[NUM_HOSTS][NUM_HOSTS];
-    //std::map< int, std::queue<std::pair<char*, int> > > tmp_pkt_queue;
     struct _pkt_queue tmp_pkt_queue[MAX_HOSTS*MAX_HOSTS];
 
     while (1) {
@@ -273,7 +271,7 @@ void *SchedThread(void *threadid) {
                 pthread_mutex_unlock(&queue_mutex[queue_id]);
             }
         }
-        //printTM();
+        printTM();
         //call solstice
         // 
         //set tc
@@ -358,19 +356,14 @@ void *QueueThread(void *threadid) {
     while ((rv = recv(fd, buf, sizeof(buf), 0))) {
         if (rv < 0)
             continue;
-        //nfq_handle_packet(h[tid], buf, rv);
-        //continue;
-        // wait (sem_sched)
-        //while (stop == 1) {usleep(1);}
         char* pkt = (char*)malloc(rv);
         memcpy(pkt, buf, rv);
-        //printf("pkt received in Thread: %ld %d\n", tid, rv);
+
         pthread_mutex_lock(&queue_mutex[tid]);
         traffic_matrix[host_pair[tid].first][host_pair[tid].second] += (rv-88); //only payload size
         traffic_matrix_pkt[host_pair[tid].first][host_pair[tid].second] ++; //only payload size
         pkt_queue[tid].push(std::make_pair(pkt, rv));
         pthread_mutex_unlock(&queue_mutex[tid]);
-        //printf("tt %d: %d\n",tid, pkt_queue[tid].size());
     }
 
     printf("unbinding from queue Thread: %ld  \n", tid);
@@ -396,6 +389,9 @@ void init() {
         host_list.push_back(std::string(host));
     } 
     fclose(f_host);
+
+    FILE *fp = fopen("./TM.dat","a");
+    
     NUM_HOSTS = host_list.size();
 
     initTM();
