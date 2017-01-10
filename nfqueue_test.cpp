@@ -43,6 +43,8 @@
 #include <string>
 #include <algorithm>
 
+#include "sols.h"
+
 struct _pkt_queue {
     int _id;
     std::queue<std::pair<char*, int> > _queue;
@@ -390,7 +392,7 @@ void init() {
     } 
     fclose(f_host);
 
-    FILE *fp = fopen("./TM.dat","a");
+    fp = fopen("./TM.dat","a");
     
     NUM_HOSTS = host_list.size();
 
