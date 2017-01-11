@@ -62,6 +62,7 @@ yum -y install emacs
 yum -y --enablerepo=epel install iperf iperf3
 yum -y install tcpdump
 yum -y install iptables-devel
+yum -y install libnetfilter_queue-devel
 yum -y groupinstall "Development Tools"
 
 # fix netfilter
