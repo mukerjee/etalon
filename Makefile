@@ -1,12 +1,17 @@
-CC = g++
-CFLAGS = -Wall -O3 -Wno-unused-variable -Wno-unused-result 
+CXX=g++
+CXXFLAGS = -Wall -O3 -std=gnu++11 -Wno-unused-variable -Wno-unused-result
 LDFLAGS = -lrt -lpthread -lnfnetlink -lnetfilter_queue
-NFQUEUE_TEST = nfqueue_test.o sols.o
-all: nfqueue_test
-nfqueue_test: $(NFQUEUE_TEST)
-	$(CC) $(CFLAGS)  $(NFQUEUE_TEST) -o nfqueue_test $(LDFLAGS)
+BIN=prog
+
+SRC=$(wildcard *.cpp)
+OBJ=$(SRC:%.cpp=%.o)
+
+all: $(OBJ)
+	$(CXX) $(LDFLAGS) -o $(BIN) $^
+
+%.o: %.c
+	$(CXX) $@ -c $<
 
 clean:
 	rm -f *.o
-	rm -f nfqueue_test
-
+	rm $(BIN)
