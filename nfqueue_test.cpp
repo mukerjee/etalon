@@ -46,6 +46,8 @@
 
 #include "sols.h"
 
+#include "ctpl.h"
+
 #ifdef __APPLE__
 #define FMT_U64 "%llu"
 #else
@@ -53,6 +55,7 @@
 #endif
 struct _pkt_queue {
     int _id;
+    int round;
     double circuit_bytes;
     std::queue<std::pair<char*, int> > _queue;
 };
@@ -62,7 +65,7 @@ unsigned int max_demand = 0;
 unsigned int NUM_HOSTS  = 0;		
 unsigned int NUM_THREADS = 0;
 #define MAX_HOSTS 64
-#define MAX_ROUND 10
+#define MAX_ROUND 64
 
 pthread_t threads[MAX_HOSTS*MAX_HOSTS];
 pthread_t xmit_thread[MAX_HOSTS*MAX_HOSTS];
@@ -70,6 +73,7 @@ pthread_t sched_thread;
 
 /*mutexes*/
 pthread_mutex_t queue_mutex[MAX_HOSTS*MAX_HOSTS];
+pthread_mutex_t pkt_queue_mutex[MAX_HOSTS*MAX_HOSTS][MAX_ROUND];
 pthread_mutex_t ipt_mutex;
 
 struct nfq_handle *h[MAX_HOSTS*MAX_HOSTS];
@@ -178,10 +182,8 @@ void setTC(int cls, double bw) {
     sprintf(cmd, "tc class change dev eth0 parent 1: classid 1:%d htb rate %fmbps ceil %fmbps",
             cls, bw, bw);
 
-    //system (cmd);
+    system (cmd);
 }
-
-
 
 void initTC() {
     clearTC();
@@ -287,19 +289,20 @@ int packetHandler(struct nfq_q_handle *qh, struct nfgenmsg *nfmsg, struct nfq_da
     return nfq_set_verdict(qh, id, NF_ACCEPT, 0, NULL);
 }
 
-void *xmitThread(void *_queue) {
-    struct _pkt_queue *pkt_queue = (struct _pkt_queue*)_queue;
+void xmitThread(int id, struct _pkt_queue* pkt_queue) {
     int queue_id = pkt_queue->_id;
     int src = host_pair[queue_id].first;
     int dest = host_pair[queue_id].second;
     int sent_byte = 0;
+    int round = pkt_queue->round;
 
+    pthread_mutex_lock(&pkt_queue_mutex[queue_id][round]);
     if (current_path[src][dest] == 1) {
         double cir_bytes = pkt_queue->circuit_bytes;
         while(!pkt_queue->_queue.empty()) {
             int payload_byte = pkt_queue->_queue.front().second - 88;
-            //if (sent_byte + payload_byte > cir_bytes) 
-               // break;
+            if (sent_byte + payload_byte > cir_bytes) 
+                break;
             nfq_handle_packet(h[queue_id], pkt_queue->_queue.front().first, pkt_queue->_queue.front().second);
             pkt_queue->_queue.pop();
             sent_byte += payload_byte;
@@ -313,8 +316,7 @@ void *xmitThread(void *_queue) {
         nfq_handle_packet(h[queue_id], pkt_queue->_queue.front().first, pkt_queue->_queue.front().second);
         pkt_queue->_queue.pop();
     }
-    //pthread_exit(NULL);
-    return NULL;
+    pthread_mutex_unlock(&pkt_queue_mutex[queue_id][round]);
 }
 
 void *SchedThread(void *threadid) {
@@ -322,9 +324,10 @@ void *SchedThread(void *threadid) {
     uint64_t tmp_TM_pkt[NUM_HOSTS][NUM_HOSTS];
     struct _pkt_queue tmp_pkt_queue[NUM_HOSTS*NUM_HOSTS][MAX_ROUND];
     int cur_round = 0;
+    ctpl::thread_pool p(NUM_HOSTS*NUM_HOSTS);
     while (1) {
         usleep(3000);
-        cur_round = cur_round++%MAX_ROUND;
+        cur_round = ++cur_round%MAX_ROUND;
         
         //Take a snapshot of TM
         for (int i=0; i<NUM_HOSTS; i++) {
@@ -332,12 +335,16 @@ void *SchedThread(void *threadid) {
                 if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
                 pthread_mutex_lock(&queue_mutex[queue_id]);
+                pthread_mutex_lock(&pkt_queue_mutex[queue_id][cur_round]);
                 tmp_TM[i * NUM_HOSTS + j] = traffic_matrix[i][j];
                 tmp_pkt_queue[queue_id][cur_round]._id = queue_id;
                 if (tmp_pkt_queue[queue_id][cur_round]._queue.size() != 0) {
-                    printf("%d %d\n",cur_round, tmp_pkt_queue[queue_id][cur_round]._queue.size());
+                    printf("[ERROR] %d %d %d\n",cur_round, queue_id,tmp_pkt_queue[queue_id][cur_round]._queue.size());
+                    exit(1);
                 }
                 tmp_pkt_queue[queue_id][cur_round]._queue = pkt_queue[queue_id];
+                tmp_pkt_queue[queue_id][cur_round].round = cur_round;
+                pthread_mutex_unlock(&pkt_queue_mutex[queue_id][cur_round]);
             }
         }
         initTM();
@@ -350,7 +357,6 @@ void *SchedThread(void *threadid) {
         }
 
 	    init_sols();
-    	//sols_init(&s, NUM_HOSTS); /* init for 8 hosts */
         // setup the demand
         mset (&s.future, tmp_TM);
 
@@ -398,17 +404,18 @@ void *SchedThread(void *threadid) {
             }
         }
         //fprintf(fp, "\n\n");
-        //set tc
         //transmit
         int rc;
         for (int i=1; i<=NUM_THREADS; i++) {
             if (tmp_pkt_queue[i][cur_round]._queue.size() == 0) continue;
-            rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
+
+            p.push(xmitThread, &tmp_pkt_queue[i][cur_round]);
+            /*rc = pthread_create(&xmit_thread[i], NULL, xmitThread,
               &tmp_pkt_queue[i][cur_round]);
               if (rc) {
                   printf("ERROR; return code from pthread_create() is %d\n", rc);
                   exit(-1);
-              }
+              }*/
             /*int sent_byte = 0;
             int src = host_pair[i].first;
             int dest = host_pair[i].second;
