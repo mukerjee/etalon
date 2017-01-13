@@ -327,11 +327,12 @@ void *SchedThread(void *threadid) {
     ctpl::thread_pool p(NUM_HOSTS*NUM_HOSTS);
     while (1) {
         usleep(3000);
-        cur_round = ++cur_round%MAX_ROUND;
+        cur_round++;
+        cur_round %= MAX_ROUND;
         
         //Take a snapshot of TM
-        for (int i=0; i<NUM_HOSTS; i++) {
-            for (int j=0; j<NUM_HOSTS; j++) {
+        for (unsigned int i=0; i<NUM_HOSTS; i++) {
+            for (unsigned int j=0; j<NUM_HOSTS; j++) {
                 if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
                 pthread_mutex_lock(&queue_mutex[queue_id]);
@@ -339,7 +340,7 @@ void *SchedThread(void *threadid) {
                 tmp_TM[i * NUM_HOSTS + j] = traffic_matrix[i][j];
                 tmp_pkt_queue[queue_id][cur_round]._id = queue_id;
                 if (tmp_pkt_queue[queue_id][cur_round]._queue.size() != 0) {
-                    printf("[ERROR] %d %d %d\n",cur_round, queue_id,tmp_pkt_queue[queue_id][cur_round]._queue.size());
+                    printf("[ERROR] %d %d %lu\n",cur_round, queue_id,tmp_pkt_queue[queue_id][cur_round]._queue.size());
                     exit(1);
                 }
                 tmp_pkt_queue[queue_id][cur_round]._queue = pkt_queue[queue_id];
@@ -348,8 +349,8 @@ void *SchedThread(void *threadid) {
             }
         }
         initTM();
-        for (int i=0; i<NUM_HOSTS; i++) {
-            for (int j=0; j<NUM_HOSTS; j++) {
+        for (unsigned int i=0; i<NUM_HOSTS; i++) {
+            for (unsigned int j=0; j<NUM_HOSTS; j++) {
                 if (i==j) continue;
                 int queue_id = host_to_queueid[i][j];
                 pthread_mutex_unlock(&queue_mutex[queue_id]);
@@ -376,7 +377,7 @@ void *SchedThread(void *threadid) {
             //fprintf(fp, "day #%d: T=" FMT_U64 "\n", i, day->len);
             double bytes = (day->len-20) * circuit_bw; //substract the configuration time (20 usec)
 
-            for (int dest = 0; dest < NUM_HOSTS; dest++) {
+            for (unsigned int dest = 0; dest < NUM_HOSTS; dest++) {
                 src = day->input_ports[dest];
                 assert(src >= 0);
                 if (day->is_dummy[dest]) {
@@ -390,8 +391,8 @@ void *SchedThread(void *threadid) {
             }
         }
 
-        for (int i=0; i<NUM_HOSTS; i++) {
-            for (int j=0; j<NUM_HOSTS; j++) {
+        for (unsigned int i=0; i<NUM_HOSTS; i++) {
+            for (unsigned int j=0; j<NUM_HOSTS; j++) {
                 if (circuit_bytes[i][j] >= 1.0) {
                     double rate = circuit_bytes[i][j]*8.0/1000000.0/((s.week_len-(s.night_len*s.nday))/1000000.0);
                     //printf("%f %f\n",circuit_bytes[i][j], circuit_rate[i][j]);
@@ -406,7 +407,7 @@ void *SchedThread(void *threadid) {
         //fprintf(fp, "\n\n");
         //transmit
         int rc;
-        for (int i=1; i<=NUM_THREADS; i++) {
+        for (unsigned int i=1; i<=NUM_THREADS; i++) {
             if (tmp_pkt_queue[i][cur_round]._queue.size() == 0) continue;
 
             p.push(xmitThread, &tmp_pkt_queue[i][cur_round]);
@@ -549,8 +550,8 @@ void init() {
     
     NUM_HOSTS = host_list.size();
 
-    for (int i=0; i<NUM_HOSTS; i++) {
-        for (int j=0; j<NUM_HOSTS; j++) {
+    for (unsigned int i=0; i<NUM_HOSTS; i++) {
+        for (unsigned int j=0; j<NUM_HOSTS; j++) {
             circuit_rate[i][j] = 100.0;
             current_path[i][j] = 0;
         }
@@ -570,7 +571,7 @@ intHandler(int signum) {
     //pthread_exit(NULL);
     //
     uint32_t prev = 0;
-    for (int i=0; i<ids[3].size(); i++){
+    for (unsigned int i=0; i<ids[3].size(); i++){
         if (ids[3][i] != prev+1)
             printf("something is wrong %d %d\n",ids[3][i], prev);
         prev = ids[3][i];
