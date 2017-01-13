@@ -59,7 +59,7 @@ mmul(sols_mat_t * m, uint64_t x) {
 }
 */
 
-#define NHOST 8
+#define NHOST 4
 
 int
 mainTest() {
@@ -149,7 +149,7 @@ uint64_t timer_read(struct Timer *tm) {
 
 int
 main() {
-    return mainTest();
+    //return mainTest();
 
     sols_t s;
     int i, j;
@@ -194,7 +194,7 @@ main() {
 
         /* debugging */
 
-        /*
+        
         printf("[demand]\n");
         mprint(&s.demand);
 
@@ -213,7 +213,7 @@ main() {
                     printf("  %d -> %d\n", src, dest);
                 }
             }
-        }*/
+        }
 
         printf("(%.3fus)\n", (double)(tread) / 1e3);
     }
