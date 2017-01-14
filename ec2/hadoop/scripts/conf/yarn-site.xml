@@ -16,6 +16,14 @@
 
 <!-- Site specific YARN configuration properties -->
  <property>
+            <name>yarn.scheduler.minimum-allocation-mb</name>
+            <value>2048</value>
+    </property>
+    <property>
+            <name>yarn.scheduler.maximum-allocation-mb</name>
+            <value>10240</value>
+    </property> 
+<property>
     <name>yarn.nodemanager.aux-services</name>
     <value>mapreduce_shuffle</value>
   </property> 

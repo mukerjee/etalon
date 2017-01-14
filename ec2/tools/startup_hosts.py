@@ -16,6 +16,9 @@ chown ec2-user:ec2-user -R /home/ec2-user/dc
 # Setting Hadoop
 wget http://apache.mesi.com.ar/hadoop/common/hadoop-2.7.3/hadoop-2.7.3.tar.gz -P /home/ec2-user/
 tar xvzf /home/ec2-user/hadoop-2.7.3.tar.gz -C /home/ec2-user/
+sudo wget http://repos.fedorapeople.org/repos/dchen/apache-maven/epel-apache-maven.repo -O /etc/yum.repos.d/epel-apache-maven.repo
+sudo sed -i s/\$releasever/6/g /etc/yum.repos.d/epel-apache-maven.repo
+yum install -y apache-maven
 
 sudo mkdir /usr/local/hadoop
 sudo mv /home/ec2-user/hadoop-2.7.3/* /usr/local/hadoop/
@@ -23,8 +26,8 @@ sudo chown -R ec2-user /usr/local/hadoop
 
 echo "export JAVA_HOME=/usr/lib/jvm/java-1.7.0-openjdk-1.7.0.121.x86_64
 export HADOOP_INSTALL=/usr/local/hadoop
-export PATH=$PATH:\$HADOOP_INSTALL/bin
-export PATH=$PATH:\$HADOOP_INSTALL/sbin
+export PATH=\$PATH:\$HADOOP_INSTALL/bin
+export PATH=\$PATH:\$HADOOP_INSTALL/sbin
 export HADOOP_MAPRED_HOME=\$HADOOP_INSTALL
 export HADOOP_COMMON_HOME=\$HADOOP_INSTALL
 export HADOOP_HDFS_HOME=\$HADOOP_INSTALL

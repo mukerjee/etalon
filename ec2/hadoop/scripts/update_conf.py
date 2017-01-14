@@ -19,6 +19,7 @@ def run_cmd(host, cmd):
     ssh.connect(host, username='ec2-user')
     stdin, stdout, stderr = ssh.exec_command(cmd)
 
+
 def run_install():
 
     HADOOP_CONF_DIR = '/usr/local/hadoop/etc/hadoop/'
@@ -29,7 +30,10 @@ def run_install():
     os.system(cmd)
     cmd = 'scp ./id_rsa ec2-user@%s:~/.ssh/' % (publicIP['namenode'][0])
     os.system(cmd)
+    cmd = 'scp ./config ec2-user@%s:~/.ssh/' % (publicIP['namenode'][0])
+    os.system(cmd)
 
+    run_cmd(publicIP['namenode'][0], 'chmod 600 /home/ec2-user/.ssh/config')
     run_cmd(publicIP['namenode'][0], 'mkdir -p %s/hadoop_data/hdfs/namenode' % (HADOOP_INSTALL))
     run_cmd(publicIP['namenode'][0], 'touch %s/masters' % (HADOOP_CONF_DIR))
     run_cmd(publicIP['namenode'][0], 'echo \"%s\" > %s/masters' % (privateDNS['namenode'][0], HADOOP_CONF_DIR))
@@ -41,14 +45,19 @@ def run_install():
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/placeholder/%s/g\' %s/mapred-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/placeholder/%s/g\' %s/yarn-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/placeholder/%s/g\' %s/core-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
-    run_cmd(publicIP['namenode'][0], 'echo \'%s\t%s\''% (namenode_publicDNS, privateDNS['namenode'][0]))
+    run_cmd(publicIP['namenode'][0], 'echo \'%s\t%s\' | sudo tee --append /etc/hosts'% (namenode_publicDNS, privateDNS['namenode'][0]))
 
     f = open('id_rsa.pub','r')
     for line in f:
         pub = line.rstrip('\r\n')
     run_cmd(publicIP['namenode'][0], 'echo \"%s\" >> /home/ec2-user/.ssh/authorized_keys' % (pub))
+    run_cmd(publicIP['namenode'][0], 'git clone https://github.com/intel-hadoop/HiBench.git /home/ec2-user/HiBench')
+    run_cmd(publicIP['namenode'][0], 'cd /home/ec2-user/HiBench; mvn -Phadoopbench clean package')
 
     for i in range (0, num_datanode):
+        cmd = 'scp ./config ec2-user@%s:~/.ssh/' % (publicIP['datanode'][i])
+        os.system(cmd)
+        run_cmd(publicIP['datanode'][i], 'chmod 600 /home/ec2-user/.ssh/config')
         cmd = 'scp -r ./conf/* ec2-user@%s:%s' % (publicIP['datanode'][i], HADOOP_CONF_DIR)
         os.system(cmd)
         run_cmd(publicIP['datanode'][i], 'mkdir -p %s/hadoop_data/hdfs/datanode' % (HADOOP_INSTALL))
@@ -57,6 +66,11 @@ def run_install():
         run_cmd(publicIP['datanode'][i], 'sed -i \'s/placeholder/%s/g\' %s/yarn-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
         run_cmd(publicIP['datanode'][i], 'sed -i \'s/placeholder/%s/g\' %s/core-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
         run_cmd(publicIP['datanode'][i], 'sed -i \'s/namenode/datanode/g\' %s/hdfs-site.xml' % (HADOOP_CONF_DIR))
+
+    cmd = 'scp ./hadoop.conf ec2-user@%s:/home/ec2-user/HiBench/conf/' % (publicIP['namenode'][0])
+    print cmd
+    os.system(cmd)
+    run_cmd(publicIP['namenode'][0], 'sed -i \'s/localhost/%s/g\' /home/ec2-user/HiBench/conf/hadoop.conf' %(namenode_publicDNS))
 
 def init():
     global publicIP
@@ -73,18 +87,21 @@ def init():
     output = subprocess.check_output(cmd, shell=True)
     ip_list = re.split('\r|\t|\n', output)
     start = False
-    for i in range(0, len(ip_list)):
-        if ip_list[i] == '':
-            continue
-        if ip_list[i].startswith('3'):
+    ip_list2 = []
+    for ip in ip_list:
+        if ip != '':
+            ip_list2.append(ip)
+
+    for i in range(0, len(ip_list2)):
+        if ip_list2[i].startswith('3'):
             switch_idx = i
             continue
         else:
             if start == False:
-                publicIP['namenode'] = [ip_list[i]]
+                publicIP['namenode'] = [ip_list2[i]]
                 start = True
             else:
-                publicIP['datanode'].append(ip_list[i])
+                publicIP['datanode'].append(ip_list2[i])
 
 
     start = False
@@ -93,18 +110,20 @@ def init():
            "--output=text")
     output = subprocess.check_output(cmd, shell=True)
     ip_list = re.split('\r|\t|\n', output)
-    for i in range(0, len(ip_list)):
-        if ip_list[i] == '':
-            continue
+    ip_list2 = []
+    for ip in ip_list:
+        if ip != '':
+            ip_list2.append(ip)
+    for i in range(0, len(ip_list2)):
         if i == switch_idx:
             continue
         else:
-            ip_list[i] = ip_list[i].replace('.ec2.internal','')
+            ip_list2[i] = ip_list2[i].replace('.ec2.internal','')
             if start == False:
-                privateDNS['namenode'] = [ip_list[i]]
+                privateDNS['namenode'] = [ip_list2[i]]
                 start = True
             else:
-                privateDNS['datanode'].append(ip_list[i])
+                privateDNS['datanode'].append(ip_list2[i])
 
     cmd = ("aws ec2 describe-instances "
            "--query \"Reservations[*].Instances[*].PublicDnsName\" "
@@ -123,7 +142,6 @@ def init():
 
     print namenode_publicDNS
     num_datanode = len(publicIP['datanode'])
-    print num_datanode
     print 'Number of running datanodes: %d' % (num_datanode)
 
     print publicIP['namenode']
