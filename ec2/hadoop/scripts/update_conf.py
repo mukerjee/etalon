@@ -41,6 +41,7 @@ def run_install():
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/placeholder/%s/g\' %s/mapred-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/placeholder/%s/g\' %s/yarn-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/placeholder/%s/g\' %s/core-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
+    run_cmd(publicIP['namenode'][0], 'echo \'%s\t%s\''% (namenode_publicDNS, privateDNS['namenode'][0]))
 
     f = open('id_rsa.pub','r')
     for line in f:
@@ -122,6 +123,7 @@ def init():
 
     print namenode_publicDNS
     num_datanode = len(publicIP['datanode'])
+    print num_datanode
     print 'Number of running datanodes: %d' % (num_datanode)
 
     print publicIP['namenode']
