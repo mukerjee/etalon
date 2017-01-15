@@ -25,7 +25,14 @@ def launch_hosts(it, c, spot=False):
             "SubnetId": subnet,
             "Placement": {
                 "GroupName": group_name
-            }
+            },
+            "BlockDeviceMappings": [
+                {
+                    "DeviceName" : "/dev/xvda",
+                     "Ebs" : { "VolumeSize" : 50 }
+                }
+            ]
+
         }
         open("/tmp/configuration_hosts_spot.json", 'w').write(
             json.dumps(spot_config))
