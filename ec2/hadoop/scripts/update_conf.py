@@ -34,6 +34,7 @@ def run_install():
     os.system(cmd)
 
     run_cmd(publicIP['namenode'][0], 'chmod 600 /home/ec2-user/.ssh/config')
+    run_cmd(publicIP['namenode'][0], 'rm -rf %s/hadoop_data/hdfs/namenode' % (HADOOP_INSTALL))
     run_cmd(publicIP['namenode'][0], 'mkdir -p %s/hadoop_data/hdfs/namenode' % (HADOOP_INSTALL))
     run_cmd(publicIP['namenode'][0], 'touch %s/masters' % (HADOOP_CONF_DIR))
     run_cmd(publicIP['namenode'][0], 'echo \"%s\" > %s/masters' % (privateDNS['namenode'][0], HADOOP_CONF_DIR))
@@ -55,6 +56,7 @@ def run_install():
     run_cmd(publicIP['namenode'][0], 'cd /home/ec2-user/HiBench; mvn -Phadoopbench clean package')
 
     for i in range (0, num_datanode):
+        run_cmd(publicIP['datanode'][i], 'rm -rf /tmp')
         cmd = 'scp ./config ec2-user@%s:~/.ssh/' % (publicIP['datanode'][i])
         os.system(cmd)
         run_cmd(publicIP['datanode'][i], 'chmod 600 /home/ec2-user/.ssh/config')
@@ -71,6 +73,7 @@ def run_install():
     print cmd
     os.system(cmd)
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/localhost/%s/g\' /home/ec2-user/HiBench/conf/hadoop.conf' %(namenode_publicDNS))
+    run_cmd(publicIP['namenode'][0], 'hdfs namenode -format')
 
 def init():
     global publicIP
