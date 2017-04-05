@@ -1,0 +1,10 @@
+#!/bin/sh
+
+if [ $# -lt 2 ]; then
+    echo "usage: $0 handler"
+    exit 1
+fi
+
+ARGS=$@
+printf "write $ARGS\nquit\n" | nc 127.0.0.1 7777 | grep -v ^Click::ControlSocket | grep -v ^DATA | grep -v "200 Goodbye!"| grep -v "200 Write handler"
+
