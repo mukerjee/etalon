@@ -5,8 +5,8 @@ define($IP0 1.1.1.1, $IP1 1.1.1.2, $IP2 1.1.1.3, $IP3 1.1.1.4,
 
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
-define ($RECONFIG_DELAY 0.000003)
-// define ($RECONFIG_DELAY 0.3)
+define ($RECONFIG_DELAY 0.000020)
+// define ($RECONFIG_DELAY 0.2)
 
 ControlSocket("TCP", 1239)
 
