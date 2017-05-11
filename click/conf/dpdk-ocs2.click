@@ -6,44 +6,62 @@ define($IP0 1.1.1.1, $IP1 1.1.1.2, $IP2 1.1.1.3, $IP3 1.1.1.4,
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
 define ($RECONFIG_DELAY 0.000020)
-// define ($RECONFIG_DELAY 0.2)
 
 ControlSocket("TCP", 1239)
-
-// Script(write hybrid_switch/s01.switch 1,
-//        write hybrid_switch/s12.switch 1,
-//        write hybrid_switch/s23.switch 1,
-//        write hybrid_switch/s30.switch 1)
 
 Script(write hybrid_switch/s01.switch 1,
        write hybrid_switch/s12.switch 1,
        write hybrid_switch/s23.switch 1,
        write hybrid_switch/s30.switch 1,
+       write hybrid_switch/ecnr0/s.switch 1,
+       write hybrid_switch/ecnr1/s.switch 2,
+       write hybrid_switch/ecnr2/s.switch 3,
+       write hybrid_switch/ecnr3/s.switch 0,
        wait $(mul 9 $RECONFIG_DELAY),
        write hybrid_switch/s01.switch 0,
        write hybrid_switch/s12.switch 0,
        write hybrid_switch/s23.switch 0,
        write hybrid_switch/s30.switch 0,
+       write hybrid_switch/ecnr0/s.switch 4,
+       write hybrid_switch/ecnr1/s.switch 4,
+       write hybrid_switch/ecnr2/s.switch 4,
+       write hybrid_switch/ecnr3/s.switch 4,
        wait $RECONFIG_DELAY,
        write hybrid_switch/s02.switch 1,
        write hybrid_switch/s13.switch 1,
        write hybrid_switch/s20.switch 1,
        write hybrid_switch/s31.switch 1,
+       write hybrid_switch/ecnr0/s.switch 2,
+       write hybrid_switch/ecnr1/s.switch 3,
+       write hybrid_switch/ecnr2/s.switch 0,
+       write hybrid_switch/ecnr3/s.switch 1,
        wait $(mul 9 $RECONFIG_DELAY),
        write hybrid_switch/s02.switch 0,
        write hybrid_switch/s13.switch 0,
        write hybrid_switch/s20.switch 0,
        write hybrid_switch/s31.switch 0,
+       write hybrid_switch/ecnr0/s.switch 4,
+       write hybrid_switch/ecnr1/s.switch 4,
+       write hybrid_switch/ecnr2/s.switch 4,
+       write hybrid_switch/ecnr3/s.switch 4,
        wait $RECONFIG_DELAY,
        write hybrid_switch/s03.switch 1,
        write hybrid_switch/s10.switch 1,
        write hybrid_switch/s21.switch 1,
        write hybrid_switch/s32.switch 1,
+       write hybrid_switch/ecnr0/s.switch 3,
+       write hybrid_switch/ecnr1/s.switch 0,
+       write hybrid_switch/ecnr2/s.switch 1,
+       write hybrid_switch/ecnr3/s.switch 2,
        wait $(mul 9 $RECONFIG_DELAY),
        write hybrid_switch/s03.switch 0,
        write hybrid_switch/s10.switch 0,
        write hybrid_switch/s21.switch 0,
        write hybrid_switch/s32.switch 0,
+       write hybrid_switch/ecnr0/s.switch 4,
+       write hybrid_switch/ecnr1/s.switch 4,
+       write hybrid_switch/ecnr2/s.switch 4,
+       write hybrid_switch/ecnr3/s.switch 4,
        wait $RECONFIG_DELAY,
        loop)
 
@@ -67,7 +85,7 @@ in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
 // in :: {InfiniteSource(LENGTH 9000) -> IPEncap(255, $IP0, $IP1)
 //        -> EtherEncap(0x0800, $MAC0, $MAC1) -> output}
-// out :: Discard()
+// out :: ToDump("./test.pcap") //Discard()
 
 elementclass Checker { $mac |
     c :: IPClassifier(src host $IP0, src host $IP1, src host $IP2, src host $IP3)
@@ -75,6 +93,16 @@ elementclass Checker { $mac |
     input -> c => c0, c1, c2, c3
           -> StoreData(0, DATA \<$mac>) -> StoreData(6, DATA \<$MACSwitch>)
           -> output
+}
+
+elementclass ECNRewriter {
+    s :: Switch(4)
+    w0 :: StoreData(15, DATA \<00>)
+    w1 :: StoreData(15, DATA \<01>)
+    w2 :: StoreData(15, DATA \<02>)
+    w3 :: StoreData(15, DATA \<03>)
+    wNone :: StoreData(15, DATA \<FC>)
+    input -> s => w0, w1, w2, w3, wNone -> output
 }
 
 out0 :: Checker($MAC0)
@@ -114,10 +142,10 @@ hybrid_switch :: {
     s02[1], s12[1], s22[1], s32[1] -> circuit_link2
     s03[1], s13[1], s23[1], s33[1] -> circuit_link3
 
-    packet_link0, circuit_link0 -> [0]output
-    packet_link1, circuit_link1 -> [1]output
-    packet_link2, circuit_link2 -> [2]output
-    packet_link3, circuit_link3 -> [3]output
+    packet_link0, circuit_link0 -> ecnr0 :: ECNRewriter -> [0]output
+    packet_link1, circuit_link1 -> ecnr1 :: ECNRewriter -> [1]output
+    packet_link2, circuit_link2 -> ecnr2 :: ECNRewriter -> [2]output
+    packet_link3, circuit_link3 -> ecnr3 :: ECNRewriter -> [3]output
 }
 
 in -> MarkIPHeader(14)
