@@ -346,7 +346,7 @@ Script::initialize(ErrorHandler *errh)
     else if (insn == INSN_WAIT_TIME) {
         Timestamp ts;
         if (cp_time(cp_expand(_args3[_insn_pos], expander), &ts))
-            _timer.schedule_after(ts);
+            _timer.reschedule_after(ts);
         else
             errh->error("syntax error at %<wait%>");
     } else if (insn == INSN_INITIAL) {
@@ -408,7 +408,7 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
             if (_step_count == nsteps) {
                 Timestamp ts;
                 if (cp_time(cp_expand(_args3[ipos], expander), &ts)) {
-                    _timer.schedule_after(ts);
+                    _timer.reschedule_after(ts);
                     _insn_pos--;
                 } else
                     errh->error("syntax error at %<wait%>");
