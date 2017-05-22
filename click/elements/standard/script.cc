@@ -32,6 +32,13 @@
 # include <signal.h>
 # include <click/master.hh>
 # include <click/userutils.hh>
+# if defined(__APPLE__) && defined(__MACH__)
+#  include <CoreServices/CoreServices.h>
+#  include <mach/mach_time.h>
+#  ifndef __osx__
+#   define __osx__
+#  endif
+# endif
 #endif
 CLICK_DECLS
 
@@ -374,6 +381,13 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
     expander.script = this;
     expander.errh = errh;
 
+#if defined(__osx__)
+    static mach_timebase_info_data_t sTimebaseInfo;
+    struct timeval tv, tv_new;
+    if ( sTimebaseInfo.denom == 0)
+        (void) mach_timebase_info(&sTimebaseInfo);
+    _start_time = mach_absolute_time();
+#endif
     nsteps += _step_count;
     while ((nsteps - _step_count) >= 0 && _insn_pos < _insns.size()) {
            // && njumps < max_jumps) {
@@ -408,6 +422,30 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
             if (_step_count == nsteps) {
                 Timestamp ts;
                 if (cp_time(cp_expand(_args3[ipos], expander), &ts)) {
+#if defined(__osx__)
+                    uint64_t elapsed_nano = 0;
+                    uint64_t ts_nsec = (uint64_t)ts.nsec();
+                    printf("pre: %f\n", _timer.expiry_steady().doubleval());
+                    printf("pre ns: %llu\n", ts_nsec);
+
+                    while (elapsed_nano < ts_nsec)
+                        elapsed_nano = (mach_absolute_time() - _start_time) *
+                            sTimebaseInfo.numer / sTimebaseInfo.denom;
+
+                    struct timeval tv_new;
+                    gettimeofday(&tv_new,NULL);
+                    long e = (1000000 * tv_new.tv_sec + tv_new.tv_usec)
+                        - (1000000 * tv.tv_sec + tv.tv_usec);
+                    tv = tv_new;
+
+                    printf("new time = %llu\n", e);
+                    printf("post ns: %llu\n", elapsed_nano);
+
+                    _start_time = mach_absolute_time();
+                } else
+                    errh->error("syntax error at %<wait%>");
+            }
+#else
                     _timer.reschedule_after(ts);
                     _insn_pos--;
                 } else
@@ -416,6 +454,7 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
             }
             _step_count++;
             _timer.unschedule();
+#endif
             break;
 
         case INSN_INITIAL:
