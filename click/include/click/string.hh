@@ -1,6 +1,7 @@
 // -*- related-file-name: "../../lib/string.cc" -*-
 #ifndef CLICK_STRING_HH
 #define CLICK_STRING_HH
+#include <functional>
 #include <click/algorithm.hh>
 #include <click/atomic.hh>
 #if HAVE_STRING_PROFILING
@@ -14,6 +15,15 @@
 #define CLICK_CONSTANT_CSTR(cstr) ((cstr) && __builtin_constant_p(strlen((cstr))))
 CLICK_DECLS
 class StringAccum;
+
+class String;
+namespace std {
+    template <>
+    class hash<String> {
+    public:
+        size_t operator()(const String &s) const;
+    };
+}
 
 class String { public:
 
@@ -299,6 +309,7 @@ class String { public:
 
     friend struct rep_t;
     friend class StringAccum;
+    friend size_t std::hash<String>::operator()(const String&) const;
 
 };
 
