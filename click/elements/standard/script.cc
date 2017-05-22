@@ -375,8 +375,8 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
     expander.errh = errh;
 
     nsteps += _step_count;
-    while ((nsteps - _step_count) >= 0 && _insn_pos < _insns.size()
-           && njumps < max_jumps) {
+    while ((nsteps - _step_count) >= 0 && _insn_pos < _insns.size()) {
+           // && njumps < max_jumps) {
 
         // process current instruction
         // increment instruction pointer now, in case we call 'goto' directly
@@ -567,11 +567,11 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
     }
 
   done:
-    if (njumps >= max_jumps) {
-        ErrorHandler::default_handler()->error("%p{element}: too many jumps, giving up", this);
-        _insn_pos = _insns.size();
-        _timer.unschedule();
-    }
+    // if (njumps >= max_jumps) {
+    //     ErrorHandler::default_handler()->error("%p{element}: too many jumps, giving up", this);
+    //     _insn_pos = _insns.size();
+    //     _timer.unschedule();
+    // }
     if (step_type == STEP_ROUTER)
         router()->adjust_runcount(1);
     return njumps + 1;
