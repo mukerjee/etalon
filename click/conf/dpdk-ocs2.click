@@ -7,57 +7,101 @@ define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
 define ($RECONFIG_DELAY 0.000020)
 
-ControlSocket("TCP", 1239)
+StaticThreadSched(scripte 7,
+                  hybrid_switch/c0 0,
+                  hybrid_switch/c1 1,
+                  hybrid_switch/c2 2,
+                  hybrid_switch/c3 3,
+                  hybrid_switch/q00 0,
+                  hybrid_switch/q01 0,
+                  hybrid_switch/q02 0,
+                  hybrid_switch/q03 0,
+                  hybrid_switch/q10 1,
+                  hybrid_switch/q11 1,
+                  hybrid_switch/q12 1,
+                  hybrid_switch/q13 1,
+                  hybrid_switch/q20 2,
+                  hybrid_switch/q21 2,
+                  hybrid_switch/q22 2,
+                  hybrid_switch/q23 2,
+                  hybrid_switch/q30 3,
+                  hybrid_switch/q31 3,
+                  hybrid_switch/q32 3,
+                  hybrid_switch/q33 3,
+                  hybrid_switch/packet_link0 0,
+                  hybrid_switch/packet_link1 1,
+                  hybrid_switch/packet_link2 2,
+                  hybrid_switch/packet_link3 3,
+                  hybrid_switch/circuit_link0 0,
+                  hybrid_switch/circuit_link1 1,
+                  hybrid_switch/circuit_link2 2,
+                  hybrid_switch/circuit_link3 3,
+                  hybrid_switch/ecnr0 0,
+                  hybrid_switch/ecnr1 1,
+                  hybrid_switch/ecnr2 2,
+                  hybrid_switch/ecnr3 3,
+                  out0 0,
+                  out1 1,
+                  out2 2,
+                  out3 3,
+                  in 4,
+                  miph 4,
+                  ipc 4,
+                  out 5,
+                  cs 6)
 
-Script(write hybrid_switch/s01.switch 1,
-       write hybrid_switch/s12.switch 1,
-       write hybrid_switch/s23.switch 1,
-       write hybrid_switch/s30.switch 1,
+cs :: ControlSocket("TCP", 1239)
+
+scripte :: Script(
+       write hybrid_switch/ps0.switch 3,
+       write hybrid_switch/ps1.switch 0,
+       write hybrid_switch/ps2.switch 1,
+       write hybrid_switch/ps3.switch 2,
        write hybrid_switch/ecnr0/s.switch 1,
        write hybrid_switch/ecnr1/s.switch 2,
        write hybrid_switch/ecnr2/s.switch 3,
        write hybrid_switch/ecnr3/s.switch 0,
        wait $(mul 9 $RECONFIG_DELAY),
-       write hybrid_switch/s01.switch 0,
-       write hybrid_switch/s12.switch 0,
-       write hybrid_switch/s23.switch 0,
-       write hybrid_switch/s30.switch 0,
+       write hybrid_switch/ps0.switch -1,
+       write hybrid_switch/ps1.switch -1,
+       write hybrid_switch/ps2.switch -1,
+       write hybrid_switch/ps3.switch -1,
        write hybrid_switch/ecnr0/s.switch 4,
        write hybrid_switch/ecnr1/s.switch 4,
        write hybrid_switch/ecnr2/s.switch 4,
        write hybrid_switch/ecnr3/s.switch 4,
        wait $RECONFIG_DELAY,
-       write hybrid_switch/s02.switch 1,
-       write hybrid_switch/s13.switch 1,
-       write hybrid_switch/s20.switch 1,
-       write hybrid_switch/s31.switch 1,
+       write hybrid_switch/ps0.switch 2,
+       write hybrid_switch/ps1.switch 3,
+       write hybrid_switch/ps2.switch 0,
+       write hybrid_switch/ps3.switch 1,
        write hybrid_switch/ecnr0/s.switch 2,
        write hybrid_switch/ecnr1/s.switch 3,
        write hybrid_switch/ecnr2/s.switch 0,
        write hybrid_switch/ecnr3/s.switch 1,
        wait $(mul 9 $RECONFIG_DELAY),
-       write hybrid_switch/s02.switch 0,
-       write hybrid_switch/s13.switch 0,
-       write hybrid_switch/s20.switch 0,
-       write hybrid_switch/s31.switch 0,
+       write hybrid_switch/ps0.switch -1,
+       write hybrid_switch/ps1.switch -1,
+       write hybrid_switch/ps2.switch -1,
+       write hybrid_switch/ps3.switch -1,
        write hybrid_switch/ecnr0/s.switch 4,
        write hybrid_switch/ecnr1/s.switch 4,
        write hybrid_switch/ecnr2/s.switch 4,
        write hybrid_switch/ecnr3/s.switch 4,
        wait $RECONFIG_DELAY,
-       write hybrid_switch/s03.switch 1,
-       write hybrid_switch/s10.switch 1,
-       write hybrid_switch/s21.switch 1,
-       write hybrid_switch/s32.switch 1,
+       write hybrid_switch/ps0.switch 1,
+       write hybrid_switch/ps1.switch 2,
+       write hybrid_switch/ps2.switch 3,
+       write hybrid_switch/ps3.switch 0,
        write hybrid_switch/ecnr0/s.switch 3,
        write hybrid_switch/ecnr1/s.switch 0,
        write hybrid_switch/ecnr2/s.switch 1,
        write hybrid_switch/ecnr3/s.switch 2,
        wait $(mul 9 $RECONFIG_DELAY),
-       write hybrid_switch/s03.switch 0,
-       write hybrid_switch/s10.switch 0,
-       write hybrid_switch/s21.switch 0,
-       write hybrid_switch/s32.switch 0,
+       write hybrid_switch/ps0.switch -1,
+       write hybrid_switch/ps1.switch -1,
+       write hybrid_switch/ps2.switch -1,
+       write hybrid_switch/ps3.switch -1,
        write hybrid_switch/ecnr0/s.switch 4,
        write hybrid_switch/ecnr1/s.switch 4,
        write hybrid_switch/ecnr2/s.switch 4,
@@ -85,7 +129,7 @@ in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
 // in :: {InfiniteSource(LENGTH 9000) -> IPEncap(255, $IP0, $IP1)
 //        -> EtherEncap(0x0800, $MAC0, $MAC1) -> output}
-// out :: ToDump("./test.pcap") //Discard()
+// out :: ToDump("./test.pcap", SNAPLEN 34)
 
 elementclass Checker { $mac |
     c :: IPClassifier(src host $IP0, src host $IP1, src host $IP2, src host $IP3)
@@ -116,31 +160,33 @@ hybrid_switch :: {
     c2 :: IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3)
     c3 :: IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3)
 
-    s00, s01, s02, s03 :: Switch(0)
-    s10, s11, s12, s13 :: Switch(0)
-    s20, s21, s22, s23 :: Switch(0)
-    s30, s31, s32, s33 :: Switch(0)
+    q00, q01, q02, q03 :: ThreadSafeQueue(CAPACITY 1000)
+    q10, q11, q12, q13 :: ThreadSafeQueue(CAPACITY 1000)
+    q20, q21, q22, q23 :: ThreadSafeQueue(CAPACITY 1000)
+    q30, q31, q32, q33 :: ThreadSafeQueue(CAPACITY 1000)
 
     packet_link0, packet_link1, packet_link2, packet_link3 ::
-      {input -> Queue(CAPACITY 1000) -> LinkUnqueue(0, $PACKET_BW) -> output}
+      {input -> LinkUnqueue(0, $PACKET_BW) ->
+      StoreData(18, DATA \<01>) -> output}
 
     circuit_link0, circuit_link1, circuit_link2, circuit_link3 ::
-      {input -> Queue(CAPACITY 1000) -> LinkUnqueue(0, $CIRCUIT_BW) -> output}
+      {input -> LinkUnqueue(0, $CIRCUIT_BW) ->
+      StoreData(18, DATA \<02>) -> output}
 
-    input[0] -> c0 => s00, s01, s02, s03
-    input[1] -> c1 => s10, s11, s12, s13
-    input[2] -> c2 => s20, s21, s22, s23
-    input[3] -> c3 => s30, s31, s32, s33
+    input[0] -> c0 => q00, q01, q02, q03
+    input[1] -> c1 => q10, q11, q12, q13
+    input[2] -> c2 => q20, q21, q22, q23
+    input[3] -> c3 => q30, q31, q32, q33
 
-    s00, s10, s20, s30 -> packet_link0
-    s01, s11, s21, s31 -> packet_link1
-    s02, s12, s22, s32 -> packet_link2
-    s03, s13, s23, s33 -> packet_link3
+    q00, q10, q20, q30 => RoundRobinSched -> packet_link0
+    q01, q11, q21, q31 => RoundRobinSched -> packet_link1
+    q02, q12, q22, q32 => RoundRobinSched -> packet_link2
+    q03, q13, q23, q33 => RoundRobinSched -> packet_link3
 
-    s00[1], s10[1], s20[1], s30[1] -> circuit_link0
-    s01[1], s11[1], s21[1], s31[1] -> circuit_link1
-    s02[1], s12[1], s22[1], s32[1] -> circuit_link2
-    s03[1], s13[1], s23[1], s33[1] -> circuit_link3
+    q00, q10, q20, q30 => ps0 :: PullSwitch(0) -> circuit_link0
+    q01, q11, q21, q31 => ps1 :: PullSwitch(1) -> circuit_link1
+    q02, q12, q22, q32 => ps2 :: PullSwitch(2) -> circuit_link2
+    q03, q13, q23, q33 => ps3 :: PullSwitch(3) -> circuit_link3
 
     packet_link0, circuit_link0 -> ecnr0 :: ECNRewriter -> [0]output
     packet_link1, circuit_link1 -> ecnr1 :: ECNRewriter -> [1]output
@@ -148,7 +194,7 @@ hybrid_switch :: {
     packet_link3, circuit_link3 -> ecnr3 :: ECNRewriter -> [3]output
 }
 
-in -> MarkIPHeader(14)
-   -> IPClassifier(src host $IP0, src host $IP1,
-                   src host $IP2, src host $IP3)[0, 1, 2, 3]
+in -> miph :: MarkIPHeader(14)
+   -> ipc ::IPClassifier(src host $IP0, src host $IP1,
+                         src host $IP2, src host $IP3)[0, 1, 2, 3]
    => hybrid_switch => out0, out1, out2, out3 -> out
