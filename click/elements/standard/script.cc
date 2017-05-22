@@ -506,8 +506,8 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
             HandlerCall hc(cp_expand(_args3[ipos], expander));
             int flags = HandlerCall::f_write + (insn == INSN_WRITEQ ? HandlerCall::UNQUOTE_PARAM : 0);
             if (hc.initialize(flags, this, errh) >= 0) {
-                ContextErrorHandler c_errh(errh, "While calling %<%s%>:", hc.unparse().c_str());
-                _write_status = hc.call_write(&c_errh);
+                //ContextErrorHandler c_errh(errh, "While calling %<%s%>:", hc.unparse().c_str());
+                _write_status = hc.call_write(NULL); //&c_errh);
             }
             break;
         }
