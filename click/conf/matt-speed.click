@@ -1,6 +1,7 @@
-define($IP0 1.1.1.1, $IP1 1.1.1.2, $IP2 1.1.1.3, $IP3 1.1.1.4)
-
-ControlSocket("TCP", 1239)
+define($IP0 1.1.1.1, $IP1 1.1.1.2, $IP2 1.1.1.3, $IP3 1.1.1.4,
+       $MAC0 0A:02:03:04:05:06, $MAC1 0B:02:03:04:05:06,
+       $MAC2 0C:02:03:04:05:06, $MAC3 0D:02:03:04:05:06,
+       $MACSwitch 0F:02:03:04:05:06)
 
 // aa :: {InfiniteSource -> IPEncap(255, $IP0, $IP0) -> output}
 // ab :: {InfiniteSource -> IPEncap(255, $IP0, $IP1) -> output}
@@ -42,4 +43,9 @@ ControlSocket("TCP", 1239)
 
 // a, b, c, d => out0, out1, out2, out3
 
-InfiniteSource(LENGTH 1) -> Queue -> Unqueue -> c0 :: Counter -> Queue -> Discard
+cs :: ControlSocket("TCP", 1239)
+
+InfiniteSource(LENGTH 9000) -> IPEncap(255, $IP0, $IP1) -> EtherEncap(0x0800, $MAC0, $MAC1)
+-> c0 :: Counter
+// -> Discard
+-> ToDump("/tmp/speed.pcap", SNAPLEN 34)
