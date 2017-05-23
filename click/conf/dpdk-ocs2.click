@@ -36,6 +36,14 @@ StaticThreadSched(scripte 7,
                   hybrid_switch/circuit_link1 1,
                   hybrid_switch/circuit_link2 2,
                   hybrid_switch/circuit_link3 3,
+		  hybrid_switch/rrs0 0,
+		  hybrid_switch/rrs1 1,
+		  hybrid_switch/rrs2 2,
+		  hybrid_switch/rrs3 3,
+		  hybrid_switch/ps0 0,
+		  hybrid_switch/ps1 1,
+		  hybrid_switch/ps2 2,
+		  hybrid_switch/ps3 3,
                   hybrid_switch/ecnr0 0,
                   hybrid_switch/ecnr1 1,
                   hybrid_switch/ecnr2 2,
@@ -178,10 +186,10 @@ hybrid_switch :: {
     input[2] -> c2 => q20, q21, q22, q23
     input[3] -> c3 => q30, q31, q32, q33
 
-    q00, q10, q20, q30 => RoundRobinSched -> packet_link0
-    q01, q11, q21, q31 => RoundRobinSched -> packet_link1
-    q02, q12, q22, q32 => RoundRobinSched -> packet_link2
-    q03, q13, q23, q33 => RoundRobinSched -> packet_link3
+    q00, q10, q20, q30 => rrs0 :: RoundRobinSched -> packet_link0
+    q01, q11, q21, q31 => rrs1 :: RoundRobinSched -> packet_link1
+    q02, q12, q22, q32 => rrs2 :: RoundRobinSched -> packet_link2
+    q03, q13, q23, q33 => rrs3 :: RoundRobinSched -> packet_link3
 
     q00, q10, q20, q30 => ps0 :: PullSwitch(0) -> circuit_link0
     q01, q11, q21, q31 => ps1 :: PullSwitch(1) -> circuit_link1
