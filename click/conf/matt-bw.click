@@ -23,5 +23,5 @@ InfiniteSource(LENGTH 1500)
    // -> RoundRobinSched
    -> LinkUnqueue(0, $PACKET_BW)
    -> out1
-   // -> ToDump("./test.pcap", SNAPLEN 34)
+   -> ToDump("./test.pcap", SNAPLEN 34)
    -> Discard

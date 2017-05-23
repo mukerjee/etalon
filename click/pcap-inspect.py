@@ -66,5 +66,5 @@ for k, v in data.items():
     avg_bw = zip(*v)[1]
     med_bw = np.median(avg_bw)*8 / 1000000000.0
     avg_bw = (sum(avg_bw)*8) / float(len(avg_bw)) / 1000000000
-    print k, med_time, avg_time, med_bw, avg_bw
+    print k, med_time, avg_time, '\t', med_bw, avg_bw
     # print k, avg_time, avg_bw

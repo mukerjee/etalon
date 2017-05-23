@@ -135,7 +135,7 @@ scripte :: Script(
 
 in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
-// in :: {InfiniteSource(LENGTH 9000) -> IPEncap(255, $IP0, $IP1)
+// in :: {InfiniteSource(LENGTH 1500) -> IPEncap(255, $IP0, $IP1)
 //        -> EtherEncap(0x0800, $MAC0, $MAC1) -> output}
 // out :: ToDump("./test.pcap", SNAPLEN 34)
 
