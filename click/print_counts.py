@@ -23,7 +23,7 @@ while(True):
             s.send(message)
             data = s.recv(BUFFER_SIZE)
             if data[:3] == '200':
-                results[i].append(int(data.split('\n')[-1]) / 1000000000)
+                results[i].append(float(data.split('\n')[-1]) / 1000000000.0)
                 # results[i].append(int(round(float(data.split('\n')[-1])*8 /
                 #                             1000000)))
     # message = 'READ c0.bit_rate\n'

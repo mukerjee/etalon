@@ -82,8 +82,8 @@ void
 LinkUnqueue::delay_by_bandwidth(Packet *p, const Timestamp &tv) const
 {
     uint32_t length = p->length() + EXTRA_LENGTH_ANNO(p);
-    uint32_t delay = (length * 10000) / _bandwidth;
-    p->set_timestamp_anno(tv + Timestamp::make_usec(delay));
+    uint32_t delay = (length * (uint64_t)10000000) / _bandwidth;
+    p->set_timestamp_anno(tv + Timestamp::make_nsec(delay));
 }
 
 #if 0
