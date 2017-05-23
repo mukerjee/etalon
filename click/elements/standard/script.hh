@@ -505,7 +505,9 @@ class Script : public Element { public:
 
     Timer _timer;
     int *_cur_steps;
-#if defined(__APPLE__) && defined(__MACH__)
+#if defined (__linux__)
+    struct timespec _start_time;
+#elif defined(__APPLE__) && defined(__MACH__)
     uint64_t _start_time;
 #endif
 

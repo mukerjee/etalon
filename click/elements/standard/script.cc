@@ -336,6 +336,10 @@ Script::initialize(ErrorHandler *errh)
     _step_count = 0;
     _timer.initialize(this);
 
+#if defined(__linux__)
+    sched_setscheduler(getpid(), SCHED_RR, NULL);
+#endif
+
     Expander expander;
     expander.script = this;
     expander.errh = errh;
@@ -381,7 +385,9 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
     expander.script = this;
     expander.errh = errh;
 
-#if defined(__osx__)
+#if defined(__linux__)
+    clock_gettime(CLOCK_MONOTONIC, &_start_time);
+#elif defined(__osx__)
     static mach_timebase_info_data_t sTimebaseInfo;
     struct timeval tv, tv_new;
     if ( sTimebaseInfo.denom == 0)
@@ -422,7 +428,20 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
             if (_step_count == nsteps) {
                 Timestamp ts;
                 if (cp_time(cp_expand(_args3[ipos], expander), &ts)) {
-#if defined(__osx__)
+#if defined(__linux__)
+	            uint64_t elapsed_nano = 0;
+                    uint64_t ts_nsec = (uint64_t)ts.nsec();
+		    struct timespec ts_new;
+                    while (elapsed_nano < ts_nsec) {
+			clock_gettime(CLOCK_MONOTONIC, &ts_new);
+			elapsed_nano = (1000000000 * ts_new.tv_sec + ts_new.tv_nsec)
+                        - (1000000000 * _start_time.tv_sec + _start_time.tv_nsec);
+		    }
+		    _start_time = ts_new;
+                } else
+		    errh->error("syntax error at %<wait%>");
+            }
+#elif defined(__osx__)
                     uint64_t elapsed_nano = 0;
                     uint64_t ts_nsec = (uint64_t)ts.nsec();
                     printf("pre: %f\n", _timer.expiry_steady().doubleval());
@@ -432,7 +451,6 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
                         elapsed_nano = (mach_absolute_time() - _start_time) *
                             sTimebaseInfo.numer / sTimebaseInfo.denom;
 
-                    struct timeval tv_new;
                     gettimeofday(&tv_new,NULL);
                     long e = (1000000 * tv_new.tv_sec + tv_new.tv_usec)
                         - (1000000 * tv.tv_sec + tv.tv_usec);
