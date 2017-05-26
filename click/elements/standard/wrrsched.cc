@@ -59,7 +59,7 @@ int
 WRRSched::configure(Vector<String> &conf, ErrorHandler *errh)
 {
     String str;
-    unsigned int w = 1;
+    // unsigned int w = 1;
     unsigned int n = ninputs();
     if (!(_weights = new unsigned int[n]))
         return errh->error("out of memory!");
