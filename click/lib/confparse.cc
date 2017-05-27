@@ -1595,6 +1595,24 @@ bool cp_bandwidth(const String &str, uint32_t *result)
     return true;
 }
 
+bool cp_bandwidth64(const String &str, uint64_t *result)
+{
+    BandwidthArg64 ba;
+    uint64_t x;
+    if (!ba.parse(str, x)) {
+	cp_errno = CPE_FORMAT;
+	return false;
+    }
+    if (ba.status == NumArg::status_range)
+	cp_errno = CPE_OVERFLOW;
+    else if (ba.status == NumArg::status_unitless)
+	cp_errno = CPE_NOUNITS;
+    else
+	cp_errno = CPE_OK;
+    *result = x;
+    return true;
+}
+
 
 
 // PARSING IPv4 ADDRESSES
@@ -2228,6 +2246,7 @@ const CpVaParseCmd
   cpTimestampSigned	= "timestamp_signed",
   cpTimeval		= "timeval",
   cpBandwidth		= "bandwidth_Bps",
+  cpBandwidth64		= "bandwidth_Bps64",
   cpIPAddress		= "ip_addr",
   cpIPPrefix		= "ip_prefix",
   cpIPAddressOrPrefix	= "ip_addr_or_prefix",
@@ -2292,6 +2311,7 @@ enum {
   cpiTimestampSigned,
   cpiTimeval,
   cpiBandwidth,
+  cpiBandwidth64,
   cpiIPAddress,
   cpiIPPrefix,
   cpiIPAddressOrPrefix,
@@ -2601,6 +2621,18 @@ default_parsefunc(cp_value *v, const String &arg,
       break;
   }
 
+  case cpiBandwidth64: {
+      BandwidthArg64 ba;
+      if (!ba.parse(arg, v->v.u64))
+	  goto type_mismatch;
+      else if (ba.status == NumArg::status_range) {
+	  String m = cp_unparse_bandwidth64(v->v.u64);
+	  errh->error("%s out of range, bound %s", argname, m.c_str());
+      } else if (ba.status == NumArg::status_unitless)
+	  errh->warning("no units on bandwidth %s, assuming Bps", argname);
+      break;
+  }
+
   case cpiReal2: {
       FixedPointArg fpa(v->extra.i);
       if (!fpa.parse_saturating(arg, v->v.s32))
@@ -2794,6 +2826,12 @@ default_storefunc(cp_value *v  CP_CONTEXT)
    case cpiAnno: {
      int *istore = (int *)v->store;
      *istore = v->v.s32;
+     break;
+   }
+
+   case cpiBandwidth64: {
+     int *istore = (int *)v->store;
+     *istore = v->v.u64;
      break;
    }
 
@@ -4174,6 +4212,12 @@ cp_unparse_bandwidth(uint32_t bw)
     return BandwidthArg::unparse(bw);
 }
 
+String
+cp_unparse_bandwidth64(uint64_t bw)
+{
+    return BandwidthArg64::unparse(bw);
+}
+
 
 // initialization and cleanup
 
@@ -4228,6 +4272,7 @@ cp_va_static_initialize()
     cp_register_argtype(cpTimestampSigned, "seconds since the epoch", 0, default_parsefunc, default_storefunc, cpiTimestampSigned);
     cp_register_argtype(cpTimeval, "seconds since the epoch", 0, default_parsefunc, default_storefunc, cpiTimeval);
     cp_register_argtype(cpBandwidth, "bandwidth", 0, default_parsefunc, default_storefunc, cpiBandwidth);
+    cp_register_argtype(cpBandwidth64, "bandwidth64", 0, default_parsefunc, default_storefunc, cpiBandwidth64);
     cp_register_argtype(cpIPAddress, "IP address", 0, default_parsefunc, default_storefunc, cpiIPAddress);
     cp_register_argtype(cpIPPrefix, "IP address prefix", cpArgStore2, default_parsefunc, default_storefunc, cpiIPPrefix);
     cp_register_argtype(cpIPAddressOrPrefix, "IP address or prefix", cpArgStore2, default_parsefunc, default_storefunc, cpiIPAddressOrPrefix);

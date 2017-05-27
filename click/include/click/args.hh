@@ -1287,6 +1287,11 @@ class BandwidthArg : public NumArg { public:
     int status;
 };
 
+class BandwidthArg64 : public NumArg { public:
+    bool parse(const String &str, uint64_t &result, const ArgContext & = blank_args);
+    static String unparse(uint64_t x);
+    int status;
+};
 
 #if !CLICK_TOOL
 /** @class AnnoArg

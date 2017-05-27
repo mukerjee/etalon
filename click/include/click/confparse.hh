@@ -163,6 +163,7 @@ bool cp_time(const String &str, Timestamp *result, bool allow_negative = false);
 bool cp_time(const String& str, struct timeval* result);
 
 bool cp_bandwidth(const String& str, uint32_t* result);
+bool cp_bandwidth64(const String& str, uint64_t* result);
 
 // network addresses
 class IPAddressList;
@@ -273,6 +274,7 @@ extern const CpVaParseCmd
     cpTimestampSigned,	///< Result storage Timestamp*, parsed by cp_time().
     cpTimeval,		///< Result storage struct timeval*, parsed by cp_time().
     cpBandwidth,	///< Result storage uint32_t*, parsed by cp_bandwidth().
+    cpBandwidth64,	///< Result storage uint64_t*, parsed by cp_bandwidth64().
     cpIPAddress,	///< Result storage IPAddress* or equivalent, parsed by cp_ip_address().
     cpIPPrefix,		///< Result storage IPAddress* addr and IPAddress *mask, parsed by cp_ip_prefix().
     cpIPAddressOrPrefix,///< Result storage IPAddress* addr and IPAddress *mask, parsed by cp_ip_prefix().
@@ -326,6 +328,7 @@ String cp_unparse_microseconds(uint32_t value);
 String cp_unparse_interval(const Timestamp& value) CLICK_DEPRECATED;
 String cp_unparse_interval(const struct timeval& value) CLICK_DEPRECATED;
 String cp_unparse_bandwidth(uint32_t value);
+String cp_unparse_bandwidth64(uint64_t value);
 //@}
 
 /// @name Legacy Functions

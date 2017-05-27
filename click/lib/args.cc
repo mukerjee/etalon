@@ -1231,6 +1231,25 @@ multiply_factor(uint32_t ix, uint32_t fx, uint32_t factor, int &status)
     }
 }
 
+static uint64_t
+multiply_factor64(uint32_t ix, uint32_t fx, uint32_t factor, int &status)
+{
+    if (factor == 1) {
+        if (int32_t(fx) < 0 && ++ix == 0)
+            status = NumArg::status_range;
+        return ix;
+    } else {
+        uint64_t flow, ftoint, ilow, ihigh;
+        int_multiply(fx, factor, flow, ftoint);
+        if (int64_t(flow) < 0)
+            ++ftoint;
+        int_multiply(ix, factor, ilow, ihigh);
+        if (ihigh != 0 || ilow + ftoint < ftoint)
+            status = NumArg::status_range;
+        return ilow + ftoint;
+    }
+}
+
 bool
 BandwidthArg::parse(const String &str, uint32_t &result, const ArgContext &args)
 {
@@ -1273,6 +1292,48 @@ BandwidthArg::unparse(uint32_t x)
         return cp_unparse_real10(x * 8, 3) + "kbps";
 }
 
+bool
+BandwidthArg64::parse(const String &str, uint64_t &result, const ArgContext &args)
+{
+    int power, factor;
+    const char *unit_end = UnitArg(byte_bandwidth_units, byte_bandwidth_prefixes).parse(str.begin(), str.end(), power, factor);
+
+    value_type ix;
+    uint32_t fx;
+    uint64_t r;
+    const char *xend = parse_fraction(str.begin(), unit_end,
+                                      false, power, ix, fx, status);
+    if (status == status_inval || xend != unit_end) {
+        status = status_inval;
+        return false;
+    }
+    if (uint64_t(ix) != ix)
+        status = status_range;
+    r = multiply_factor64(ix, fx, factor, status);
+    if (status == status_range) {
+        args.error("out of range");
+        result = 0xFFFFFFFFU;
+        return false;
+    } else {
+        if (unit_end == str.end() && r)
+            status = status_unitless;
+        result = r;
+        return true;
+    }
+}
+
+String
+BandwidthArg64::unparse(uint64_t x)
+{
+    if (x >= 0x20000000U)
+        return cp_unparse_real10((uint32_t)x, 6) + "MBps";
+    else if (x >= 125000000)
+        return cp_unparse_real10((uint32_t)x * 8, 9) + "Gbps";
+    else if (x >= 125000)
+        return cp_unparse_real10((uint32_t)x * 8, 6) + "Mbps";
+    else
+        return cp_unparse_real10((uint32_t)x * 8, 3) + "kbps";
+}
 
 static const char seconds_units[] = "\
 \1\0\1s\
