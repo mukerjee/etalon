@@ -57,7 +57,10 @@ StaticThreadSched(scripte 7,
                   miph 4,
                   ipc 4,
                   out 5,
-                  cs 6)
+                  cs 6,
+		  // arp_c 4,
+		  // arp 5
+		  )
 
 cs :: ControlSocket("TCP", 1239)
 
@@ -134,11 +137,15 @@ scripte :: Script_New(
 // 0 0 1 0
 
 
-in :: FromDPDKDevice(0)
-out :: ToDPDKDevice(0)
-// in :: {InfiniteSource(LENGTH 1500) -> IPEncap(255, $IP0, $IP1)
-//        -> EtherEncap(0x0800, $MAC0, $MAC1) -> output}
-// out :: ToDump("./test.pcap", SNAPLEN 34)
+// in :: FromDPDKDevice(0)
+// out :: ToDPDKDevice(0)
+in :: {InfiniteSource(LENGTH 1500) -> IPEncap(255, $IP0, $IP1)
+       -> EtherEncap(0x0800, $MAC0, $MAC1) -> output}
+out :: ToDump("./test.pcap", SNAPLEN 34)
+
+// arp_c :: Classifier(12/0806 20/0002, 12/0800);
+// arp :: ARPQuerier($IPSwitch, $MACSwitch)
+
 
 elementclass Checker { $mac |
     c :: IPClassifier(src host $IP0, src host $IP1, src host $IP2, src host $IP3)
@@ -203,7 +210,11 @@ hybrid_switch :: {
     packet_link3, circuit_link3 -> ecnr3 :: ECNRewriter -> [3]output
 }
 
-in -> miph :: MarkIPHeader(14)
+// arp_c[0] -> [1]arp
+
+in -> //arp_c[1] ->
+miph :: MarkIPHeader(14)
    -> ipc ::IPClassifier(src host $IP0, src host $IP1,
                          src host $IP2, src host $IP3)[0, 1, 2, 3]
-   => hybrid_switch => out0, out1, out2, out3 -> out
+   => hybrid_switch => out0, out1, out2, out3 -> //arp ->
+   out
