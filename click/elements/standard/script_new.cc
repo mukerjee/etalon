@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 4 -*-
 /*
- * script.{cc,hh} -- element provides scripting functionality
+ * script_new.{cc,hh} -- element provides scripting functionality
  * Eddie Kohler
  *
  * Copyright (c) 2001 International Computer Science Institute
@@ -21,7 +21,7 @@
  */
 
 #include <click/config.h>
-#include "script.hh"
+#include "script_new.hh"
 #include <click/confparse.hh>
 #include <click/error.hh>
 #include <click/router.hh>
@@ -44,41 +44,41 @@ CLICK_DECLS
 
 static const StaticNameDB::Entry instruction_entries[] = {
 #if CLICK_USERLEVEL
-    { "append", Script::insn_append },
+    { "append", Script_New::insn_append },
 #endif
-    { "end", (uint32_t) Script::insn_end },
-    { "error", (uint32_t) Script::insn_error },
-    { "errorq", (uint32_t) Script::insn_errorq },
-    { "exit", (uint32_t) Script::insn_exit },
-    { "export", Script::insn_export },
-    { "exportq", Script::insn_exportq },
-    { "goto", Script::INSN_GOTO },
-    { "init", Script::insn_init },
-    { "initq", Script::insn_initq },
-    { "label", Script::INSN_LABEL },
-    { "loop", Script::INSN_LOOP_PSEUDO },
-    { "pause", Script::INSN_WAIT_STEP },
-    { "print", Script::INSN_PRINT },
-    { "printn", Script::INSN_PRINTN },
-    { "printnq", Script::INSN_PRINTNQ },
-    { "printq", Script::INSN_PRINTQ },
-    { "read", Script::INSN_READ },
-    { "readq", Script::INSN_READQ },
-    { "return", Script::INSN_RETURN },
-    { "returnq", Script::insn_returnq },
+    { "end", (uint32_t) Script_New::insn_end },
+    { "error", (uint32_t) Script_New::insn_error },
+    { "errorq", (uint32_t) Script_New::insn_errorq },
+    { "exit", (uint32_t) Script_New::insn_exit },
+    { "export", Script_New::insn_export },
+    { "exportq", Script_New::insn_exportq },
+    { "goto", Script_New::INSN_GOTO },
+    { "init", Script_New::insn_init },
+    { "initq", Script_New::insn_initq },
+    { "label", Script_New::INSN_LABEL },
+    { "loop", Script_New::INSN_LOOP_PSEUDO },
+    { "pause", Script_New::INSN_WAIT_STEP },
+    { "print", Script_New::INSN_PRINT },
+    { "printn", Script_New::INSN_PRINTN },
+    { "printnq", Script_New::INSN_PRINTNQ },
+    { "printq", Script_New::INSN_PRINTQ },
+    { "read", Script_New::INSN_READ },
+    { "readq", Script_New::INSN_READQ },
+    { "return", Script_New::INSN_RETURN },
+    { "returnq", Script_New::insn_returnq },
 #if CLICK_USERLEVEL
-    { "save", Script::insn_save },
+    { "save", Script_New::insn_save },
 #endif
-    { "set", Script::INSN_SET },
-    { "setq", Script::insn_setq },
-    { "stop", (uint32_t) Script::insn_stop },
-    { "wait", Script::INSN_WAIT_PSEUDO },
-    { "wait_for", Script::INSN_WAIT_TIME },
-    { "wait_step", Script::INSN_WAIT_STEP },
-    { "wait_stop", Script::INSN_WAIT_STEP },
-    { "wait_time", Script::INSN_WAIT_TIME },
-    { "write", Script::INSN_WRITE },
-    { "writeq", Script::INSN_WRITEQ }
+    { "set", Script_New::INSN_SET },
+    { "setq", Script_New::insn_setq },
+    { "stop", (uint32_t) Script_New::insn_stop },
+    { "wait", Script_New::INSN_WAIT_PSEUDO },
+    { "wait_for", Script_New::INSN_WAIT_TIME },
+    { "wait_step", Script_New::INSN_WAIT_STEP },
+    { "wait_stop", Script_New::INSN_WAIT_STEP },
+    { "wait_time", Script_New::INSN_WAIT_TIME },
+    { "write", Script_New::INSN_WRITE },
+    { "writeq", Script_New::INSN_WRITEQ }
 };
 
 #if CLICK_USERLEVEL
@@ -102,7 +102,7 @@ static const StaticNameDB::Entry signal_entries[] = {
 static NameDB *dbs[2];
 
 void
-Script::static_initialize()
+Script_New::static_initialize()
 {
     dbs[0] = new StaticNameDB(NameInfo::T_SCRIPT_INSN, String(), instruction_entries, sizeof(instruction_entries) / sizeof(instruction_entries[0]));
     NameInfo::installdb(dbs[0], 0);
@@ -113,7 +113,7 @@ Script::static_initialize()
 }
 
 void
-Script::static_cleanup()
+Script_New::static_cleanup()
 {
     delete dbs[0];
 #if CLICK_USERLEVEL
@@ -121,13 +121,13 @@ Script::static_cleanup()
 #endif
 }
 
-Script::Script()
+Script_New::Script_New()
     : _type(-1), _write_status(0), _timer(this), _cur_steps(0)
 {
 }
 
 void
-Script::add_insn(int insn, int arg, int arg2, const String &arg3)
+Script_New::add_insn(int insn, int arg, int arg2, const String &arg3)
 {
     // first instruction must be WAIT or WAIT_STEP, so add INITIAL if
     // necessary
@@ -141,7 +141,7 @@ Script::add_insn(int insn, int arg, int arg2, const String &arg3)
 }
 
 int
-Script::find_label(const String &label) const
+Script_New::find_label(const String &label) const
 {
     for (int i = 0; i < _insns.size(); i++)
         if (_insns[i] == INSN_LABEL && _args3[i] == label)
@@ -156,7 +156,7 @@ Script::find_label(const String &label) const
 }
 
 int
-Script::find_variable(const String &name, bool add)
+Script_New::find_variable(const String &name, bool add)
 {
     int i;
     for (i = 0; i < _vars.size(); i += 2)
@@ -171,7 +171,7 @@ Script::find_variable(const String &name, bool add)
 }
 
 int
-Script::configure(Vector<String> &conf, ErrorHandler *errh)
+Script_New::configure(Vector<String> &conf, ErrorHandler *errh)
 {
     String type_arg;
     if (Args(this, errh).bind(conf)
@@ -208,15 +208,15 @@ Script::configure(Vector<String> &conf, ErrorHandler *errh)
         _type = (ninputs() || noutputs() ? type_push : type_active);
 
     if (_type == type_driver) {
-        if (router()->attachment("Script"))
-            return errh->error("router has more than one driver script");
-        router()->set_attachment("Script", this);
+        if (router()->attachment("Script_New"))
+            return errh->error("router has more than one driver script_new");
+        router()->set_attachment("Script_New", this);
     }
 
     if (_type == type_push && ninputs() == 0)
-        return errh->error("PACKET script must have inputs");
+        return errh->error("PACKET script_new must have inputs");
     else if (_type != type_push && (ninputs() || noutputs()))
-        return errh->error("ports allowed only on PACKET scripts");
+        return errh->error("ports allowed only on PACKET script_news");
 
     for (int i = 0; i < conf.size(); i++) {
         String insn_name = cp_shift_spacevec(conf[i]);
@@ -330,7 +330,7 @@ Script::configure(Vector<String> &conf, ErrorHandler *errh)
 }
 
 int
-Script::initialize(ErrorHandler *errh)
+Script_New::initialize(ErrorHandler *errh)
 {
     _insn_pos = 0;
     _step_count = 0;
@@ -341,7 +341,7 @@ Script::initialize(ErrorHandler *errh)
 #endif
 
     Expander expander;
-    expander.script = this;
+    expander.script_new = this;
     expander.errh = errh;
     for (int i = 0; i < _insns.size(); i++)
         if (_insns[i] == insn_init || _insns[i] == insn_export)
@@ -379,10 +379,10 @@ Script::initialize(ErrorHandler *errh)
 }
 
 int
-Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
+Script_New::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
 {
     Expander expander;
-    expander.script = this;
+    expander.script_new = this;
     expander.errh = errh;
 
 #if defined(__linux__)
@@ -635,7 +635,7 @@ Script::step(int nsteps, int step_type, int njumps, ErrorHandler *errh)
 }
 
 int
-Script::complete_step(String *retval)
+Script_New::complete_step(String *retval)
 {
     int last_insn;
     if (_insn_pos < 0 || _insn_pos >= _insns.size())
@@ -672,7 +672,7 @@ Script::complete_step(String *retval)
 }
 
 void
-Script::run_timer(Timer *)
+Script_New::run_timer(Timer *)
 {
     // called when a timer expires
     assert(_insns[_insn_pos] == INSN_WAIT_TIME || _insns[_insn_pos] == INSN_INITIAL);
@@ -683,7 +683,7 @@ Script::run_timer(Timer *)
 }
 
 void
-Script::push(int port, Packet *p)
+Script_New::push(int port, Packet *p)
 {
     ErrorHandler *errh = ErrorHandler::default_handler();
     ContextErrorHandler cerrh(errh, "While executing %<%p{element}%>:", this);
@@ -703,7 +703,7 @@ Script::push(int port, Packet *p)
 }
 
 Packet *
-Script::pull(int)
+Script_New::pull(int)
 {
     Packet *p = input(0).pull();
     if (!p)
@@ -732,30 +732,30 @@ Script::pull(int)
 }
 
 int
-Script::Expander::expand(const String &vname, String &out, int vartype, int) const
+Script_New::Expander::expand(const String &vname, String &out, int vartype, int) const
 {
     if (vartype == '(') {
         HandlerCall hc(vname);
-        if (hc.initialize_read(script, errh) >= 0) {
+        if (hc.initialize_read(script_new, errh) >= 0) {
             out = hc.call_read(errh);
             return true;
         } else
             return false;
     }
 
-    int x = script->find_variable(vname, false);
-    if (x < script->_vars.size()) {
-        out = script->_vars[x + 1];
+    int x = script_new->find_variable(vname, false);
+    if (x < script_new->_vars.size()) {
+        out = script_new->_vars[x + 1];
         return true;
     }
 
     if (vname.length() == 1 && vname[0] == '?') {
-        out = String(script->_write_status);
+        out = String(script_new->_write_status);
         return true;
     }
 
     if (vname.equals("args", 4)) {
-        out = script->_run_args;
+        out = script_new->_run_args;
         return true;
     }
 
@@ -771,13 +771,13 @@ Script::Expander::expand(const String &vname, String &out, int vartype, int) con
     }
 
     if (vname.length() == 1 && vname[0] == '0') {
-        out = script->_run_handler_name;
+        out = script_new->_run_handler_name;
         return true;
     }
 
     if (vname.length() > 0 && vname[0] >= '1' && vname[0] <= '9'
         && IntArg().parse(vname, x)) {
-        String arg, run_args = script->_run_args;
+        String arg, run_args = script_new->_run_args;
         for (; x > 0; --x)
             arg = cp_shift_spacevec(run_args);
         out = arg;
@@ -785,7 +785,7 @@ Script::Expander::expand(const String &vname, String &out, int vartype, int) con
     }
 
     if (vname.length() == 1 && vname[0] == '#') {
-        String run_args = script->_run_args;
+        String run_args = script_new->_run_args;
         for (x = 0; cp_shift_spacevec(run_args); )
             ++x;
         out = String(x);
@@ -793,7 +793,7 @@ Script::Expander::expand(const String &vname, String &out, int vartype, int) con
     }
 
     if (vname.equals("write", 5)) {
-        out = BoolArg::unparse(script->_run_op & Handler::f_write);
+        out = BoolArg::unparse(script_new->_run_op & Handler::f_write);
         return true;
     }
 
@@ -801,9 +801,9 @@ Script::Expander::expand(const String &vname, String &out, int vartype, int) con
 }
 
 int
-Script::step_handler(int op, String &str, Element *e, const Handler *h, ErrorHandler *errh)
+Script_New::step_handler(int op, String &str, Element *e, const Handler *h, ErrorHandler *errh)
 {
-    Script *scr = (Script *) e;
+    Script_New *scr = (Script_New *) e;
     String data = cp_uncomment(str);
     int nsteps, steptype;
     int what = (uintptr_t) h->write_user_data();
@@ -872,7 +872,7 @@ Script::step_handler(int op, String &str, Element *e, const Handler *h, ErrorHan
 #endif
 
 int
-Script::arithmetic_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
+Script_New::arithmetic_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
 {
     int what = (uintptr_t) h->read_user_data();
 
@@ -964,7 +964,7 @@ Script::arithmetic_handler(int, String &str, Element *, const Handler *h, ErrorH
 }
 
 int
-Script::normal_error(int message, ErrorHandler *errh)
+Script_New::normal_error(int message, ErrorHandler *errh)
 {
     static const char * const messages[] = {
         "expected one number", "expected two numbers"
@@ -973,7 +973,7 @@ Script::normal_error(int message, ErrorHandler *errh)
 }
 
 int
-Script::modrem_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
+Script_New::modrem_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
 {
     int what = (uintptr_t) h->read_user_data();
     (void) what;
@@ -1007,7 +1007,7 @@ Script::modrem_handler(int, String &str, Element *, const Handler *h, ErrorHandl
 }
 
 int
-Script::negabs_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
+Script_New::negabs_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
 {
     int what = (uintptr_t) h->read_user_data();
 
@@ -1029,7 +1029,7 @@ Script::negabs_handler(int, String &str, Element *, const Handler *h, ErrorHandl
 }
 
 int
-Script::compare_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
+Script_New::compare_handler(int, String &str, Element *, const Handler *h, ErrorHandler *errh)
 {
     int what = (uintptr_t) h->read_user_data();
 
@@ -1062,7 +1062,7 @@ Script::compare_handler(int, String &str, Element *, const Handler *h, ErrorHand
 }
 
 int
-Script::sprintf_handler(int, String &str, Element *, const Handler *, ErrorHandler *errh)
+Script_New::sprintf_handler(int, String &str, Element *, const Handler *, ErrorHandler *errh)
 {
     String format = cp_unquote(cp_shift_spacevec(str));
     const char *s = format.begin(), *pct, *end = format.end();
@@ -1152,7 +1152,7 @@ Script::sprintf_handler(int, String &str, Element *, const Handler *, ErrorHandl
 }
 
 int
-Script::basic_handler(int, String &str, Element *e, const Handler *h, ErrorHandler *errh)
+Script_New::basic_handler(int, String &str, Element *e, const Handler *h, ErrorHandler *errh)
 {
     int what = (uintptr_t) h->read_user_data();
 
@@ -1308,24 +1308,24 @@ Script::basic_handler(int, String &str, Element *e, const Handler *h, ErrorHandl
 }
 
 int
-Script::star_write_handler(const String &str, Element *e, void *, ErrorHandler *)
+Script_New::star_write_handler(const String &str, Element *e, void *, ErrorHandler *)
 {
-    Script *s = static_cast<Script *>(e);
+    Script_New *s = static_cast<Script_New *>(e);
     s->set_handler(str, Handler::f_read | Handler::f_read_param | Handler::f_write, step_handler, 0, ST_RUN);
     return Router::hindex(s, str);
 }
 
 String
-Script::read_export_handler(Element *e, void *user_data)
+Script_New::read_export_handler(Element *e, void *user_data)
 {
-    Script *scr = static_cast<Script *>(e);
+    Script_New *scr = static_cast<Script_New *>(e);
     return scr->_vars[(intptr_t) user_data + 1];
 }
 
 int
-Script::var_handler(int, String &str, Element *e, const Handler *h, ErrorHandler *errh)
+Script_New::var_handler(int, String &str, Element *e, const Handler *h, ErrorHandler *errh)
 {
-    Script *s = static_cast<Script *>(e);
+    Script_New *s = static_cast<Script_New *>(e);
     int what = (uintptr_t) h->read_user_data();
     int r = 0;
     String *varval = 0;
@@ -1363,7 +1363,7 @@ Script::var_handler(int, String &str, Element *e, const Handler *h, ErrorHandler
 }
 
 void
-Script::add_handlers()
+Script_New::add_handlers()
 {
     set_handler("step", Handler::f_write, step_handler, 0, ST_STEP);
     set_handler("goto", Handler::f_write, step_handler, 0, ST_GOTO);
@@ -1419,5 +1419,5 @@ Script::add_handlers()
             add_read_handler(_vars[_args[i]], read_export_handler, _args[i]);
 }
 
-EXPORT_ELEMENT(Script)
+EXPORT_ELEMENT(Script_New)
 CLICK_ENDDECLS

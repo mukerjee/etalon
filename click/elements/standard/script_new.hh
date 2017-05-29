@@ -1,6 +1,6 @@
 // -*- c-basic-offset: 4 -*-
-#ifndef CLICK_SCRIPT_HH
-#define CLICK_SCRIPT_HH
+#ifndef CLICK_SCRIPT_NEW_HH
+#define CLICK_SCRIPT_NEW_HH
 #include <click/element.hh>
 #include <click/timer.hh>
 #include <click/variableenv.hh>
@@ -9,11 +9,11 @@ CLICK_DECLS
 /*
 =c
 
-Script(INSTRUCTIONS...)
+Script_New(INSTRUCTIONS...)
 
 =s control
 
-script a Click router configuration
+script_new a Click router configuration
 
 =io
 
@@ -21,14 +21,14 @@ normally none
 
 =d
 
-The Script element implements a simple scripting language useful for
-controlling Click configurations.  Scripts can set variables, call handlers,
+The Script_New element implements a simple script_newing language useful for
+controlling Click configurations.  Script_News can set variables, call handlers,
 wait for prodding from other elements, and stop the router.
 
 =head1 INSTRUCTIONS
 
 Each configuration argument is an I<instruction> (except for optional
-keywords; see below).  Script generally processes these instructions
+keywords; see below).  Script_New generally processes these instructions
 sequentially.
 
 =head2 Handler Instructions
@@ -51,17 +51,17 @@ example, assuming the 'c.count' read handler returns 0:
 
 =item 'C<set> VAR TEXT', 'C<setq> VAR TEXT'
 
-Sets the script variable $VAR to TEXT.
+Sets the script_new variable $VAR to TEXT.
 
 =item 'C<init> VAR TEXT', 'C<initq> VAR TEXT'
 
-Initializes the script variable $VAR to TEXT.  The assignment happens exactly
-once, when the Script element is initialized.  Later the instruction has no
+Initializes the script_new variable $VAR to TEXT.  The assignment happens exactly
+once, when the Script_New element is initialized.  Later the instruction has no
 effect.
 
 =item 'C<export> VAR [TEXT]', 'C<exportq> VAR [TEXT]'
 
-Like C<init>, but also makes the value of script variable VAR available via a
+Like C<init>, but also makes the value of script_new variable VAR available via a
 read handler named VAR.
 
 =item 'C<print> [>FILE | >>FILE] [TEXT | HANDLER]'
@@ -97,7 +97,7 @@ Like C<printn>, but unquotes HANDLER
 =item 'C<read> HANDLER [ARGS]', 'C<readq> HANDLER [ARGS]'
 
 Call a read handler and print the handler name and result to standard error.  (In the kernel, the result is printed to the system log.)  For example, the
-configuration 'Idle -> c::Counter -> Idle; Script(read c.count)' would print
+configuration 'Idle -> c::Counter -> Idle; Script_New(read c.count)' would print
 print this to standard error:
 
    c.count:
@@ -118,7 +118,7 @@ instructions as the '$?' variable.
 
 =item 'C<pause> [COUNT]'
 
-Block until the Script element's 'step' handler is called COUNT times.  COUNT
+Block until the Script_New element's 'step' handler is called COUNT times.  COUNT
 defaults to 1.
 
 =item 'C<wait> TIME'
@@ -138,16 +138,16 @@ Defines a label named LABEL.
 
 =item 'C<goto> LABEL [CONDITION]'
 
-Transfers control to the named label.  Script elements detect loops; if an
-element's script appears to be looping (it executes 1000 goto instructions
-without blocking), the script is disabled.  If CONDITION is supplied, then the
+Transfers control to the named label.  Script_New elements detect loops; if an
+element's script_new appears to be looping (it executes 1000 goto instructions
+without blocking), the script_new is disabled.  If CONDITION is supplied, then the
 branch executes only when CONDITION is true.
 
 Also, 'C<goto exit [CONDITION]>' and 'C<goto end [CONDITION]>' end execution
-of the script, like 'C<exit>' and 'C<end>' respectively.  'C<goto loop
+of the script_new, like 'C<exit>' and 'C<end>' respectively.  'C<goto loop
 [CONDITION]>' transfers control to the first instruction, like 'C<loop>'.
-'C<goto error [CONDITION]>' ends execution of the script with an error, like
-'C<error>'.  'C<goto stop [CONDITION]>' ends execution of the script and asks
+'C<goto error [CONDITION]>' ends execution of the script_new with an error, like
+'C<error>'.  'C<goto stop [CONDITION]>' ends execution of the script_new and asks
 the driver to stop, like 'C<stop>'.
 
 =item 'C<loop>'
@@ -156,84 +156,84 @@ Transfers control to the first instruction.
 
 =item 'C<end>'
 
-End execution of this script.  In signal scripts, 'C<end>' causes the script
-to be reinstalled as a signal handler.  In packet scripts, 'C<end>' emits
+End execution of this script_new.  In signal script_news, 'C<end>' causes the script_new
+to be reinstalled as a signal handler.  In packet script_news, 'C<end>' emits
 the packet on output 0.  An implicit 'C<end>' is executed if execution falls
-off the end of a script.
+off the end of a script_new.
 
 =item 'C<exit>'
 
-End execution of this script.  In signal scripts, 'C<exit>' will I<not>
-reinstall the script as a signal handler.  In packet scripts, 'C<exit>' will
+End execution of this script_new.  In signal script_news, 'C<exit>' will I<not>
+reinstall the script_new as a signal handler.  In packet script_news, 'C<exit>' will
 drop the packet.
 
 =item 'C<stop>'
 
-End execution of this script as by 'C<end>', and additionally ask the driver
-to stop.  (A TYPE DRIVER Script, or DriverManager element, can intercept
+End execution of this script_new as by 'C<end>', and additionally ask the driver
+to stop.  (A TYPE DRIVER Script_New, or DriverManager element, can intercept
 this request.)
 
 =item 'C<return> [VALUE]', 'C<returnq> [VALUE]'
 
-End execution of this script.  In passive scripts, VALUE is returned as the
-value of the C<run> handler.  In packet scripts, VALUE is the port on which
+End execution of this script_new.  In passive script_news, VALUE is returned as the
+value of the C<run> handler.  In packet script_news, VALUE is the port on which
 the packet should be emitted.
 
 =item 'C<error> [MSG]', 'C<errorq> [MSG]'
 
-End execution of the script and indicate an error.  The optional error message
+End execution of the script_new and indicate an error.  The optional error message
 MSG is reported if given.
 
 =back
 
-=head1 SCRIPT TYPES
+=head1 SCRIPT_NEW TYPES
 
-Scripts come in several types, including active scripts, which start running
-as soon as the configuration is loaded; passive scripts, which run only when
-prodded; signal scripts, which run in response to a signal; and driver
-scripts, which are active scripts that also control when the driver stops.
+Script_News come in several types, including active script_news, which start running
+as soon as the configuration is loaded; passive script_news, which run only when
+prodded; signal script_news, which run in response to a signal; and driver
+script_news, which are active script_news that also control when the driver stops.
 
-The optional TYPE keyword argument selects a script type. The types
+The optional TYPE keyword argument selects a script_new type. The types
 are:
 
 =over 8
 
 =item C<ACTIVE>
 
-The script starts running as soon as the router is initialized. ACTIVE is
-the default for Script elements without ports.
+The script_new starts running as soon as the router is initialized. ACTIVE is
+the default for Script_New elements without ports.
 
 =item C<PASSIVE>
 
-The script runs in response to a handler, namely the C<run> handler.
-Passive scripts can help build complex handlers from existing simple ones; for
-example, here's a passive script whose C<s.run> read handler returns the sum
+The script_new runs in response to a handler, namely the C<run> handler.
+Passive script_news can help build complex handlers from existing simple ones; for
+example, here's a passive script_new whose C<s.run> read handler returns the sum
 of two Counter handlers.
 
    ... c1 :: Counter ... c2 :: Counter ...
-   s :: Script(TYPE PASSIVE,
+   s :: Script_New(TYPE PASSIVE,
           return $(add $(c1.count) $(c2.count)))
 
-Within the script, the C<$args> variable equals the C<run> handler's
+Within the script_new, the C<$args> variable equals the C<run> handler's
 arguments.  C<$1>, C<$2>, etc. equal the first, second, etc. space-separated
 portions of C<$args>, and C<$#> equals the number of space-separated
 arguments.
 
 =item C<PACKET>
 
-The script runs in response to a packet push or pull event. Within the
-script, the C<$input> variable equals the packet input port. The script's
+The script_new runs in response to a packet push or pull event. Within the
+script_new, the C<$input> variable equals the packet input port. The script_new's
 return value is used as the output port number. PACKET is the default for
-Script elements with ports.
+Script_New elements with ports.
 
 =item C<PROXY>
 
-The script runs in response to I<any> handler (except Script's predefined
-handlers).  Within the script, the C<$0> variable equals the handler's name,
+The script_new runs in response to I<any> handler (except Script_New's predefined
+handlers).  Within the script_new, the C<$0> variable equals the handler's name,
 and the C<$write> variable is "true" if the handler was called as a write
 handler.  For example, consider:
 
-   s :: Script(TYPE PROXY,
+   s :: Script_New(TYPE PROXY,
           goto nota $(ne $0 a),
           returnq "you called 'a'",
           label nota,
@@ -248,33 +248,33 @@ error.
 
 =item C<DRIVER>
 
-The script manages the Click driver's stop events.  See DriverManager for
+The script_new manages the Click driver's stop events.  See DriverManager for
 more information.
 
 =item C<SIGNAL> SIGNO...
 
-User-level only: The script runs in response to the signal(s) specified
+User-level only: The script_new runs in response to the signal(s) specified
 by the SIGNO argument(s).  Each SIGNO can be an integer or a signal name, such
-as INT or HUP.  Soon after the driver receives a named signal, this script
-will run.  The signal handler is automatically blocked until the script runs.
-The signal script will be reinstalled atomically as long as the script
-completes without blocking.  If it blocks, however, the signal script will not
-be installed from the blocking point until the script completes.  If multiple
-Script elements select the same signal, all the scripts will run.
+as INT or HUP.  Soon after the driver receives a named signal, this script_new
+will run.  The signal handler is automatically blocked until the script_new runs.
+The signal script_new will be reinstalled atomically as long as the script_new
+completes without blocking.  If it blocks, however, the signal script_new will not
+be installed from the blocking point until the script_new completes.  If multiple
+Script_New elements select the same signal, all the script_news will run.
 
 =back
 
 =head1 SUBSTITUTIONS
 
-Text in most Script instructions undergoes variable substitution.  References
-to script variables, such as 'C<$x>', are replaced by the variable text.
+Text in most Script_New instructions undergoes variable substitution.  References
+to script_new variables, such as 'C<$x>', are replaced by the variable text.
 Additionally, the form 'C<$(HANDLER [ARG...])>' can be used to interpolate a
 read handler's value.  Variable and handler references can be nested inside
-a 'C<$(...)>' block.  For example, the following script will print 0, 1, 2, 3,
-and 4 on separate lines, then exit.  Note the use of Script's arithmetic
+a 'C<$(...)>' block.  For example, the following script_new will print 0, 1, 2, 3,
+and 4 on separate lines, then exit.  Note the use of Script_New's arithmetic
 handlers.
 
-   s :: Script(set x 0,
+   s :: Script_New(set x 0,
                label begin_loop,
                print $x,
                set x $(s.add $x 1),
@@ -284,7 +284,7 @@ handlers.
 This can be further shortened since local handler references do not require
 the element name.  Thus, "$(s.add ...)" can be written "$(add ...)", as below.
 
-   Script(set x 0,
+   Script_New(set x 0,
           label begin_loop,
           print $x,
           set x $(add $x 1),
@@ -301,7 +301,7 @@ Move the instruction pointer to the specified label.
 
 =h run read/write
 
-Run the script.  If the script ends with a 'C<return>' instruction, then the
+Run the script_new.  If the script_new ends with a 'C<return>' instruction, then the
 handler returns with that value.
 
 =h add "read with parameters"
@@ -425,7 +425,7 @@ C<kill>; it expands to the driver's process ID.
 
 =h get "read with parameters"
 
-The argument is a variable name.  Returns the value of that script variable.
+The argument is a variable name.  Returns the value of that script_new variable.
 
 =h set w
 
@@ -441,14 +441,14 @@ space-separated argument off the named variable and returns the result.
 
 */
 
-class Script : public Element { public:
+class Script_New : public Element { public:
 
-    Script() CLICK_COLD;
+    Script_New() CLICK_COLD;
 
     static void static_initialize();
     static void static_cleanup();
 
-    const char *class_name() const      { return "Script"; }
+    const char *class_name() const      { return "Script_New"; }
     const char *port_count() const      { return "-/-"; }
     const char *processing() const      { return "ah/ah"; }
     int configure(Vector<String> &, ErrorHandler *) CLICK_COLD;
@@ -512,7 +512,7 @@ class Script : public Element { public:
 #endif
 
     class Expander : public VariableExpander { public:
-        Script *script;
+        Script_New *script_new;
         ErrorHandler *errh;
         int expand(const String &var, String &expansion, int vartype, int depth) const;
     };

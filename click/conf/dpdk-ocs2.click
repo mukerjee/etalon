@@ -1,7 +1,8 @@
-define($IP0 1.1.1.1, $IP1 1.1.1.2, $IP2 1.1.1.3, $IP3 1.1.1.4,
-       $MAC0 0A:02:03:04:05:06, $MAC1 0B:02:03:04:05:06,
+define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5,
+       $IPSwitch 10.10.1.1,
+       $MAC0 f4:52:14:15:6f:d2, $MAC1 f4:52:14:15:6d:32,
        $MAC2 0C:02:03:04:05:06, $MAC3 0D:02:03:04:05:06,
-       $MACSwitch 0F:02:03:04:05:06)
+       $MACSwitch f4:52:14:15:6c:02)
 
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
@@ -60,7 +61,7 @@ StaticThreadSched(scripte 7,
 
 cs :: ControlSocket("TCP", 1239)
 
-scripte :: Script(
+scripte :: Script_New(
        write hybrid_switch/ps0.switch 3,
        write hybrid_switch/ps1.switch 0,
        write hybrid_switch/ps2.switch 1,
