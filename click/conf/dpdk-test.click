@@ -10,18 +10,15 @@ a :: ARPQuerier($IPSwitch, $MACSwitch)
 cnt :: AverageCounter
 
 Script(
-	print 10, //cnt.byte_count,
-	wait 1000,
-	print 14,
+	print cnt.byte_count,
+	wait 1,
+	loop,
 	)
 
-Idle ->
-// FromDPDKDevice(1) ->
+FromDPDKDevice(1) ->
 c
 
 c[0] -> [1]a
 
 c[1] -> cnt -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16) -> a ->
-// Print -> IPPrint ->
-Discard
-// ToDPDKDevice(1)
+ToDPDKDevice(1)
