@@ -3,7 +3,7 @@
 # make Click
 # scp cloudlab_rsa mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa
 # scp cloudlab_rsa.pub mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa.pub
-git clone git@github.com:mukerjee/sdrt.git
+# git clone git@github.com:mukerjee/sdrt.git
 cd sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make
