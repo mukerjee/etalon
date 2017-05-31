@@ -1,5 +1,7 @@
 define($DEVNAME enp8s0d1)
 
+define($IP0 10.10.1.1, $IP1 10.10.1.2, $IP2 10.10.1.3, $IP3 10.10.1.4)
+
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
 define ($RECONFIG_DELAY 0.000020)
@@ -124,7 +126,7 @@ in :: FromDPDKDevice(1)
 out :: ToDPDKDevice(1)
 
 arp_c :: Classifier(12/0800, 12/0806 20/0002)
-arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth, TABLE arp_t)
+arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)
 
 elementclass Checker {
     c :: IPClassifier(src host $IP0, src host $IP1, src host $IP2, src host $IP3)
