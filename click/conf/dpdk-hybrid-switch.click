@@ -1,8 +1,4 @@
-define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5,
-       $IPSwitch 10.10.1.1,
-       $MAC0 f4:52:14:15:68:32, $MAC1 f4:52:14:15:47:32,
-       $MAC2 0C:02:03:04:05:06, $MAC3 0D:02:03:04:05:06,
-       $MACSwitch f4:52:14:15:6c:02)
+define($DEVNAME enp8s0d1)
 
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
@@ -51,10 +47,6 @@ StaticThreadSched(scripte 6,
 cs :: ControlSocket("TCP", 1239)
 
 scripte :: Script_New(
-       write arp_t.insert $IP0 $MAC0,
-       write arp_t.insert $IP1 $MAC1,
-
-       label schedule,
        write hybrid_switch/circuit_link0/ps.switch 3,
        write hybrid_switch/circuit_link1/ps.switch 0,
        write hybrid_switch/circuit_link2/ps.switch 1,
@@ -109,7 +101,7 @@ scripte :: Script_New(
        write hybrid_switch/ecnr2/s.switch 4,
        write hybrid_switch/ecnr3/s.switch 4,
        wait $RECONFIG_DELAY,
-       goto schedule,
+       loop,
        )
 
 // 0 1 0 0
@@ -131,8 +123,8 @@ scripte :: Script_New(
 in :: FromDPDKDevice(1)
 out :: ToDPDKDevice(1)
 
-arp_t :: ARPTable
-arp :: ARPQuerier($IPSwitch, $MACSwitch, TABLE arp_t)
+arp_c :: Classifier(12/0800, 12/0806 20/0002)
+arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth, TABLE arp_t)
 
 elementclass Checker {
     c :: IPClassifier(src host $IP0, src host $IP1, src host $IP2, src host $IP3)
@@ -196,10 +188,10 @@ hybrid_switch :: {
     ecnr0, ecnr1, ecnr2, ecnr3 => [0,1,2,3]output
 }
 
-in ->MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16)
+in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16)
    -> IPClassifier(src host $IP0, src host $IP1,
                    src host $IP2, src host $IP3)[0,1,2,3]
    => hybrid_switch[0,1,2,3]
    => out0, out1, out2, out3 -> SetIPChecksum -> arp -> out
 
-Idle -> [1]arp
+arp_c[1] -> [1]arp
