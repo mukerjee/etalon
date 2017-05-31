@@ -1,6 +1,6 @@
 define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5,
        $IPSwitch 10.10.1.1,
-       $MAC0 f4:52:14:15:6f:d2, $MAC1 f4:52:14:15:6d:32,
+       $MAC0 f4:52:14:15:68:32, $MAC1 f4:52:14:15:47:32,
        $MAC2 0C:02:03:04:05:06, $MAC3 0D:02:03:04:05:06,
        $MACSwitch f4:52:14:15:6c:02)
 
@@ -30,10 +30,10 @@ StaticThreadSched(scripte 6,
                   hybrid_switch/q31 4,
                   hybrid_switch/q32 4,
                   hybrid_switch/q33 4,
-                  // hybrid_switch/packet_link0 1,
-                  // hybrid_switch/packet_link1 2,
-                  // hybrid_switch/packet_link2 3,
-                  // hybrid_switch/packet_link3 4,
+                  hybrid_switch/packet_link0 1,
+                  hybrid_switch/packet_link1 2,
+                  hybrid_switch/packet_link2 3,
+                  hybrid_switch/packet_link3 4,
                   hybrid_switch/circuit_link0 1,
                   hybrid_switch/circuit_link1 2,
                   hybrid_switch/circuit_link2 3,
@@ -51,6 +51,9 @@ StaticThreadSched(scripte 6,
 cs :: ControlSocket("TCP", 1239)
 
 scripte :: Script_New(
+	write arp_t.insert $IP0 $MAC0,
+	write arp_t.insert $IP1 $MAC1,
+
        // write hybrid_switch/circuit_link0/ps.switch 3,
        // write hybrid_switch/circuit_link1/ps.switch 0,
        // write hybrid_switch/circuit_link2/ps.switch 1,
@@ -124,11 +127,17 @@ scripte :: Script_New(
 // 0 0 1 0
 
 
-in :: FromDPDKDevice(1)
-out :: ToDPDKDevice(1)
+// in :: FromDPDKDevice(1)
+// out :: ToDPDKDevice(1)
+in :: FromDevice(enp8s0d1)
+out :: {input -> Queue -> ToDevice(enp8s0d1)}
+// out :: {input -> Queue -> ToDevice(enp8s0d1, METHOD LINUX)}
+
+
+arp_t :: ARPTable
 
 arp_c :: Classifier(12/0806 20/0002, 12/0800);
-arp :: ARPQuerier($IPSwitch, $MACSwitch)
+arp :: ARPQuerier($IPSwitch, $MACSwitch, TABLE arp_t)
 
 elementclass Checker {
     c :: IPClassifier(src host $IP0, src host $IP1, src host $IP2, src host $IP3)
@@ -156,26 +165,26 @@ hybrid_switch :: {
 
     packet_link0, packet_link1, packet_link2, packet_link3 :: {
       input[0,1,2,3] => RoundRobinSched -> LinkUnqueue(0, $PACKET_BW)
-                     // -> StoreData(4, DATA \<01>) -> output
-                     -> StoreData(1, DATA \<01>) -> output
+                     -> StoreData(4, DATA \<01>) -> output
+                     // -> StoreData(1, DATA \<01>) -> output
                      // -> output
     }
 
     circuit_link0, circuit_link1, circuit_link2, circuit_link3 :: {
       input[0,1,2,3] => ps :: PullSwitch -> LinkUnqueue(0, $CIRCUIT_BW)
-                     // -> StoreData(4, DATA \<02>) -> output
-                     -> output
+                     -> StoreData(4, DATA \<02>) -> output
+                     // -> output
     }
 
     ecnr0, ecnr1, ecnr2, ecnr3 :: {
-        // s :: Switch(4)
-    	// w0 :: StoreData(1, DATA \<00>)
-    	// w1 :: StoreData(1, DATA \<01>)
-    	// w2 :: StoreData(1, DATA \<02>)
-    	// w3 :: StoreData(1, DATA \<03>)
-    	// wNone :: StoreData(1, DATA \<FC>)
-    	// input -> s => w0, w1, w2, w3, wNone -> output
-	input -> Null -> output
+        s :: Switch(4)
+    	w0 :: StoreData(1, DATA \<00>)
+    	w1 :: StoreData(1, DATA \<01>)
+    	w2 :: StoreData(1, DATA \<02>)
+    	w3 :: StoreData(1, DATA \<03>)
+    	wNone :: StoreData(1, DATA \<FC>)
+    	input -> s => w0, w1, w2, w3, wNone -> output
+	// input -> Null -> output
     }
 
     input[0] -> c0 => q00, q01, q02, q03
@@ -208,10 +217,16 @@ hybrid_switch :: {
 
 arp_c[0] -> ARPPrint("GETTING ARP RESPONSE") -> [1]arp
 
-in -> ARPPrint("REAL IN ARP") -> Print("REAL IN", CONTENTS HEX) -> arp_c[1] -> MarkIPHeader(14) -> IPPrint("input") -> StripToNetworkHeader
-   -> GetIPAddress(16)
-   -> IPClassifier(src host $IP0, src host $IP1,
-                   src host $IP2, src host $IP3)[0,1,2,3]
+in
+    // -> ARPPrint("REAL IN ARP") -> Print("REAL IN", CONTENTS HEX)
+    -> arp_c[1] -> MarkIPHeader(14)
+    // -> IPPrint("input")
+    -> StripToNetworkHeader -> GetIPAddress(16)
+    -> IPClassifier(src host $IP0, src host $IP1,
+                    src host $IP2, src host $IP3)[0,1,2,3]
     => hybrid_switch[0,1,2,3]
-   => out0, out1, out2, out3  -> IPPrint("pre arp")
-   -> arp -> ARPPrint("post arp") -> Print("post arp ip", CONTENTS HEX) -> out
+    => out0, out1, out2, out3
+    // -> IPPrint("pre arp")
+    -> arp
+    -> ARPPrint("post arp") -> IPPrint("post arp ip")
+    -> out
