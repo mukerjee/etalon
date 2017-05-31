@@ -155,9 +155,13 @@ inline struct rte_mbuf* get_mbuf(Packet* p, bool create=true) {
     return mbuf;
 }
 
-void ToDPDKDevice::run_timer(Timer *)
+void ToDPDKDevice::run_timer(Timer *t)
 {
-    flush_internal_queue(_iqueues[click_current_cpu_id()]);
+    for(int i = 0; i < _iqueues.size(); i++) {
+        if (&_iqueues[i].timeout == t) {
+	    flush_internal_queue(_iqueues[i]);
+	}
+    }
 }
 
 /* Flush as much as possible packets from a given internal queue to the DPDK
