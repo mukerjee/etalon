@@ -51,11 +51,11 @@ int
 PullSwitch::initialize(ErrorHandler *errh)
 {
     _notifier.initialize(Notifier::EMPTY_NOTIFIER, router());
-    _notifier.set_active(_input >= 0, false);
+    // _notifier.set_active(_input >= 0, false);
     if (!(_signals = new NotifierSignal[ninputs()]))
-	return errh->error("out of memory!");
-    for (int i = 0; i < ninputs(); ++i)
-	_signals[i] = Notifier::upstream_empty_signal(this, i, wake_callback, this);
+       return errh->error("out of memory!");
+    // for (int i = 0; i < ninputs(); ++i)
+    // 	_signals[i] = Notifier::upstream_empty_signal(this, i, wake_callback, this);
     return 0;
 }
 
@@ -70,14 +70,14 @@ Packet *
 PullSwitch::pull(int)
 {
     if (_input < 0) {
-	_notifier.set_active(false, false);
+	// _notifier.set_active(false, false);
 	return 0;
     } else if (Packet *p = input(_input).pull()) {
-	_notifier.set_active(true, false);
+	// _notifier.set_active(true, false);
 	return p;
     } else {
-	if (!_signals[_input])
-	    _notifier.set_active(false, false);
+	// if (!_signals[_input])
+	//     _notifier.set_active(false, false);
 	return 0;
     }
 }
@@ -86,12 +86,12 @@ void
 PullSwitch::set_input(int input)
 {
     _input = (input < 0 || input >= ninputs() ? -1 : input);
-    if (!_notifier.initialized())
-	/* do nothing, this is the set_input() called from configure() */;
-    else if (_input < 0)
-	_notifier.set_active(false, false);
-    else if (_signals[_input])
-	_notifier.set_active(true, true);
+    // if (!_notifier.initialized())
+    // 	/* do nothing, this is the set_input() called from configure() */;
+    // else if (_input < 0)
+    // 	_notifier.set_active(false, false);
+    // else if (_signals[_input])
+    // 	_notifier.set_active(true, true);
 }
 
 CLICK_ENDDECLS

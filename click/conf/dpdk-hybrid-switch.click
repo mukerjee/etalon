@@ -1,33 +1,12 @@
 define($DEVNAME enp8s0d1)
 
-define($IP0 10.10.1.1, $IP1 10.10.1.2, $IP2 10.10.1.3, $IP3 10.10.1.4)
+define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
 
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
 define ($RECONFIG_DELAY 0.000020)
 
-StaticThreadSched(scripte 6,
-                  cs 5,
-                  hybrid_switch/c0 1,
-                  hybrid_switch/c1 2,
-                  hybrid_switch/c2 3,
-                  hybrid_switch/c3 4,
-                  hybrid_switch/q00 1,
-                  hybrid_switch/q01 1,
-                  hybrid_switch/q02 1,
-                  hybrid_switch/q03 1,
-                  hybrid_switch/q10 2,
-                  hybrid_switch/q11 2,
-                  hybrid_switch/q12 2,
-                  hybrid_switch/q13 2,
-                  hybrid_switch/q20 3,
-                  hybrid_switch/q21 3,
-                  hybrid_switch/q22 3,
-                  hybrid_switch/q23 3,
-                  hybrid_switch/q30 4,
-                  hybrid_switch/q31 4,
-                  hybrid_switch/q32 4,
-                  hybrid_switch/q33 4,
+StaticThreadSched(scripte 5,
                   hybrid_switch/packet_link0 1,
                   hybrid_switch/packet_link1 2,
                   hybrid_switch/packet_link2 3,
@@ -36,17 +15,10 @@ StaticThreadSched(scripte 6,
                   hybrid_switch/circuit_link1 2,
                   hybrid_switch/circuit_link2 3,
                   hybrid_switch/circuit_link3 4,
-                  hybrid_switch/ecnr0 1,
-                  hybrid_switch/ecnr1 2,
-                  hybrid_switch/ecnr2 3,
-                  hybrid_switch/ecnr3 4,
-                  out0 1,
-                  out1 2,
-                  out2 3,
-                  out3 4,
 		  )
+// BalancedThreadSched()
 
-cs :: ControlSocket("TCP", 1239)
+ControlSocket("TCP", 1239)
 
 scripte :: Script_New(
        write hybrid_switch/circuit_link0/ps.switch 3,
@@ -122,6 +94,7 @@ scripte :: Script_New(
 // 0 0 1 0
 
 
+// in :: {in1 :: FromDPDKDevice(1, 0), in2 :: FromDPDKDevice(1, 1) -> output}
 in :: FromDPDKDevice(1)
 out :: ToDPDKDevice(1)
 
@@ -176,7 +149,7 @@ hybrid_switch :: {
     input[1] -> c1 => q10, q11, q12, q13
     input[2] -> c2 => q20, q21, q22, q23
     input[3] -> c3 => q30, q31, q32, q33
-    
+
     q00, q10, q20, q30 => packet_link0 -> ecnr0
     q01, q11, q21, q31 => packet_link1 -> ecnr1
     q02, q12, q22, q32 => packet_link2 -> ecnr2

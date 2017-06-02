@@ -243,7 +243,8 @@ void ToDPDKDevice::push(int, Packet *p)
                 iqueue.timeout.unschedule();
         } else if (_timeout >= 0 && !iqueue.timeout.scheduled()) {
             if (_timeout == 0)
-                iqueue.timeout.schedule_now();
+                // iqueue.timeout.schedule_now();
+	        flush_internal_queue(iqueue);
             else
                 iqueue.timeout.schedule_after_msec(_timeout);
         }
