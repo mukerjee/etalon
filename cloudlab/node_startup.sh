@@ -9,3 +9,5 @@ ping router -c1
 
 sudo arp -s host0 `arp | grep router | tr -s ' ' | cut -d' ' -f3`
 sudo arp -s host1 `arp | grep router | tr -s ' ' | cut -d' ' -f3`
+
+#sudo tcpdump -nnXXSs 0 -i enp8s0d1
