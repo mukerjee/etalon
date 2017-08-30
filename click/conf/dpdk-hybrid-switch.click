@@ -1,6 +1,6 @@
-define($DEVNAME enp8s0d1)
+define($DEVNAME enp8s0)
 
-define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
+define($IP0 192.168.0.2, $IP1 192.168.0.3, $IP2 192.168.0.4, $IP3 192.168.0.5)
 
 define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 
@@ -95,8 +95,8 @@ scripte :: Script_New(
 
 
 // in :: {in1 :: FromDPDKDevice(1, 0), in2 :: FromDPDKDevice(1, 1) -> output}
-in :: FromDPDKDevice(1)
-out :: ToDPDKDevice(1)
+in :: FromDPDKDevice(0)
+out :: ToDPDKDevice(0)
 
 arp_c :: Classifier(12/0800, 12/0806 20/0002)
 arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)
