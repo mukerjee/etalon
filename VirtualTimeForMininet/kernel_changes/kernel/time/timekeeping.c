@@ -295,111 +295,27 @@ static void timekeeping_forward_now(struct timekeeper *tk)
 /* Delta virtual time = delta physical time / TDF */
 static void do_dilatetimeofday(struct timespec *ts)
 {
-	int dilation;
-    dilation = current->dilation;
-    if(dilation > 0 && current->virtual_start_nsec > 0){
-		// printk("[info] [process %d] clock time %lld sec %lld nanosec, or %lld nanosec\n", current->pid, ts->tv_sec, ts->tv_nsec, now);
-		// printk("[info] [process %d] current virtual_start_nsec =\t%lld nanosec\n", current->pid, current->virtual_start_nsec);
+  int dilation = current->dilation;
+  if(dilation > 0 && current->virtual_start_nsec > 0) {
+    struct timespec dilated_ts;
 
-    	// if dilation is one, do not go through following calculations
-		// if (dilation == 1)
-		// {
-		// 	return;
-		// }
+    u64 now = timespec_to_ns(ts);
+    u64 physical_past_nsec = now - current->virtual_start_nsec;
+    u64 virtual_past_nsec = physical_past_nsec / dilation;
+    u64 dilated_now = virtual_past_nsec + current->virtual_start_nsec;
 
-    	s64 now;
-    	struct timespec dilated_ts;
-    	s64 physical_past_nsec;
-    	s64 virtual_past_nsec;
-		s32 remainder;
-
-		if(dilation < 1000){ // tdf should not be unreasonably large
-
-	        // printk("[info] [process %d] in do_dilatetimeofday current dilation = %d\n", current->pid, dilation);
-
-	        now = timespec_to_ns(ts);
-	        physical_past_nsec = now - current->virtual_start_nsec;
-
-			// printk("[info] [process %d] last physical_past_nsec =\t%lld nanosec\n", current->pid, current->physical_past_nsec);
-			// printk("[info] [process %d] last virtual_past_nsec =\t%lld nanosec\n", current->pid, current->virtual_past_nsec);
-	    	// printk("[info] [process %d] just physical_past_nsec =\t%lld nanosec\n", current->pid, physical_past_nsec);
-
-	        s64 dividend = physical_past_nsec - current->physical_past_nsec;
-
-	        // sth is wrong after last division
-	        // if (physical_past_nsec < 0 || virtual_past_nsec < 0 || dividend < 0)
-	        // {
-	            // printk("[panic] [process %d] physical_past_nsec = %lld , virtual_past_nsec = %lld or dividend = %lld < 0\n", current->pid, physical_past_nsec, virtual_past_nsec, dividend);
-	            // printk("[panic] [process %d] physical_past_nsec = %lld\n", physical_past_nsec);
-				// printk("[panic] [process %d] virtual_past_nsec = %lld\n", virtual_past_nsec);
-				// printk("[panic] [process %d] dividend = %lld\n", dividend);
-				// return;
-	        // }
-
-			s64 divisor = div_u64_rem(dividend, dilation, &remainder);
-	        virtual_past_nsec = divisor + current->virtual_past_nsec;
-
-			// printk("[info] [process %d] %lld / %d = %lld ... %ld\n", current->pid, dividend, dilation, divisor, remainder);
-	    	// printk("[info] [process %d] just virtual_past_nsec =\t%lld nanosec\n", current->pid, virtual_past_nsec);
-
-	        // last do_dilatetimeofday() failed
-	        // if (dilation > 1 && virtual_past_nsec > physical_past_nsec)
-	        // {
-	            // printk("[panic] [process %d] virtual time faster than physical when dilation = %d", dilation);
-				// printk("[panic] [process %d] dilation = %d > 1\n", dilation);
-				// printk("[panic] [process %d] physical_past_nsec = %lld\n", physical_past_nsec);
-				// printk("[panic] [process %d] virtual_past_nsec = %lld\n", virtual_past_nsec);
-				// return;
-	        // }
-
-	        // last do_dilatetimeofday() failed
-	        // if (dilation < 1 && virtual_past_nsec < physical_past_nsec)
-	        // {
-	            // printk("[panic] [process %d] virtual time slower than physical when dilation = %d", dilation);
-	            // printk("[panic] [process %d] dilation = %d < 1\n", dilation);
-				// printk("[panic] [process %d] physical_past_nsec = %lld\n", physical_past_nsec);
-				// printk("[panic] [process %d] virtual_past_nsec = %lld\n", virtual_past_nsec);
-				// return;
-	        // }
-
-	        s64 dilated_now = virtual_past_nsec + current->virtual_start_nsec;
-
-	        if (dilation > 1 && dilated_now > now)
-	        {
-				printk("[panic] [process %d] VT faster RT when dilation = %d (dilated_now = %lld > now = %lld\n)", dilation, dilated_now, now);
-				return;
-	        }
-
-			// if (dilation < 1 && dilated_now < now)
-			// {
-				// printk("[panic] [process %d] virtual time slower than physical when dilation = %d", dilation);
-				// printk("[panic] [process %d] dilation = %d < 1\n", dilation);
-				// printk("[panic] [process %d] dilated_now = %lld < now = %lld\n", dilated_now, now);
-				// return;
-	        // }
-
-			dilated_ts = ns_to_timespec(dilated_now);
-
-	        // printk("[info] [process %d] dilated time %lld sec %lld nanosec, or %lld nanosec\n", current->pid, dilated_ts.tv_sec, dilated_ts.tv_nsec, dilated_now);
-
-	        ts->tv_sec = dilated_ts.tv_sec;
-	        ts->tv_nsec = dilated_ts.tv_nsec;
-			current->physical_past_nsec = physical_past_nsec;
-	    	current->virtual_past_nsec = virtual_past_nsec;
-			// printk("[info] [process %d] in do_dilatetimeofday: total physical past \t%lld nanosec\n", current->pid, physical_past_nsec);
-	        // printk("[info] [process %d] in do_dilatetimeofday: total virtual past \t%lld nanosec\n", current->pid, virtual_past_nsec);
-
-			// re-check
-			// if (virtual_past_nsec != 0)
-			// {
-			// 	s64 actual_dilation = physical_past_nsec / virtual_past_nsec; // div_u64_rem(physical_past_nsec, virtual_past_nsec, &remainder);
-			// 	printk("[info] [process %d] in do_dilatetimeofday: actual dilation(%lld), should-be dilation(%d)\n", current->pid, actual_dilation, current->dilation);
-			// }
-        }
-        // printk("[info] [process %d] total physical past \t%lld nanosec\n", current->pid, physical_past_nsec);
-        // printk("[info] [process %d] total virtual past \t%lld nanosec\n", current->pid, virtual_past_nsec);
-		// printk("[info] [process %d] return time %lld sec %lld nanosec, or %lld nanosec\n", current->pid, ts->tv_sec, ts->tv_nsec, now);
+    if (dilated_now > now) {
+      printk("[panic] [process %d] VT faster RT when dilation = %d (dilated_now = %lld > now = %lld\n)", dilation, dilated_now, now);
+      return;
     }
+
+    dilated_ts = ns_to_timespec(dilated_now);
+
+    ts->tv_sec = dilated_ts.tv_sec;
+    ts->tv_nsec = dilated_ts.tv_nsec;
+    current->physical_past_nsec = physical_past_nsec;
+    current->virtual_past_nsec = virtual_past_nsec;
+  }
 }
 
 /**
