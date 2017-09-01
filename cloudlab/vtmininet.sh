@@ -10,7 +10,7 @@ git clone git://openflowswitch.org/openflow.git
 cd $HOME/openflow
 sudo ./boot.sh
 sudo ./configure
-patch -p1 < $HOME/sdrt/VirtualTimeForMininet/mininet/util/openflow-patches/controller.patch
+patch -p1 < $HOME/sdrt/vt-mininet/mininet/util/openflow-patches/controller.patch
 sudo make
 sudo make install
 
@@ -31,7 +31,7 @@ sudo make install
 sudo sed -i -r 's/GRUB_DEFAULT=0/GRUB_DEFAULT=1/' /etc/default/grub
 sudo update-grub
 
-cd $HOME/sdrt/VirtualTimeForMininet/mininet
+cd $HOME/sdrt/vt-mininet/mininet
 sudo make clean
 sudo make install
 
