@@ -116,7 +116,7 @@ endif
 endif
 
 # -------------------------------------
-TARGETS=ping tracepath traceroute6 clockdiff rdisc arping tftpd rarpd
+TARGETS=ping
 
 LDLIBS=$(LDLIB) $(ADDLIB)
 
@@ -158,7 +158,7 @@ DEF_ping6_common = $(DEF_ping)
 LIB_ping = $(LIB_CAP) $(LIB_IDN) $(LIB_CRYPTO) $(LIB_RESOLV) $(LDFLAG_M)
 
 ping: ping_common.o ping6_common.o
-ping.o ping_common.o ping6_common.o: ping.h in6_flowlabel.h
+ping.o ping_common.o: ping.h in6_flowlabel.h
 ping6.o ping6_common.o: ping.h in6_flowlabel.h
 
 # rarpd

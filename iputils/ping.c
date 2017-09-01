@@ -450,7 +450,7 @@ main(int argc, char **argv)
 			options |= F_VERBOSE;
 			break;
 		case 'V':
-			printf("ping utility, iputils-%s\n", SNAPSHOT);
+			printf("ping utility, iputils-s20161105\n");
 			exit(0);
 		case 'w':
 			deadline = atoi(optarg);

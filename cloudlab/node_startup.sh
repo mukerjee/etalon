@@ -1,7 +1,7 @@
 #!/bin/bash
 
 sudo apt-get update
-sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs
+sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs libcap-dev libidna11-dev nettle-dev
 
 sudo ifconfig enp8s0 192.168.0.`hostname | cut -d'.' -f1 | cut -d'-' -f2 | awk '{print $1+1}'` netmask 255.255.255.0
 
