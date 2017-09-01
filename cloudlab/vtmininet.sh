@@ -28,8 +28,9 @@ sudo make install
 
 sudo sed -i -r 's/GRUB_DEFAULT=0/GRUB_DEFAULT=1/' /etc/default/grub
 sudo update-grub
-sudo reboot
 
 cd $HOME/sdrt/VirtualTimeForMininet/mininet
 sudo make clean
 sudo make install
+
+sudo reboot
