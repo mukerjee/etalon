@@ -305,7 +305,8 @@ static void do_dilatetimeofday(struct timespec *ts)
     u64 dilated_now = virtual_past_nsec + current->virtual_start_nsec;
 
     if (dilated_now > now) {
-      printk("[panic] [process %d] VT faster RT when dilation = %d (dilated_now = %lld > now = %lld\n)", dilation, dilated_now, now);
+      printk("[panic] [process %d] VT faster RT when dilation = %d (dilated_now = %lld > now = %lld\n)", 
+	     current->pid, dilation, dilated_now, now);
       return;
     }
 
