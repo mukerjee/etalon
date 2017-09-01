@@ -22,6 +22,7 @@ if [ -e /etc/init.d/openvswitch-controller ]; then
 fi
 
 cd /proj/dna-PG0/linux-3.16.3-vtmininet
+sudo make headers_install
 sudo make modules_install
 sudo make install
 
