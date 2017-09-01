@@ -1,0 +1,26 @@
+*~
+*.o
+
+*.diff
+*.orig
+*.patch
+*.plist
+*.rej
+
+core
+.gdb_history
+.gdbinit
+
+# Makefile build
+/arping
+/clockdiff
+/ping
+/ping6
+/rarpd
+/rdisc
+/tftpd
+/tracepath
+/tracepath6
+/traceroute6
+# Meson build
+/builddir
