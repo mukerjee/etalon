@@ -22,13 +22,15 @@ if [ -e /etc/init.d/openvswitch-controller ]; then
 fi
 
 cd /proj/dna-PG0/linux-3.16.3-vtmininet
+sudo make headers_install
 sudo make modules_install
 sudo make install
 
 sudo sed -i -r 's/GRUB_DEFAULT=0/GRUB_DEFAULT=1/' /etc/default/grub
 sudo update-grub
-sudo reboot
 
 cd $HOME/sdrt/VirtualTimeForMininet/mininet
 sudo make clean
 sudo make install
+
+sudo reboot
