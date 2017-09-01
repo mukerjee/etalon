@@ -18,15 +18,19 @@ def myNetwork():
     Intf('eth2', node=s1)
 
     info('*** Add hosts\n')
-    h1 = net.addHost('h1', ip='10.10.1.4', cls=CPULimitedHost,
+    h1 = net.addHost('h1', ip='10.10.1.5', cls=CPULimitedHost,
                      sched='cfs', period_us=100000, cpu=1,
                      tdf=10)
-
+    
     info('*** Add links\n')
     net.addLink(h1, s1)
 
     info('*** Starting network\n')
     net.start()
+
+    h1.cmd('ping router -c1')
+    h1.cmd('ping 10.10.1.4 -c1')
+
     CLI(net)
     net.stop()
 
