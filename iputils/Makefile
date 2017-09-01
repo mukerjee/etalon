@@ -205,18 +205,8 @@ html:
 
 clean:
 	@rm -f *.o $(TARGETS)
-	@$(MAKE) -C Modules clean
-	@$(MAKE) -C doc clean
-	@set -e; \
-		if [ -f ninfod/Makefile ]; then \
-			$(MAKE) -C ninfod clean; \
-		fi
 
 distclean: clean
-	@set -e; \
-		if [ -f ninfod/Makefile ]; then \
-			$(MAKE) -C ninfod distclean; \
-		fi
 
 # -------------------------------------
 RPMBUILD=rpmbuild
