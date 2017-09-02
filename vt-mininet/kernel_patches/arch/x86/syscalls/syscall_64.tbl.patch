@@ -6,8 +6,8 @@
  316	common	renameat2		sys_renameat2
 +317	common  virtualtimeunshare	sys_virtualtimeunshare
 +318	common  settimedilationfactor	sys_settimedilationfactor
-+319	common	gettimedilation		sys_virtualtimeunshare
-+320	common	getstartvirtualtime	sys_virtualtimeunshare
++319	common	gettimedilation		sys_gettimedilation
++320	common	getstartvirtualtime	sys_getstartvirtualtime
  
  #
  # x32-specific system call numbers start at 512 to avoid cache impact
