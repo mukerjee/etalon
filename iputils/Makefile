@@ -157,9 +157,10 @@ DEF_ping_common = $(DEF_ping)
 DEF_ping6_common = $(DEF_ping)
 LIB_ping = $(LIB_CAP) $(LIB_IDN) $(LIB_CRYPTO) $(LIB_RESOLV) $(LDFLAG_M)
 
-ping: ping_common.o ping6_common.o
+ping: ping_common.o ping6_common.o syscall_wrapper.o
 ping.o ping_common.o: ping.h in6_flowlabel.h
 ping6.o ping6_common.o: ping.h in6_flowlabel.h
+syscall_wrapper.o: syscall_wrapper.h
 
 # rarpd
 DEF_rarpd =

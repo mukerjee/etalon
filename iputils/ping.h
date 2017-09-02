@@ -55,6 +55,7 @@
 #include <linux/errqueue.h>
 
 #include "in6_flowlabel.h"
+#include "syscall_wrapper.h"
 
 #ifndef SCOPE_DELIMITER
 #define SCOPE_DELIMITER '%'
