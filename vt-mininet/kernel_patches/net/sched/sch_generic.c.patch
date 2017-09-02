@@ -13,7 +13,7 @@
  	r->linklayer = (conf->linklayer & TC_LINKLAYER_MASK);
  	r->mult = 1;
  	/*
-@@ -944,3 +951,26 @@ void psched_ratecfg_precompute(struct ps
+@@ -946,3 +953,26 @@ void psched_ratecfg_precompute(struct ps
  	}
  }
  EXPORT_SYMBOL(psched_ratecfg_precompute);

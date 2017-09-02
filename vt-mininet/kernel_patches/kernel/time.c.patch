@@ -1,7 +1,6 @@
 --- linux-3.16.3-clean/kernel/time.c	2014-09-17 11:22:16.000000000 -0600
 +++ ./linux-3.16.3-vtmininet/kernel/time.c	2017-08-29 10:02:36.884974380 -0600
-@@ -37,7 +37,8 @@
- #include <linux/fs.h>
+@@ -38,6 +38,7 @@
  #include <linux/math64.h>
  #include <linux/ptrace.h>
 

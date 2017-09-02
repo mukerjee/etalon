@@ -59,7 +59,7 @@
  		return -EINVAL;
  	/*
  	 * Not implemented, but pretend it works if there is nothing to
-@@ -1943,3 +2016,120 @@ int unshare_files(struct files_struct **
+@@ -1943,3 +2016,117 @@ int unshare_files(struct files_struct **
  	task_unlock(task);
  	return 0;
  }
@@ -177,4 +177,3 @@
 +bad_unshare_out:
 +	return err;
 +}
-+
