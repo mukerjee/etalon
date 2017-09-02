@@ -8,12 +8,11 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
-@@ -115,6 +224,41 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
+@@ -115,6 +224,40 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
  }
  
  /*
-+ * Change current process's time dilation factor --- Jiaqi Yan
-+ * What below is a total copy of init_virtual_start_time in fork.c
++ * Change current process's time dilation factor
 + */
 +SYSCALL_DEFINE2(settimedilationfactor, unsigned long, dilation, pid_t, ppid)
 +{
