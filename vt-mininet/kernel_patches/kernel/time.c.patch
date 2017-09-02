@@ -46,12 +46,12 @@
 +}
 +
 +
-+SYSCALL_DEFINE(gettimedilation)
++SYSCALL_DEFINE0(gettimedilation)
 +{
-+	return current->dilation;
++	return (long)(current->dilation);
 +}
 +
-+SYSCALL_DEFINE(getstartvirtualtime)
++SYSCALL_DEFINE0(getstartvirtualtime)
 +{
 +	return current->virtual_start_nsec;
 +}

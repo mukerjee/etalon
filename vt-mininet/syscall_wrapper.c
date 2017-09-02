@@ -18,9 +18,9 @@ int settimedilationfactor(int dilation, int ppid) {
 }
 
 int gettimedilation() {
-    return syscall(GETTIMEDILATION);
+    return (int)syscall(GETTIMEDILATION);
 }
 
-int getstartvirtualtime() {
+long getstartvirtualtime() {
     return syscall(GETSTARTVIRTUALTIME);
 }

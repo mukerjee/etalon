@@ -6,8 +6,8 @@
  
 +asmlinkage long sys_virtualtimeunshare(unsigned long, unsigned long);
 +asmlinkage long sys_settimedilationfactor(unsigned long, pid_t);
-+asmlinkage int sys_gettimedilation();
-+asmlinkage s64 sys_getstartvirtualtime();
++asmlinkage long sys_gettimedilation(void);
++asmlinkage long sys_getstartvirtualtime(void);
 +
  asmlinkage long sys_execve(const char __user *filename,
  		const char __user *const __user *argv,

@@ -11,7 +11,7 @@
 
 int virtualtimeunshare(unsigned long, int);
 int settimedilationfactor(int, int);
-int gettimedilation();
-int getstartvirtualtime();
+int gettimedilation(void);
+long getstartvirtualtime(void);
 
 #endif
