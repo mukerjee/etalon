@@ -4,7 +4,7 @@
  #define CLONE_DETACHED		0x00400000	/* Unused, ignored */
  #define CLONE_UNTRACED		0x00800000	/* set if the tracing process can't force CLONE_PTRACE on this clone */
  #define CLONE_CHILD_SETTID	0x01000000	/* set the TID in the child */
-+#define CLONE_TIME          0x02000000  /* virtual time support --- Jiaqi */
++#define CLONE_TIME		0x02000000	/* virtual time support */
 +
  /* 0x02000000 was previously the unused CLONE_STOPPED (Start in stopped state)
     and is now available for re-use. */

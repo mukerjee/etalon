@@ -1,10 +1,10 @@
 #include "syscall_wrapper.h"
 
-#define VIRTUALTIMEUNSHARE 318
-#define SETTIMEDILATIONFACTOR 321
+#define VIRTUALTIMEUNSHARE 317
+#define SETTIMEDILATIONFACTOR 318
 
 int virtualtimeunshare(unsigned long flags, int dilation) {
-    return syscall(VIRTUALTIMEUNSHARE, flags | 0x02000000, dilation);
+	return syscall(VIRTUALTIMEUNSHARE, flags | 0x02000000, dilation);
 }
 
 /*

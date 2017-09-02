@@ -4,8 +4,8 @@
  314	common	sched_setattr		sys_sched_setattr
  315	common	sched_getattr		sys_sched_getattr
  316	common	renameat2		sys_renameat2
-+318	common  virtualtimeunshare		sys_virtualtimeunshare
-+321	common  settimedilationfactor		sys_settimedilationfactor
++317	common  virtualtimeunshare		sys_virtualtimeunshare
++318	common  settimedilationfactor		sys_settimedilationfactor
  
  #
  # x32-specific system call numbers start at 512 to avoid cache impact

@@ -18,7 +18,6 @@
 +SYSCALL_DEFINE2(settimedilationfactor, unsigned long, dilation, pid_t, ppid)
 +{
 +	if (dilation > 0) {
-+		struct timespec ts;
 +		struct task_struct *task = current;
 +
 +		if (ppid != 0) { // change current's parent's dilation
@@ -34,6 +33,7 @@
 +
 +		/* reset virtual_start so that we can get original time */
 +		task->virtual_start_nsec = 0;
++		struct timespec ts;
 +		getnstimeofday(&ts);
 +		task->virtual_start_nsec = timespec_to_ns(&ts);
 +

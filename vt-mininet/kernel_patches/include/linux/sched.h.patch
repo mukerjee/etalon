@@ -4,8 +4,8 @@
  	struct signal_struct *signal;
  	struct sighand_struct *sighand;
  
-+    int dilation;
-+    s64 virtual_start_nsec;
++	int dilation;
++	s64 virtual_start_nsec;
 +
  	sigset_t blocked, real_blocked;
  	sigset_t saved_sigmask;	/* restored if set_restore_sigmask() was used */
