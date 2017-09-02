@@ -2,6 +2,8 @@
 
 #define VIRTUALTIMEUNSHARE 317
 #define SETTIMEDILATIONFACTOR 318
+#define GETTIMEDILATION 319
+#define GETSTARTVIRTUALTIME 320
 
 int virtualtimeunshare(unsigned long flags, int dilation) {
 	return syscall(VIRTUALTIMEUNSHARE, flags | 0x02000000, dilation);
@@ -15,3 +17,10 @@ int settimedilationfactor(int dilation, int ppid) {
 	return syscall(SETTIMEDILATIONFACTOR, dilation, ppid);
 }
 
+int gettimedilation() {
+    return syscall(GETTIMEDILATION);
+}
+
+int getstartvirtualtime() {
+    return syscall(GETSTARTVIRTUALTIME);
+}

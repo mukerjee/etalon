@@ -8,7 +8,7 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
-@@ -115,6 +224,40 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
+@@ -115,6 +224,51 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
  }
  
  /*
@@ -43,6 +43,17 @@
 +		}
 +	}
 +	return 0;
++}
++
++
++SYSCALL_DEFINE(gettimedilation)
++{
++	return current->dilation;
++}
++
++SYSCALL_DEFINE(getstartvirtualtime)
++{
++	return current->virtual_start_nsec;
 +}
 +
 +/*

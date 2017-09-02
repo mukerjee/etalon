@@ -1,11 +1,13 @@
 --- linux-3.16.3-clean/arch/x86/syscalls/syscall_64.tbl	2014-09-17 11:22:16.000000000 -0600
 +++ linux-3.16.3-vtmininet/arch/x86/syscalls/syscall_64.tbl	2017-08-29 10:02:36.888974335 -0600
-@@ -323,6 +323,8 @@
+@@ -323,6 +323,10 @@
  314	common	sched_setattr		sys_sched_setattr
  315	common	sched_getattr		sys_sched_getattr
  316	common	renameat2		sys_renameat2
 +317	common  virtualtimeunshare	sys_virtualtimeunshare
 +318	common  settimedilationfactor	sys_settimedilationfactor
++319	common	gettimedilation		sys_virtualtimeunshare
++320	common	getstartvirtualtime	sys_virtualtimeunshare
  
  #
  # x32-specific system call numbers start at 512 to avoid cache impact

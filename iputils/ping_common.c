@@ -84,8 +84,8 @@ long long tsum;			/* sum of all times, for doing average */
 long long tsum2;
 int  pipesize = -1;
 
-int dilation;
-long long start_virtual_time_ns;
+int dilation = -1;
+long long start_virtual_time_ns = -1;
 
 int datalen = DEFDATALEN;
 
@@ -733,6 +733,13 @@ void main_loop(ping_func_set_st *fset, socket_st *sock, __u8 *packet, int packle
 					if (c->cmsg_len < CMSG_LEN(sizeof(struct timeval)))
 						continue;
 					recv_timep = (struct timeval*)CMSG_DATA(c);
+
+                    if (dilation == -1) {
+                        dilation = gettimedilation();
+                    }
+                    if (start_virtual_time == -1) {
+                        start_virtual_time = getstartvirtualtime();
+                    }
 
                     unsigned long recv_timep_ns = timeval_to_ns(recv_timep);
                     unsigned long recv_virtual_ns = start_virtual_time +
