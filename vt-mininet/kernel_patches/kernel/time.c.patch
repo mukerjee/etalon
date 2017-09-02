@@ -9,7 +9,7 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
-@@ -115,6 +224,61 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
+@@ -115,6 +224,42 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
  }
  
  /*
@@ -21,46 +21,27 @@
 +	if (dilation > 0) {
 +		struct timeval now;
 +		struct timespec ts;
++       struct task_struct *task = current;
 +
-+		if (ppid == 0) // change current's dilation
-+		{
-+			/* reset virtual_start so that we can get original time */
-+			current->dilation = 0;
-+
-+			/* reset nsec fields, current version */
-+			current->virtual_start_nsec = 0;
-+			getnstimeofday(&ts);
-+			current->virtual_start_nsec = timespec_to_ns(&ts);
-+			current->physical_past_nsec = 0;
-+			current->virtual_past_nsec = 0;
-+
-+			current->dilation = dilation;
-+		} else { // change current's parent's dilation
-+			/*
-+			 * To access parent's data, we need to lock and unlock;
-+			 * see https://www.kernel.org/doc/Documentation/RCU/whatisRCU.txt for more details
-+			 */
++       if (ppid != 0) { // change current's parent's dilation
 +			rcu_read_lock();
-+
-+			struct task_struct* parent = rcu_dereference(current->real_parent);
++			task = rcu_dereference(current->real_parent);
 +
 +			/* pid_t == __kernel_pid_t == int */
 +			if (!parent || parent->pid != ppid) {
 +				rcu_read_unlock();
 +				return -1;
-+			}
++			}          
++       }
 +
-+			parent->dilation = 0;
++       /* reset virtual_start so that we can get original time */
++	    task->virtual_start_nsec = 0;
++		getnstimeofday(&ts);
++		task->virtual_start_nsec = timespec_to_ns(&ts);
 +
-+			/* reset virtual_start so that we can get original time */
-+			/* reset nsec fields, current version */
-+			parent->virtual_start_nsec = 0;
-+			getnstimeofday(&ts);
-+			parent->virtual_start_nsec = timespec_to_ns(&ts);
-+			parent->physical_past_nsec = 0;
-+			parent->virtual_past_nsec = 0;
++		task->dilation = dilation;
 +
-+			parent->dilation = dilation;
++       if (ppid != 0) {
 +			rcu_read_unlock();
 +		}
 +	}
