@@ -8,7 +8,7 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
-@@ -115,6 +224,42 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
+@@ -115,6 +224,41 @@ SYSCALL_DEFINE2(gettimeofday, struct tim
  }
  
  /*
@@ -18,29 +18,28 @@
 +SYSCALL_DEFINE2(settimedilationfactor, unsigned long, dilation, pid_t, ppid)
 +{
 +	if (dilation > 0) {
-+		struct timeval now;
 +		struct timespec ts;
-+       struct task_struct *task = current;
++		struct task_struct *task = current;
 +
-+       if (ppid != 0) { // change current's parent's dilation
++		if (ppid != 0) { // change current's parent's dilation
 +			rcu_read_lock();
 +			task = rcu_dereference(current->real_parent);
 +
 +			/* pid_t == __kernel_pid_t == int */
-+			if (!parent || parent->pid != ppid) {
++			if (!task || task->pid != ppid) {
 +				rcu_read_unlock();
 +				return -1;
 +			}          
-+       }
++		}
 +
-+       /* reset virtual_start so that we can get original time */
-+	    task->virtual_start_nsec = 0;
++		/* reset virtual_start so that we can get original time */
++		task->virtual_start_nsec = 0;
 +		getnstimeofday(&ts);
 +		task->virtual_start_nsec = timespec_to_ns(&ts);
 +
 +		task->dilation = dilation;
 +
-+       if (ppid != 0) {
++		if (ppid != 0) {
 +			rcu_read_unlock();
 +		}
 +	}
