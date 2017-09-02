@@ -85,7 +85,7 @@ long long tsum2;
 int  pipesize = -1;
 
 int dilation = -1;
-long long start_virtual_time_ns = -1;
+long start_virtual_time = -1;
 
 int datalen = DEFDATALEN;
 
@@ -741,10 +741,14 @@ void main_loop(ping_func_set_st *fset, socket_st *sock, __u8 *packet, int packle
                         start_virtual_time = getstartvirtualtime();
                     }
 
-                    unsigned long recv_timep_ns = timeval_to_ns(recv_timep);
-                    unsigned long recv_virtual_ns = start_virtual_time +
-                        (recv_timep_ns - start_virtual_time_ns) / dilation;
-                    ns_to_timeval(recv_virtual_ns, recv_timep);
+		    printf("d = %d, svt = %ld\n", dilation, start_virtual_time);
+		    if (dilation > 1 && start_virtual_time > 0) {
+		      long recv_timep_ns = recv_timep->tv_sec * 1000000000 + recv_timep->tv_usec * 1000;
+		      long recv_virtual_ns = start_virtual_time +
+                        (recv_timep_ns - start_virtual_time) / dilation;
+		      recv_timep->tv_sec = recv_virtual_ns / 1000000000;
+		      recv_timep->tv_usec = (recv_virtual_ns / 1000) % 1000;
+		    }
 				}
 #endif
 
