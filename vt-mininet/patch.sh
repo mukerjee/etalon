@@ -13,14 +13,15 @@ files=`find ./kernel_patches/* -name '*.patch'`
 for f in $files; do
     f=${f#./kernel_patches/}
     f=${f%.*}
-    b=basename $f
+    b=`basename $f`
     cp $CLEAN/$f /tmp/$b
-    patch /tmp/$b ./kernel_patches/$f
+    patch /tmp/$b ./kernel_patches/$f.patch
 
     if cmp -s $DST/$f /tmp/$b
     then
-        echo "skipping $DST/$f"
+        printf "\tskipping $DST/$f\n"
     else
+	printf "\t"
         cp -v /tmp/$b $DST/$f
     fi
 done
