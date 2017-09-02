@@ -1,18 +1,18 @@
 #!/bin/bash
 
-if [ "z$1" = "z" ]; then
-    echo "usage: $0 path/to/kernel/src"
+if [ "$#" -ne 2 ] || ! [ -d "$1" ] || ! [ -d "$2" ]; then
+    echo "usage: $0 path/to/clean-kernel/ path/to/dest-kernel/"
     exit 1
 fi
 
-DST=$1
+CLEAN=${1%/}
+DST=${2%/}
 
-if [ ! -e $DST ]; then
-    echo "error: $DST not found"
-    exit 1
-fi
+files=`find ./kernel_patches/* -name '*.patch'`
 
-echo "Step 1. transfer modified kernel source files"
-for f in $(find ./kernel_patches/* -name '*.patch'); do
-    patch -p1 < $f
+for f in $files; do
+    f2=${f#./kernel_patches/}
+    f2=${f2%.*}
+    cp $CLEAN/$f2 $DST/$f2
+    patch $DST/$f2 $f
 done
