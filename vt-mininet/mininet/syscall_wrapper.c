@@ -1,4 +1,4 @@
-#include <sys/syscall.h>
+#include "syscall_wrapper.h"
 
 #define VIRTUALTIMEUNSHARE 318
 #define SETTIMEDILATIONFACTOR 321

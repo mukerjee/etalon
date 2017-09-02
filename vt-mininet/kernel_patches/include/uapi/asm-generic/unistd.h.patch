@@ -12,7 +12,7 @@
 +
  #undef __NR_syscalls
 -#define __NR_syscalls 277
-+#define __NR_syscalls 281
++#define __NR_syscalls 282
  
  /*
   * All syscalls below here should go away really,
