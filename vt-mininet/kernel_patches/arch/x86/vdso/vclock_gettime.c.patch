@@ -13,20 +13,8 @@
 -		tz->tz_minuteswest = gtod->tz_minuteswest;
 -		tz->tz_dsttime = gtod->tz_dsttime;
 -	}
-+    return vdso_fallback_gtod(tv, tz);
++   return vdso_fallback_gtod(tv, tz);
  
--	return 0;
-+	/*if (likely(tv != NULL)) {*/
-+		/*if (unlikely(do_realtime((struct timespec *)tv) == VCLOCK_NONE))*/
-+			/*return vdso_fallback_gtod(tv, tz);*/
-+		/*tv->tv_usec /= 1000;*/
-+	/*}*/
-+	/*if (unlikely(tz != NULL)) {*/
-+		/*tz->tz_minuteswest = gtod->tz_minuteswest;*/
-+		/*tz->tz_dsttime = gtod->tz_dsttime;*/
-+	/*}*/
-+
-+	/*return 0;*/
  }
  int gettimeofday(struct timeval *, struct timezone *)
  	__attribute__((weak, alias("__vdso_gettimeofday")));

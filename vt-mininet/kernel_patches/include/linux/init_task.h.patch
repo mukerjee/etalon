@@ -4,7 +4,6 @@
  	.ptraced	= LIST_HEAD_INIT(tsk.ptraced),			\
  	.ptrace_entry	= LIST_HEAD_INIT(tsk.ptrace_entry),		\
  	.real_parent	= &tsk,						\
--	.parent		= &tsk,						\
 +    .virtual_start_time = 0,                    \
 +    .physical_past_time = 0,                    \
 +    .virtual_past_time = 0,                     \
@@ -12,7 +11,7 @@
 +    .virtual_start_nsec = 0,                    \
 +    .physical_past_nsec = 0,                    \
 +    .virtual_past_nsec = 0,                     \
-+    .parent		= &tsk,						\
+	.parent		= &tsk,						\
  	.children	= LIST_HEAD_INIT(tsk.children),			\
  	.sibling	= LIST_HEAD_INIT(tsk.sibling),			\
  	.group_leader	= &tsk,						\

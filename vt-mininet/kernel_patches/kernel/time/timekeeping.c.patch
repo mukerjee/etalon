@@ -1,6 +1,6 @@
 --- linux-3.16.3-clean/kernel/time/timekeeping.c	2014-09-17 11:22:16.000000000 -0600
 +++ ./linux-3.16.3-vtmininet/kernel/time/timekeeping.c	2017-09-01 12:53:48.450976718 -0600
-@@ -19,10 +19,12 @@
+@@ -19,6 +19,7 @@
  #include <linux/clocksource.h>
  #include <linux/jiffies.h>
  #include <linux/time.h>
@@ -8,11 +8,6 @@
  #include <linux/tick.h>
  #include <linux/stop_machine.h>
  #include <linux/pvclock_gtod.h>
- #include <linux/compiler.h>
-+#include <linux/math64.h> // for 64bit div
- 
- #include "tick-internal.h"
- #include "ntp_internal.h"
 @@ -290,6 +292,33 @@ static void timekeeping_forward_now(stru
  	timespec_add_ns(&tk->raw_time, nsec);
  }
@@ -47,38 +42,14 @@
  /**
   * __getnstimeofday - Returns the time of day in a timespec.
   * @ts:		pointer to the timespec to be set
-@@ -320,6 +349,15 @@ int __getnstimeofday(struct timespec *ts
+@@ -320,6 +349,10 @@ int __getnstimeofday(struct timespec *ts
  	 */
  	if (unlikely(timekeeping_suspended))
  		return -EAGAIN;
 +
 +	/* Dilate time */
-+	// s64 now = timespec_to_ns(ts);
-+	// printk("[info] getnstimeofday before do_dilatetimeofday: %ld nano seconds\n", now);
-+
-+    // now = timespec_to_ns(ts);
-+	// printk("[info] getnstimeofday after do_dilatetimeofday: %ld nano seconds\n", now);
 +	do_dilatetimeofday(ts);
 +
  	return 0;
  }
  EXPORT_SYMBOL(__getnstimeofday);
-@@ -355,6 +393,18 @@ ktime_t ktime_get(void)
- 	 * 32-bit architectures without CONFIG_KTIME_SCALAR.
- 	 */
- 	return ktime_add_ns(ktime_set(secs, 0), nsecs);
-+
-+    /* Dilated time
-+    struct timespec ts = ktime_to_timespec(ktime_add_ns(ktime_set(secs, 0), nsecs));
-+
-+	// s64 now = timespec_to_ns(&ts);
-+	// printk("[info] ktime_get before do_dilatetimeofday: %ld nano seconds\n", now);
-+    // do_dilatetimeofday(&ts);
-+    // now = timespec_to_ns(&ts);
-+	// printk("[info] ktime_get after do_dilatetimeofday: %ld nano seconds\n", now);
-+
-+    return timespec_to_ktime(ts);
-+    */
- }
- EXPORT_SYMBOL_GPL(ktime_get);
- 

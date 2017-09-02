@@ -17,23 +17,3 @@
  static inline void psched_ratecfg_getrate(struct tc_ratespec *res,
  					  const struct psched_ratecfg *r)
  {
-@@ -716,6 +719,19 @@ static inline void psched_ratecfg_getrat
- 	 */
- 	res->rate = min_t(u64, r->rate_bytes_ps, ~0U);
- 
-+	/*
-+	if (current)
-+	{
-+		if (current->dilation > 0)
-+		{
-+			// r->rate_bytes_ps = r->rate_bytes_ps / current->dilation * 1000;
-+		}
-+		printk("[info] in psched_ratecfg_getrate res->rate(%llu), r->rate_bytes_ps(%llu)\n", res->rate, r->rate_bytes_ps, current->dilation);
-+	} else {
-+		printk("[info] in psched_ratecfg_getrate current is NULL");
-+	}
-+	*/
-+
- 	res->overhead = r->overhead;
- 	res->linklayer = (r->linklayer & TC_LINKLAYER_MASK);
- }
