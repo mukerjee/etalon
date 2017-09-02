@@ -67,6 +67,16 @@
 #define MININTERVAL	10		/* Minimal interpacket gap */
 #define MINUSERINTERVAL	200		/* Minimal allowed interval for non-root */
 
+#define NSEC_PER_USEC	1000L
+#define NSEC_PER_SEC	1000000000L
+static inline long timeval_to_ns(struct timeval *tv)
+{
+  return ((long) tv->tv_sec * NSEC_PER_SEC) +
+    tv->tv_usec * NSEC_PER_USEC;
+}
+int ns_to_timeval(long nsec, struct timeval *tv);
+
+
 #define SCHINT(a)	(((a) <= MININTERVAL) ? MININTERVAL : (a))
 
 /* various options */

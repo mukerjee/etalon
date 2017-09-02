@@ -96,6 +96,31 @@ int ident;			/* process id to identify our packets */
 
 static int screen_width = INT_MAX;
 
+int ns_to_timeval(long nsec, struct timeval *tv) {
+  struct timespec ts;
+  int rem;
+
+  if (!nsec) {
+    tv->tv_sec = 0;
+    tv->tv_usec = 0;
+    return -1;
+  }
+
+  ts.tv_sec = nsec / NSEC_PER_SEC;
+  rem = nsec % NSEC_PER_SEC;
+
+  if (rem < 0) {
+    ts.tv_sec--;
+    rem += NSEC_PER_SEC;
+  }
+  ts.tv_nsec = rem;
+
+  tv->tv_sec = ts.tv_sec;
+  tv->tv_usec = (suseconds_t) ts.tv_nsec / 1000;
+
+  return 0;
+}
+
 #define ARRAY_SIZE(a)	(sizeof(a) / sizeof(a[0]))
 
 #ifdef CAPABILITIES
@@ -741,13 +766,11 @@ void main_loop(ping_func_set_st *fset, socket_st *sock, __u8 *packet, int packle
                         start_virtual_time = getstartvirtualtime();
                     }
 
-		    printf("d = %d, svt = %ld\n", dilation, start_virtual_time);
 		    if (dilation > 1 && start_virtual_time > 0) {
-		      long recv_timep_ns = recv_timep->tv_sec * 1000000000 + recv_timep->tv_usec * 1000;
+		      long recv_timep_ns = timeval_to_ns(recv_timep);
 		      long recv_virtual_ns = start_virtual_time +
                         (recv_timep_ns - start_virtual_time) / dilation;
-		      recv_timep->tv_sec = recv_virtual_ns / 1000000000;
-		      recv_timep->tv_usec = (recv_virtual_ns / 1000) % 1000;
+		      ns_to_timeval(recv_virtual_ns, recv_timep);
 		    }
 				}
 #endif
