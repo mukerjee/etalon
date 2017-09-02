@@ -188,6 +188,9 @@ extern int rtt;
 extern __u16 acked;
 extern int pipesize;
 
+extern int dilation;
+extern long long start_virtual_time_ns;
+
 /*
  * Write to stdout
  */
