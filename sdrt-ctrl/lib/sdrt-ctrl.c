@@ -51,18 +51,18 @@ void get_local_ip(char* addr)
 }
 void get_remote_ip(int fd, char* raddr)
 {
-	socklen_t len;
-	struct sockaddr_storage addr;
-	//int port;
+    socklen_t len;
+    struct sockaddr_storage addr;
+    //int port;
 
-	len = sizeof addr;
-	getpeername(fd, (struct sockaddr*)&addr, &len);
+    len = sizeof addr;
+    getpeername(fd, (struct sockaddr*)&addr, &len);
 
-	// deal with both IPv4 and IPv6:
-	if (addr.ss_family == AF_INET) {
-		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-		//port = ntohs(s->sin_port);
-		inet_ntop(AF_INET, &s->sin_addr, raddr, INET_ADDRSTRLEN);
+    // deal with both IPv4 and IPv6:
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        //port = ntohs(s->sin_port);
+        inet_ntop(AF_INET, &s->sin_addr, raddr, INET_ADDRSTRLEN);
     }
 }
 
@@ -137,11 +137,11 @@ int socket(int domain, int type, int protocol)
 {
     char* fn_name = "socket";
     get_next_fn((void**)&next_socket,fn_name);
-   
+
     open_ctrl_socket();
 
     int sockfd = next_socket(domain, type, protocol);
-    
+
     return sockfd;
 }
 
@@ -162,7 +162,7 @@ ssize_t write(int fd, void *buffer, size_t size)
             fprintf(stderr, "Failed to send ctrl message\n");
             return nbytes;
         }
-	fprintf(stderr, "SIZE: %ld\n", size);
+        fprintf(stderr, "SIZE: %ld\n", size);
     }
     return next_write(fd, buffer, size);
 }
@@ -173,7 +173,7 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags)
     ssize_t nbytes = -1;
     char* fn_name = "send";
     get_next_fn((void**)&next_send,fn_name);
-     
+
     //Get the destination address
     if (fd != ctrl_sock) {
         get_remote_ip(fd, info->dst);
