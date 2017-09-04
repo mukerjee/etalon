@@ -17,34 +17,6 @@
 #define SWITCH_CTRL_IP "10.10.1.1"
 #define SWITCH_CTRL_PORT "8888"
 
-#define FAMS 12
-char* ADDRESS_FAMILIY[FAMS] =
-{
-        "PF_UNSPEC",
-        "PF_UNIX",
-        "PF_INET",
-        "PF_AX25",
-        "PF_IPX",
-        "PF_APPLETALK",
-        "PF_NETROM",
-        "PF_BRIDGE",
-        "PF_ATMPVC",
-        "PF_X25",
-        "PF_INET6",
-};
-
-#define SOCKS 7
-char* SOCK_TYPE[SOCKS] =
-{
-        "NULL",
-        "SOCK_STREAM",
-        "SOCK_DGRAM",
-        "SOCK_RAW",
-        "SOCK_RDM"
-        "SOCK_SEQPACKET",
-        "SOCK_DCCP"
-};
-
 struct traffic_info {
     char src[INET_ADDRSTRLEN];
     char dst[INET_ADDRSTRLEN];
@@ -58,7 +30,10 @@ int ctrl_sock = -1;
 ssize_t write(int fd, void *buffer, size_t size);
 int socket(int domain, int type, int protocol);
 int close(int sockfd);
+
 static int (*next_socket)(int domain, int type, int protocol) = NULL;
+static int (*next_send)(int socket, const void *buffer, size_t length, int flags) = NULL;
+static int (*next_write)(int fd, void *buffer, size_t size) = NULL;
 static int (*next_close)(int sockfd) = NULL;
 
 void get_local_ip(char* addr)
@@ -165,7 +140,6 @@ int socket(int domain, int type, int protocol)
     char* fn_name = "socket";
     get_next_fn((void**)&next_socket,fn_name);
    
-    //fprintf(stderr, "Open new socket!\n");
     open_ctrl_socket();
 
     int sockfd = next_socket(domain, type, protocol);
@@ -173,8 +147,7 @@ int socket(int domain, int type, int protocol)
     return sockfd;
 }
 
-//Wrap up the socket() call
-static int (*next_write)(int fd, void *buffer, size_t size) = NULL;
+//Wrap up the write() call
 ssize_t write(int fd, void *buffer, size_t size)
 {
     ssize_t nbytes = -1;
@@ -182,25 +155,46 @@ ssize_t write(int fd, void *buffer, size_t size)
     get_next_fn((void**)&next_write,fn_name);
 
     //Get the destination address
-    get_remote_ip(ctrl_sock, info->dst);
-    info->size = size;
-    nbytes = next_write(ctrl_sock, info, sizeof(struct traffic_info));
+    if (fd != ctrl_sock) {
+        get_remote_ip(ctrl_sock, info->dst);
+        info->size = size;
+        nbytes = next_write(ctrl_sock, info, sizeof(struct traffic_info));
 
-    if (nbytes != sizeof(struct traffic_info)){
-        fprintf(stderr, "Failed to send ctrl message\n");
-        return nbytes;
+        if (nbytes != sizeof(struct traffic_info)){
+            fprintf(stderr, "Failed to send ctrl message\n");
+            return nbytes;
+        }
     }
     return next_write(fd, buffer, size);
 }
 
-//Wrap up the connect() call
+//Wrap up the send() call
+ssize_t send(int fd, const void *buffer, size_t size, int flags)
+{
+    ssize_t nbytes = -1;
+    char* fn_name = "send";
+    get_next_fn((void**)&next_send,fn_name);
+
+    //Get the destination address
+    if (fd != ctrl_sock) {
+        get_remote_ip(ctrl_sock, info->dst);
+        info->size = size;
+        nbytes = next_send(ctrl_sock, info, sizeof(struct traffic_info), flags);
+        if (nbytes != sizeof(struct traffic_info)){
+            fprintf(stderr, "Failed to send ctrl message\n");
+            return nbytes;
+        }
+    }
+
+    return next_send(fd, buffer, size, flags);
+}
+
+//Wrap up the close() call
 int close(int sockfd)
 {
     char* fn_name = "close";
-
     get_next_fn((void**)&next_close,fn_name);
 
     fprintf(stderr, "close(%i)\n", sockfd);
-
     return next_close(sockfd);
 }
