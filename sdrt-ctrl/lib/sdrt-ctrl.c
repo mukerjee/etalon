@@ -14,36 +14,8 @@
 #include <net/if.h>
 
 #define LOCAL_CTRL_DEVNAME "enp8s0d1"
-#define SWITCH_CTRL_IP "10.0.2.1"
+#define SWITCH_CTRL_IP "10.10.1.1"
 #define SWITCH_CTRL_PORT "8888"
-
-#define FAMS 12
-char* ADDRESS_FAMILIY[FAMS] =
-{
-        "PF_UNSPEC",
-        "PF_UNIX",
-        "PF_INET",
-        "PF_AX25",
-        "PF_IPX",
-        "PF_APPLETALK",
-        "PF_NETROM",
-        "PF_BRIDGE",
-        "PF_ATMPVC",
-        "PF_X25",
-        "PF_INET6",
-};
-
-#define SOCKS 7
-char* SOCK_TYPE[SOCKS] =
-{
-        "NULL",
-        "SOCK_STREAM",
-        "SOCK_DGRAM",
-        "SOCK_RAW",
-        "SOCK_RDM"
-        "SOCK_SEQPACKET",
-        "SOCK_DCCP"
-};
 
 struct traffic_info {
     char src[INET_ADDRSTRLEN];
@@ -58,6 +30,11 @@ int ctrl_sock = -1;
 ssize_t write(int fd, void *buffer, size_t size);
 int socket(int domain, int type, int protocol);
 int close(int sockfd);
+
+static int (*next_socket)(int domain, int type, int protocol) = NULL;
+static int (*next_send)(int socket, const void *buffer, size_t length, int flags) = NULL;
+static int (*next_write)(int fd, void *buffer, size_t size) = NULL;
+static int (*next_close)(int sockfd) = NULL;
 
 void get_local_ip(char* addr)
 {
@@ -74,21 +51,19 @@ void get_local_ip(char* addr)
 }
 void get_remote_ip(int fd, char* raddr)
 {
-	socklen_t len;
-	struct sockaddr_storage addr;
-	int port;
+    socklen_t len;
+    struct sockaddr_storage addr;
+    //int port;
 
-	len = sizeof addr;
-	getpeername(fd, (struct sockaddr*)&addr, &len);
+    len = sizeof addr;
+    getpeername(fd, (struct sockaddr*)&addr, &len);
 
-	// deal with both IPv4 and IPv6:
-	if (addr.ss_family == AF_INET) {
-		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-		port = ntohs(s->sin_port);
-		inet_ntop(AF_INET, &s->sin_addr, raddr, INET_ADDRSTRLEN);
+    // deal with both IPv4 and IPv6:
+    if (addr.ss_family == AF_INET) {
+        struct sockaddr_in *s = (struct sockaddr_in *)&addr;
+        //port = ntohs(s->sin_port);
+        inet_ntop(AF_INET, &s->sin_addr, raddr, INET_ADDRSTRLEN);
     }
-	printf("Peer IP address: %s\n", raddr);
-	printf("Peer port      : %d\n", port);	
 }
 
 static void open_ctrl_socket()
@@ -116,7 +91,7 @@ static void open_ctrl_socket()
         for(p = res;p != NULL; p = p->ai_next) 
         {
             /* Try to open a socket */
-            if ((ctrl_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) 
+            if ((ctrl_sock = next_socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) 
             {
                 perror("Could not open socket");
                 continue;
@@ -124,7 +99,7 @@ static void open_ctrl_socket()
 
             if (connect(ctrl_sock, p->ai_addr, p->ai_addrlen) == -1) 
             {
-                close(ctrl_sock);
+                next_close(ctrl_sock);
                 perror("Could not connect to socket");
                 continue;
             }
@@ -158,22 +133,19 @@ static void get_next_fn(void** next_fn, char* fn)
 }
 
 //Wrap up the socket() call
-static int (*next_socket)(int domain, int type, int protocol) = NULL;
 int socket(int domain, int type, int protocol)
 {
     char* fn_name = "socket";
     get_next_fn((void**)&next_socket,fn_name);
-   
-    fprintf(stderr, "Open new socket!\n");
+
     open_ctrl_socket();
 
     int sockfd = next_socket(domain, type, protocol);
-    
+
     return sockfd;
 }
 
-//Wrap up the socket() call
-static int (*next_write)(int fd, void *buffer, size_t size) = NULL;
+//Wrap up the write() call
 ssize_t write(int fd, void *buffer, size_t size)
 {
     ssize_t nbytes = -1;
@@ -181,26 +153,46 @@ ssize_t write(int fd, void *buffer, size_t size)
     get_next_fn((void**)&next_write,fn_name);
 
     //Get the destination address
-    get_remote_ip(ctrl_sock, info->dst);
-    info->size = size;
-    nbytes = next_write(ctrl_sock, info, sizeof(struct traffic_info));
+    if (fd != ctrl_sock) {
+        get_remote_ip(fd, info->dst);
+        info->size = size;
+        nbytes = next_write(ctrl_sock, info, sizeof(struct traffic_info));
 
-    if (nbytes != sizeof(struct traffic_info)){
-        fprintf(stderr, "Failed to send ctrl message\n");
-        return nbytes;
+        if (nbytes != sizeof(struct traffic_info)){
+            fprintf(stderr, "Failed to send ctrl message\n");
+            return nbytes;
+        }
+        fprintf(stderr, "SIZE: %ld\n", size);
     }
     return next_write(fd, buffer, size);
 }
 
-//Wrap up the connect() call
-static int (*next_close)(int sockfd) = NULL;
+//Wrap up the send() call
+ssize_t send(int fd, const void *buffer, size_t size, int flags)
+{
+    ssize_t nbytes = -1;
+    char* fn_name = "send";
+    get_next_fn((void**)&next_send,fn_name);
+
+    //Get the destination address
+    if (fd != ctrl_sock) {
+        get_remote_ip(fd, info->dst);
+        info->size = size;
+        nbytes = next_send(ctrl_sock, info, sizeof(struct traffic_info), flags);
+        if (nbytes != sizeof(struct traffic_info)){
+            fprintf(stderr, "Failed to send ctrl message\n");
+            return nbytes;
+        }
+    }
+    return next_send(fd, buffer, size, flags);
+}
+
+//Wrap up the close() call
 int close(int sockfd)
 {
     char* fn_name = "close";
-
     get_next_fn((void**)&next_close,fn_name);
 
     fprintf(stderr, "close(%i)\n", sockfd);
-
     return next_close(sockfd);
 }
