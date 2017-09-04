@@ -173,7 +173,6 @@ void *service_single_client(void *args) {
 
 	while(1)
 	{
-        fprintf(stderr, "Wait for receiving\n");
 		nbytes = read(socket, &info, sizeof(info));
 		if (nbytes == 0)
 			break;
