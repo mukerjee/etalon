@@ -86,6 +86,9 @@ int main(int argc, char *argv[])
         pthread_exit(NULL);
     }
 
+	FD_ZERO (&active_fd_set);
+	FD_SET (serverSocket, &active_fd_set);
+
     while (1)
     {
         read_fd_set = active_fd_set;
@@ -98,7 +101,6 @@ int main(int argc, char *argv[])
         for (i = 0; i < FD_SETSIZE; ++i) {
             if (FD_ISSET (i, &read_fd_set)) {
                 if (i == serverSocket) {
-                    /* Connection request on original socket. */
                     clientAddr = malloc(sinSize);
                     if ((clientSocket = accept(serverSocket, (struct sockaddr *) clientAddr, &sinSize)) == -1) 
                     {
@@ -107,6 +109,7 @@ int main(int argc, char *argv[])
                         exit (EXIT_FAILURE);
                     }
                     FD_SET (clientSocket, &active_fd_set);
+                    fprintf(stderr, "New connection: %d\n", clientSocket);
                 }
                 else
                 {
