@@ -58,6 +58,8 @@ int ctrl_sock = -1;
 ssize_t write(int fd, void *buffer, size_t size);
 int socket(int domain, int type, int protocol);
 int close(int sockfd);
+static int (*next_socket)(int domain, int type, int protocol) = NULL;
+static int (*next_close)(int sockfd) = NULL;
 
 void get_local_ip(char* addr)
 {
@@ -116,7 +118,7 @@ static void open_ctrl_socket()
         for(p = res;p != NULL; p = p->ai_next) 
         {
             /* Try to open a socket */
-            if ((ctrl_sock = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) 
+            if ((ctrl_sock = next_socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) 
             {
                 perror("Could not open socket");
                 continue;
@@ -124,7 +126,7 @@ static void open_ctrl_socket()
 
             if (connect(ctrl_sock, p->ai_addr, p->ai_addrlen) == -1) 
             {
-                close(ctrl_sock);
+                next_close(ctrl_sock);
                 perror("Could not connect to socket");
                 continue;
             }
@@ -158,13 +160,12 @@ static void get_next_fn(void** next_fn, char* fn)
 }
 
 //Wrap up the socket() call
-static int (*next_socket)(int domain, int type, int protocol) = NULL;
 int socket(int domain, int type, int protocol)
 {
     char* fn_name = "socket";
     get_next_fn((void**)&next_socket,fn_name);
    
-    fprintf(stderr, "Open new socket!\n");
+    //fprintf(stderr, "Open new socket!\n");
     open_ctrl_socket();
 
     int sockfd = next_socket(domain, type, protocol);
@@ -193,7 +194,6 @@ ssize_t write(int fd, void *buffer, size_t size)
 }
 
 //Wrap up the connect() call
-static int (*next_close)(int sockfd) = NULL;
 int close(int sockfd)
 {
     char* fn_name = "close";
