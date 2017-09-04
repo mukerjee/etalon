@@ -115,11 +115,17 @@ int main(int argc, char *argv[])
                 {
                     nbytes = read(i, &info, sizeof(info));
                     if (nbytes == 0)
+                    {
+                        fprintf(stderr, "Closing socket\n");
+                        close(i);
+                        FD_CLR(i, &active_fd_set);
                         break;
-                    else if (nbytes == -1)
+                    }
+                    if (nbytes < 0)
                     {
                         perror("Socket read() failed");
                         close(i);
+                        FD_CLR (i, &active_fd_set);
                         exit (EXIT_FAILURE);
                     }
                     fprintf(stderr, "[CTRL] SRC: %s DST: %s SIZE: %ld\n", info.src, info.dst, info.size);

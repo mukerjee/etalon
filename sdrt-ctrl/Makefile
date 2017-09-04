@@ -8,5 +8,5 @@ server: server.c
 	$(CC) $(CFLAGS) $@.c $(LDFLAGS) -o $@ 
 
 clean:
-	rm *.o server
+	rm server
 
