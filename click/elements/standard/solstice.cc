@@ -31,18 +31,27 @@ Solstice::Solstice() : _timer(this)
 int
 Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-    String num_hosts;
+    String num_hosts, circuit_bw;
     if (Args(conf, this, errh)
         .read_mp("NUM_HOSTS", num_hosts)
+        // .read_p("CIRCUIT_BW", circuit_bw)
         .complete() < 0)
         return -1;
     _num_hosts = atoi(num_hosts.c_str());
     if (_num_hosts == 0)
         return -1;
-    _traffic_matrix = (int **)malloc(sizeof(int*) * _num_hosts);
-    for (int i = 0; i < _num_hosts; i++) {
-        _traffic_matrix[i] = (int *)malloc(sizeof(int) * _num_hosts);
-    }
+    _traffic_matrix = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
+    sols_init(&_s, _num_hosts);
+    _s.night_len = 20;  // reconfiguration us
+    _s.week_len = 3000;  // schedule max length us
+    _s.avg_day_len = 40;  // ???
+    _s.min_day_len = 40;  // minimum configuration length us
+    _s.day_len_align = 1;  // ???
+    // _s.skip_norm_down = 1;
+    // if (circuit_bw)
+    //     _s.link_bw = atoi(circuit_bw);
+    // else
+    //     _s.link_bw = 10;
     return 0;
 }
  
@@ -70,11 +79,94 @@ Solstice::run_timer(Timer *)
         for (int src = 0; src < _num_hosts; src++) {
             for (int dst = 0; dst < _num_hosts; dst++) {
                 sprintf(queue, "hybrid_switch/q%d%d.length", src, dst);
-                _traffic_matrix[src][dst] = atoi(HandlerCall::call_read(queue, this).c_str());
+                _traffic_matrix[src * _num_hosts + dst] =
+                    atoi(HandlerCall::call_read(queue, this).c_str());
+                printf("src = %d, dest = %d, val = %d\n", src, dst, _traffic_matrix[src * _num_hosts + dst]);
             }
         }
 
         // do solstice here
+
+        // int i, j;
+        // uint64_t dat[NHOST * NHOST];
+
+        // uint64_t cap = (s.week_len * s.link_bw / _num_hosts);
+
+        // for (i = 0; i < NHOST; i++) {
+        //     for (j = 0; j < NHOST; j++) {
+        //         if (i == j) {
+        //             continue;
+        //         }
+
+        //         dat[i * NHOST + j] = rand() % cap;
+        //     }
+        // }
+
+        /* setup the demand here */
+        for (int src = 0; src < _num_hosts; src++) {
+            for (int dst = 0; dst < _num_hosts; dst++) {
+                uint64_t v = _traffic_matrix[src * _num_hosts + dst];
+                if (v == 0) continue;
+                sols_mat_set(&_s.future, src, dst, v);
+            }
+        }
+
+        sols_schedule(&_s);
+        sols_check(&_s);
+
+        printf("[demand]\n");
+        for (int src = 0; src < _num_hosts; src++) {
+            for (int dst = 0; dst < _num_hosts; dst++) {
+                if (dst > 0) printf(" ");
+                uint64_t v = _s.demand.m[src * _num_hosts + dst];
+                if (v == 0)
+                    printf(".");
+                else
+                    printf("%lld", v);
+            }
+            printf("\n");            
+        }
+        
+        char configuration[500];
+        
+        schedule = String();
+        sprintf(configuration, "%d ", _s.nday);
+        schedule.append(configuration);
+        
+
+        int *port_mapping = (int *)malloc(sizeof(int) * _num_hosts);
+        for (int i = 0; i < _s.nday; i++) {
+            sols_day_t *day = &_s.sched[i];
+            sprintf(configuration, "%lld ", day->len);
+            schedule.append(configuration);
+
+            
+            // printf("day #%d: T=" FMT_U64 "\n", i, day->len);
+            for (int dst = 0; dst < _num_hosts; dst++) {
+                int src = day->input_ports[dst];
+                if (src < 0) {
+                    printf("SOLSTICE BAD PORT\n");
+                    return;
+                }
+                port_mapping[src] = dst;
+                // if (day->is_dummy[dst]) {
+                //     printf("  (%d -> %d)\n", src, dst);
+                // } else {
+                //     printf("  %d -> %d\n", src, dst);
+                // }
+            }
+
+            configuration[0] = '\0';
+            for (int src = 0; src < _num_hosts; src++) {
+                char *p = &(configuration[strlen(configuration)]);
+                sprintf(p, "%d/", port_mapping[src]);
+            }
+            configuration[strlen(configuration)-1] = '\0';
+            schedule.append(configuration);
+        }
+
+        // sols_cleanup(&s);
+        printf("%s\n", schedule.c_str());
 
         schedule = "6 180 1/2/3/0 20 4/4/4/4 180 2/3/0/1 20 4/4/4/4 180 3/0/1/2 20 4/4/4/4";
 

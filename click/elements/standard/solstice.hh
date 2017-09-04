@@ -1,6 +1,7 @@
 // -*- c-basic-offset: 4 -*-
 #ifndef CLICK_SOLSTICE_HH
 #define CLICK_SOLSTICE_HH
+#include <click/sols.h>
 #include <click/element.hh>
 #include <click/timer.hh>
 CLICK_DECLS
@@ -33,7 +34,8 @@ class Solstice : public Element {
     void run_timer(Timer *);
 
   private:
-    int **_traffic_matrix;
+    sols_t _s;
+    int *_traffic_matrix;
     Timer _timer;
     int _num_hosts;
 };
