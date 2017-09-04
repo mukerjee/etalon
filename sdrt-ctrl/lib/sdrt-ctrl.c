@@ -53,7 +53,7 @@ void get_remote_ip(int fd, char* raddr)
 {
 	socklen_t len;
 	struct sockaddr_storage addr;
-	int port;
+	//int port;
 
 	len = sizeof addr;
 	getpeername(fd, (struct sockaddr*)&addr, &len);
@@ -61,11 +61,9 @@ void get_remote_ip(int fd, char* raddr)
 	// deal with both IPv4 and IPv6:
 	if (addr.ss_family == AF_INET) {
 		struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-		port = ntohs(s->sin_port);
+		//port = ntohs(s->sin_port);
 		inet_ntop(AF_INET, &s->sin_addr, raddr, INET_ADDRSTRLEN);
     }
-	printf("Peer IP address: %s\n", raddr);
-	printf("Peer port      : %d\n", port);	
 }
 
 static void open_ctrl_socket()
