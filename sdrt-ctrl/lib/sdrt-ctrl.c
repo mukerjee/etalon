@@ -162,6 +162,7 @@ ssize_t write(int fd, void *buffer, size_t size)
             fprintf(stderr, "Failed to send ctrl message\n");
             return nbytes;
         }
+	fprintf(stderr, "SIZE: %ld\n", size);
     }
     return next_write(fd, buffer, size);
 }
@@ -172,7 +173,7 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags)
     ssize_t nbytes = -1;
     char* fn_name = "send";
     get_next_fn((void**)&next_send,fn_name);
-
+     
     //Get the destination address
     if (fd != ctrl_sock) {
         get_remote_ip(fd, info->dst);
@@ -183,7 +184,6 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags)
             return nbytes;
         }
     }
-
     return next_send(fd, buffer, size, flags);
 }
 
