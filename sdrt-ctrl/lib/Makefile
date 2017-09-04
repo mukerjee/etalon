@@ -1,10 +1,10 @@
 all:    libs
 
-libs:   sdrt-ctrl-sock.so
+libs:   sdrt-ctrl.so
 
-sdrt-ctrl-sock.so: sdrt-ctrl-sock.c
-	rm -f sdrt-ctrl-sockso*
-	gcc -O3 -fPIC -shared -Werror -Wall -o sdrt-ctrl-sock.so  sdrt-ctrl-sock.c -ldl
+sdrt-ctrl.so: sdrt-ctrl.c
+	rm -f sdrt-ctrl.so*
+	gcc -O3 -fPIC -shared -Werror -Wall -o sdrt-ctrl.so  sdrt-ctrl.c -ldl
 
 clean:
-	rm -f sdrt-ctrl-sock.so* 
+	rm -f sdrt-ctrl.so* 

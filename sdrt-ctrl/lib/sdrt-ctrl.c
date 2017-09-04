@@ -14,7 +14,7 @@
 #include <net/if.h>
 
 #define LOCAL_CTRL_DEVNAME "enp8s0d1"
-#define SWITCH_CTRL_IP "10.0.2.1"
+#define SWITCH_CTRL_IP "10.10.1.1"
 #define SWITCH_CTRL_PORT "8888"
 
 #define FAMS 12
