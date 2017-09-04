@@ -1,3 +1,7 @@
+#if defined (__cplusplus)
+extern "C" {
+#endif
+
 #include <stdint.h>
 
 #define SOLS_MAX_NDAY 256
@@ -91,3 +95,7 @@ void sols_test(sols_t *s); /* just for testing */
 int sols_day_is_dummy(sols_day_t * day, int dest);
 int sols_day_input_port(sols_day_t * day, int dest);
 uint64_t sols_bw_limit(sols_t *s, int lane);
+
+#if defined (__cplusplus)
+}
+#endif

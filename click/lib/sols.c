@@ -1,4 +1,4 @@
-#include "sols.h"
+#include "../include/click/sols.h"
 
 /* imports */
 #include <stdio.h>
