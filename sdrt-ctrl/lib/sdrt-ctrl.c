@@ -156,7 +156,7 @@ ssize_t write(int fd, void *buffer, size_t size)
 
     //Get the destination address
     if (fd != ctrl_sock) {
-        get_remote_ip(ctrl_sock, info->dst);
+        get_remote_ip(fd, info->dst);
         info->size = size;
         nbytes = next_write(ctrl_sock, info, sizeof(struct traffic_info));
 
@@ -177,7 +177,7 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags)
 
     //Get the destination address
     if (fd != ctrl_sock) {
-        get_remote_ip(ctrl_sock, info->dst);
+        get_remote_ip(fd, info->dst);
         info->size = size;
         nbytes = next_send(ctrl_sock, info, sizeof(struct traffic_info), flags);
         if (nbytes != sizeof(struct traffic_info)){
