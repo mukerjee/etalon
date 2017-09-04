@@ -67,6 +67,7 @@ int
 RunSchedule::handler(int, String &str, Element *t, const Handler *,
                      ErrorHandler *errh)
 {
+    printf("in handler\n");
     ((RunSchedule *)t)->next_schedule = str;
     return 0;
 }
