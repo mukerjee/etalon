@@ -58,8 +58,10 @@ FullNoteQueue::push(int, Packet *p)
     // Code taken from SimpleQueue::push().
     Storage::index_type h = head(), t = tail(), nt = next_i(t);
 
-    if (nt != h)
-	push_success(h, t, nt, p);
+    if (nt != h) {
+        push_success(h, t, nt, p);
+        enqueue_bytes += p->length();
+    }
     else
 	push_failure(p);
 }
@@ -70,8 +72,11 @@ FullNoteQueue::pull(int)
     // Code taken from SimpleQueue::deq.
     Storage::index_type h = head(), t = tail(), nh = next_i(h);
 
-    if (h != t)
-	return pull_success(h, nh);
+    if (h != t) {
+        Packet *p = pull_success(h, nh);
+        dequeue_bytes += p->length();
+        return p;
+    }
     else
 	return pull_failure();
 }
@@ -85,11 +90,32 @@ FullNoteQueue::read_handler(Element *e, void *)
 	+ "\nnonfull " + fq->_full_note.unparse(fq->router());
 }
 
+String
+FullNoteQueue::read_enqueue_bytes(Element *e, void *)
+{
+    char s[500];
+    FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
+    // sprintf(s, "%d", e->dequeue_bytes);
+    // return String(s);
+    return e->enqueue_bytes;
+}
+
+String
+FullNoteQueue::read_dequeue_bytes(Element *e, void *)
+{
+    char s[500];
+    FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
+    sprintf(s, "%d", e->dequeue_bytes);
+    return String(s);
+}
+
 void
 FullNoteQueue::add_handlers()
 {
     NotifierQueue::add_handlers();
     add_read_handler("notifier_state", read_handler, 0);
+    add_read_handler("enqueue_bytes", read_handler, 0);
+    add_read_handler("dequeue_bytes", read_handler, 0);
 }
 #endif
 

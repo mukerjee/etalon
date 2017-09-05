@@ -83,6 +83,9 @@ class FullNoteQueue : public NotifierQueue { public:
 
   protected:
 
+    unsigned long long enqueue_bytes;
+    unsigned long long dequeue_bytes;
+
     ActiveNotifier _full_note;
 
     inline void push_success(Storage::index_type h, Storage::index_type t,
