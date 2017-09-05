@@ -22,6 +22,8 @@ CLICK_DECLS
 
 FullNoteQueue::FullNoteQueue()
 {
+    enqueue_bytes = 0;
+    dequeue_bytes = 0;
 }
 
 void *
@@ -90,14 +92,22 @@ FullNoteQueue::read_handler(Element *e, void *)
 	+ "\nnonfull " + fq->_full_note.unparse(fq->router());
 }
 
+void
+FullNoteQueue::add_handlers()
+{
+    NotifierQueue::add_handlers();
+    add_read_handler("notifier_state", read_handler, 0);
+    add_read_handler("enqueue_bytes", read_enqueue_bytes, 0);
+    add_read_handler("dequeue_bytes", read_dequeue_bytes, 0);
+}
+#else
 String
 FullNoteQueue::read_enqueue_bytes(Element *e, void *)
 {
     char s[500];
     FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
-    // sprintf(s, "%d", e->dequeue_bytes);
-    // return String(s);
-    return e->enqueue_bytes;
+    sprintf(s, "%lld", fq->enqueue_bytes);
+    return String(s);
 }
 
 String
@@ -105,17 +115,16 @@ FullNoteQueue::read_dequeue_bytes(Element *e, void *)
 {
     char s[500];
     FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
-    sprintf(s, "%d", e->dequeue_bytes);
+    sprintf(s, "%lld", fq->dequeue_bytes);
     return String(s);
 }
 
 void
 FullNoteQueue::add_handlers()
 {
-    NotifierQueue::add_handlers();
-    add_read_handler("notifier_state", read_handler, 0);
-    add_read_handler("enqueue_bytes", read_handler, 0);
-    add_read_handler("dequeue_bytes", read_handler, 0);
+    // NotifierQueue::add_handlers();
+    add_read_handler("enqueue_bytes", read_enqueue_bytes, 0);
+    add_read_handler("dequeue_bytes", read_dequeue_bytes, 0);
 }
 #endif
 

@@ -21,6 +21,7 @@
 #include <click/confparse.hh>
 #include <click/error.hh>
 #include <sys/select.h>
+#include <algorithm>  // max
 
 CLICK_DECLS
 
@@ -34,24 +35,14 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
     String num_hosts, circuit_bw;
     if (Args(conf, this, errh)
         .read_mp("NUM_HOSTS", num_hosts)
-        // .read_p("CIRCUIT_BW", circuit_bw)
         .complete() < 0)
         return -1;
     _num_hosts = atoi(num_hosts.c_str());
     if (_num_hosts == 0)
         return -1;
     _traffic_matrix = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
-    sols_init(&_s, _num_hosts);
-    _s.night_len = 20;  // reconfiguration us
-    _s.week_len = 3000;  // schedule max length us
-    _s.avg_day_len = 40;  // ???
-    _s.min_day_len = 40;  // minimum configuration length us
-    _s.day_len_align = 1;  // ???
-    // _s.skip_norm_down = 1;
-    // if (circuit_bw)
-    //     _s.link_bw = atoi(circuit_bw);
-    // else
-    //     _s.link_bw = 10;
+    _enqueued_matrix = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
+    _dequeued_matrix = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
     return 0;
 }
  
@@ -74,14 +65,28 @@ Solstice::run_timer(Timer *)
     String schedule;
     
     while(1) {
-        // gather traffic matrix from queues
+	sols_init(&_s, _num_hosts);
+	_s.night_len = 20;  // reconfiguration us
+	_s.week_len = 3000;  // schedule max length us
+	_s.avg_day_len = 40;  // ???
+	_s.min_day_len = 40;  // minimum configuration length us
+	_s.day_len_align = 1;  // ???
+	_s.link_bw = 1125; // 9Gbps (in bytes / us)
+	_s.pack_bw = 125; // 1Gbps (in bytes / us)
+
+	// gather traffic matrix from queues
         char queue[500];
         for (int src = 0; src < _num_hosts; src++) {
             for (int dst = 0; dst < _num_hosts; dst++) {
-                sprintf(queue, "hybrid_switch/q%d%d.length", src, dst);
-                _traffic_matrix[src * _num_hosts + dst] =
+		int i = src * _num_hosts + dst;
+                sprintf(queue, "hybrid_switch/q%d%d.enqueue_bytes", src, dst);
+                _enqueued_matrix[i] =
                     atoi(HandlerCall::call_read(queue, this).c_str());
-                printf("src = %d, dest = %d, val = %d\n", src, dst, _traffic_matrix[src * _num_hosts + dst]);
+                sprintf(queue, "hybrid_switch/q%d%d.dequeue_bytes", src, dst);
+                _dequeued_matrix[i] =
+                    atoi(HandlerCall::call_read(queue, this).c_str());
+		_traffic_matrix[i] = std::max(_enqueued_matrix[i] -
+					      _dequeued_matrix[i], 0);
             }
         }
 
@@ -114,18 +119,18 @@ Solstice::run_timer(Timer *)
         sols_schedule(&_s);
         sols_check(&_s);
 
-        printf("[demand]\n");
-        for (int src = 0; src < _num_hosts; src++) {
-            for (int dst = 0; dst < _num_hosts; dst++) {
-                if (dst > 0) printf(" ");
-                uint64_t v = _s.demand.m[src * _num_hosts + dst];
-                if (v == 0)
-                    printf(".");
-                else
-                    printf("%lld", v);
-            }
-            printf("\n");            
-        }
+        // printf("[demand]\n");
+        // for (int src = 0; src < _num_hosts; src++) {
+        //     for (int dst = 0; dst < _num_hosts; dst++) {
+        //         if (dst > 0) printf(" ");
+        //         uint64_t v = _s.demand.m[src * _num_hosts + dst];
+        //         if (v == 0)
+        //             printf(".");
+        //         else
+        //             printf("%ld", v);
+        //     }
+        //     printf("\n");            
+        // }
         
         char configuration[500];
         
@@ -137,7 +142,7 @@ Solstice::run_timer(Timer *)
         int *port_mapping = (int *)malloc(sizeof(int) * _num_hosts);
         for (int i = 0; i < _s.nday; i++) {
             sols_day_t *day = &_s.sched[i];
-            sprintf(configuration, "%lld ", day->len);
+            sprintf(configuration, "%ld ", day->len);
             schedule.append(configuration);
 
             
@@ -165,17 +170,17 @@ Solstice::run_timer(Timer *)
             schedule.append(configuration);
         }
 
-        // sols_cleanup(&s);
-        printf("%s\n", schedule.c_str());
+        sols_cleanup(&_s);
+        // printf("%s\n", schedule.c_str());
 
-        schedule = "6 180 1/2/3/0 20 4/4/4/4 180 2/3/0/1 20 4/4/4/4 180 3/0/1/2 20 4/4/4/4";
+        // schedule = "6 180 1/2/3/0 20 4/4/4/4 180 2/3/0/1 20 4/4/4/4 180 3/0/1/2 20 4/4/4/4";
 
         // tell schedule runner
         HandlerCall::call_write("runner.setSchedule", schedule, this);
 
-        // remove this...
-        _timer.schedule_after(Timestamp(1));
-        return;
+        // // remove this...
+        // _timer.schedule_after(Timestamp(1));
+        // return;
     }
 }
 

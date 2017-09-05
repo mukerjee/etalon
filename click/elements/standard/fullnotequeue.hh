@@ -74,9 +74,9 @@ class FullNoteQueue : public NotifierQueue { public:
 
     int configure(Vector<String> &conf, ErrorHandler *) CLICK_COLD;
     int live_reconfigure(Vector<String> &conf, ErrorHandler *errh);
-#if CLICK_DEBUG_SCHEDULING
+    //#if CLICK_DEBUG_SCHEDULING
     void add_handlers() CLICK_COLD;
-#endif
+    //#endif
 
     void push(int port, Packet *p);
     Packet *pull(int port);
@@ -98,6 +98,8 @@ class FullNoteQueue : public NotifierQueue { public:
 #if CLICK_DEBUG_SCHEDULING
     static String read_handler(Element *e, void *user_data) CLICK_COLD;
 #endif
+    static String read_enqueue_bytes(Element *e, void *user_data);
+    static String read_dequeue_bytes(Element *e, void *user_data);
 
 };
 
