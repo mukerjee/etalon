@@ -18,10 +18,12 @@
 
 #include <click/config.h>
 #include "fullnotequeue.hh"
+#include <pthread.h>
 CLICK_DECLS
 
 FullNoteQueue::FullNoteQueue()
 {
+    pthread_mutex_init(&_lock, NULL);
     enqueue_bytes = 0;
     dequeue_bytes = 0;
 }
@@ -57,30 +59,38 @@ FullNoteQueue::live_reconfigure(Vector<String> &conf, ErrorHandler *errh)
 void
 FullNoteQueue::push(int, Packet *p)
 {
+    pthread_mutex_lock(&_lock);
     // Code taken from SimpleQueue::push().
     Storage::index_type h = head(), t = tail(), nt = next_i(t);
 
     if (nt != h) {
         push_success(h, t, nt, p);
         enqueue_bytes += p->length();
+	pthread_mutex_unlock(&_lock);
     }
-    else
+    else {
+	pthread_mutex_unlock(&_lock);
 	push_failure(p);
+    }
 }
 
 Packet *
 FullNoteQueue::pull(int)
 {
+    pthread_mutex_lock(&_lock);
     // Code taken from SimpleQueue::deq.
     Storage::index_type h = head(), t = tail(), nh = next_i(h);
 
     if (h != t) {
         Packet *p = pull_success(h, nh);
         dequeue_bytes += p->length();
+	pthread_mutex_unlock(&_lock);
         return p;
     }
-    else
+    else {
+	pthread_mutex_unlock(&_lock);
 	return pull_failure();
+    }
 }
 
 #if CLICK_DEBUG_SCHEDULING
@@ -97,34 +107,47 @@ FullNoteQueue::add_handlers()
 {
     NotifierQueue::add_handlers();
     add_read_handler("notifier_state", read_handler, 0);
-    add_read_handler("enqueue_bytes", read_enqueue_bytes, 0);
-    add_read_handler("dequeue_bytes", read_dequeue_bytes, 0);
 }
 #else
 String
 FullNoteQueue::read_enqueue_bytes(Element *e, void *)
 {
-    char s[500];
     FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
-    sprintf(s, "%lld", fq->enqueue_bytes);
-    return String(s);
+    return String(fq->enqueue_bytes);
 }
 
 String
 FullNoteQueue::read_dequeue_bytes(Element *e, void *)
 {
-    char s[500];
     FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
-    sprintf(s, "%lld", fq->dequeue_bytes);
-    return String(s);
+    return String(fq->dequeue_bytes);
+}
+
+String
+FullNoteQueue::read_bytes(Element *e, void *)
+{
+    FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
+
+    pthread_mutex_lock(&(fq->_lock));
+    int byte_count = 0;
+    Storage::index_type h = fq->head(), t = fq->tail();
+    while (h != t) {
+	byte_count += fq->_q[h]->length();
+	h = fq->next_i(h);
+    }
+    String r = String(byte_count);
+    pthread_mutex_unlock(&(fq->_lock));
+    
+    return r;
 }
 
 void
 FullNoteQueue::add_handlers()
 {
-    // NotifierQueue::add_handlers();
+    NotifierQueue::add_handlers();
     add_read_handler("enqueue_bytes", read_enqueue_bytes, 0);
     add_read_handler("dequeue_bytes", read_dequeue_bytes, 0);
+    add_read_handler("bytes", read_bytes, 0);
 }
 #endif
 

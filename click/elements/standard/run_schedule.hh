@@ -3,6 +3,7 @@
 #define CLICK_RUNSCHEDULE_HH
 #include <click/element.hh>
 #include <click/timer.hh>
+#include <pthread.h>
 CLICK_DECLS
 
 /*
@@ -45,6 +46,7 @@ class RunSchedule : public Element {
 
     Timer _timer;
     int _num_hosts;
+    pthread_mutex_t _lock;
 };
 
 CLICK_ENDDECLS

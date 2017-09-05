@@ -21,6 +21,7 @@
 #include <click/confparse.hh>
 #include <click/error.hh>
 #include <sys/select.h>
+#include <pthread.h>
 #if defined(__APPLE__) && defined(__MACH__)
 # include <CoreServices/CoreServices.h>
 # include <mach/mach_time.h>
@@ -31,8 +32,9 @@
 
 CLICK_DECLS
 
-RunSchedule::RunSchedule() : _timer(this), _num_hosts(0)
+RunSchedule::RunSchedule() : _timer(this), _num_hosts(0) //, _spin_lock(0)
 {
+    pthread_mutex_init(&_lock, NULL);
 }
 
 int
@@ -51,7 +53,7 @@ RunSchedule::configure(Vector<String> &conf, ErrorHandler *errh)
 }
  
 int
-RunSchedule::initialize(ErrorHandler *errh)
+RunSchedule::initialize(ErrorHandler *)
 {
     _timer.initialize(this);
     
@@ -65,9 +67,13 @@ RunSchedule::initialize(ErrorHandler *errh)
 
 int
 RunSchedule::handler(int, String &str, Element *t, const Handler *,
-                     ErrorHandler *errh)
+                     ErrorHandler *)
 {
-    ((RunSchedule *)t)->next_schedule = str;
+    RunSchedule *rs = static_cast<RunSchedule *>(t);
+
+    pthread_mutex_lock(&(rs->_lock));
+    rs->next_schedule = String(str);
+    pthread_mutex_unlock(&(rs->_lock));
     return 0;
 }
 
@@ -86,15 +92,23 @@ RunSchedule::split(const String &s, char delim) {
 }
 
 int
-RunSchedule::execute_schedule(ErrorHandler *errh)
+RunSchedule::execute_schedule(ErrorHandler *)
 {
     // parse schedule...
 
-    // '2 180 1/2/3/0 20 4/4/4/4'
-    String current_schedule = next_schedule;
+    // num_schedules [duration config]
+    // confg = src_for_dst_0/src_for_dst_1/...
+    // '2 180 1/2/3/0 20 -1/-1/-1/-1'
+    pthread_mutex_lock(&_lock);
+    String current_schedule = String(next_schedule);
+    pthread_mutex_unlock(&_lock);
+
+    // printf("running sched %s\n", current_schedule.c_str());
+    
     if (current_schedule == "")
         return 0;
     Vector<String> v = RunSchedule::split(current_schedule, ' ');
+
     int num_configurations = atoi(v[0].c_str());
 
     int *durations = (int *)malloc(sizeof(int) * num_configurations);
@@ -124,24 +138,21 @@ RunSchedule::execute_schedule(ErrorHandler *errh)
         clock_gettime(CLOCK_MONOTONIC, &start_time);
 #endif
 
-        // set configuration    
+        // set configuration
         for(int i = 0; i < _num_hosts; i++) {
-            int src = i;
-            int dst = configuration[i];
-            char handler[500];
-            char value[5];
-            sprintf(handler, "hybrid_switch/circuit_link%d/ps.switch", src);
-            sprintf(value, "%d", dst);
-            HandlerCall::call_write(handler, value, this);
+	    int dst = i;
+            int src = configuration[i];
+	    char handler[500];
+	    sprintf(handler, "hybrid_switch/circuit_link%d/ps.switch %d", dst, src);
+            HandlerCall::call_write(handler, this);
 
             // probably just remove this? we aren't signaling TCP to dump.
-            sprintf(handler, "hybrid_switch/ecnr%d/s.switch", dst);
-            sprintf(value, "%d", src);
-            HandlerCall::call_write(handler, value, this);
+	    // sprintf(handler, "hybrid_switch/ecnr%d/s.switch %d", dst, src);
+            // HandlerCall::call_write(handler, this);
         }
 
         // wait duration
-        uint64_t elapsed_nano = 0;
+        long long elapsed_nano = 0;
 
 #if defined(__osx__)
         uint64_t ts_new;
@@ -154,7 +165,7 @@ RunSchedule::execute_schedule(ErrorHandler *errh)
         start_time = ts_new;
 #elif defined(__linux__)
         struct timespec ts_new;
-                    
+
         while (elapsed_nano < duration * 1000) {
             clock_gettime(CLOCK_MONOTONIC, &ts_new);
             elapsed_nano = (1000000000 * ts_new.tv_sec + ts_new.tv_nsec)
@@ -165,7 +176,8 @@ RunSchedule::execute_schedule(ErrorHandler *errh)
         errh->error("only implemented for linux and osx");
         return -1;
 #endif
-    }
+    }    
+    free(durations);
     return 0;
 }
 

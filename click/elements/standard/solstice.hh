@@ -35,11 +35,12 @@ class Solstice : public Element {
 
   private:
     sols_t _s;
-    int *_traffic_matrix;
-    int *_enqueued_matrix;
-    int *_dequeued_matrix;
+    long long *_traffic_matrix;
+    long long *_enqueued_matrix;
+    long long *_dequeued_matrix;
     Timer _timer;
     int _num_hosts;
+    int _print;
 };
 
 CLICK_ENDDECLS
