@@ -51,8 +51,8 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
 
     sols_init(&_s, _num_hosts);
     _s.night_len = reconfig_delay * tdf;  // reconfiguration us
-    _s.week_len = 2000;  // schedule max length us
-    _s.min_day_len = 40;  // minimum configuration length us
+    _s.week_len = 2000 * tdf;  // schedule max length us
+    _s.min_day_len = 9 * reconfig_delay * tdf;  // minimum configuration length us
     _s.day_len_align = 1;  // ???
     _s.link_bw = int(circuit_bw / 1000000); // 9Gbps (in bytes / us)
     _s.pack_bw = int(packet_bw / 1000000); // 1Gbps (in bytes / us)
