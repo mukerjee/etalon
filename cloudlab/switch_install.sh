@@ -33,6 +33,7 @@ sudo mkdir /mnt/huge_1GB
 sudo sh -c "echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' >> /etc/fstab"
 
 printf "\n%s%s%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' >> $HOME/.bashrc
+source $HOME/.bashrc
 
 # make Click
 # scp cloudlab_rsa mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa
@@ -40,6 +41,6 @@ printf "\n%s%s%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export R
 # git clone git@github.com:mukerjee/sdrt.git
 cd $HOME/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
-make
+make -j16
 
 sudo reboot
