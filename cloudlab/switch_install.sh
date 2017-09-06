@@ -41,6 +41,6 @@ source $HOME/.bashrc
 # git clone git@github.com:mukerjee/sdrt.git
 cd $HOME/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
-make
+make -j16
 
 sudo reboot
