@@ -6,9 +6,9 @@ sudo ifconfig enp8s0d1 10.10.2.`echo ${h:4} | awk '{print $1+2}'` netmask 255.25
 
 for i in {0..15}
 do
-    ping host$i -c1
+    ping host$i -c1 -W1
 done
-ping router -c1
+ping router -c1 -W1
 
 for i in {0..15}
 do
