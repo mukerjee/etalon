@@ -32,7 +32,7 @@ def myNetwork():
     info('*** Add links\n')
     Link(h, s1, intfName1='h%d-eth1' % host)
     Link(h, s2, intfName1='h%d-eth2' % host)
-    h.cmd('ifconfig h%d-eth2 10.10.2.%d netmask 255.255.255.0' % (host, host+2))
+    h.cmd('ifconfig h%d-eth2 10.10.2.%d netmask 255.255.255.0' % (host, host+4))
 
     info('*** Starting network\n')
     net.start()
