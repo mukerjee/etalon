@@ -1,13 +1,17 @@
 #!/bin/bash
 
+cd $HOME
+
+sudo apt-get -y install software-properties-common
+sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
 sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
-wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-4.0-2.0.0.1/MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu16.04-x86_64.tgz
-tar xfz ./MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu16.04-x86_64.tgz
-sudo ./MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu16.04-x86_64/mlnxofedinstall --force --dpdk
+wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-4.0-2.0.0.1/MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu14.04-x86_64.tgz
+tar xfz ./MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu14.04-x86_64.tgz
+sudo ./MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu14.04-x86_64/mlnxofedinstall --force --dpdk
 sudo /etc/init.d/openibd restart
 
 # Mellanox DPDK
@@ -28,5 +32,14 @@ sudo update-grub
 sudo mkdir /mnt/huge_1GB
 sudo sh -c "echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' >> /etc/fstab"
 
-printf "\n%s\n%s\n" 'export RTE_SDK=/users/mukerjee/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' >> /users/mukerjee/.bashrc
+printf "\n%s%s%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' >> $HOME/.bashrc
+
+# make Click
+# scp cloudlab_rsa mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa
+# scp cloudlab_rsa.pub mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa.pub
+# git clone git@github.com:mukerjee/sdrt.git
+cd $HOME/sdrt/click
+./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
+make
+
 sudo reboot

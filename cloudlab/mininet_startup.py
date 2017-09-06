@@ -1,5 +1,8 @@
 #!/usr/bin/python
 
+import subprocess
+import os
+
 from mininet.net import Mininet
 from mininet.node import CPULimitedHost
 from mininet.cli import CLI
@@ -35,5 +38,6 @@ def myNetwork():
     net.stop()
 
 if __name__ == '__main__':
+    subprocess.call([os.path.expanduser('~/sdrt/cloudlab/node_arp_poison.sh')])
     setLogLevel('info')
     myNetwork()
