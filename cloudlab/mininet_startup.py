@@ -25,14 +25,14 @@ def myNetwork():
     Intf('eth2', node=s2)
 
     info('*** Add hosts\n')
-    h = net.addHost('h', ip='10.10.1.%d' % (host+2), cls=CPULimitedHost,
+    h = net.addHost('h%d' % host, ip='10.10.1.%d/24' % (host+2), cls=CPULimitedHost,
                     sched='cfs', period_us=100000, cpu=1,
                     tdf=10)
     
     info('*** Add links\n')
-    Link(h, s1, intfName1='h-eth1')
-    Link(h, s2, intfName2='h-eth2')
-    h.cmd('ifconfig h-eth2 10.10.2.%d netmask 255.255.255.0' % (host+2))
+    Link(h, s1, intfName1='h%d-eth1' % host)
+    Link(h, s2, intfName1='h%d-eth2' % host)
+    h.cmd('ifconfig h%d-eth2 10.10.2.%d netmask 255.255.255.0' % (host, host+2))
 
     info('*** Starting network\n')
     net.start()
