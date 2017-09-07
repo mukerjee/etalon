@@ -1,0 +1,25 @@
+#!/usr/bin/python
+
+import sys
+import os
+
+NODES_FILE = '../common/handles.cloudlab'
+
+
+def main():
+    # ssh into instances using their handle
+
+    if len(sys.argv) < 2:
+        print 'usage %s name [nodes_file]' % (sys.argv[0])
+        sys.exit(-1)
+
+    nodesFile = NODES_FILE if len(sys.argv) < 3 else sys.argv[2]
+
+    machines = open(nodesFile, 'r').read().split('\n')[:-1]
+    for machine in machines:
+        handle, hostname = [m.strip() for m in machine.split('#')]
+        if handle == sys.argv[1]:
+            os.system('ssh -o StrictHostKeyChecking=no %s' % (hostname))
+
+if __name__ == '__main__':
+    main()
