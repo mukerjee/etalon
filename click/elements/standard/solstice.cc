@@ -96,9 +96,9 @@ Solstice::run_timer(Timer *)
 		_traffic_matrix[i] = atoll(HandlerCall::call_read(handler,
 								  this).c_str());
 
-		sprintf(handler, "hybrid_switch/q%d%d/lq.bytes", src, dst);
-		_traffic_matrix[i] += atoll(HandlerCall::call_read(handler,
-								   this).c_str());
+		// sprintf(handler, "hybrid_switch/q%d%d/lq.bytes", src, dst);
+		// _traffic_matrix[i] += atoll(HandlerCall::call_read(handler,
+		// 						   this).c_str());
 
 		// sprintf(handler, "hybrid_switch/ps/q%d%d.bytes", src, dst);
 		// _traffic_matrix[i] += atoll(HandlerCall::call_read(handler,
@@ -120,7 +120,7 @@ Solstice::run_timer(Timer *)
 		    	   _enqueued_matrix[i], _dequeued_matrix[i], 
                            _traffic_matrix[i], len, loss_len, pslen);
 
-		    sprintf(handler, "hybrid_switch/q%d%d.length", 3, dst);
+		    sprintf(handler, "hybrid_switch/q%d%d/q.length", 3, dst);
 		    len = atoi(HandlerCall::call_read(handler, 
 						      this).c_str());
 		    sprintf(handler, "hybrid_switch/q%d%d/lq.length", 3, dst);

@@ -1,9 +1,9 @@
-define($DEVNAME eth3)
+define($DEVNAME eth2)
 
 define($NUMHOSTS 4)
-define($IP0 10.10.2.2, $IP1 10.10.2.3, $IP2 10.10.2.4, $IP3 10.10.2.5)
+define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
 
-define ($CIRCUIT_BW 1Gbps, $PACKET_BW 0.1Gbps)
+define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
 define ($RTT 200)  // usecs
 define ($MTU 1500)  // bytes
 
@@ -34,8 +34,8 @@ ControlSocket("TCP", 1239)
 sol :: Solstice($NUMHOSTS, $CIRCUIT_BW, $PACKET_BW, $RECONFIG_DELAY, $TDF)
 runner :: RunSchedule($NUMHOSTS)
 
-in :: FromDPDKDevice(1)
-out :: ToDPDKDevice(1)
+in :: FromDPDKDevice(0)
+out :: ToDPDKDevice(0)
 
 arp_c :: Classifier(12/0800, 12/0806 20/0002)
 arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)
@@ -64,7 +64,7 @@ elementclass packet_switch {
     q00, q01, q02, q03,
     q10, q11, q12, q13,
     q20, q21, q22, q23,
-    q30, q31, q32, q33 :: Queue(CAPACITY $PQL)
+    q30, q31, q32, q33 :: Queue(CAPACITY 1)
 
     packet_link0, packet_link1, packet_link2, packet_link3 :: packet_link
 
@@ -93,8 +93,9 @@ hybrid_switch :: {
     q20, q21, q22, q23,
     q30, q31, q32, q33 :: {
         input[0] -> q ::Queue(CAPACITY $CQL)
-	input[1] -> lq :: Queue(CAPACITY $CQL) // loss queue
+	input[1] -> lq :: Queue(CAPACITY 1) // loss queue
 	lq, q => PrioSched -> output
+	// q -> output
     }
 
     circuit_link0, circuit_link1, circuit_link2, circuit_link3 :: circuit_link
@@ -111,15 +112,15 @@ hybrid_switch :: {
     q02, q12, q22, q32 => circuit_link2 -> [2]output
     q03, q13, q23, q33 => circuit_link3 -> [3]output
 
-    // q00, q01, q02, q03 => packet_up_link0 -> [0]output
-    // q10, q11, q12, q13 => packet_up_link1 -> [1]output
-    // q20, q21, q22, q23 => packet_up_link2 -> [2]output
-    // q30, q31, q32, q33 => packet_up_link3 -> [3]output
-
     q00, q01, q02, q03 => packet_up_link0 -> [0]ps[0] -> [0]output
     q10, q11, q12, q13 => packet_up_link1 -> [1]ps[1] -> [1]output
     q20, q21, q22, q23 => packet_up_link2 -> [2]ps[2] -> [2]output
     q30, q31, q32, q33 => packet_up_link3 -> [3]ps[3] -> [3]output
+
+    // ps[ 4,  5,  6,  7] => Discard, Discard, Discard, Discard
+    // ps[ 8,  9, 10, 11] => Discard, Discard, Discard, Discard
+    // ps[12, 13, 14, 15] => Discard, Discard, Discard, Discard
+    // ps[16, 17, 18, 19] => Discard, Discard, Discard, Discard
 
     ps[ 4,  5,  6,  7] => [1]q00, [1]q01, [1]q02, [1]q03
     ps[ 8,  9, 10, 11] => [1]q10, [1]q11, [1]q12, [1]q13

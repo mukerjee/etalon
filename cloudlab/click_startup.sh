@@ -1,5 +1,10 @@
 #!/bin/bash
 
+sudo ifconfig eth2 10.10.1.1 netmask 255.255.255.0
+sudo ifconfig eth3 10.10.2.1 netmask 255.255.255.0
+
+sudo sed -i -r 's/10.10.2/10.10.1/' /etc/hosts
+
 # run click
 # n = 4? n = 3?
 # http://dpdk-guide.gitlab.io/dpdk-guide/tuning/memory.html
