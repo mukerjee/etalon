@@ -2,6 +2,7 @@
 #ifndef CLICK_BWRATEDSPLITTER_HH
 #define CLICK_BWRATEDSPLITTER_HH
 #include "elements/standard/ratedsplitter.hh"
+#include <pthread.h>
 CLICK_DECLS
 
 /*
@@ -54,6 +55,8 @@ class BandwidthRatedSplitter : public RatedSplitter { public:
 
     void push(int port, Packet *);
 
+private:
+    pthread_mutex_t _lock;
 };
 
 CLICK_ENDDECLS

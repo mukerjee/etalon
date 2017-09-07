@@ -18,23 +18,27 @@
  */
 
 #include <click/config.h>
+#include <pthread.h>
 #include "bwratedsplitter.hh"
 #include "ratedunqueue.hh"
 CLICK_DECLS
 
 BandwidthRatedSplitter::BandwidthRatedSplitter()
 {
+    pthread_mutex_init(&_lock);
 }
 
 void
 BandwidthRatedSplitter::push(int, Packet *p)
 {
+    pthread_mutex_lock(&_lock);
     _tb.refill();
     if (_tb.contains(RatedUnqueue::tb_bandwidth_thresh)) {
 	_tb.remove(p->length());
 	output(0).push(p);
     } else
 	checked_output_push(1, p);
+    pthread_mutex_unlock(&_lock);
 }
 
 CLICK_ENDDECLS

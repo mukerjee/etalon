@@ -42,7 +42,7 @@ hybrid_switch :: {
     q20, q21, q22, q23 :: Queue(CAPACITY 1000)
     q30, q31, q32, q33 :: Queue(CAPACITY 1000)
 
-    packet_link0, packet_link1, packet_link2, packet_link3 :: {
+    packet_up_link0, packet_up_link1, packet_up_link2, packet_up_link3 :: {
       input[0,1,2,3] => RoundRobinSched -> LinkUnqueue(0, $PACKET_BW)
 		     -> output
     }
@@ -57,10 +57,20 @@ hybrid_switch :: {
     input[2] -> c2 => q20, q21, q22, q23
     input[3] -> c3 => q30, q31, q32, q33
 
-    q00, q10, q20, q30 => packet_link0 -> [0]output
-    q01, q11, q21, q31 => packet_link1 -> [1]output
-    q02, q12, q22, q32 => packet_link2 -> [2]output
-    q03, q13, q23, q33 => packet_link3 -> [3]output
+    // q00, q10, q20, q30 => packet_link0 -> [0]output
+    // q01, q11, q21, q31 => packet_link1 -> [1]output
+    // q02, q12, q22, q32 => packet_link2 -> [2]output
+    // q03, q13, q23, q33 => packet_link3 -> [3]output
+
+    packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3 :: BandwidthRatedSplitter($PACKET_BW)
+    q00, q01, q02, q03 -> packet_up_link0 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q10, q11, q12, q13 -> packet_up_link1 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q20, q21, q22, q23 -> packet_up_link2 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q30, q31, q32, q33 -> packet_up_link3 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    packet_down_link0 => [0]output, Discard
+    packet_down_link1 => [1]output, Discard
+    packet_down_link2 => [2]output, Discard
+    packet_down_link3 => [3]output, Discard
 
     q00, q10, q20, q30 => circuit_link0 -> [0]output
     q01, q11, q21, q31 => circuit_link1 -> [1]output
