@@ -1,4 +1,4 @@
-define($DEVNAME enp8s0d1)
+define($DEVNAME eth3)
 
 define($NUMHOSTS 4)
 define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
@@ -8,10 +8,10 @@ define ($CIRCUIT_BW 1Gbps, $PACKET_BW 0.1Gbps)
 define ($RECONFIG_DELAY 20) // usecs
 define ($TDF 1)
 
-StaticThreadSched(hybrid_switch/packet_link0 1,
-                  hybrid_switch/packet_link1 2,
-                  hybrid_switch/packet_link2 3,
-                  hybrid_switch/packet_link3 4,
+StaticThreadSched(hybrid_switch/packet_up_link0 1,
+                  hybrid_switch/packet_up_link1 2,
+                  hybrid_switch/packet_up_link2 3,
+                  hybrid_switch/packet_up_link3 4,
                   hybrid_switch/circuit_link0 1,
                   hybrid_switch/circuit_link1 2,
                   hybrid_switch/circuit_link2 3,
@@ -63,10 +63,10 @@ hybrid_switch :: {
     // q03, q13, q23, q33 => packet_link3 -> [3]output
 
     packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3 :: BandwidthRatedSplitter($PACKET_BW)
-    q00, q01, q02, q03 -> packet_up_link0 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
-    q10, q11, q12, q13 -> packet_up_link1 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
-    q20, q21, q22, q23 -> packet_up_link2 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
-    q30, q31, q32, q33 -> packet_up_link3 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q00, q01, q02, q03 => packet_up_link0 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q10, q11, q12, q13 => packet_up_link1 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q20, q21, q22, q23 => packet_up_link2 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
+    q30, q31, q32, q33 => packet_up_link3 -> IPClassifier(dst host $IP0, dst host $IP1, dst host $IP2, dst host $IP3) => packet_down_link0, packet_down_link1, packet_down_link2, packet_down_link3
     packet_down_link0 => [0]output, Discard
     packet_down_link1 => [1]output, Discard
     packet_down_link2 => [2]output, Discard
