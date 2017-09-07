@@ -84,26 +84,55 @@ Solstice::run_timer(Timer *)
             for (int dst = 0; dst < _num_hosts; dst++) {
 		int i = src * _num_hosts + dst;
 		char handler[500];
-		sprintf(handler, "hybrid_switch/q%d%d.enqueue_bytes", src, dst);
+		sprintf(handler, "hybrid_switch/q%d%d/q.enqueue_bytes", src, dst);
                 _enqueued_matrix[i] = atoll(HandlerCall::call_read(handler,
 								   this).c_str());
-		sprintf(handler, "hybrid_switch/q%d%d.dequeue_bytes", src, dst);
+		sprintf(handler, "hybrid_switch/q%d%d/q.dequeue_bytes", src, dst);
                 _dequeued_matrix[i] = atoll(HandlerCall::call_read(handler,
 								   this).c_str());
 		_traffic_matrix[i] = _enqueued_matrix[i] - _dequeued_matrix[i];
-		sprintf(handler, "hybrid_switch/q%d%d.bytes", src, dst);
+
+		sprintf(handler, "hybrid_switch/q%d%d/q.bytes", src, dst);
 		_traffic_matrix[i] = atoll(HandlerCall::call_read(handler,
 								  this).c_str());
+
+		sprintf(handler, "hybrid_switch/q%d%d/lq.bytes", src, dst);
+		_traffic_matrix[i] += atoll(HandlerCall::call_read(handler,
+								   this).c_str());
+
+		// sprintf(handler, "hybrid_switch/ps/q%d%d.bytes", src, dst);
+		// _traffic_matrix[i] += atoll(HandlerCall::call_read(handler,
+		// 						   this).c_str());
+
 		if (_traffic_matrix[i] < 0)
 		    _traffic_matrix[i] = 0;
-		// if (src == 0 && dst == 1 && _print == 0) {
-		//     sprintf(handler, "hybrid_switch/q%d%d.length", src, dst);
-		//     int len = atoi(HandlerCall::call_read(handler, 
-		//     					  this).c_str());
-		//     printf("e = %lld, d = %lld, tm = %lld, len = %d\n",
-		//     	   _enqueued_matrix[i],
-		//     	   _dequeued_matrix[i], _traffic_matrix[i], len);
-		// }
+		if (src == 0 && dst == 1 && _print == 0) {
+		    sprintf(handler, "hybrid_switch/q%d%d/q.length", src, dst);
+		    int len = atoi(HandlerCall::call_read(handler, 
+		    					  this).c_str());
+		    sprintf(handler, "hybrid_switch/q%d%d/lq.length", src, dst);
+		    int loss_len = atoi(HandlerCall::call_read(handler, 
+							       this).c_str());
+		    sprintf(handler, "hybrid_switch/ps/q%d%d.length", src, dst);
+		    int pslen = atoi(HandlerCall::call_read(handler, 
+							    this).c_str());
+		    printf("e = %lld, d = %lld, tm = %lld, len = %d, losslen = %d, pslen= %d\n",
+		    	   _enqueued_matrix[i], _dequeued_matrix[i], 
+                           _traffic_matrix[i], len, loss_len, pslen);
+
+		    sprintf(handler, "hybrid_switch/q%d%d.length", 3, dst);
+		    len = atoi(HandlerCall::call_read(handler, 
+						      this).c_str());
+		    sprintf(handler, "hybrid_switch/q%d%d/lq.length", 3, dst);
+		    loss_len = atoi(HandlerCall::call_read(handler, 
+							   this).c_str());
+		    sprintf(handler, "hybrid_switch/ps/q%d%d.length", 3, dst);
+		    pslen = atoi(HandlerCall::call_read(handler, 
+							this).c_str());
+		    printf("e = %lld, d = %lld, tm = %lld, len = %d, losslen = %d, pslen= %d\n",
+		    	   _enqueued_matrix[i], _dequeued_matrix[i], 
+			   _traffic_matrix[i], len, loss_len, pslen);
+		}
             }
         }
 	_print = (_print + 1) % 10000;

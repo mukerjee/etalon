@@ -146,6 +146,10 @@ RunSchedule::execute_schedule(ErrorHandler *)
 	    sprintf(handler, "hybrid_switch/circuit_link%d/ps.switch %d", dst, src);
             HandlerCall::call_write(handler, this);
 
+	    // "don't pull" switch
+	    // sprintf(handler, "hybrid_switch/packet_up_link%d/dps.switch %d", dst, src);
+            // HandlerCall::call_write(handler, this);
+
             // probably just remove this? we aren't signaling TCP to dump.
 	    // sprintf(handler, "hybrid_switch/ecnr%d/s.switch %d", dst, src);
             // HandlerCall::call_write(handler, this);
