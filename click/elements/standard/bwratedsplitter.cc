@@ -25,7 +25,7 @@ CLICK_DECLS
 
 BandwidthRatedSplitter::BandwidthRatedSplitter()
 {
-    pthread_mutex_init(&_lock);
+    pthread_mutex_init(&_lock, NULL);
 }
 
 void
