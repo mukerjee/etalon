@@ -154,6 +154,8 @@ int DPDKDevice::initialize_device(ErrorHandler *errh)
     if (info.promisc)
         rte_eth_promiscuous_enable(port_id);
 
+    rte_eth_dev_set_mtu(port_id, 9000);
+
     return 0;
 }
 
@@ -334,7 +336,7 @@ DPDKDeviceArg::parse(const String &str, DPDKDevice* &result, const ArgContext &c
 }
 
 int DPDKDevice::NB_MBUF = 65536;
-int DPDKDevice::MBUF_DATA_SIZE = 2048;
+int DPDKDevice::MBUF_DATA_SIZE = 16384;
 int DPDKDevice::MBUF_SIZE = MBUF_DATA_SIZE
                           + sizeof (struct rte_mbuf) + RTE_PKTMBUF_HEADROOM;
 int DPDKDevice::MBUF_CACHE_SIZE = 256;
