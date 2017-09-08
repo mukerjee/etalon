@@ -22,7 +22,9 @@ sudo sed -i -r 's/10.10.2/10.10.1/' /etc/hosts
 
 # clear arp
 sudo ip link set arp off dev eth2
-sleep 1; sudo ip link set arp on dev eth2
+sudo ip link set arp on dev eth2
+sudo ip link set arp off dev eth3
+sudo ip link set arp on dev eth3
 
 for i in {0..7}
 do
