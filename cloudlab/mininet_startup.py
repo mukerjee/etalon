@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
-# import subprocess
-# import os
+import subprocess
+import os
 from socket import gethostname
 
 from mininet.net import Mininet
@@ -28,7 +28,7 @@ def myNetwork():
     info('*** Add hosts\n')
     h = net.addHost('h%d' % host, ip='10.10.1.%d/24' % (host+2), cls=CPULimitedHost,
                     sched='cfs', period_us=100000, cpu=1,
-                    tdf=1)
+                    tdf=5)
     
     info('*** Add links\n')
     Link(h, s1, intfName1='h%d-eth1' % host)
