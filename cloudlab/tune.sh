@@ -4,7 +4,7 @@ if [ -z ${ROUTER+x} ]
 then
     h=`hostname | cut -d'.' -f1`
 else
-    h = -1
+    h='host-1'
 fi
 sudo ifconfig eth2 10.10.1.`echo ${h:4} | awk '{print $1+2}'` netmask 255.255.255.0
 sudo ifconfig eth3 10.10.2.`echo ${h:4} | awk '{print $1+2}'` netmask 255.255.255.0
