@@ -57,4 +57,4 @@ then
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
 
-sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping
+sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
