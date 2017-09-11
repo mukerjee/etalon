@@ -18,7 +18,7 @@ define($IP11 10.10.1.11, $IP12 10.10.1.12, $IP13 10.10.1.13, $IP14 10.10.1.14,
        $IP81 10.10.1.81, $IP82 10.10.1.82, $IP83 10.10.1.83, $IP84 10.10.1.84,
        $IP85 10.10.1.85, $IP86 10.10.1.86, $IP87 10.10.1.87, $IP88 10.10.1.88)
 
-define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
+// define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
 
 define ($CIRCUIT_BW 8Gbps, $PACKET_BW 1Gbps)
 define ($RTT 60)  // usecs -- measured
@@ -64,93 +64,177 @@ arp_c :: Classifier(12/0800, 12/0806 20/0002, 12/0806 20/0001)
 arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)
 arp_r :: ARPResponder($DEVNAME)
 
-elementclass classfy {
-    input[0] -> IPClassifier(dst host $IP0, dst host $IP1, 
-                             dst host $IP2, dst host $IP3)
-             => [0, 1, 2, 3]output
+elementclass in_classfy {
+    input[0] -> IPClassifier(
+  src host $IP11 or src host $IP12 or src host $IP13 or src host $IP14 or
+  src host $IP14 or src host $IP16 or src host $IP17 or src host $IP18,
+  src host $IP21 or src host $IP22 or src host $IP23 or src host $IP24 or
+  src host $IP24 or src host $IP26 or src host $IP27 or src host $IP28,
+  src host $IP31 or src host $IP32 or src host $IP33 or src host $IP34 or
+  src host $IP34 or src host $IP36 or src host $IP37 or src host $IP38,
+  src host $IP41 or src host $IP42 or src host $IP43 or src host $IP44 or
+  src host $IP44 or src host $IP46 or src host $IP47 or src host $IP48,
+  src host $IP51 or src host $IP52 or src host $IP53 or src host $IP54 or
+  src host $IP54 or src host $IP56 or src host $IP57 or src host $IP58,
+  src host $IP61 or src host $IP62 or src host $IP63 or src host $IP64 or
+  src host $IP64 or src host $IP66 or src host $IP67 or src host $IP68,
+  src host $IP71 or src host $IP72 or src host $IP73 or src host $IP74 or
+  src host $IP74 or src host $IP76 or src host $IP77 or src host $IP78,
+  src host $IP81 or src host $IP82 or src host $IP83 or src host $IP84 or
+  src host $IP84 or src host $IP86 or src host $IP87 or src host $IP88
+)
+             => [0, 1, 2, 3, 4, 5, 6, 7]output
+}
+
+elementclass out_classfy {
+    input[0] -> IPClassifier(
+  dst host $IP11 or dst host $IP12 or dst host $IP13 or dst host $IP14 or
+  dst host $IP14 or dst host $IP16 or dst host $IP17 or dst host $IP18,
+  dst host $IP21 or dst host $IP22 or dst host $IP23 or dst host $IP24 or
+  dst host $IP24 or dst host $IP26 or dst host $IP27 or dst host $IP28,
+  dst host $IP31 or dst host $IP32 or dst host $IP33 or dst host $IP34 or
+  dst host $IP34 or dst host $IP36 or dst host $IP37 or dst host $IP38,
+  dst host $IP41 or dst host $IP42 or dst host $IP43 or dst host $IP44 or
+  dst host $IP44 or dst host $IP46 or dst host $IP47 or dst host $IP48,
+  dst host $IP51 or dst host $IP52 or dst host $IP53 or dst host $IP54 or
+  dst host $IP54 or dst host $IP56 or dst host $IP57 or dst host $IP58,
+  dst host $IP61 or dst host $IP62 or dst host $IP63 or dst host $IP64 or
+  dst host $IP64 or dst host $IP66 or dst host $IP67 or dst host $IP68,
+  dst host $IP71 or dst host $IP72 or dst host $IP73 or dst host $IP74 or
+  dst host $IP74 or dst host $IP76 or dst host $IP77 or dst host $IP78,
+  dst host $IP81 or dst host $IP82 or dst host $IP83 or dst host $IP84 or
+  dst host $IP84 or dst host $IP86 or dst host $IP87 or dst host $IP88
+)
+             => [0, 1, 2, 3, 4, 5, 6, 7]output
 }
 
 elementclass packet_link {
-    input[0,1,2,3] 
-                   => RoundRobinSched 
-                   -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)
-		   -> output
+    input[0,1,2,3,4,5,6,7] 
+                           => RoundRobinSched 
+                  	   -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)
+			   -> output
 }
 
 elementclass circuit_link {
-    input[0,1,2,3] => ps :: PullSwitch(-1) -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)
-		   -> output
+    input[0,1,2,3,4,5,6,7] 
+                           => ps :: PullSwitch(-1)
+                           -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)
+		           -> output
 }
 
 elementclass packet_switch {
-    c0, c1, c2, c3 :: classfy
-    q00, q01, q02, q03,
-    q10, q11, q12, q13,
-    q20, q21, q22, q23,
-    q30, q31, q32, q33 :: Queue(CAPACITY 1)
+    c0, c1, c2, c3, c4, c5, c6, c7 :: out_classfy
 
-    packet_link0, packet_link1, packet_link2, packet_link3 :: packet_link
+    q00, q01, q02, q03, q04, q05, q06, q07,
+    q10, q11, q12, q13, q14, q15, q16, q17,
+    q20, q21, q22, q23, q24, q25, q26, q27,
+    q30, q31, q32, q33, q34, q35, q36, q37,
+    q40, q41, q42, q43, q44, q45, q46, q47,
+    q50, q51, q52, q53, q54, q55, q56, q57,
+    q60, q61, q62, q63, q64, q65, q66, q67,
+    q70, q71, q72, q73, q74, q75, q76, q77
+ :: Queue(CAPACITY 1)
+
+    packet_link0, packet_link1, packet_link2, packet_link3,
+    packet_link4, packet_link5, packet_link6, packet_link7  :: packet_link
 
     input[0] -> c0 => q00, q01, q02, q03
     input[1] -> c1 => q10, q11, q12, q13
     input[2] -> c2 => q20, q21, q22, q23
     input[3] -> c3 => q30, q31, q32, q33
+    input[4] -> c4 => q40, q41, q42, q43
+    input[5] -> c5 => q50, q51, q52, q53
+    input[6] -> c6 => q60, q61, q62, q63
+    input[7] -> c7 => q70, q71, q72, q73
 
-    q00, q10, q20, q30 => packet_link0 -> [0]output
-    q01, q11, q21, q31 => packet_link1 -> [1]output
-    q02, q12, q22, q32 => packet_link2 -> [2]output
-    q03, q13, q23, q33 => packet_link3 -> [3]output
+    q00, q10, q20, q30, q40, q50, q60, q70 => packet_link0 -> [0]output
+    q01, q11, q21, q31, q41, q51, q61, q71 => packet_link1 -> [1]output
+    q02, q12, q22, q32, q42, q52, q62, q72 => packet_link2 -> [2]output
+    q03, q13, q23, q33, q43, q53, q63, q73 => packet_link3 -> [3]output
+    q04, q14, q24, q34, q44, q54, q64, q74 => packet_link4 -> [4]output
+    q05, q15, q25, q35, q45, q55, q65, q75 => packet_link5 -> [5]output
+    q06, q16, q26, q36, q46, q56, q66, q76 => packet_link6 -> [6]output
+    q07, q17, q27, q37, q47, q57, q67, q77 => packet_link7 -> [7]output
 
-    q00[1], q01[1], q02[1], q03[1] => [ 4,  5,  6,  7]output
-    q10[1], q11[1], q12[1], q13[1] => [ 8,  9, 10, 11]output
-    q20[1], q21[1], q22[1], q23[1] => [12, 13, 14, 15]output
-    q30[1], q31[1], q32[1], q33[1] => [16, 17, 18, 19]output
+    // would be drops
+    q00[1], q01[1], q02[1], q03[1], q04[1], q05[1], q06[1], q07[1] -> [8]output
+    q10[1], q11[1], q12[1], q13[1], q14[1], q15[1], q16[1], q17[1] -> [9]output
+    q20[1], q21[1], q22[1], q23[1], q24[1], q25[1], q26[1], q27[1] -> [10]output
+    q30[1], q31[1], q32[1], q33[1], q34[1], q35[1], q36[1], q37[1] -> [11]output
+    q40[1], q41[1], q42[1], q43[1], q44[1], q45[1], q46[1], q47[1] -> [12]output
+    q50[1], q51[1], q52[1], q53[1], q54[1], q55[1], q56[1], q57[1] -> [13]output
+    q60[1], q61[1], q62[1], q63[1], q64[1], q65[1], q66[1], q67[1] -> [14]output
+    q70[1], q71[1], q72[1], q73[1], q74[1], q75[1], q76[1], q77[1] -> [15]output
 }
 
 hybrid_switch :: {
-    c0, c1, c2, c3 :: classfy
+    c0, c1, c2, c3, c4, c5, c6, c7 :: out_classfy
 
     // ToR queues (in here for convenience)
-    q00, q01, q02, q03,
-    q10, q11, q12, q13,
-    q20, q21, q22, q23,
-    q30, q31, q32, q33 :: {
+    q00, q01, q02, q03, q04, q05, q06, q07,
+    q10, q11, q12, q13, q14, q15, q16, q17,
+    q20, q21, q22, q23, q24, q25, q26, q27,
+    q30, q31, q32, q33, q34, q35, q36, q37,
+    q40, q41, q42, q43, q44, q45, q46, q47,
+    q50, q51, q52, q53, q54, q55, q56, q57,
+    q60, q61, q62, q63, q64, q65, q66, q67,
+    q70, q71, q72, q73, q74, q75, q76, q77
+ :: {
         input[0] -> q ::Queue(CAPACITY $CQL)
 	input[1] -> lq :: Queue(CAPACITY 1) // loss queue
 	lq, q => PrioSched -> output
 	// q -> output
     }
 
-    circuit_link0, circuit_link1, circuit_link2, circuit_link3 :: circuit_link
-    packet_up_link0, packet_up_link1, packet_up_link2, packet_up_link3 :: packet_link
+    circuit_link0, circuit_link1, circuit_link2, circuit_link3,
+    circuit_link4, circuit_link5, circuit_link6, circuit_link7 :: circuit_link
+
+    packet_up_link0, packet_up_link1, packet_up_link2, packet_up_link3,
+    packet_up_link4, packet_up_link5, packet_up_link6, packet_up_link7 :: packet_link
+
     ps :: packet_switch
 
-    input[0] -> c0 => [0]q00, [0]q01, [0]q02, [0]q03
-    input[1] -> c1 => [0]q10, [0]q11, [0]q12, [0]q13
-    input[2] -> c2 => [0]q20, [0]q21, [0]q22, [0]q23
-    input[3] -> c3 => [0]q30, [0]q31, [0]q32, [0]q33
+    input[0] -> c0 => q00, q01, q02, q03, q04, q05, q06, q07
+    input[1] -> c1 => q10, q11, q12, q13, q14, q15, q16, q17
+    input[2] -> c2 => q20, q21, q22, q23, q24, q25, q26, q27
+    input[3] -> c3 => q30, q31, q32, q33, q34, q35, q36, q37
+    input[4] -> c4 => q40, q41, q42, q43, q44, q45, q46, q47
+    input[5] -> c5 => q50, q51, q52, q53, q54, q55, q56, q57
+    input[6] -> c6 => q60, q61, q62, q63, q64, q65, q66, q67
+    input[7] -> c7 => q70, q71, q72, q73, q74, q75, q76, q77
 
-    q00, q10, q20, q30 => circuit_link0 -> [0]output
-    q01, q11, q21, q31 => circuit_link1 -> [1]output
-    q02, q12, q22, q32 => circuit_link2 -> [2]output
-    q03, q13, q23, q33 => circuit_link3 -> [3]output
+    q00, q10, q20, q30, q40, q50, q60, q70 => circuit_link0 -> [0]output
+    q01, q11, q21, q31, q41, q51, q61, q71 => circuit_link1 -> [1]output
+    q02, q12, q22, q32, q42, q52, q62, q72 => circuit_link2 -> [2]output
+    q03, q13, q23, q33, q43, q53, q63, q73 => circuit_link3 -> [3]output
+    q04, q14, q24, q34, q44, q54, q64, q74 => circuit_link4 -> [4]output
+    q05, q15, q25, q35, q45, q55, q65, q75 => circuit_link5 -> [5]output
+    q06, q16, q26, q36, q46, q56, q66, q76 => circuit_link6 -> [6]output
+    q07, q17, q27, q37, q47, q57, q67, q77 => circuit_link7 -> [7]output
 
-    q00, q01, q02, q03 => packet_up_link0 -> [0]ps[0] -> [0]output
-    q10, q11, q12, q13 => packet_up_link1 -> [1]ps[1] -> [1]output
-    q20, q21, q22, q23 => packet_up_link2 -> [2]ps[2] -> [2]output
-    q30, q31, q32, q33 => packet_up_link3 -> [3]ps[3] -> [3]output
+    q00, q01, q02, q03, q04, q05, q06, q07 => packet_up_link0 -> [0]ps[0] -> [0]output
+    q10, q11, q12, q13, q14, q15, q16, q17 => packet_up_link1 -> [1]ps[1] -> [1]output
+    q20, q21, q22, q23, q24, q25, q26, q27 => packet_up_link2 -> [2]ps[2] -> [2]output
+    q30, q31, q32, q33, q34, q35, q36, q37 => packet_up_link3 -> [3]ps[3] -> [3]output
+    q40, q41, q42, q43, q44, q45, q46, q47 => packet_up_link4 -> [4]ps[4] -> [4]output
+    q50, q51, q52, q53, q54, q55, q56, q57 => packet_up_link5 -> [5]ps[5] -> [5]output
+    q60, q61, q62, q63, q64, q65, q66, q67 => packet_up_link6 -> [6]ps[6] -> [6]output
+    q70, q71, q72, q73, q74, q75, q76, q77 => packet_up_link7 -> [7]ps[7] -> [7]output
 
-    ps[ 4,  5,  6,  7] => [1]q00, [1]q01, [1]q02, [1]q03
-    ps[ 8,  9, 10, 11] => [1]q10, [1]q11, [1]q12, [1]q13
-    ps[12, 13, 14, 15] => [1]q20, [1]q21, [1]q22, [1]q23
-    ps[16, 17, 18, 19] => [1]q30, [1]q31, [1]q32, [1]q33
+    ps[ 8] -> out_classfy => [1]q00, [1]q01, [1]q02, [1]q03, [1]q04, [1]q05, [1]q06, [1]q07
+    ps[ 9] -> out_classfy => [1]q10, [1]q11, [1]q12, [1]q13, [1]q14, [1]q15, [1]q16, [1]q17
+    ps[10] -> out_classfy => [1]q20, [1]q21, [1]q22, [1]q23, [1]q24, [1]q25, [1]q26, [1]q27
+    ps[11] -> out_classfy => [1]q30, [1]q31, [1]q32, [1]q33, [1]q34, [1]q35, [1]q36, [1]q37
+    ps[12] -> out_classfy => [1]q40, [1]q41, [1]q42, [1]q43, [1]q44, [1]q45, [1]q46, [1]q47
+    ps[13] -> out_classfy => [1]q50, [1]q51, [1]q52, [1]q53, [1]q54, [1]q55, [1]q56, [1]q57
+    ps[14] -> out_classfy => [1]q60, [1]q61, [1]q62, [1]q63, [1]q64, [1]q65, [1]q66, [1]q67
+    ps[15] -> out_classfy => [1]q70, [1]q71, [1]q72, [1]q73, [1]q74, [1]q75, [1]q76, [1]q77
 }
 
 in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16) 
    -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]
-   -> IPClassifier(src host $IP0, src host $IP1,
-                   src host $IP2, src host $IP3)[0,1,2,3]
-   => hybrid_switch[0,1,2,3]
+   -> in_classfy[0,1,2,3,4,5,6,7]
+   => hybrid_switch[0,1,2,3,4,5,6,7]
    -> arp -> out
 
 arp_c[1] -> [1]arp
