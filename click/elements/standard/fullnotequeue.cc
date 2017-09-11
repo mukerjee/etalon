@@ -66,12 +66,11 @@ FullNoteQueue::push(int, Packet *p)
     if (nt != h) {
         push_success(h, t, nt, p);
         enqueue_bytes += p->length();
-	pthread_mutex_unlock(&_lock);
     }
     else {
-	pthread_mutex_unlock(&_lock);
 	push_failure(p);
     }
+    pthread_mutex_unlock(&_lock);
 }
 
 Packet *

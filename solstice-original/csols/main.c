@@ -157,30 +157,40 @@ main() {
     uint64_t tread;
     int tries;
 
-    uint64_t dat[NHOST * NHOST];
+    /* uint64_t dat[NHOST * NHOST]; */
+    uint64_t dat[] = {
+        0, 189000, 0, 0, 
+        0, 0, 0, 0, 
+        0, 0, 0, 117000, //270000, 
+        0, 0, 0, 0, 
+    };
 
     sols_init(&s, NHOST); /* init for 8 hosts */
     s.night_len = 20;
-    s.week_len = 3000;
+    s.week_len = 2000;
     s.avg_day_len = 40;
-    s.min_day_len = 40;
+    s.min_day_len = 180;
+    /* s.min_day_len = 40; */
+    /* s.skip_trim = 1; */
     s.day_len_align = 1;
+    s.link_bw = 1250;
+    s.pack_bw = 125;
     // s.skip_norm_down = 1;
 
     srand(time(0));
 
-    for (tries = 0; tries < 30; tries++) {
+    for (tries = 0; tries < 1; tries++) {
         uint64_t cap = (s.week_len * s.link_bw / NHOST);
 
-        for (i = 0; i < NHOST; i++) {
-            for (j = 0; j < NHOST; j++) {
-                if (i == j) {
-                    continue;
-                }
+        /* for (i = 0; i < NHOST; i++) { */
+        /*     for (j = 0; j < NHOST; j++) { */
+        /*         if (i == j) { */
+        /*             continue; */
+        /*         } */
 
-                dat[i * NHOST + j] = rand() % cap;
-            }
-        }
+        /*         dat[i * NHOST + j] = rand() % cap; */
+        /*     } */
+        /* } */
 
         /* setup the demand here */
         mset(&s.future, dat);

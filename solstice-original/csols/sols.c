@@ -433,6 +433,7 @@ sols_trim(sols_t *s) {
     sols_mat_t *d, *t;
 
     if (s->skip_trim) {
+        mcpy(&s->target, &s->demand);
         return;
     }
 
@@ -577,6 +578,29 @@ sols_stuff(sols_t *s) {
         /* printf("rd=%lu cd=%lu d=%lu\n", row_delta, col_delta, delta); */
         if (delta > 0) {
             res->m[index] += delta;
+            rsum[r].s += delta;
+            csum[c].s += delta;
+        }
+    }
+
+    /* Matt: Try spots where there was data pre-trim */
+    shuffle(s->demand.v, s->demand.n);
+    for (i = 0; i < s->demand.n; i++) {
+        index = s->demand.v[i];
+        r = index / nhost;
+        c = index % nhost;
+
+        assert(norm >= rsum[r].s);
+        assert(norm >= csum[c].s);
+        row_delta = norm - rsum[r].s;
+        col_delta = norm - csum[c].s;
+        delta = (row_delta < col_delta) ? row_delta : col_delta;
+        /* printf("rd=%lu cd=%lu d=%lu\n", row_delta, col_delta, delta); */
+        if (delta > 0) {
+	    v = sols_mat_get(res, r, c);
+	    assert(v == 0);
+	    mappend(res, r * nhost + c, delta);
+            /* res->m[index] += delta; */
             rsum[r].s += delta;
             csum[c].s += delta;
         }
@@ -1318,9 +1342,12 @@ void
 sols_schedule(sols_t *s) {
     madd(&s->request, &s->future, &s->queued);
     sols_norm_down(s); /* norm down the demand into a satisfiable one */
+    mprint(&s->demand);
     sols_trim(s); /* trim the small elements */
+    mprint(&s->target);
     sols_align(s); /* align the target */
     sols_stuff(s); /* stuff the target into a doubly-stochastic matrix */
+    mprint(&s->stuffed);
     sols_decompose(s); /* decompose the matrix into slices */
     sols_scale(s); /* scaling the day length to fit total week length */
     /* TODO: merge, scale, interleave and shuffle */
