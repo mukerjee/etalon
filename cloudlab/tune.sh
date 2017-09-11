@@ -52,4 +52,9 @@ do
     done
 done
 
-cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+if ! grep -q "apt.emulab" ~/.ssh/authorized_keys
+then
+    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+fi
+
+sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping
