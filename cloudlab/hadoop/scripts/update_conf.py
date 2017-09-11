@@ -81,10 +81,9 @@ def run_install():
         run_cmd(publicIP['datanode'][i], 'sed -i \'s/placeholder/%s/g\' %s/core-site.xml' % (namenode_publicDNS, HADOOP_CONF_DIR))
         run_cmd(publicIP['datanode'][i], 'sed -i \'s/namenode/datanode/g\' %s/hdfs-site.xml' % (HADOOP_CONF_DIR))
 
-    #cmd = 'scp ./hadoop.conf dkim@%s:/users/dkim/HiBench/conf/' % (publicIP['namenode'][0])
-    #print cmd
-    #os.system(cmd)
-    #run_cmd(publicIP['namenode'][0], 'sed -i \'s/localhost/%s/g\' /users/dkim/HiBench/conf/hadoop.conf' %(namenode_publicDNS))
+    cmd = 'scp ./hadoop.conf dkim@%s:/users/dkim/HiBench/conf/' % (publicIP['namenode'][0])
+    os.system(cmd)
+    run_cmd(publicIP['namenode'][0], 'sed -i \'s/localhost/%s/g\' /users/dkim/HiBench/conf/hadoop.conf' %(namenode_publicDNS))
 
     # Format hdfs
     run_cmd(publicIP['namenode'][0], '%s/hdfs namenode -format'%(HADOOP_BIN))
