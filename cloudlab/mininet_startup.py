@@ -46,14 +46,19 @@ def myNetwork():
     
     info('*** Starting network\n')
     net.start()
-    info('*** done that\n')
-    
+
+    info('*** setting up host arp poisoning\n')
     for h in hosts:
         h.cmd('ping router -c1 -W1')
         for i in xrange(NUM_RACKS):
             for j in xrange(HOSTS_PER_RACK):
                 h.cmd("arp -s 10.10.1.%d%d `arp | grep router | tr -s ' ' | cut -d' ' -f3`" % (i+1, j+1))
 
+    info('*** launching iperf daemon')
+    for h in hosts:
+        h.cmd("iperf -s -D")
+
+    info('*** launching sshd')
     for h in hosts:
         h.cmd('/usr/sbin/sshd -D &')
 
