@@ -37,7 +37,7 @@ sudo sysctl -w net.ipv4.tcp_sack=1
 sudo sysctl -w net.ipv4.tcp_low_latency=0
 sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.tcp_adv_win_scale=1
-sudo sysctl -w net.ipv4.tcp_congestion_control=westwood
+sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
 
 sudo sed -i -r 's/10.10.2/10.10.1/' /etc/hosts
 

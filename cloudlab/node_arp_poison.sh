@@ -5,9 +5,9 @@
 
 for i in {0..7}
 do
-    ping host$i -c1 -W1
+    sudo ping host$i -c1 -W1
 done
-ping router -c1 -W1
+sudo ping router -c1 -W1
 
 for i in {0..7}
 do
