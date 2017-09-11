@@ -21,6 +21,13 @@
 #include <click/confparse.hh>
 #include <click/error.hh>
 #include <sys/select.h>
+#if defined(__APPLE__) && defined(__MACH__)
+# include <CoreServices/CoreServices.h>
+# include <mach/mach_time.h>
+# ifndef __osx__
+#  define __osx__
+# endif
+#endif
 
 CLICK_DECLS
 
@@ -53,6 +60,7 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
     _s.night_len = reconfig_delay * tdf;  // reconfiguration us
     _s.week_len = 2000 * tdf;  // schedule max length us
     _s.min_day_len = 9 * reconfig_delay * tdf;  // minimum configuration length us
+    // _s.skip_trim = true;
     _s.day_len_align = 1;  // ???
     _s.link_bw = int(circuit_bw / 1000000); // 9Gbps (in bytes / us)
     _s.pack_bw = int(packet_bw / 1000000); // 1Gbps (in bytes / us)
@@ -78,7 +86,42 @@ Solstice::initialize(ErrorHandler *)
 void
 Solstice::run_timer(Timer *)
 {
+#if defined(__osx__)
+    static mach_timebase_info_data_t sTimebaseInfo;
+    mach_timebase_info(&sTimebaseInfo);
+    uint64_t start_time = mach_absolute_time();
+#elif defined(__linux__)
+    struct timespec start_time;
+    clock_gettime(CLOCK_MONOTONIC, &start_time);
+#else
+    errh->error("only implemented for linux and osx");
+    return -1;
+#endif
+
+    int duration = int(_s.week_len * 0.9);
     while(1) {
+        // wait for a while. solstice is actually much quicker to run
+	// than the week length. (e.g., 30us to run without prints)
+        long long elapsed_nano = 0;
+
+#if defined(__osx__)
+        uint64_t ts_new;
+        while (elapsed_nano < duration) {
+            ts_new = mach_absolute_time();
+            elapsed_nano = (ts_new - start_time) *
+                sTimebaseInfo.numer / sTimebaseInfo.denom;
+        }
+        start_time = ts_new;
+#elif defined(__linux__)
+        struct timespec ts_new;
+        while (elapsed_nano < duration) {
+            clock_gettime(CLOCK_MONOTONIC, &ts_new);
+            elapsed_nano = (1000000000 * ts_new.tv_sec + ts_new.tv_nsec)
+                - (1000000000 * start_time.tv_sec + start_time.tv_nsec);
+        }
+        start_time = ts_new;
+#endif
+
 	// gather traffic matrix from queues
         for (int src = 0; src < _num_hosts; src++) {
             for (int dst = 0; dst < _num_hosts; dst++) {
@@ -120,13 +163,13 @@ Solstice::run_timer(Timer *)
 		    	   _enqueued_matrix[i], _dequeued_matrix[i], 
                            _traffic_matrix[i], len, loss_len, pslen);
 
-		    sprintf(handler, "hybrid_switch/q%d%d/q.length", 3, dst);
+		    sprintf(handler, "hybrid_switch/q%d%d/q.length", 2, 3);
 		    len = atoi(HandlerCall::call_read(handler, 
 						      this).c_str());
-		    sprintf(handler, "hybrid_switch/q%d%d/lq.length", 3, dst);
+		    sprintf(handler, "hybrid_switch/q%d%d/lq.length", 2, 3);
 		    loss_len = atoi(HandlerCall::call_read(handler, 
 							   this).c_str());
-		    sprintf(handler, "hybrid_switch/ps/q%d%d.length", 3, dst);
+		    sprintf(handler, "hybrid_switch/ps/q%d%d.length", 2, 3);
 		    pslen = atoi(HandlerCall::call_read(handler, 
 							this).c_str());
 		    printf("e = %lld, d = %lld, tm = %lld, len = %d, losslen = %d, pslen= %d\n",
@@ -137,29 +180,33 @@ Solstice::run_timer(Timer *)
         }
 	_print = (_print + 1) % 10000;
 
-        // uint64_t cap = (s.week_len * s.link_bw / _num_hosts);
+        uint64_t cap = _s.week_len * (_s.link_bw + _s.pack_bw);
 
         /* setup the demand here */
         for (int src = 0; src < _num_hosts; src++) {
             for (int dst = 0; dst < _num_hosts; dst++) {
                 uint64_t v = _traffic_matrix[src * _num_hosts + dst];
+		if (v > cap)
+		    v = cap;
                 if (v == 0) continue;
                 sols_mat_set(&_s.future, src, dst, v);
             }
         }
 
-        // printf("[demand]\n");
-        // for (int src = 0; src < _num_hosts; src++) {
-        //     for (int dst = 0; dst < _num_hosts; dst++) {
-        //         if (dst > 0) printf(" ");
-        //         uint64_t v = _traffic_matrix[src * _num_hosts + dst]; // _s.demand.m
-        //         if (v == 0)
-        //             printf(".");
-        //         else
-        //             printf("%ld", v);
-        //     }
-        //     printf("\n");            
-        // }
+	if(_print == 0) {
+	    printf("[demand]\n");
+	    for (int src = 0; src < _num_hosts; src++) {
+		for (int dst = 0; dst < _num_hosts; dst++) {
+		    if (dst > 0) printf(" ");
+		    uint64_t v = _traffic_matrix[src * _num_hosts + dst]; // _s.demand.m
+		    if (v == 0)
+			printf(".");
+		    else
+			printf("%ld", v);
+		}
+		printf("\n");
+	    }
+	}
 
         sols_schedule(&_s);
         sols_check(&_s);
@@ -197,6 +244,10 @@ Solstice::run_timer(Timer *)
         }
 
 	if (_print == 0) {
+            // clock_gettime(CLOCK_MONOTONIC, &ts_new);
+            // int elapsed_nano = (1000000000 * ts_new.tv_sec + ts_new.tv_nsec)
+            //     - (1000000000 * start_time.tv_sec + start_time.tv_nsec);
+	    // printf("elapsed = %f us\n", elapsed_nano / 1000.0);
 	    printf("schedule == %s\n", schedule);
 	}
 

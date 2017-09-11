@@ -5,7 +5,7 @@ cd $HOME
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
-sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs
+sudo apt-get -y install iperf3 iperf git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs nuttcp
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
@@ -32,9 +32,9 @@ sudo update-grub
 sudo mkdir /mnt/huge_1GB
 sudo sh -c "echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' >> /etc/fstab"
 
-printf "\n%s%s%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' >> $HOME/.bashrc
-RTE_SDK=$HOME/MLNX_DPDK_16.11_2.3
-RTE_TARGET=x86_64-native-linuxapp-gcc
+printf "\n%s%s%s\n%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' 'export ROUTER=1' >> $HOME/.bashrc
+export RTE_SDK=$HOME/MLNX_DPDK_16.11_2.3
+export RTE_TARGET=x86_64-native-linuxapp-gcc
 
 # make Click
 # scp cloudlab_rsa mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa
