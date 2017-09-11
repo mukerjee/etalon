@@ -8,9 +8,13 @@ StaticThreadSched(
                   cl1 5,
                   cl2 6,
                   cl3 7,
+		  // in/a 0,
+		  // in/b 1,
+		  in 0,
 		  )
 
-in::FromDPDKDevice(0)
+// in:: { a :: FromDPDKDevice(0), b:: FromDPDKDevice(0) -> output }
+in:: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
 
 arp_c :: Classifier(12/0800, 12/0806 20/0002)
