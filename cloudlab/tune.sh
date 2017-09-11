@@ -41,4 +41,15 @@ sudo sysctl -w net.ipv4.tcp_congestion_control=westwood
 
 sudo sed -i -r 's/10.10.2/10.10.1/' /etc/hosts
 
+for i in {1..8}
+do
+    for j in {1..8}
+    do
+	if ! grep -q "host$i$j" /etc/hosts
+	then
+	    printf "%s\t%s\n" "10.10.1.$i$j" "host$i$j" | sudo tee -a /etc/hosts
+	fi
+    done
+done
+
 cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
