@@ -32,7 +32,7 @@ sudo update-grub
 sudo mkdir /mnt/huge_1GB
 sudo sh -c "echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' >> /etc/fstab"
 
-printf "\n%s%s%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' >> $HOME/.bashrc
+printf "\n%s%s%s\n%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' 'export ROUTER=1' >> $HOME/.bashrc
 export RTE_SDK=$HOME/MLNX_DPDK_16.11_2.3
 export RTE_TARGET=x86_64-native-linuxapp-gcc
 
