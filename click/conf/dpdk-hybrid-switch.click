@@ -3,7 +3,7 @@ define($DEVNAME eth2)
 define($NUMHOSTS 4)
 define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
 
-define ($CIRCUIT_BW 10Gbps, $PACKET_BW 1Gbps)
+define ($CIRCUIT_BW 9Gbps, $PACKET_BW 1Gbps)
 define ($RTT 200)  // usecs
 define ($MTU 1500)  // bytes
 
@@ -13,26 +13,31 @@ define ($CQL 170, $PQL 20)  // ($CIRCUIT_BW / 8.0 / $MTU) * $RTT
 define ($RECONFIG_DELAY 20)  // usecs
 define ($TDF 1)
 
-StaticThreadSched(hybrid_switch/packet_up_link0 1,
-                  hybrid_switch/packet_up_link1 2,
+StaticThreadSched(in 0,
+		  runner 1,
+		  sol 2,
+ 		  hybrid_switch/packet_up_link0 3,
+                  hybrid_switch/packet_up_link1 3,
                   hybrid_switch/packet_up_link2 3,
-                  hybrid_switch/packet_up_link3 4,
-		  hybrid_switch/ps/packet_link0 1,
-		  hybrid_switch/ps/packet_link1 2,
+                  hybrid_switch/packet_up_link3 3,
+		  hybrid_switch/ps/packet_link0 3,
+		  hybrid_switch/ps/packet_link1 3,
 		  hybrid_switch/ps/packet_link2 3,
-		  hybrid_switch/ps/packet_link3 4,
-                  hybrid_switch/circuit_link0 1,
-                  hybrid_switch/circuit_link1 2,
-                  hybrid_switch/circuit_link2 3,
-                  hybrid_switch/circuit_link3 4,
-		  runner 5,
-		  sol 6,
+		  hybrid_switch/ps/packet_link3 3,
+                  hybrid_switch/circuit_link0 4,
+                  hybrid_switch/circuit_link1 5,
+                  hybrid_switch/circuit_link2 6,
+                  hybrid_switch/circuit_link3 7,
 		  )
 
 ControlSocket("TCP", 1239)
 
 sol :: Solstice($NUMHOSTS, $CIRCUIT_BW, $PACKET_BW, $RECONFIG_DELAY, $TDF)
 runner :: RunSchedule($NUMHOSTS)
+// Script(write hybrid_switch/circuit_link0/ps.switch 1,
+//        write hybrid_switch/circuit_link1/ps.switch 0,
+//        write hybrid_switch/circuit_link2/ps.switch 3,
+//        write hybrid_switch/circuit_link3/ps.switch 2)
 
 in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
@@ -49,7 +54,6 @@ elementclass classfy {
 elementclass packet_link {
     input[0,1,2,3] 
                    => RoundRobinSched 
-		   // => dps :: DontPullSwitch(-1)
                    -> LinkUnqueue(0, $PACKET_BW)
 		   -> output
 }
@@ -116,11 +120,6 @@ hybrid_switch :: {
     q10, q11, q12, q13 => packet_up_link1 -> [1]ps[1] -> [1]output
     q20, q21, q22, q23 => packet_up_link2 -> [2]ps[2] -> [2]output
     q30, q31, q32, q33 => packet_up_link3 -> [3]ps[3] -> [3]output
-
-    // ps[ 4,  5,  6,  7] => Discard, Discard, Discard, Discard
-    // ps[ 8,  9, 10, 11] => Discard, Discard, Discard, Discard
-    // ps[12, 13, 14, 15] => Discard, Discard, Discard, Discard
-    // ps[16, 17, 18, 19] => Discard, Discard, Discard, Discard
 
     ps[ 4,  5,  6,  7] => [1]q00, [1]q01, [1]q02, [1]q03
     ps[ 8,  9, 10, 11] => [1]q10, [1]q11, [1]q12, [1]q13
