@@ -3,6 +3,7 @@
 cd $HOME
 
 mkdir bbr
+cd bbr
 wget https://raw.githubusercontent.com/jervisfm/rebbr/master/module/Makefile
 wget https://raw.githubusercontent.com/jervisfm/rebbr/master/module/tcp_bbr.c
 
