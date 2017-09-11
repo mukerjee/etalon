@@ -54,11 +54,11 @@ def myNetwork():
             for j in xrange(HOSTS_PER_RACK):
                 h.cmd("arp -s 10.10.1.%d%d `arp | grep router | tr -s ' ' | cut -d' ' -f3`" % (i+1, j+1))
 
-    info('*** launching iperf daemon')
+    info('*** launching iperf daemon\n')
     for h in hosts:
-        h.cmd("iperf -s -D")
+        h.cmd("iperf -s -D &")
 
-    info('*** launching sshd')
+    info('*** launching sshd\n')
     for h in hosts:
         h.cmd('/usr/sbin/sshd -D &')
 
