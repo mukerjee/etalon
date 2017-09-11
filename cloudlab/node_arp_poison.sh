@@ -22,13 +22,15 @@ sudo sysctl -w net.core.wmem_default=16777216
 sudo sysctl -w net.core.rmem_max=268435456
 sudo sysctl -w net.core.wmem_max=268435456
 
+# sudo sysctl -w net.ipv4.tcp_mem="374847 499797 749694"
+# sudo sysctl -w net.ipv4.udp_mem="374847 499797 749694"
 sudo sysctl -w net.ipv4.tcp_rmem="4096 87380 134217728"
 sudo sysctl -w net.ipv4.tcp_wmem="4096 65536 134217728"
 
-# sudo sysctl -w net.ipv4.tcp_timestamps=1
+sudo sysctl -w net.ipv4.tcp_timestamps=1
 # sudo sysctl -w net.ipv4.tcp_sack=1
-# sudo sysctl -w net.ipv4.tcp_low_latency=0
-# sudo sysctl -w net.ipv4.tcp_mtu_probing=0
+sudo sysctl -w net.ipv4.tcp_low_latency=0
+sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.tcp_adv_win_scale=1
 sudo sysctl -w net.ipv4.tcp_congestion_control=westwood
 
