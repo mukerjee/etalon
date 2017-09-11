@@ -138,14 +138,14 @@ elementclass packet_switch {
     packet_link0, packet_link1, packet_link2, packet_link3,
     packet_link4, packet_link5, packet_link6, packet_link7  :: packet_link
 
-    input[0] -> c0 => q00, q01, q02, q03
-    input[1] -> c1 => q10, q11, q12, q13
-    input[2] -> c2 => q20, q21, q22, q23
-    input[3] -> c3 => q30, q31, q32, q33
-    input[4] -> c4 => q40, q41, q42, q43
-    input[5] -> c5 => q50, q51, q52, q53
-    input[6] -> c6 => q60, q61, q62, q63
-    input[7] -> c7 => q70, q71, q72, q73
+    input[0] -> c0 => q00, q01, q02, q03, q04, q05, q06, q07
+    input[1] -> c1 => q10, q11, q12, q13, q14, q15, q16, q17
+    input[2] -> c2 => q20, q21, q22, q23, q24, q25, q26, q27
+    input[3] -> c3 => q30, q31, q32, q33, q34, q35, q36, q37
+    input[4] -> c4 => q40, q41, q42, q43, q44, q45, q46, q47
+    input[5] -> c5 => q50, q51, q52, q53, q54, q55, q56, q57
+    input[6] -> c6 => q60, q61, q62, q63, q64, q65, q66, q67
+    input[7] -> c7 => q70, q71, q72, q73, q74, q75, q76, q77
 
     q00, q10, q20, q30, q40, q50, q60, q70 => packet_link0 -> [0]output
     q01, q11, q21, q31, q41, q51, q61, q71 => packet_link1 -> [1]output
