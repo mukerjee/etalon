@@ -45,9 +45,9 @@ for i in {1..8}
 do
     for j in {1..8}
     do
-	if ! grep -q "host$i$j" /etc/hosts
+	if ! grep -q "h$i$j" /etc/hosts
 	then
-	    printf "%s\t%s\n" "10.10.1.$i$j" "host$i$j" | sudo tee -a /etc/hosts
+	    printf "%s\t%s\n" "10.10.1.$i$j" "h$i$j" | sudo tee -a /etc/hosts
 	fi
     done
 done
