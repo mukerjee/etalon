@@ -62,4 +62,7 @@ sudo tc qdisc del dev eth2 root
 sudo killall -9 iperf3 iperf nuttcp
 sudo mn -c
 
-sudo iptables -A PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
+if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
+then
+    sudo iptables -A PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
+fi
