@@ -27,6 +27,7 @@ def myNetwork():
     info('*** Add switches\n')
     s1 = net.addSwitch('s1')
     s1_eth2 = TCIntf('eth2', node=s1, bw=CIRCUIT_LINK / TDF)
+
     s2 = net.addSwitch('s2')
     s1_eth3 = Intf('eth3', node=s2)
 
@@ -39,21 +40,28 @@ def myNetwork():
                                  tdf=TDF))
         hosts[-1].setCPUFrac(1.0 / TDF)
         
-        l = TCLink(hosts[i], s1, intfName1='h%d%d-eth1' % j, bw=PACKET_LINK / TDF)
+        l = TCLink(hosts[i], s1, intfName1='h%d%d-eth1' % j, intfName2='s1-h%d%d-eth1' % j,  bw=PACKET_LINK / TDF)
         l.intf1.setMAC('AA:AA:AA:AA:AA:%d%d' % j)
-        l = Link(hosts[i], s2, intfName1='h%d%d-eth2' % j)
+        l = Link(hosts[i], s2, intfName1='h%d%d-eth2' % j, intfName2='s2-h%d%d-eth2' % j)
         l.intf1.setIP('10.10.2.%d%d/24' % j)
+        hosts[-1].cmd("ifconfig h%d%d-eth1 mtu 9000" % j)
+        s1.cmd("ifconfig s1-h%d%d-eth1 mtu 9000" % j)
     
     info('*** Starting network\n')
     net.start()
-    info('*** done that\n')
-    
+
+    info('*** setting up host arp poisoning\n')
     for h in hosts:
         h.cmd('ping router -c1 -W1')
         for i in xrange(NUM_RACKS):
             for j in xrange(HOSTS_PER_RACK):
                 h.cmd("arp -s 10.10.1.%d%d `arp | grep router | tr -s ' ' | cut -d' ' -f3`" % (i+1, j+1))
 
+    info('*** launching iperf daemon\n')
+    for h in hosts:
+        h.cmd("iperf -s -D &")
+
+    info('*** launching sshd\n')
     for h in hosts:
         h.cmd('/usr/sbin/sshd -D &')
 

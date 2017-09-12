@@ -37,7 +37,7 @@ sudo sysctl -w net.ipv4.tcp_sack=1
 sudo sysctl -w net.ipv4.tcp_low_latency=0
 sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.tcp_adv_win_scale=1
-sudo sysctl -w net.ipv4.tcp_congestion_control=westwood
+sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
 
 sudo sed -i -r 's/10.10.2/10.10.1/' /etc/hosts
 
@@ -58,3 +58,14 @@ then
 fi
 
 sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
+sudo tc qdisc del dev eth2 root
+sudo killall -9 iperf3 iperf nuttcp
+sudo mn -c
+
+# if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
+# then
+#     sudo iptables -A PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
+# fi
+
+# sudo tc qdisc add dev eth0 root handle 1: prio
+# sudo tc filter add dev eth2 protocol ip parent 1:0 prio 1 u32 match ip protocol 6 0xff match u8 0x05 0x0f at 0 match u16 0x0000 0xffc0 at 2 match u8 0x10 0xff at 33 flowid 1:1
