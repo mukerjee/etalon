@@ -66,3 +66,6 @@ sudo mn -c
 # then
 #     sudo iptables -A PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # fi
+
+# sudo tc qdisc add dev eth0 root handle 1: prio
+# sudo tc filter add dev eth2 protocol ip parent 1:0 prio 1 u32 match ip protocol 6 0xff match u8 0x05 0x0f at 0 match u16 0x0000 0xffc0 at 2 match u8 0x10 0xff at 33 flowid 1:1
