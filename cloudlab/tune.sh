@@ -58,3 +58,4 @@ then
 fi
 
 sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
+sudo tc qdisc del dev eth2 root
