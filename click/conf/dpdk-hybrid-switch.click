@@ -20,13 +20,14 @@ define($IP11 10.10.1.11, $IP12 10.10.1.12, $IP13 10.10.1.13, $IP14 10.10.1.14,
 
 // define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
 
-define ($CIRCUIT_BW 8Gbps, $PACKET_BW 1Gbps)
+define ($CIRCUIT_BW 4Gbps, $PACKET_BW 0.5Gbps)
 define ($RTT 60)  // usecs -- measured
 define ($MTU 9000)  // bytes
-define ($DELAY_LATENCY 0.000140) // seconds 10 - (RTT / TDF) * TDF, if your target is 10us
+// define ($DELAY_LATENCY 0.000140) // seconds 10 - (RTT / TDF) * TDF, if your target is 10us
+define ($DELAY_LATENCY 0) // Not worrying about this-- host-to-host ends up being ~15us without delaying
 
 // TODO emperical
-define ($CQL 170)  // ($CIRCUIT_BW / 8.0 / $MTU) * $RTT
+define ($CQL 200)  // ($CIRCUIT_BW / 8.0 / $MTU) * $RTT
 
 define ($RECONFIG_DELAY 20)  // usecs
 define ($TDF 20)

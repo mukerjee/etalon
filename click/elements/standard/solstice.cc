@@ -59,11 +59,12 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
     sols_init(&_s, _num_hosts);
     _s.night_len = reconfig_delay * tdf;  // reconfiguration us
     _s.week_len = 2000 * tdf;  // schedule max length us
-    _s.min_day_len = 9 * reconfig_delay * tdf;  // minimum configuration length us
-    // _s.skip_trim = true;
+    // _s.min_day_len = 10 * reconfig_delay * tdf;  // minimum configuration length us
+    _s.min_day_len = 2 * reconfig_delay * tdf;  // minimum configuration length us
+    _s.skip_trim = true;
     _s.day_len_align = 1;  // ???
-    _s.link_bw = int(circuit_bw / 1000000); // 9Gbps (in bytes / us)
-    _s.pack_bw = int(packet_bw / 1000000); // 1Gbps (in bytes / us)
+    _s.link_bw = int(circuit_bw / 1000000); // 4Gbps (in bytes / us)
+    _s.pack_bw = int(packet_bw / 1000000); // 0.5Gbps (in bytes / us)
 
     _print = 0;
 
@@ -223,7 +224,7 @@ Solstice::run_timer(Timer *)
 	    if (i > 0)
 		sprintf(&(schedule[strlen(schedule)]), " ");
             sols_day_t *day = &_s.sched[i];
-	    sprintf(&(schedule[strlen(schedule)]), "%ld ", day->len);
+	    sprintf(&(schedule[strlen(schedule)]), "%ld ", day->len - _s.night_len);
 
 	    for (int dst = 0; dst < _num_hosts; dst++) {
                 int src = day->input_ports[dst];
