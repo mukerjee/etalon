@@ -3,7 +3,7 @@
 import sys
 import os
 
-NODES_FILE = '../common/handles.cloudlab'
+NODES_FILE = './common/handles.cloudlab'
 
 
 def main():

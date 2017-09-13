@@ -37,10 +37,12 @@ class RunSchedule : public Element {
     void run_timer(Timer *);
 
     String next_schedule;
+    bool do_resize;
 
   private:
 
     static int handler(int, String&, Element*, const Handler*, ErrorHandler*);
+    static int resize_handler(int, String&, Element*, const Handler*, ErrorHandler*);
     static Vector<String> split(const String&, char);
     int execute_schedule(ErrorHandler *);
 

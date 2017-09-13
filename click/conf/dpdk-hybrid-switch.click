@@ -66,8 +66,8 @@ StaticThreadSched(in 0,
 ControlSocket("TCP", 1239)
 
 sol :: Solstice($NUMHOSTS, $CIRCUIT_BW, $PACKET_BW, $RECONFIG_DELAY, $TDF)
-runner :: RunSchedule($NUMHOSTS, $BIG_BUFFER_SIZE, $SMALL_BUFFER_SIZE)
-traffic_matrix :: EstimateTraffic($NUM_HOSTS)
+runner :: RunSchedule($NUMHOSTS, $BIG_BUFFER_SIZE, $SMALL_BUFFER_SIZE, RESIZE false)
+traffic_matrix :: EstimateTraffic($NUM_HOSTS, SOURCE QUEUES)
 // Script(write hybrid_switch/circuit_link0/ps.switch 1,
 //        write hybrid_switch/circuit_link1/ps.switch 0,
 //        write hybrid_switch/circuit_link2/ps.switch 3,

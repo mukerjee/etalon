@@ -58,9 +58,7 @@ then
 fi
 
 sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
-sudo tc qdisc del dev eth2 root
-sudo killall -9 iperf3 iperf nuttcp
-sudo mn -c
+$HOME/sdrt/cloudlab/kill.sh
 
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # then
