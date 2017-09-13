@@ -5,7 +5,7 @@ import os
 from socket import gethostname
 
 from mininet.net import Mininet
-from mininet.node import CPULimitedHost
+from mininet.node import HostWithPrivateDirsCPULimited
 from mininet.cli import CLI
 from mininet.link import Intf, Link, TCLink, TCIntf
 from mininet.log import setLogLevel, info
@@ -35,9 +35,10 @@ def myNetwork():
     hosts = []
     for i in xrange(HOSTS_PER_RACK):
         j = (host+1, i+1)
-        hosts.append(net.addHost('h%d%d' % j, ip='10.10.1.%d%d/24' % j, cls=CPULimitedHost,
-                                 sched='cfs', period_us=100000,
-                                 tdf=TDF))
+        hosts.append(net.addHost('h%d%d' % j, ip='10.10.1.%d%d/24' % j,
+                                 cls=HostWithPrivateDirsCPULimited,
+				 sched='cfs', period_us=100000,
+				 tdf=TDF))
         hosts[-1].setCPUFrac(1.0 / TDF)
         
         l = TCLink(hosts[i], s1, intfName1='h%d%d-eth1' % j, intfName2='s1-h%d%d-eth1' % j,  bw=PACKET_LINK / TDF)
