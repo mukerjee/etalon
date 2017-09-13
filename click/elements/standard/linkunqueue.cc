@@ -62,6 +62,7 @@ LinkUnqueue::initialize(ErrorHandler *errh)
     ScheduleInfo::initialize_task(this, &_task, errh);
     _timer.initialize(this);
     _signal = Notifier::upstream_empty_signal(this, 0, &_task);
+    _can_push_signal = Notifier::downstream_full_signal(this, 0, &_task);
     Storage::_capacity = 0x7FFFFFFF;
     //_state = S_ASLEEP;
     _back_to_back = false;
@@ -107,6 +108,9 @@ static void print_queue(Packet *head) {
 bool
 LinkUnqueue::run_task(Task *)
 {
+    if (!_can_push_signal)
+	return false;
+
     bool worked = false;
     Timestamp now = Timestamp::now();
     Timestamp now_delayed = now + _latency;

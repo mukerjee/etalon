@@ -83,6 +83,7 @@ class LinkUnqueue : public Element, public Storage { public:
     Task _task;
     Timer _timer;
     NotifierSignal _signal;
+    NotifierSignal _can_push_signal;
 
     void delay_by_bandwidth(Packet *, const Timestamp &) const;
     static String read_param(Element *, void *) CLICK_COLD;
