@@ -816,6 +816,31 @@ class HostWithPrivateDirs( Host ):
                 self.cmd( 'mkdir -p %s' % directory )
                 self.cmd( 'mount -n -t tmpfs tmpfs %s' % directory )
 
+class HostWithPrivateDirsCPULimited( CPULimitedHost ):
+    "Host with private directories"
+
+    def __init__( self, name, *args, **kwargs ):
+        "privateDirs: list of private directory strings or tuples"
+        self.name = name
+        self.privateDirs = kwargs.pop( 'privateDirs', [] )
+        CPULimitedHost.__init__( self, name, *args, **kwargs )
+        self.mountPrivateDirs()
+
+    def mountPrivateDirs( self ):
+        "mount private directories"
+        for directory in self.privateDirs:
+            if isinstance( directory, tuple ):
+                # mount given private directory
+                privateDir = directory[ 1 ] % self.__dict__
+                mountPoint = directory[ 0 ]
+                self.cmd( 'mkdir -p %s' % privateDir )
+                self.cmd( 'mkdir -p %s' % mountPoint )
+                self.cmd( 'mount --bind %s %s' %
+                               ( privateDir, mountPoint ) )
+            else:
+                # mount temporary filesystem on directory
+                self.cmd( 'mkdir -p %s' % directory )
+                self.cmd( 'mount -n -t tmpfs tmpfs %s' % directory )
 
 
 # Some important things to note:
