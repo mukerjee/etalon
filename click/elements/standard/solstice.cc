@@ -59,9 +59,9 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
     sols_init(&_s, _num_hosts);
     _s.night_len = reconfig_delay * tdf;  // reconfiguration us
     _s.week_len = 2000 * tdf;  // schedule max length us
-    // _s.min_day_len = 10 * reconfig_delay * tdf;  // minimum configuration length us
-    _s.min_day_len = 2 * reconfig_delay * tdf;  // minimum configuration length us
-    _s.skip_trim = true;
+    _s.min_day_len = 10 * reconfig_delay * tdf;  // minimum configuration length us
+    // _s.min_day_len = 2 * reconfig_delay * tdf;  // minimum configuration length us
+    // _s.skip_trim = true;
     _s.day_len_align = 1;  // ???
     _s.link_bw = int(circuit_bw / 1000000); // 4Gbps (in bytes / us)
     _s.pack_bw = int(packet_bw / 1000000); // 0.5Gbps (in bytes / us)
@@ -193,6 +193,35 @@ Solstice::run_timer(Timer *)
                 sols_mat_set(&_s.future, src, dst, v);
             }
         }
+
+	/* inflate demand to 1/2 weeklen */
+	/* find largest row or column sum and increase demand to 1/2 weeklen */
+	/* allows solstice to schedule small flows letting TCP grow */
+	uint64_t max_col = 0;
+	uint64_t max_row = 0;
+	for (int src = 0; src < _num_hosts; src++) {
+	    uint64_t current_row = 0;
+	    for (int dst = 0; dst < _num_hosts; dst++)
+		current_row += sols_mat_get(&_s.future, src, dst);
+	    if (current_row > max_row)
+		max_row = current_row;
+	}
+	for (int dst = 0; dst < _num_hosts; dst++) {
+	    uint64_t current_col = 0;
+	    for (int src = 0; src < _num_hosts; src++)
+		current_col += sols_mat_get(&_s.future, src, dst);
+	    if (current_col > max_col)
+		max_col = current_col;
+	}
+	uint64_t min_demand = _s.week_len * _s.link_bw;
+	double scale_factor = max_row > max_col ? min_demand / max_row : min_demand / max_col;
+	for (int dst = 0; dst < _num_hosts; dst++) {
+	    for (int src = 0; src < _num_hosts; src++) {
+		uint64_t current = sols_mat_get(&_s.future, src, dst);
+		sols_mat_set(&_s.future, src, dst, current*scale_factor);
+	    }
+	}
+
 
 	if(_print == 0) {
 	    printf("[demand]\n");

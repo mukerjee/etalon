@@ -1,7 +1,7 @@
 #!/bin/bash
 
-./tune.sh
-./clear_arp.sh
+$HOME/sdrt/cloudlab/tune.sh
+$HOME/sdrt/cloudlab/clear_arp.sh
 
 for i in {0..7}
 do
