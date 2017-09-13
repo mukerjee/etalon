@@ -7,7 +7,7 @@ from common import RACKS, intializeExperiment, stopExperiment, waitOnNodes, \
     setQueueSize
 
 iperf_server = 'iperf -s -D'
-iperf_client = 'iperf -t1 -c %s'
+iperf_client = 'iperf -o0.2 -t1 -c %s'
 ping = 'sudo ping -i.05 -w1 %s'
 
 BUFFER_SIZES = [500]

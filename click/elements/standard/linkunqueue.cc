@@ -108,9 +108,6 @@ static void print_queue(Packet *head) {
 bool
 LinkUnqueue::run_task(Task *)
 {
-    if (!_can_push_signal)
-	return false;
-
     bool worked = false;
     Timestamp now = Timestamp::now();
     Timestamp now_delayed = now + _latency;
@@ -142,6 +139,9 @@ LinkUnqueue::run_task(Task *)
 
     // Emit packets if it's time
     while (_qhead && _qhead->timestamp_anno() <= now) {
+	if (!_can_push_signal) {
+	    return false;
+	}
 	Packet *p = _qhead;
 	_qhead = p->next();
 	if (!_qhead)
