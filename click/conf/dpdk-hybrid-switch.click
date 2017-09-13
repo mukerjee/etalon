@@ -27,7 +27,8 @@ define ($MTU 9000)  // bytes
 define ($DELAY_LATENCY 0) // Not worrying about this-- host-to-host ends up being ~15us without delaying
 
 // TODO emperical
-define ($CQL 200)  // ($CIRCUIT_BW / 8.0 / $MTU) * $RTT
+define ($BIG_BUFFER_SIZE 100)  // ($CIRCUIT_BW / 8.0 / $MTU) * $RTT
+define ($SMALL_BUFFER_SIZE 10)
 
 define ($RECONFIG_DELAY 20)  // usecs
 define ($TDF 20)
@@ -35,24 +36,38 @@ define ($TDF 20)
 StaticThreadSched(in 0,
 		  runner 1,
 		  sol 2,
- 		  hybrid_switch/packet_up_link0 3,
-                  hybrid_switch/packet_up_link1 3,
-                  hybrid_switch/packet_up_link2 3,
-                  hybrid_switch/packet_up_link3 3,
-		  hybrid_switch/ps/packet_link0 3,
-		  hybrid_switch/ps/packet_link1 3,
-		  hybrid_switch/ps/packet_link2 3,
-		  hybrid_switch/ps/packet_link3 3,
+		  traffic_matrix 3,
                   hybrid_switch/circuit_link0 4,
                   hybrid_switch/circuit_link1 5,
                   hybrid_switch/circuit_link2 6,
                   hybrid_switch/circuit_link3 7,
+                  hybrid_switch/circuit_link4 12,
+                  hybrid_switch/circuit_link5 13,
+                  hybrid_switch/circuit_link6 14,
+                  hybrid_switch/circuit_link7 15,
+ 		  hybrid_switch/packet_up_link0 3,
+                  hybrid_switch/packet_up_link1 3,
+                  hybrid_switch/packet_up_link2 3,
+                  hybrid_switch/packet_up_link3 3,
+ 		  hybrid_switch/packet_up_link4 3,
+                  hybrid_switch/packet_up_link5 3,
+                  hybrid_switch/packet_up_link6 3,
+                  hybrid_switch/packet_up_link7 3,
+		  hybrid_switch/ps/packet_link0 3,
+		  hybrid_switch/ps/packet_link1 3,
+		  hybrid_switch/ps/packet_link2 3,
+		  hybrid_switch/ps/packet_link3 3,
+		  hybrid_switch/ps/packet_link4 3,
+		  hybrid_switch/ps/packet_link5 3,
+		  hybrid_switch/ps/packet_link6 3,
+		  hybrid_switch/ps/packet_link7 3,
 		  )
 
 ControlSocket("TCP", 1239)
 
 sol :: Solstice($NUMHOSTS, $CIRCUIT_BW, $PACKET_BW, $RECONFIG_DELAY, $TDF)
-runner :: RunSchedule($NUMHOSTS)
+runner :: RunSchedule($NUMHOSTS, $BIG_BUFFER_SIZE, $SMALL_BUFFER_SIZE)
+traffic_matrix :: EstimateTraffic($NUM_HOSTS)
 // Script(write hybrid_switch/circuit_link0/ps.switch 1,
 //        write hybrid_switch/circuit_link1/ps.switch 0,
 //        write hybrid_switch/circuit_link2/ps.switch 3,
@@ -158,14 +173,14 @@ elementclass packet_switch {
     q07, q17, q27, q37, q47, q57, q67, q77 => packet_link7 -> [7]output
 
     // would be drops
-    q00[1], q01[1], q02[1], q03[1], q04[1], q05[1], q06[1], q07[1] -> [8]output
-    q10[1], q11[1], q12[1], q13[1], q14[1], q15[1], q16[1], q17[1] -> [9]output
-    q20[1], q21[1], q22[1], q23[1], q24[1], q25[1], q26[1], q27[1] -> [10]output
-    q30[1], q31[1], q32[1], q33[1], q34[1], q35[1], q36[1], q37[1] -> [11]output
-    q40[1], q41[1], q42[1], q43[1], q44[1], q45[1], q46[1], q47[1] -> [12]output
-    q50[1], q51[1], q52[1], q53[1], q54[1], q55[1], q56[1], q57[1] -> [13]output
-    q60[1], q61[1], q62[1], q63[1], q64[1], q65[1], q66[1], q67[1] -> [14]output
-    q70[1], q71[1], q72[1], q73[1], q74[1], q75[1], q76[1], q77[1] -> [15]output
+    // q00[1], q01[1], q02[1], q03[1], q04[1], q05[1], q06[1], q07[1] -> [8]output
+    // q10[1], q11[1], q12[1], q13[1], q14[1], q15[1], q16[1], q17[1] -> [9]output
+    // q20[1], q21[1], q22[1], q23[1], q24[1], q25[1], q26[1], q27[1] -> [10]output
+    // q30[1], q31[1], q32[1], q33[1], q34[1], q35[1], q36[1], q37[1] -> [11]output
+    // q40[1], q41[1], q42[1], q43[1], q44[1], q45[1], q46[1], q47[1] -> [12]output
+    // q50[1], q51[1], q52[1], q53[1], q54[1], q55[1], q56[1], q57[1] -> [13]output
+    // q60[1], q61[1], q62[1], q63[1], q64[1], q65[1], q66[1], q67[1] -> [14]output
+    // q70[1], q71[1], q72[1], q73[1], q74[1], q75[1], q76[1], q77[1] -> [15]output
 }
 
 hybrid_switch :: {
@@ -181,10 +196,10 @@ hybrid_switch :: {
     q60, q61, q62, q63, q64, q65, q66, q67,
     q70, q71, q72, q73, q74, q75, q76, q77
  :: {
-        input[0] -> q ::Queue(CAPACITY $CQL)
-	input[1] -> lq :: Queue(CAPACITY 1) // loss queue
-	lq, q => PrioSched -> output
-	// q -> output
+        input[0] -> q ::Queue(CAPACITY $SMALL_BUFFER_SIZE)
+	// input[1] -> lq :: Queue(CAPACITY 1) // loss queue
+	// lq, q => PrioSched -> output
+	q -> output
     }
 
     circuit_link0, circuit_link1, circuit_link2, circuit_link3,
@@ -222,14 +237,14 @@ hybrid_switch :: {
     q60, q61, q62, q63, q64, q65, q66, q67 => packet_up_link6 -> [6]ps[6] -> [6]output
     q70, q71, q72, q73, q74, q75, q76, q77 => packet_up_link7 -> [7]ps[7] -> [7]output
 
-    ps[ 8] -> out_classfy => [1]q00, [1]q01, [1]q02, [1]q03, [1]q04, [1]q05, [1]q06, [1]q07
-    ps[ 9] -> out_classfy => [1]q10, [1]q11, [1]q12, [1]q13, [1]q14, [1]q15, [1]q16, [1]q17
-    ps[10] -> out_classfy => [1]q20, [1]q21, [1]q22, [1]q23, [1]q24, [1]q25, [1]q26, [1]q27
-    ps[11] -> out_classfy => [1]q30, [1]q31, [1]q32, [1]q33, [1]q34, [1]q35, [1]q36, [1]q37
-    ps[12] -> out_classfy => [1]q40, [1]q41, [1]q42, [1]q43, [1]q44, [1]q45, [1]q46, [1]q47
-    ps[13] -> out_classfy => [1]q50, [1]q51, [1]q52, [1]q53, [1]q54, [1]q55, [1]q56, [1]q57
-    ps[14] -> out_classfy => [1]q60, [1]q61, [1]q62, [1]q63, [1]q64, [1]q65, [1]q66, [1]q67
-    ps[15] -> out_classfy => [1]q70, [1]q71, [1]q72, [1]q73, [1]q74, [1]q75, [1]q76, [1]q77
+    // ps[ 8] -> out_classfy => [1]q00, [1]q01, [1]q02, [1]q03, [1]q04, [1]q05, [1]q06, [1]q07
+    // ps[ 9] -> out_classfy => [1]q10, [1]q11, [1]q12, [1]q13, [1]q14, [1]q15, [1]q16, [1]q17
+    // ps[10] -> out_classfy => [1]q20, [1]q21, [1]q22, [1]q23, [1]q24, [1]q25, [1]q26, [1]q27
+    // ps[11] -> out_classfy => [1]q30, [1]q31, [1]q32, [1]q33, [1]q34, [1]q35, [1]q36, [1]q37
+    // ps[12] -> out_classfy => [1]q40, [1]q41, [1]q42, [1]q43, [1]q44, [1]q45, [1]q46, [1]q47
+    // ps[13] -> out_classfy => [1]q50, [1]q51, [1]q52, [1]q53, [1]q54, [1]q55, [1]q56, [1]q57
+    // ps[14] -> out_classfy => [1]q60, [1]q61, [1]q62, [1]q63, [1]q64, [1]q65, [1]q66, [1]q67
+    // ps[15] -> out_classfy => [1]q70, [1]q71, [1]q72, [1]q73, [1]q74, [1]q75, [1]q76, [1]q77
 }
 
 in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16) 
