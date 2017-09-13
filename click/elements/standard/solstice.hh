@@ -36,8 +36,6 @@ class Solstice : public Element {
   private:
     sols_t _s;
     long long *_traffic_matrix;
-    long long *_enqueued_matrix;
-    long long *_dequeued_matrix;
     Timer _timer;
     int _num_hosts;
     int _print;
