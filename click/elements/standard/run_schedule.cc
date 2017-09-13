@@ -85,7 +85,7 @@ RunSchedule::resize_handler(int, String &str, Element *t, const Handler *,
     RunSchedule *rs = static_cast<RunSchedule *>(t);
 
     pthread_mutex_lock(&(rs->_lock));
-    BoolArg::parse(string, rs->do_resize, NULL);
+    BoolArg::parse(str, rs->do_resize, ArgContext());
     pthread_mutex_unlock(&(rs->_lock));
     return 0;
 }
@@ -139,14 +139,16 @@ RunSchedule::execute_schedule(ErrorHandler *)
     }
 
     // at the beginning of the 'week' set all the buffers to full size
+    int *buffer_times = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
     if (resize) {
-	int *buffer_times = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
 	memset(buffer_times, 0, sizeof(int) * _num_hosts * _num_hosts);
 	for(int m = 0; m < num_configurations; m++) {
 	    Vector<int> configuration = configurations[m];
 	    for(int i = 0; i < _num_hosts; i++) {
 		int dst = i;
 		int src = configuration[i];
+		if (src == -1)
+		    continue;
 		char handler[500];
 		sprintf(handler, "hybrid_switch/q%d%d.capacity %d", src, dst, _big_buffer_size);
 		HandlerCall::call_write(handler, this);
@@ -216,6 +218,8 @@ RunSchedule::execute_schedule(ErrorHandler *)
 	    for(int i = 0; i < _num_hosts; i++) {
 		int dst = i;
 		int src = configuration[i];
+		if (src == -1)
+		    continue;
 		char handler[500];
 		buffer_times[src * _num_hosts + dst]--;
 		if (buffer_times[src * _num_hosts + dst] == 0) {
@@ -226,6 +230,7 @@ RunSchedule::execute_schedule(ErrorHandler *)
 	}
     }    
     free(durations);
+    free(buffer_times);
     return 0;
 }
 
