@@ -46,6 +46,8 @@ class RunSchedule : public Element {
 
     Timer _timer;
     int _num_hosts;
+    int _big_buffer_size;
+    int _small_buffer_size;
     pthread_mutex_t _lock;
 };
 

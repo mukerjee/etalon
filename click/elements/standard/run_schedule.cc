@@ -32,7 +32,7 @@
 
 CLICK_DECLS
 
-RunSchedule::RunSchedule() : _timer(this), _num_hosts(0) //, _spin_lock(0)
+RunSchedule::RunSchedule() : _timer(this), _num_hosts(0), _big_buffer_size(100), _small_buffer_size(10) 
 {
     pthread_mutex_init(&_lock, NULL);
 }
@@ -40,12 +40,12 @@ RunSchedule::RunSchedule() : _timer(this), _num_hosts(0) //, _spin_lock(0)
 int
 RunSchedule::configure(Vector<String> &conf, ErrorHandler *errh)
 {
-    String num_hosts;
     if (Args(conf, this, errh)
-        .read_mp("NUM_HOSTS", num_hosts)
+        .read_mp("NUM_HOSTS", _num_hosts)
+	.read_mp("BIG_BUFFER_SIZE", _big_buffer_size)
+	.read_mp("SMALL_BUFFER_SIZE", _small_buffer_size)
         .complete() < 0)
         return -1;
-    _num_hosts = atoi(num_hosts.c_str());
     if (_num_hosts == 0)
         return -1;
     next_schedule = "";
@@ -123,12 +123,27 @@ RunSchedule::execute_schedule(ErrorHandler *)
         }
         j++;
     }
+
+    // at the beginning of the 'week' set all the buffers to full size
+    int *buffer_times = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
+    memset(buffer_times, 0, sizeof(int) * _num_hosts * _num_hosts);
+    for(int m = 0; m < num_configurations; m++) {
+	Vector<int> configuration = configurations[m];
+	for(int i = 0; i < _num_hosts; i++) {
+	    int dst = i;
+	    int src = configuration[i];
+	    char handler[500];
+	    sprintf(handler, "hybrid_switch/q%d%d.capacity %d", src, dst, _big_buffer_size);
+	    HandlerCall::call_write(handler, this);
+	    buffer_times[src * _num_hosts + dst]++;
+	}
+    }
     
 
     // for each configuration in schedule
-    for(int i = 0; i < num_configurations; i++) {
-        Vector<int> configuration = configurations[i];
-        int duration = durations[i]; // microseconds
+    for(int m = 0; m < num_configurations; m++) {
+        Vector<int> configuration = configurations[m];
+        int duration = durations[m]; // microseconds
 #if defined(__osx__)
         static mach_timebase_info_data_t sTimebaseInfo;
         mach_timebase_info(&sTimebaseInfo);
@@ -180,6 +195,18 @@ RunSchedule::execute_schedule(ErrorHandler *)
         errh->error("only implemented for linux and osx");
         return -1;
 #endif
+
+	// resize buffer if needed
+	for(int i = 0; i < _num_hosts; i++) {
+	    int dst = i;
+	    int src = configuration[i];
+	    char handler[500];
+	    buffer_times[src * _num_hosts + dst]--;
+	    if (buffer_times[src * _num_hosts + dst] == 0) {
+		sprintf(handler, "hybrid_switch/q%d%d.capacity %d", src, dst, _small_buffer_size);
+		HandlerCall::call_write(handler, this);
+	    }
+	}
     }    
     free(durations);
     return 0;
