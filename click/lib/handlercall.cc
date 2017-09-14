@@ -137,8 +137,10 @@ HandlerCall::call_read(Element *e, const String &hname, ErrorHandler *errh)
     String empty;
     if (hc.assign(e, hname, empty, OP_READ, errh) >= 0)
 	return hc._h->call_read(hc._e, empty, errh);
-    else
+    else {
+	printf("bad call %s\n", hname.c_str());
 	return empty;
+    }
 }
 
 /** @brief  Call a read handler.
@@ -161,8 +163,10 @@ HandlerCall::call_read(const String &hdesc, const Element *context, ErrorHandler
     HandlerCall hcall(hdesc);
     if (hcall.initialize(OP_READ, context, errh) >= 0)
 	return hcall.call_read();
-    else
+    else {
+	printf("bad call %s\n", hdesc.c_str());
 	return String();
+    }
 }
 
 /** @brief  Call a write handler specified by element and handler name.
@@ -183,7 +187,12 @@ HandlerCall::call_write(Element* e, const String& hname, const String& value, Er
 {
     HandlerCall hc;
     int rv = hc.assign(e, hname, value, OP_WRITE, errh);
-    return (rv >= 0 ? hc.call_write(errh) : rv);
+    if (rv >= 0)
+	return hc.call_write(errh);
+    else {
+	printf("bad write %s %s\n", hname.c_str(), value.c_str());
+	return rv;
+    }
 }
 
 /** @brief  Call a write handler.
@@ -207,8 +216,10 @@ HandlerCall::call_write(const String &hdesc, const Element *context, ErrorHandle
     HandlerCall hcall(hdesc);
     if (hcall.initialize(OP_WRITE, context, errh) >= 0)
 	return hcall.call_write(errh);
-    else
+    else {
+	printf("bad write %s\n", hdesc.c_str());
 	return -EINVAL;
+    }
 }
 
 /** @brief  Call a write handler with a specified value.
@@ -234,8 +245,10 @@ HandlerCall::call_write(const String &hdesc, const String &value, const Element 
     if (hcall.initialize(OP_WRITE, context, errh) >= 0) {
 	hcall.set_value(value);
 	return hcall.call_write(errh);
-    } else
+    } else {
+	printf("bad write %s %s\n", hdesc.c_str(), value.c_str());
 	return -EINVAL;
+    }
 }
 
 String
