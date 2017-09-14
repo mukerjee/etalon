@@ -134,7 +134,7 @@ int main(int argc, char *argv[])
             // }
             tdf = atoi(optarg);
             /* run in network, mount namespaces and set dilation */
-            if (virtualtimeunshare(CLONE_NEWNET|CLONE_NEWNS|CLONE_NEWUTS|CLONE_NEWPID, tdf) == -1) {
+            if (virtualtimeunshare(CLONE_NEWNET|CLONE_NEWNS|CLONE_NEWUTS, tdf) == -1) {
                perror("virtualtimeunshare");
                return 1;
             }
