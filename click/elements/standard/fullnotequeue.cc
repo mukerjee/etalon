@@ -19,6 +19,8 @@
 #include <click/config.h>
 #include "fullnotequeue.hh"
 #include <pthread.h>
+#include <clicknet/tcp.h>
+
 CLICK_DECLS
 
 FullNoteQueue::FullNoteQueue()
@@ -83,6 +85,18 @@ FullNoteQueue::pull(int)
     if (h != t) {
         Packet *p = pull_success(h, nh);
         dequeue_bytes += p->length();
+
+	if (p->has_transport_header()) {
+	    int tplen = p->transport_length();
+	    const click_ip *ipp = p->ip_header();
+	    if (ipp->ip_p == IP_PROTO_TCP) { // TCP
+		tplen -= p->tcp_header()->th_off * 4;
+	    }
+	    else if (ipp->ip_p == IP_PROTO_UDP) { // UDP
+		tplen -= 8;
+	    }
+	    dequeue_bytes_no_headers += tplen;
+	}
 	pthread_mutex_unlock(&_lock);
         return p;
     }
@@ -123,6 +137,13 @@ FullNoteQueue::read_dequeue_bytes(Element *e, void *)
 }
 
 String
+FullNoteQueue::read_dequeue_bytes_no_headers(Element *e, void *)
+{
+    FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
+    return String(fq->dequeue_bytes_no_headers);
+}
+
+String
 FullNoteQueue::read_bytes(Element *e, void *)
 {
     FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
@@ -146,6 +167,7 @@ FullNoteQueue::add_handlers()
     NotifierQueue::add_handlers();
     add_read_handler("enqueue_bytes", read_enqueue_bytes, 0);
     add_read_handler("dequeue_bytes", read_dequeue_bytes, 0);
+    add_read_handler("dequeue_bytes_no_headers", read_dequeue_bytes_no_headers, 0);
     add_read_handler("bytes", read_bytes, 0);
 }
 #endif

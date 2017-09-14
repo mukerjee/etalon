@@ -86,6 +86,7 @@ class FullNoteQueue : public NotifierQueue { public:
 
     unsigned long long enqueue_bytes;
     unsigned long long dequeue_bytes;
+    unsigned long long dequeue_bytes_no_headers;
 
     ActiveNotifier _full_note;
 
@@ -101,6 +102,7 @@ class FullNoteQueue : public NotifierQueue { public:
 #endif
     static String read_enqueue_bytes(Element *e, void *user_data);
     static String read_dequeue_bytes(Element *e, void *user_data);
+    static String read_dequeue_bytes_no_headers(Element *e, void *user_data);
     static String read_bytes(Element *e, void *user_data);
 
     pthread_mutex_t _lock;
