@@ -1,7 +1,10 @@
 #!/bin/bash
 
 cd $HOME/sdrt/
-git pull
+OTHER_USER=`who | head -n1 | cut -f1 -d' '`
+su - $OTHER_USER -c "cd sdrt; git pull"
+
+exit
 
 if [ -z ${ROUTER+x} ]
 then
