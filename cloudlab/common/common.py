@@ -23,6 +23,7 @@ CONNECTION_LOOKUP = {}
 
 MININET_SCRIPT = os.path.expanduser('~/sdrt/cloudlab/mininet_startup.py -n')
 KILL_SCRIPT = os.path.expanduser('~/sdrt/cloudlab/kill.sh')
+ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
 RACKS = []
 PHYSICAL_NODES = []
@@ -65,12 +66,12 @@ def initializeRacks():
     HOSTS_PER_RACK = len(RACKS[1])
 
     for pn in PHYSICAL_NODES:
-        runOnNode(pn, MININET_SCRIPT)
+        runOnNode(pn, MININET_SCRIPT, preload=False)
     waitOnNodes()
 
 def stopExperiment():
     for pn in PHYSICAL_NODES:
-        runOnNode(pn, KILL_SCRIPT)
+        runOnNode(pn, KILL_SCRIPT, preload=False)
     waitOnNodes()
 
 def initializeThreads():
@@ -238,12 +239,14 @@ def threadRun(hostname, handle, cmd, current, total):
         sys.stdout.flush()
     threadlock.release()
 
-def runOnNode(handle, cmd, current=0, total=0):
+def runOnNode(handle, cmd, current=0, total=0, preload=True):
     try:
         hostname = handle.strip()
         while len(threads) >= MAX_CONCURRENT:
             time.sleep(1)
         THREADLOCK.acquire()
+        if preload:
+            cmd = 'LD_PRELOAD=%s %s' (ADU_PRELOAD, cmd)
         threading.Thread(target=threadRun,
                          args=(hostname, handle, cmd, current, total)).start()
         THREADS.append(hostname)

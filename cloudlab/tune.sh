@@ -60,6 +60,9 @@ fi
 sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
 $HOME/sdrt/cloudlab/kill.sh
 
+cd $HOME/sdrt/sdrt-ctrl/lib
+make
+
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # then
 #     sudo iptables -A PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
