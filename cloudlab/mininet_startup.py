@@ -41,14 +41,15 @@ def myNetwork():
                                  privateDirs = ['/hadoop'],
 				 tdf=TDF))
         hosts[-1].setCPUFrac(1.0 / TDF)
-        
+
         l = TCLink(hosts[i], s1, intfName1='h%d%d-eth1' % j, intfName2='s1-h%d%d-eth1' % j,  bw=PACKET_LINK / TDF)
         l.intf1.setMAC('AA:AA:AA:AA:AA:%d%d' % j)
         l = Link(hosts[i], s2, intfName1='h%d%d-eth2' % j, intfName2='s2-h%d%d-eth2' % j)
         l.intf1.setIP('10.10.2.%d%d/24' % j)
         hosts[-1].cmd("ifconfig h%d%d-eth1 mtu 9000" % j)
+        hosts[-1].cmd("hostname h%d%d" % j)
         s1.cmd("ifconfig s1-h%d%d-eth1 mtu 9000" % j)
-    
+
     info('*** Starting network\n')
     net.start()
 
@@ -73,5 +74,5 @@ def myNetwork():
 
 if __name__ == '__main__':
     subprocess.call([os.path.expanduser('~/sdrt/cloudlab/tune.sh')])
-    setLogLevel('info')    
+    setLogLevel('info')
     myNetwork()
