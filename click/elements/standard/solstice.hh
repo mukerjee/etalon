@@ -39,6 +39,9 @@ class Solstice : public Element {
     Timer _timer;
     int _num_hosts;
     int _print;
+
+    HandlerCall *_tm;
+    HandlerCall *_runner;
 };
 
 CLICK_ENDDECLS

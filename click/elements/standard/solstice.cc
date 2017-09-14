@@ -71,13 +71,19 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
 }
  
 int
-Solstice::initialize(ErrorHandler *)
+Solstice::initialize(ErrorHandler *errh)
 {
     _timer.initialize(this);
     
 #if defined(__linux__)
     sched_setscheduler(getpid(), SCHED_RR, NULL);
 #endif
+
+    _tm = new HandlerCall("traffic_matrix.getTraffic");
+    _tm->initialize(HandlerCall::f_read, this, errh);
+
+    _runner = new HandlerCall("runner.setSchedule");
+    _runner->initialize(HandlerCall::f_write, this, errh);
 
     _timer.schedule_now();
     return 0;
@@ -88,9 +94,7 @@ Solstice::run_timer(Timer *)
 {
     while(1) {
 	// get traffic matrix from estimator and unparse.
-	char handler[500];
-	sprintf(handler, "traffic_matrix.getTraffic");
-	String tm = HandlerCall::call_read(handler, this);
+	String tm = _tm->call_read();
 	int start = 0;
 	int sd = 0;
 	for (int ind = 0; ind < tm.length(); ind++) {
@@ -211,7 +215,7 @@ Solstice::run_timer(Timer *)
 	}
 
         // tell schedule runner
-        HandlerCall::call_write("runner.setSchedule", schedule, this);
+	_runner->call_write(schedule);
 
 	free(schedule);
     }
