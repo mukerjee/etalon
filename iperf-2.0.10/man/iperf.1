@@ -1,0 +1,177 @@
+.TH IPERF 1 "APRIL 2008" NLANR/DAST "User Manuals"
+.SH NAME
+iperf \- perform network throughput tests
+.SH SYNOPSIS
+.B iperf -s [
+.I options
+.B ]
+
+.B iperf -c
+.I server
+.B [
+.I options
+.B ]
+
+.B iperf -u -s [
+.I options
+.B ]
+
+.B iperf -u -c
+.I server
+.B [
+.I options
+.B ]
+.SH DESCRIPTION
+iperf is a tool for performing network throughput measurements.  It can test
+either TCP or UDP throughput.  To perform an iperf test the user must
+establish both a server (to discard traffic) and a client (to generate
+traffic).
+.SH "GENERAL OPTIONS"
+.TP
+.BR -e ", " --enhanced " "
+Display enhanced output in reports
+.TP
+.BR -f ", " --format " "
+[kmgKMG]   format to report: Kbits, Mbits, KBytes, MBytes (see NOTES for more)
+.TP
+.BR -h ", " --help " "
+print a help synopsis
+.TP
+.BR -i ", " --interval " \fIn\fR"
+pause \fIn\fR seconds between periodic bandwidth reports
+.TP
+.BR -l ", " --len " \fIn\fR[kmKM]"
+set read/write buffer size (TCP) or length (UDP) to \fIn\fR (TCP default 128K, UDP default 1470)
+.TP
+.BR -m ", " --print_mss " "
+print TCP maximum segment size (MTU - TCP/IP header)
+.TP
+.BR -o ", " --output " \fIfilename\fR"
+output the report or error message to this specified file
+.TP
+.BR -p ", " --port " \fIn\fR"
+set server port to listen on/connect to to \fIn\fR (default 5001)
+.TP
+.BR -u ", " --udp " "
+use UDP rather than TCP
+.TP
+.BR "    --udp-counters-64bit "
+use 64 bit UDP sequence numbers
+.TP
+.BR -w ", " --window " \fIn\fR[kmKM]"
+TCP window size (socket buffer size)
+.TP
+.BR -z ", " --realtime " "
+Request realtime scheduler, if supported.
+.TP
+.BR -B ", " --bind " \fIhost\fR"
+bind to \fIhost\fR, an interface or multicast address
+.TP
+.BR -C ", " --compatibility " "
+for use with older versions does not sent extra msgs
+.TP
+.BR -M ", " --mss " \fIn\fR"
+set TCP maximum segment size (MTU - 40 bytes)
+.TP
+.BR -N ", " --nodelay " "
+set TCP no delay, disabling Nagle's Algorithm
+.TP
+.BR -S ", " --tos " "
+set the socket's IP_TOS (byte) field
+.TP
+.BR -v ", " --version " "
+print version information and quit
+.TP
+.BR -x ", " --reportexclude " [CDMSV]"
+exclude C(connection) D(data) M(multicast) S(settings) V(server) reports
+.TP
+.BR -y ", " --reportstyle " C|c"
+if set to C or c report results as CSV (comma separated values)
+.SH "SERVER SPECIFIC OPTIONS"
+.TP
+.BR -s ", " --server " "
+run in server mode
+.TP
+.BR -D ", " --daemon " "
+run the server as a daemon.  On Windows this will also install the IPerfService.
+.TP
+.BR -R ", " --remove " "
+remove the IPerfService (Windows only).
+.TP
+.BR -U ", " --single_udp " "
+run in single threaded UDP mode
+.TP
+.BR -V ", " --ipv6_domain " "
+Enable IPv6 reception by setting the domain and socket to AF_INET6 (Can receive on both IPv4 and IPv6)
+.SH "CLIENT SPECIFIC OPTIONS"
+.TP
+.BR -b ", " --bandwidth " \fIn\fR[kmgKMG] | \fIn\fRpps"
+set target bandwidth to \fIn\fR bits/sec (default 1 Mbit/sec) or
+\fIn\fR packets per sec.  This may be used with TCP or UDP.
+.TP
+.BR -c ", " --client " \fIhost\fR"
+run in client mode, connecting to \fIhost\fR
+.TP
+.BR -d ", " --dualtest " "
+Do a bidirectional test simultaneously
+.TP
+.BR -n ", " --num " \fIn\fR[kmKM]"
+number of bytes to transmit (instead of -t)
+.TP
+.BR -r ", " --tradeoff " "
+Do a bidirectional test individually
+.TP
+.BR -t ", " --time " \fIn\fR"
+time in seconds to listen for new traffic connections, receive traffic or transmit traffic (Defaults: transmit is 10 secs while listen and receive are indefinite)
+.TP
+.BR -B ", " --bind " \fIip\fR | \fIip\fR:\fIport\fR | \fIipv6 -V\fR | \fI[ipv6]\fR:\fIport -V\fR"
+bind src addr(s) and ports from which to originate traffic (Note: -V option required for ipv6)
+.TP
+.BR -F ", " --fileinput " \fIname\fR"
+input the data to be transmitted from a file
+.TP
+.BR -I ", " --stdin " "
+input the data to be transmitted from stdin
+.TP
+.BR -L ", " --listenport " \fIn\fR"
+port to recieve bidirectional tests back on
+.TP
+.BR -P ", " --parallel " \fIn\fR"
+number of parallel client threads to run
+.TP
+.BR -R ", " --reverse " "
+reverse the traffic flow after header exchange, useful for testing through firewalls
+.TP
+.BR -T ", " --ttl " \fIn\fR"
+time-to-live, for multicast (default 1)
+.TP
+.BR -V ", " --ipv6_domain " "
+Set the domain to IPv6 (send packets over IPv6)
+.TP
+.BR -X ", " --peerdetect " "
+run server version detection prior to traffic.
+.TP
+.BR -Z ", " --linux-congestion " \fIalgo\fR"
+set TCP congestion control algorithm (Linux only)
+.SH ENVIRONMENT
+.TP
+.BR TCP_WINDOW_SIZE
+Controls the size of TCP buffers.
+.SH NOTES
+Some numeric options support format characters per '<value>\fIc\fR' (e.g. 10M) where the \fIc\fR format characters are k,m,g,K,M,G.  Lowercase format characters are 10^3 based and uppercase are 2^n based, e.g. 1k = 1000, 1K = 1024, 1m = 1,000,000 and 1M = 1,048,576
+.SH DIAGNOSTICS
+This section needs to be filled in.
+.SH BUGS
+See https://sourceforge.net/p/iperf2/tickets/
+.SH AUTHORS
+Iperf2, based from iperf (originally written by Mark Gates and Alex Warshavsky), has a goal of maintainence with some feature enhancement.
+Other contributions from Ajay Tirumala, Jim Ferguson, Jon Dugan <jdugan at x1024 dot net>,
+Feng Qin,
+Kevin Gibbs,
+John Estabrook <jestabro at ncsa.uiuc.edu>,
+Andrew Gallatin <gallatin at gmail.com>,
+Stephen Hemminger <shemminger at linux-foundation.org>,
+Tim Auckland,
+Robert J. McMahon <rjmcmahon at rjmcmahon.com>
+.SH "SEE ALSO"
+http://sourceforge.net/projects/iperf2/
