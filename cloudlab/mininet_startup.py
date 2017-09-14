@@ -65,7 +65,7 @@ def myNetwork():
     for h in hosts:
         for i in xrange(NUM_RACKS):
             for j in xrange(HOSTS_PER_RACK):
-                h.cmd("iperf3 -p%s -s -D &" % (5200 + i * NUM_RACKS + j))
+                h.cmd("iperf3 -p%s -s -D &" % (5300 + i * NUM_RACKS + j))
 
     info('*** launching sshd\n')
     for h in hosts:
