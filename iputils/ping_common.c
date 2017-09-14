@@ -609,9 +609,13 @@ void setup(socket_st *sock)
 	if (deadline) {
 		struct itimerval it;
 
+		if (dilation == -1) {
+		    dilation = gettimedilation();
+		}
+
 		it.it_interval.tv_sec = 0;
 		it.it_interval.tv_usec = 0;
-		it.it_value.tv_sec = deadline;
+		it.it_value.tv_sec = deadline * dilation;
 		it.it_value.tv_usec = 0;
 		setitimer(ITIMER_REAL, &it, NULL);
 	}
