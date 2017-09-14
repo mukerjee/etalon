@@ -5,8 +5,8 @@ cd $HOME
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
-sudo apt-get -y install iperf3 iperf git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs nuttcp libffi6 libffi-dev
-sudo pip install paramiko
+sudo apt-get -y install iperf3 iperf git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs nuttcp libffi6 libffi-dev python-dev libffi-dev
+sudo easy_install paramiko
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf

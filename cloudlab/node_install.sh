@@ -3,7 +3,7 @@
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
-sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs libcap-dev libidn11-dev nettle-dev autoconf automake libtool make gcc git socat psmisc xterm openjdk-7-jdk ssh iperf iperf3 iproute telnet python-setuptools cgroup-bin ethtool help2man pyflakes pylint pep8 git-core autotools-dev pkg-config libc6-dev python-numpy python-matplotlib nuttcp
+sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs libcap-dev libidn11-dev nettle-dev autoconf automake libtool make gcc git socat psmisc xterm openjdk-7-jdk ssh iperf iperf3 iproute telnet python-setuptools cgroup-bin ethtool help2man pyflakes pylint pep8 git-core autotools-dev pkg-config libc6-dev python-numpy python-matplotlib nuttcp maven
 
 cd $HOME
 git clone git://openflowswitch.org/openflow.git
@@ -13,6 +13,9 @@ sudo ./configure
 patch -p1 < $HOME/sdrt/vt-mininet/mininet/util/openflow-patches/controller.patch
 sudo make -j16
 sudo make -j16 install
+
+cd $HOME
+git clone https://github.com/intel-hadoop/HiBench.git
 
 sudo apt-get -y install openvswitch-switch
 sudo apt-get -y install openvswitch-controller
@@ -37,5 +40,10 @@ sudo make install
 
 cd $HOME/sdrt/iputils/
 make
+
+# cd $HOME/sdrt/iperf-2.0.10/
+# ./configure
+# make
+
 
 sudo reboot

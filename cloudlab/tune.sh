@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root"
+    exit 1
+fi
+
+cd $HOME/sdrt/
+OTHER_USER=`who | head -n1 | cut -f1 -d' '`
+su - $OTHER_USER -c "cd sdrt; git pull"
+
 if [ -z ${ROUTER+x} ]
 then
     h=`hostname | cut -d'.' -f1`
@@ -57,11 +66,21 @@ then
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
 
-sudo ln -s ~/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
+cd $HOME/sdrt/iputils/
+make
+sudo rm /usr/local/bin/ping 2>/dev/null
+sudo ln -s $HOME/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
+
 $HOME/sdrt/cloudlab/kill.sh
 
 cd $HOME/sdrt/sdrt-ctrl/lib
 make
+
+cd $HOME/sdrt/vt-mininet/mininet
+sudo make install
+sudo make install
+
+# sudo ln -s $HOME/sdrt/iperf-2.0.10/src/iperf /usr/local/bin/iperf 2>/dev/null
 
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # then
