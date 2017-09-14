@@ -112,7 +112,7 @@ static void open_ctrl_socket()
         memset(info, 0, sizeof(struct traffic_info));
 
         get_local_ip(info->src);
-        fprintf(stderr, "LOCAL_IP: %s\n", info->src);
+        /* fprintf(stderr, "LOCAL_IP: %s\n", info->src); */
     }
 }
 
@@ -127,7 +127,7 @@ static void get_next_fn(void** next_fn, char* fn)
             fprintf(stderr, "dlopen failed on %s: %s\n", fn, msg);
             exit(1);
         } else {
-            fprintf(stderr,  "next_%s = %p\n", fn, *next_fn);
+            /* fprintf(stderr,  "next_%s = %p\n", fn, *next_fn); */
         }
     }
 }
@@ -193,6 +193,6 @@ int close(int sockfd)
     char* fn_name = "close";
     get_next_fn((void**)&next_close,fn_name);
 
-    fprintf(stderr, "close(%i)\n", sockfd);
+    /* fprintf(stderr, "close(%i)\n", sockfd); */
     return next_close(sockfd);
 }
