@@ -1,5 +1,8 @@
 #!/bin/bash
 
+cd $HOME/sdrt/
+git pull
+
 if [ -z ${ROUTER+x} ]
 then
     h=`hostname | cut -d'.' -f1`
@@ -62,6 +65,10 @@ $HOME/sdrt/cloudlab/kill.sh
 
 cd $HOME/sdrt/sdrt-ctrl/lib
 make
+
+cd $HOME/sdrt/vt-mininet/mininet
+sudo make install
+sudo make install
 
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # then
