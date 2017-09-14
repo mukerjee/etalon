@@ -350,10 +350,9 @@ EstimateTraffic::get_traffic(Element *e, void *)
 }
 
 int
-EstimateTraffic::handler(int, String &str, Element *t, const Handler *,
-                     ErrorHandler *)
+EstimateTraffic::set_source(const String &str, Element *e, void *, ErrorHandler *)
 {
-    EstimateTraffic *et = static_cast<EstimateTraffic *>(t);
+    EstimateTraffic *et = static_cast<EstimateTraffic *>(e);
     et->source = String(str);
     return 0;
 }
@@ -361,8 +360,7 @@ EstimateTraffic::handler(int, String &str, Element *t, const Handler *,
 void
 EstimateTraffic::add_handlers()
 {
-    set_handler("setSource", Handler::h_write | Handler::h_write_private,
-                handler, 0, 0);
+    add_write_handler("setSource", set_source, 0);
     add_read_handler("getTraffic", get_traffic, 0);
 }
 

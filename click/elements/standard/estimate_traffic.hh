@@ -40,7 +40,7 @@ class EstimateTraffic : public Element {
     pthread_mutex_t lock;
 
   private:
-    static int handler(int, String&, Element*, const Handler*, ErrorHandler*);
+    static int set_source(const String&, Element*, void*, ErrorHandler*) CLICK_COLD;
     static String get_traffic(Element *e, void *user_data);
 
     int _serverSocket;
