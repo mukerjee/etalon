@@ -9,8 +9,6 @@ cd $HOME/sdrt/
 OTHER_USER=`who | head -n1 | cut -f1 -d' '`
 su - $OTHER_USER -c "cd sdrt; git pull"
 
-exit
-
 if [ -z ${ROUTER+x} ]
 then
     h=`hostname | cut -d'.' -f1`
