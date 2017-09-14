@@ -29,7 +29,7 @@ def myNetwork():
     s1_eth2 = TCIntf('eth2', node=s1, bw=CIRCUIT_LINK / TDF)
 
     s2 = net.addSwitch('s2')
-    s1_eth3 = Intf('eth3', node=s2)
+    s2_eth3 = Intf('eth3', node=s2)
 
     info('*** Add hosts and links\n')
     hosts = []
