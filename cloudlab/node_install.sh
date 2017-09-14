@@ -41,9 +41,9 @@ sudo make install
 cd $HOME/sdrt/iputils/
 make
 
-cd $HOME/sdrt/iperf-2.0.10/
-./configure
-make
+# cd $HOME/sdrt/iperf-2.0.10/
+# ./configure
+# make
 
 
 sudo reboot
