@@ -38,7 +38,7 @@ def myNetwork():
         hosts.append(net.addHost('h%d%d' % j, ip='10.10.1.%d%d/24' % j,
                                  cls=HostWithPrivateDirsCPULimited,
 				 sched='cfs', period_us=100000,
-                                 privateDirs = ['~/hadoop'],
+                                 privateDirs = ['/hadoop'],
 				 tdf=TDF))
         hosts[-1].setCPUFrac(1.0 / TDF)
         
