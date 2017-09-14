@@ -308,7 +308,7 @@ EstimateTraffic::run_timer(Timer *)
 	    int pslen = atoi(HandlerCall::call_read(handler,
 						    this).c_str());
 	    printf("%s: (0, 1)\te = %lld, d = %lld, tm = %lld, len = %d, pslen= %d\n",
-		   _source,
+		   source.c_str(),
 		   _enqueue_matrix[i], _dequeue_matrix[i],
 		   traffic_matrix[i], len, pslen);
 
@@ -322,7 +322,7 @@ EstimateTraffic::run_timer(Timer *)
 	    pslen = atoi(HandlerCall::call_read(handler,
 						this).c_str());
 	    printf("%s: (2, 3)\te = %lld, d = %lld, tm = %lld, len = %d, pslen= %d\n",
-		   _source,
+		   source.c_str(),
 		   _enqueue_matrix[i], _dequeue_matrix[i],
 		   traffic_matrix[i], len, pslen);
 	}
