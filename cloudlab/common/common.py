@@ -198,7 +198,7 @@ def runOnNode(handle, cmd, current=0, total=0, preload=True, printOutput=True, f
             cmd = 'LD_PRELOAD=%s %s' % (ADU_PRELOAD, cmd)
         threading.Thread(target=threadRun,
                          args=(hostname, handle, cmd, current, total, 
-                               background, fn, printOutput)).start()
+                               fn, printOutput)).start()
         THREADS.append(hostname)
         THREADLOCK.release()
     except Exception, e:
