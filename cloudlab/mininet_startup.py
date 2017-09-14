@@ -53,11 +53,12 @@ def myNetwork():
     net.start()
 
     info('*** setting up host arp poisoning\n')
+    hosts[0].cmd('ping router -c1')
+    router_mac = hosts[0].cmd("arp | grep router | tr -s ' ' | cut -d' ' -f3")
     for h in hosts:
-        h.cmd('ping router -c1 -W1')
         for i in xrange(NUM_RACKS):
             for j in xrange(HOSTS_PER_RACK):
-                h.cmd("arp -s 10.10.1.%d%d `arp | grep router | tr -s ' ' | cut -d' ' -f3`" % (i+1, j+1))
+                h.cmd("arp -s 10.10.1.%d%d %s" % (i+1, j+1, router_mac))
 
     info('*** launching iperf daemon\n')
     for h in hosts:
