@@ -66,7 +66,11 @@ then
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
 fi
 
+cd $HOME/sdrt/iputils/
+make
+sudo rm /usr/local/bin/ping 2>/dev/null
 sudo ln -s $HOME/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
+
 $HOME/sdrt/cloudlab/kill.sh
 
 cd $HOME/sdrt/sdrt-ctrl/lib
