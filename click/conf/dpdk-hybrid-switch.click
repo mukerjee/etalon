@@ -70,7 +70,7 @@ sol :: Solstice($NUMHOSTS, $CIRCUIT_BW, $PACKET_BW, $RECONFIG_DELAY, $TDF)
 runner :: RunSchedule($NUMHOSTS, $BIG_BUFFER_SIZE, $SMALL_BUFFER_SIZE, RESIZE false)
 
 // Script(write runner.setSchedule 2 2000000 1/0/2/3/4/5/6/7 2000000 -1/-1/-1/-1/-1/-1/-1/-1)
-// Script(wait 1, print hybrid_switch/q01.capacity, loop)
+Script(wait 1, print hybrid_switch/q01.capacity, loop)
 // Script(wait 10, write runner.setDoResize true)
 // Script(wait 10, write traffic_matrix.setSource ADU)
 
