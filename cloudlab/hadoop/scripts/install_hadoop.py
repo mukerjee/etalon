@@ -6,11 +6,10 @@ import argparse
 import os
 import re
 
-#publicIP = {'namenode':['apt164.apt.emulab.net'], 'datanode':['apt146.apt.emulab.net', 'apt138.apt.emulab.net', 'apt156.apt.emulab.net']}
-publicIP = {'namenode':['apt164.apt.emulab.net'], 'datanode':['apt146.apt.emulab.net']}
-privateDNS = {'namenode':['cp-1'], 'datanode':['cp-2']}
-namenode_publicDNS = 'apt164.apt.emulab.net'
-num_datanode =  1
+publicIP = {'namenode':['10.10.1.11'], 'datanode':['10.10.1.12', '10.10.1.21', '10.10.1.22']}
+privateDNS = {'namenode':['10.10.1.11'], 'datanode':['10.10.1.12', '10.10.1.21', '10.10.1.22']}
+namenode_publicDNS = '10.10.1.11'
+num_datanode = 3
 
 def run_cmd(host, cmd):
     print host, cmd
@@ -22,14 +21,22 @@ def run_cmd(host, cmd):
     if exit_status == 0:
         print ("Done")
     else:
+        print stderr
         print("Error", exit_status)
     ssh.close()
 
 def run_install():
 
-    HADOOP_CONF_DIR = '/usr/local/hadoop/etc/hadoop'
-    HADOOP_INSTALL = '/usr/local/hadoop'
-    HADOOP_BIN = '/usr/local/hadoop/bin'
+    HADOOP_CONF_DIR = '/hadoop/etc/hadoop'
+    HADOOP_INSTALL = '/hadoop'
+    HADOOP_BIN = '/hadoop/bin'
+
+    #Install hadoop
+    run_cmd(publicIP['namenode'][0], 'pkill -9 java')
+    run_cmd(publicIP['namenode'][0], 'rm -rf /hadoop/*')
+    run_cmd(publicIP['namenode'][0], 'rm -rf /tmp/hadoop*')
+    run_cmd(publicIP['namenode'][0], 'cp -r /users/dkim/hadoop-2.7.4/* /hadoop/')
+
     cmd = 'scp -r ./conf/* dkim@%s:%s' % (publicIP['namenode'][0], HADOOP_CONF_DIR)
     os.system(cmd)
     cmd = 'scp ./config dkim@%s:~/.ssh/' % (publicIP['namenode'][0])
@@ -62,13 +69,13 @@ def run_install():
     #    pub = line.rstrip('\r\n')
     #run_cmd(publicIP['namenode'][0], 'echo \"%s\" >> /users/dkim/.ssh/authorized_keys' % (pub))
 
-    # Download hibench
-    #run_cmd(publicIP['namenode'][0], 'git clone https://github.com/intel-hadoop/HiBench.git /users/dkim/HiBench')
-    #run_cmd(publicIP['namenode'][0], 'cd /users/dkim/HiBench; mvn -Phadoopbench clean package')
-
     # Set datanode
     for i in range (0, num_datanode):
-        #run_cmd(publicIP['datanode'][i], 'rm -rf /tmp')
+        print 'Setup datanode %d'%i
+        run_cmd(publicIP['datanode'][i], 'rm -rf /tmp/hadoop*')
+        run_cmd(publicIP['datanode'][i], 'rm -rf /hadoop/*')
+        run_cmd(publicIP['datanode'][i], 'pkill -9 java')
+        run_cmd(publicIP['datanode'][i], 'cp -r /users/dkim/hadoop-2.7.4/* /hadoop/')
         cmd = 'scp ./config dkim@%s:~/.ssh/' % (publicIP['datanode'][i])
         os.system(cmd)
         run_cmd(publicIP['datanode'][i], 'chmod 600 /users/dkim/.ssh/config')
@@ -86,7 +93,7 @@ def run_install():
     run_cmd(publicIP['namenode'][0], 'sed -i \'s/localhost/%s/g\' /users/dkim/HiBench/conf/hadoop.conf' %(namenode_publicDNS))
 
     # Format hdfs
-    run_cmd(publicIP['namenode'][0], '%s/hdfs namenode -format'%(HADOOP_BIN))
+    run_cmd(publicIP['namenode'][0], '%s/hdfs namenode -format -force'%(HADOOP_BIN))
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
