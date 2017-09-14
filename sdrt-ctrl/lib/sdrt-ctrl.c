@@ -13,9 +13,9 @@
 #include <sys/ioctl.h>
 #include <net/if.h>
 
-#define LOCAL_CTRL_DEVNAME "enp8s0d1"
-#define SWITCH_CTRL_IP "10.10.1.1"
-#define SWITCH_CTRL_PORT "8888"
+#define LOCAL_CTRL_DEVNAME "eth3"
+#define SWITCH_CTRL_IP "10.10.2.1"
+#define SWITCH_CTRL_PORT "8123"
 
 struct traffic_info {
     char src[INET_ADDRSTRLEN];
@@ -162,7 +162,7 @@ ssize_t write(int fd, void *buffer, size_t size)
             fprintf(stderr, "Failed to send ctrl message\n");
             return nbytes;
         }
-        fprintf(stderr, "SIZE: %ld\n", size);
+        /* fprintf(stderr, "SIZE: %ld\n", size); */
     }
     return next_write(fd, buffer, size);
 }
