@@ -51,6 +51,8 @@ class RunSchedule : public Element {
     int _big_buffer_size;
     int _small_buffer_size;
     pthread_mutex_t _lock;
+    HandlerCall **_queue_capacity;
+    HandlerCall **_pull_switch;
 };
 
 CLICK_ENDDECLS

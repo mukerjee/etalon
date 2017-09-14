@@ -54,13 +54,31 @@ RunSchedule::configure(Vector<String> &conf, ErrorHandler *errh)
 }
  
 int
-RunSchedule::initialize(ErrorHandler *)
+RunSchedule::initialize(ErrorHandler *errh)
 {
     _timer.initialize(this);
     
 #if defined(__linux__)
     sched_setscheduler(getpid(), SCHED_RR, NULL);
 #endif
+
+    _queue_capacity = (HandlerCall **)malloc(sizeof(HandlerCall *) * _num_hosts * _num_hosts);
+    for(int src = 0; src < _num_hosts; src++) {
+	for(int dst = 0; dst < _num_hosts; dst++) {
+	    char handler[500];
+	    sprintf(handler, "hybrid_switch/q%d%d.capacity", src, dst);
+	    _queue_capacity[src * _num_hosts + dst] = new HandlerCall(handler);
+	    _queue_capacity[src * _num_hosts + dst]->initialize(HandlerCall::f_read | HandlerCall::f_write,
+								this, errh);
+	}
+    }
+    _pull_switch = (HandlerCall **)malloc(sizeof(Handler *) * _num_hosts);
+    for(int dst = 0; dst < _num_hosts; dst++) {
+	char handler[500];
+	sprintf(handler, "hybrid_switch/circuit_link%d/ps.switch", dst);
+	_pull_switch[dst] = new HandlerCall(handler);
+	_pull_switch[dst]->initialize(HandlerCall::f_write, this, errh);
+    }
 
     _timer.schedule_now();
     return 0;
@@ -149,9 +167,7 @@ RunSchedule::execute_schedule(ErrorHandler *)
 		int src = configuration[i];
 		if (src == -1)
 		    continue;
-		char handler[500];
-		sprintf(handler, "hybrid_switch/q%d%d.capacity %d", src, dst, _big_buffer_size);
-		HandlerCall::call_write(handler, this);
+		_queue_capacity[src * _num_hosts + dst]->call_write(String(_big_buffer_size));
 		buffer_times[src * _num_hosts + dst]++;
 	    }
 	}
@@ -174,13 +190,7 @@ RunSchedule::execute_schedule(ErrorHandler *)
         for(int i = 0; i < _num_hosts; i++) {
 	    int dst = i;
             int src = configuration[i];
-	    char handler[500];
-	    sprintf(handler, "hybrid_switch/circuit_link%d/ps.switch %d", dst, src);
-            HandlerCall::call_write(handler, this);
-
-	    // "don't pull" switch
-	    // sprintf(handler, "hybrid_switch/packet_up_link%d/dps.switch %d", dst, src);
-            // HandlerCall::call_write(handler, this);
+	    _pull_switch[dst]->call_write(String(src));
 
             // probably just remove this? we aren't signaling TCP to dump.
 	    // sprintf(handler, "hybrid_switch/ecnr%d/s.switch %d", dst, src);
@@ -220,11 +230,9 @@ RunSchedule::execute_schedule(ErrorHandler *)
 		int src = configuration[i];
 		if (src == -1)
 		    continue;
-		char handler[500];
 		buffer_times[src * _num_hosts + dst]--;
 		if (buffer_times[src * _num_hosts + dst] == 0) {
-		    sprintf(handler, "hybrid_switch/q%d%d.capacity %d", src, dst, _small_buffer_size);
-		    HandlerCall::call_write(handler, this);
+		    _queue_capacity[src * _num_hosts + dst]->call_write(String(_small_buffer_size));
 		}
 	    }
 	}
