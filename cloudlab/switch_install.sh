@@ -5,7 +5,8 @@ cd $HOME
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
-sudo apt-get -y install iperf3 iperf git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs nuttcp
+sudo apt-get -y install iperf3 iperf git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs nuttcp libffi6 libffi-dev
+sudo pip install paramiko
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
@@ -20,7 +21,7 @@ wget http://www.mellanox.com/downloads/Drivers/MLNX_DPDK_16.11_2.3.tar.gz
 tar xfz ./MLNX_DPDK_16.11_2.3.tar.gz
 sudo connectx_port_config -c eth,eth
 sudo sh -c "echo 'options mlx4_core log_num_mgm_entry_size=-7' >> /etc/modprobe.d/mlx4.conf"
-sudo /etc/init.d/openibd restart 
+sudo /etc/init.d/openibd restart
 cd ./MLNX_DPDK_16.11_2.3
 make install T=x86_64-native-linuxapp-gcc
 cd ../
