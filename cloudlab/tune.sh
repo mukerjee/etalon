@@ -1,5 +1,14 @@
 #!/bin/bash
 
+if [[ $EUID -ne 0 ]]; then
+    echo "This script must be run as root"
+    exit 1
+fi
+
+cd $HOME/sdrt/
+OTHER_USER=`who | head -n1 | cut -f1 -d' '`
+su - $OTHER_USER -c "cd sdrt; git pull"
+
 if [ -z ${ROUTER+x} ]
 then
     h=`hostname | cut -d'.' -f1`
@@ -62,6 +71,10 @@ $HOME/sdrt/cloudlab/kill.sh
 
 cd $HOME/sdrt/sdrt-ctrl/lib
 make
+
+cd $HOME/sdrt/vt-mininet/mininet
+sudo make install
+sudo make install
 
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # then
