@@ -12,7 +12,7 @@
 #include <signal.h>
 #include <errno.h>
 
-const char *port = "8888";
+const char *port = "8123";
 
 struct traffic_info {
     char src[INET_ADDRSTRLEN];

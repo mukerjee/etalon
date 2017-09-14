@@ -23,7 +23,7 @@ TODO
 
 */
 
-#define ADU_PORT "8888"
+#define ADU_PORT "8123"
 
 class EstimateTraffic : public Element {
   public:
@@ -47,10 +47,15 @@ class EstimateTraffic : public Element {
     int _serverSocket;
     fd_set _active_fd_set;
 
-    long long *_enqueued_matrix;
-    long long *_dequeued_matrix;
+    long long *_enqueue_matrix;
+    long long *_dequeue_matrix;
     Timer _timer;
     int _print;
+
+    HandlerCall **_queue_dequeue_bytes;
+    HandlerCall **_queue_dequeue_bytes_no_headers;
+    HandlerCall **_queue_enqueue_bytes;
+    HandlerCall **_queue_bytes;
 };
 
 CLICK_ENDDECLS
