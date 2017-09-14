@@ -36,8 +36,7 @@ class EstimateTraffic : public Element {
 
     void run_timer(Timer *);
     String source;
-    long long *traffic_matrix;
-    int num_hosts;
+    String output_traffic_matrix;
     pthread_mutex_t lock;
 
   private:
@@ -47,8 +46,11 @@ class EstimateTraffic : public Element {
     int _serverSocket;
     fd_set _active_fd_set;
 
+    int _num_hosts;
+
     long long *_enqueue_matrix;
     long long *_dequeue_matrix;
+    long long *_traffic_matrix;
     Timer _timer;
     int _print;
 

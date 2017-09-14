@@ -95,6 +95,9 @@ Solstice::run_timer(Timer *)
     while(1) {
 	// get traffic matrix from estimator and unparse.
 	String tm = _tm->call_read();
+	// if(_print == 0) {
+	//     printf("tm = %s\n", tm.c_str());
+	// }
 	int start = 0;
 	int sd = 0;
 	for (int ind = 0; ind < tm.length(); ind++) {
@@ -150,10 +153,11 @@ Solstice::run_timer(Timer *)
 	    }
 	}
 
+	_print = (_print+1) % 50000;
 
 	// print demand and scaled matrix
 	if(_print == 0) {
-	    printf("[demand]\t\t[scaled]\n");
+	    printf("[demand]\t\t\t\t\t[scaled]\n");
 	    for (int src = 0; src < _num_hosts; src++) {
 		for (int dst = 0; dst < _num_hosts; dst++) {
 		    if (dst > 0) printf(" ");
@@ -163,7 +167,7 @@ Solstice::run_timer(Timer *)
 		    else
 			printf("%ld", v);
 		}
-		printf("\t\t");
+		printf("\t\t\t\t\t");
 		for (int dst = 0; dst < _num_hosts; dst++) {
 		    if (dst > 0) printf(" ");
 		    uint64_t v = sols_mat_get(&_s.future, src, dst);
