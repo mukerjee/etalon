@@ -3,6 +3,8 @@
 import rpyc
 from subprocess import Popen, PIPE
 
+rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
+
 RPYC_PORT = 18861
 
 iperf3_client = 'iperf3 -i0.1 -t%s -c %s'
@@ -33,5 +35,6 @@ class MyService(rpyc.Service):
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(MyService, port = RPYC_PORT)
+    t = ThreadedServer(MyService, port=RPYC_PORT, 
+                       protocol_config=rpyc.core.protocol.DEFAULT_CONFIG)
     t.start()
