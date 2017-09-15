@@ -23,5 +23,6 @@
 </property>
 <property>
     <name>topology.script.file.name</name>
-    <value>/hadoop/conf/topology.script.sh</value>
+    <value>/hadoop/etc/hadoop/topology.script.sh</value>
+</property>
 </configuration>
