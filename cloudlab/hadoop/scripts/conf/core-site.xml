@@ -21,4 +21,8 @@
     <name>fs.defaultFS</name>
     <value>hdfs://placeholder:9000</value>
 </property>
+<property>
+    <name>topology.script.file.name</name>
+    <value>/hadoop/etc/hadoop/topology.script.sh</value>
+</property>
 </configuration>
