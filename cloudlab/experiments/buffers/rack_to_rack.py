@@ -2,42 +2,48 @@
 
 import sys
 sys.path.append("../../common/")
-import time
 import os
+import time
 
-from common import RACKS, HANDLE_TO_IP, initializeExperiment, waitOnNodes, setQueueSize, runOnNode
-import common
+from common import initializeExperiment, rackToRackIperf3, rackToRackPing, \
+    waitOnNodes, setQueueSize
 
 TIMESTAMP = int(time.time())
 SCRIPT = '.'.join(os.path.basename(__file__).split('.')[:-1])
 
-iperf_client = 'iperf3 -i0.1 -t1 -c %s'
-ping = 'sudo ping -i0.05 -w1 %s'
-
-BUFFER_SIZES = [10, 100, 1000]
+# BUFFER_SIZES = [10, 100, 1000]
+BUFFER_SIZES = [1000]
 
 initializeExperiment()
-HOSTS_PER_RACK = common.HOSTS_PER_RACK
 
 for buffer_size in BUFFER_SIZES:
     print '--- setting switch buffer size to %d...' % buffer_size
     setQueueSize(buffer_size)
     print '--- done...'
 
-    total = HOSTS_PER_RACK * 2
-    current = 0
-    servers = RACKS[2]
-    for host in RACKS[1]:
-        out_fn = '%s-%s-%s-%s-%s.txt' % (TIMESTAMP, SCRIPT, buffer_size, 
-                                         host.hostname, 'iperf3')
-        runOnNode(host.hostname, iperf_client % (servers[current].hostname),
-                  current+1, total, fn=out_fn, preload=False)
-        current += 1
+    out_fn = '%s-%s-%s' % (TIMESTAMP, SCRIPT, buffer_size)
+    rackToRackIperf3(1, 2, out_fn)
+    rackToRackIperf3(2, 1, out_fn)
 
-    for host in RACKS[1]:
-        out_fn = '%s-%s-%s-%s-%s.txt' % (TIMESTAMP, SCRIPT, buffer_size, 
-                                         host.hostname, 'ping')
-        runOnNode(host.hostname, ping % (servers[current % HOSTS_PER_RACK].hostname), 
-                  current+1, total, fn=out_fn)
-        current += 1
+    rackToRackIperf3(3, 4, out_fn)
+    rackToRackIperf3(4, 3, out_fn)
+
+    rackToRackIperf3(5, 6, out_fn)
+    rackToRackIperf3(6, 5, out_fn)
+
+    rackToRackIperf3(7, 8, out_fn)
+    rackToRackIperf3(8, 7, out_fn)
+
+    rackToRackPing(1, 2, out_fn)
+    rackToRackPing(2, 1, out_fn)
+
+    rackToRackPing(3, 4, out_fn)
+    rackToRackPing(4, 3, out_fn)
+
+    rackToRackPing(5, 6, out_fn)
+    rackToRackPing(6, 5, out_fn)
+
+    rackToRackPing(7, 8, out_fn)
+    rackToRackPing(8, 7, out_fn)
+
     waitOnNodes()

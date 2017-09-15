@@ -25,24 +25,24 @@ HANDLE_TO_IP = {}
 NUM_RACKS = 0
 HOSTS_PER_RACK = 0
 
-SSH_CONNECTIONS = {}
-
 TCP_IP = 'localhost'
 TCP_PORT = 1239
 BUFFER_SIZE = 1024
 CLICK_SOCKET = None
 
-MAX_CONCURRENT = 64
+MAX_CONCURRENT = 128
 
 THREADS = []
 THREADLOCK = threading.Lock()
 
+IPERF3_CLIENT = 'iperf3 -p53%s -i0.1 -t1 -c %s'
+PING = 'sudo ping -i0.05 -w1 %s'
 
 ##
 ## Experiment commands
 ##
 def initializeExperiment():
-    global NUM_RACKS, HOSTS_PER_RACK, PHYSICAL_NODES, RACKS  ##### remove last two ####
+    global NUM_RACKS, HOSTS_PER_RACK
 
     print '--- starting experiment...'
     print '--- clearing local arp...'
@@ -66,21 +66,10 @@ def initializeExperiment():
     for line in f:
         handle, ip = [x.strip() for x in line.split('#')]
         rack = int(handle[-2])
-
-        # #### REMOVE AFTER TESTING #####
-        # if rack not in [1, 2]:
-        #     continue
-        # ##### ################### #####
-        print handle
         RACKS[rack].append(node(handle))
         HANDLE_TO_IP[handle] = ip
     HOSTS_PER_RACK = len(RACKS[1])
     print '--- done...'
-
-    # ######## Remove this after testing #######
-    # PHYSICAL_NODES = PHYSICAL_NODES[:2]
-    # RACKS = RACKS[:3]
-    # #######                           #######
 
     initializeClickControl()
 
@@ -118,8 +107,8 @@ def clickReadHandler(element, handler):
     return data
 
 def setQueueSize(size):
-    for i in xrange(len(RACKS)):
-        for j in xrange(len(RACKS)):
+    for i in xrange(len(RACKS) - 1):
+        for j in xrange(len(RACKS) - 1):
             clickWriteHandler('hybrid_switch/q%d%d' % (i, j), 'capacity', size)
 
 def setEstimateTrafficSource(source):
@@ -130,6 +119,26 @@ def setQueueResize(b):
         clickWriteHandler('runner', 'setDoResize', 'true')
     else:
         clickWriteHandler('runner', 'setDoResize', 'false')
+
+##
+## Rack level helper functions
+##
+def rackToRackIperf3(source, dest, fn):
+    servers = RACKS[dest]
+    for i, host in enumerate(RACKS[source]):
+        out_fn = fn + '-%s-%s.txt' % (host.hostname, 'iperf3')
+        runOnNode(host.hostname,
+                  IPERF3_CLIENT % (host.hostname[1:], servers[i].hostname),
+                  fn=out_fn, preload=False)
+
+def rackToRackPing(source, dest, fn):
+    servers = RACKS[dest]
+    for i, host in enumerate(RACKS[source]):
+        out_fn = fn + '-%s-%s.txt' % (host.hostname, 'ping')
+        runOnNode(host.hostname, PING % (servers[i].hostname),
+                  fn=out_fn, preload=False)
+
+
 
 
 ##
@@ -204,17 +213,14 @@ def waitOnWork():
 def sshRun(hostname, cmd, printOutput=True):
     out = ""
 
-    if hostname in SSH_CONNECTIONS:
-        sesh = SSH_CONNECTIONS[hostname][1]
-    else:
-        client = paramiko.SSHClient()
-        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        client.connect(hostname, timeout=1)
-        sesh = client.get_transport().open_session()
-        sesh.get_pty()
-        SSH_CONNECTIONS[hostname] = (client, sesh)
+    client = paramiko.SSHClient()
+    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    client.connect(hostname, timeout=1)
+    sesh = client.get_transport().open_session()
+    sesh.set_combine_stderr(True)
+    sesh.get_pty()
 
-    print sesh, cmd
+    print cmd
     sesh.exec_command(cmd)
 
     while True:
@@ -227,16 +233,14 @@ def sshRun(hostname, cmd, printOutput=True):
                 sys.stdout.flush()
         if sesh.exit_status_ready():
             break
-    print printOutput
     rc = sesh.recv_exit_status()
 
-    # client.close()
-    print rc, out
+    client.close()
 
     if rc != 0:
-        raise Exception('bad RC (%s) from cmd: %s\n output: %s', 
-                        rc, cmd, out)
-    return out
+        raise Exception('bad RC (%s) from %s cmd: %s\n output: %s' %
+                        (rc, hostname, cmd, out))
+    return out, rc
 
 
 ##
@@ -247,7 +251,7 @@ def threadRun(hostname, handle, cmd, current, total, fn, po):
         out = sshRun(hostname, cmd, printOutput=po)[0]
     except Exception, e:
         print e
-        out = ''
+        out = str(e)
     THREADLOCK.acquire()
     THREADS.remove(hostname)
     if total:
