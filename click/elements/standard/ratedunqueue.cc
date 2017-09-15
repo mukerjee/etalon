@@ -79,6 +79,7 @@ RatedUnqueue::initialize(ErrorHandler *errh)
 {
     ScheduleInfo::initialize_task(this, &_task, errh);
     _signal = Notifier::upstream_empty_signal(this, 0, &_task);
+    _can_push_signal = Notifier::downstream_full_signal(this, 0, &_task);
     _timer.initialize(this);
     return 0;
 }

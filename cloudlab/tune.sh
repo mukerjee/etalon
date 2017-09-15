@@ -9,7 +9,9 @@ cd $HOME/sdrt/
 OTHER_USER=`who | head -n1 | cut -f1 -d' '`
 su - $OTHER_USER -c "cd sdrt; git pull"
 
-if [ -z ${ROUTER+x} ]
+sudo easy_install rpyc
+
+if ! hostname | grep -q router
 then
     h=`hostname | cut -d'.' -f1`
 else

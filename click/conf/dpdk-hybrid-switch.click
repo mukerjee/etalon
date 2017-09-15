@@ -21,14 +21,14 @@ define($IP11 10.10.1.11, $IP12 10.10.1.12, $IP13 10.10.1.13, $IP14 10.10.1.14,
 // define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
 
 define ($CIRCUIT_BW 4Gbps, $PACKET_BW 0.5Gbps)
-define ($RTT 60)  // usecs -- measured
-define ($MTU 9000)  // bytes
+// define ($RTT 60)  // usecs -- measured
+// define ($MTU 9000)  // bytes
 // define ($DELAY_LATENCY 0.000140) // seconds 10 - (RTT / TDF) * TDF, if your target is 10us
-define ($DELAY_LATENCY 0) // Not worrying about this-- host-to-host ends up being ~15us without delaying
+// define ($DELAY_LATENCY 0) // Not worrying about this-- host-to-host ends up being ~15us without delaying
 
 // TODO emperical
-define ($BIG_BUFFER_SIZE 100)
-define ($SMALL_BUFFER_SIZE 10)
+define ($BIG_BUFFER_SIZE 1000)
+define ($SMALL_BUFFER_SIZE 100)
 
 define ($RECONFIG_DELAY 20)  // usecs
 define ($TDF 20)
@@ -84,21 +84,21 @@ arp_r :: ARPResponder($DEVNAME)
 elementclass in_classfy {
     input[0] -> IPClassifier(
   src host $IP11 or src host $IP12 or src host $IP13 or src host $IP14 or
-  src host $IP14 or src host $IP16 or src host $IP17 or src host $IP18,
+  src host $IP15 or src host $IP16 or src host $IP17 or src host $IP18,
   src host $IP21 or src host $IP22 or src host $IP23 or src host $IP24 or
-  src host $IP24 or src host $IP26 or src host $IP27 or src host $IP28,
+  src host $IP25 or src host $IP26 or src host $IP27 or src host $IP28,
   src host $IP31 or src host $IP32 or src host $IP33 or src host $IP34 or
-  src host $IP34 or src host $IP36 or src host $IP37 or src host $IP38,
+  src host $IP35 or src host $IP36 or src host $IP37 or src host $IP38,
   src host $IP41 or src host $IP42 or src host $IP43 or src host $IP44 or
-  src host $IP44 or src host $IP46 or src host $IP47 or src host $IP48,
+  src host $IP45 or src host $IP46 or src host $IP47 or src host $IP48,
   src host $IP51 or src host $IP52 or src host $IP53 or src host $IP54 or
-  src host $IP54 or src host $IP56 or src host $IP57 or src host $IP58,
+  src host $IP55 or src host $IP56 or src host $IP57 or src host $IP58,
   src host $IP61 or src host $IP62 or src host $IP63 or src host $IP64 or
-  src host $IP64 or src host $IP66 or src host $IP67 or src host $IP68,
+  src host $IP65 or src host $IP66 or src host $IP67 or src host $IP68,
   src host $IP71 or src host $IP72 or src host $IP73 or src host $IP74 or
-  src host $IP74 or src host $IP76 or src host $IP77 or src host $IP78,
+  src host $IP75 or src host $IP76 or src host $IP77 or src host $IP78,
   src host $IP81 or src host $IP82 or src host $IP83 or src host $IP84 or
-  src host $IP84 or src host $IP86 or src host $IP87 or src host $IP88
+  src host $IP85 or src host $IP86 or src host $IP87 or src host $IP88
 )
              => [0, 1, 2, 3, 4, 5, 6, 7]output
 }
@@ -106,21 +106,21 @@ elementclass in_classfy {
 elementclass out_classfy {
     input[0] -> IPClassifier(
   dst host $IP11 or dst host $IP12 or dst host $IP13 or dst host $IP14 or
-  dst host $IP14 or dst host $IP16 or dst host $IP17 or dst host $IP18,
+  dst host $IP15 or dst host $IP16 or dst host $IP17 or dst host $IP18,
   dst host $IP21 or dst host $IP22 or dst host $IP23 or dst host $IP24 or
-  dst host $IP24 or dst host $IP26 or dst host $IP27 or dst host $IP28,
+  dst host $IP25 or dst host $IP26 or dst host $IP27 or dst host $IP28,
   dst host $IP31 or dst host $IP32 or dst host $IP33 or dst host $IP34 or
-  dst host $IP34 or dst host $IP36 or dst host $IP37 or dst host $IP38,
+  dst host $IP35 or dst host $IP36 or dst host $IP37 or dst host $IP38,
   dst host $IP41 or dst host $IP42 or dst host $IP43 or dst host $IP44 or
-  dst host $IP44 or dst host $IP46 or dst host $IP47 or dst host $IP48,
+  dst host $IP45 or dst host $IP46 or dst host $IP47 or dst host $IP48,
   dst host $IP51 or dst host $IP52 or dst host $IP53 or dst host $IP54 or
-  dst host $IP54 or dst host $IP56 or dst host $IP57 or dst host $IP58,
+  dst host $IP55 or dst host $IP56 or dst host $IP57 or dst host $IP58,
   dst host $IP61 or dst host $IP62 or dst host $IP63 or dst host $IP64 or
-  dst host $IP64 or dst host $IP66 or dst host $IP67 or dst host $IP68,
+  dst host $IP65 or dst host $IP66 or dst host $IP67 or dst host $IP68,
   dst host $IP71 or dst host $IP72 or dst host $IP73 or dst host $IP74 or
-  dst host $IP74 or dst host $IP76 or dst host $IP77 or dst host $IP78,
+  dst host $IP75 or dst host $IP76 or dst host $IP77 or dst host $IP78,
   dst host $IP81 or dst host $IP82 or dst host $IP83 or dst host $IP84 or
-  dst host $IP84 or dst host $IP86 or dst host $IP87 or dst host $IP88
+  dst host $IP85 or dst host $IP86 or dst host $IP87 or dst host $IP88
 )
              => [0, 1, 2, 3, 4, 5, 6, 7]output
 }
@@ -128,14 +128,14 @@ elementclass out_classfy {
 elementclass packet_link {
     input[0,1,2,3,4,5,6,7] 
                            => RoundRobinSched 
-                  	   -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)
+			   -> BandwidthRatedUnqueue($PACKET_BW)
 			   -> output
 }
 
 elementclass circuit_link {
     input[0,1,2,3,4,5,6,7] 
                            => ps :: PullSwitch(-1)
-                           -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)
+                           -> BandwidthRatedUnqueue($CIRCUIT_BW)
 		           -> output
 }
 
@@ -233,4 +233,4 @@ in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16)
 arp_c[1] -> [1]arp
 arp_c[2] -> arp_r -> out
 
-pc -> ICMPPingResponder -> Queue -> DelayUnqueue($DELAY_LATENCY) -> arp 
+pc -> ICMPPingResponder -> arp

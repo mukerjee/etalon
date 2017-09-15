@@ -66,9 +66,11 @@ def myNetwork():
 
     info('*** launching iperf daemon\n')
     for h in hosts:
+        # h.cmd("iperf3 -s -D &")
+        h.cmd("./rpyc_daemon.py &")
         for i in xrange(NUM_RACKS):
             for j in xrange(HOSTS_PER_RACK):
-                h.cmd("iperf3 -p%s -s -D &" % (5300 + i * NUM_RACKS + j))
+                h.cmd("iperf3 -p53%d%d -s -D &" % (i+1, j+1))
 
     info('*** launching sshd\n')
     for h in hosts:

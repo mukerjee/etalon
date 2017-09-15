@@ -67,6 +67,7 @@ class RatedUnqueue : public Element { public:
     Task _task;
     Timer _timer;
     NotifierSignal _signal;
+    NotifierSignal _can_push_signal;
     uint32_t _runs;
     uint32_t _pushes;
     uint32_t _failed_pulls;

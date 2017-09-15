@@ -38,6 +38,9 @@ BandwidthRatedUnqueue::run_task(Task *)
     _tb.refill();
 
     if (_tb.contains(tb_bandwidth_thresh)) {
+	if (!_can_push_signal) {
+	    return false; // without rescheduling
+	}
 	if (Packet *p = input(0).pull()) {
 	    _tb.remove(p->length());
 	    _pushes++;
