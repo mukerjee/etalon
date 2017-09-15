@@ -611,6 +611,8 @@ void setup(socket_st *sock)
 
 		if (dilation == -1) {
 		    dilation = gettimedilation();
+		    if (dilation < 1)
+		      dilation = 1;
 		}
 
 		it.it_interval.tv_sec = 0;
