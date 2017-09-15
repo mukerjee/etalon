@@ -15,6 +15,9 @@ host = int(gethostname().split('.')[0][4:])
 TDF = 20.0
 CIRCUIT_LINK = 80000  # Mbps
 PACKET_LINK = 10000  # Mbps
+#TDF = 1.0
+#CIRCUIT_LINK = 4000  # Mbps
+#PACKET_LINK = 500  # Mbps
 NUM_RACKS = 8
 HOSTS_PER_RACK = 8
 
