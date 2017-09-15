@@ -15,6 +15,9 @@ host = int(gethostname().split('.')[0][4:])
 TDF = 20.0
 CIRCUIT_LINK = 80000  # Mbps
 PACKET_LINK = 10000  # Mbps
+#TDF = 1.0
+#CIRCUIT_LINK = 4000  # Mbps
+#PACKET_LINK = 500  # Mbps
 NUM_RACKS = 8
 HOSTS_PER_RACK = 8
 
@@ -63,11 +66,11 @@ def myNetwork():
 
     info('*** launching iperf daemon\n')
     for h in hosts:
-        h.cmd("iperf3 -s -D &")
+        # h.cmd("iperf3 -s -D &")
         h.cmd("./rpyc_daemon.py &")
-        # for i in xrange(NUM_RACKS):
-        #     for j in xrange(HOSTS_PER_RACK):
-        #         h.cmd("iperf3 -p%s -s -D &" % (5300 + i * NUM_RACKS + j))
+        for i in xrange(NUM_RACKS):
+            for j in xrange(HOSTS_PER_RACK):
+                h.cmd("iperf3 -p53%d%d -s -D &" % (i+1, j+1))
 
     info('*** launching sshd\n')
     for h in hosts:

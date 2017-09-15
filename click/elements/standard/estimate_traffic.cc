@@ -322,8 +322,8 @@ EstimateTraffic::run_timer(Timer *)
 		   _enqueue_matrix[i], _dequeue_matrix[i],
 		   _traffic_matrix[i], len, pslen);
 
-	    psrc = 2;
-	    pdst = 3;
+	    psrc = 3;
+	    pdst = 1;
 	    i = psrc * _num_hosts + pdst;
 	    sprintf(handler, "hybrid_switch/q%d%d.length", psrc, pdst);
 	    len = atoi(HandlerCall::call_read(handler,

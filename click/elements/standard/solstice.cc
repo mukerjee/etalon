@@ -153,33 +153,6 @@ Solstice::run_timer(Timer *)
 	    }
 	}
 
-	_print = (_print+1) % 50000;
-
-	// print demand and scaled matrix
-	if(_print == 0) {
-	    printf("[demand]\t\t\t\t\t[scaled]\n");
-	    for (int src = 0; src < _num_hosts; src++) {
-		for (int dst = 0; dst < _num_hosts; dst++) {
-		    if (dst > 0) printf(" ");
-		    uint64_t v = _traffic_matrix[src * _num_hosts + dst];
-		    if (v == 0)
-			printf(".");
-		    else
-			printf("%ld", v);
-		}
-		printf("\t\t\t\t\t");
-		for (int dst = 0; dst < _num_hosts; dst++) {
-		    if (dst > 0) printf(" ");
-		    uint64_t v = sols_mat_get(&_s.future, src, dst);
-		    if (v == 0)
-			printf(".");
-		    else
-			printf("%ld", v);
-		}
-		printf("\n");
-	    }
-	}
-
         sols_schedule(&_s);
         sols_check(&_s);
 
@@ -214,7 +187,32 @@ Solstice::run_timer(Timer *)
 	    schedule[strlen(schedule)-1] = '\0';
         }
 
-	if (_print == 0) {
+	// _print = (_print+1) % 50000;
+	_print = (_print+1) % 5000;
+
+	// print demand and scaled matrix
+	if(scale_factor && !_print) {
+	    printf("[demand]\t\t\t\t\t[scaled]\n");
+	    for (int src = 0; src < _num_hosts; src++) {
+		for (int dst = 0; dst < _num_hosts; dst++) {
+		    if (dst > 0) printf(" ");
+		    uint64_t v = _traffic_matrix[src * _num_hosts + dst];
+		    if (v == 0)
+			printf(".");
+		    else
+			printf("%ld", v);
+		}
+		printf("\t\t\t\t\t");
+		for (int dst = 0; dst < _num_hosts; dst++) {
+		    if (dst > 0) printf(" ");
+		    uint64_t v = sols_mat_get(&_s.future, src, dst);
+		    if (v == 0)
+			printf(".");
+		    else
+			printf("%ld", v);
+		}
+		printf("\n");
+	    }
 	    printf("schedule == %s\n", schedule);
 	}
 
