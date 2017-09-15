@@ -1,22 +1,18 @@
 #!/usr/bin/python
 
-import subprocess
-import copy
 import time
 import threading
-import multiprocessing
 import sys
 import os
 import socket
 import select
 import paramiko
 import rpyc
-from subprocess import Popen, PIPE, STDOUT
+from subprocess import Popen, PIPE, STDOUT, call
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
 
 RPYC_PORT = 18861
-CHECK_TIMEOUT = 15
 
 NODES_FILE = os.path.expanduser('~/sdrt/cloudlab/common/handles.cloudlab')
 MININET_NODES_FILE = os.path.expanduser('~/sdrt/cloudlab/common/mininet.cloudlab')
@@ -50,7 +46,7 @@ def initializeExperiment():
 
     print '--- starting experiment...'
     print '--- clearing local arp...'
-    subprocess.call([os.path.expanduser('~/sdrt/cloudlab/clear_arp.sh')])
+    call([os.path.expanduser('~/sdrt/cloudlab/clear_arp.sh')])
     print '--- done...'
 
     print '--- parsing host handles...'
@@ -71,44 +67,30 @@ def initializeExperiment():
         handle, ip = [x.strip() for x in line.split('#')]
         rack = int(handle[-2])
 
-        #### REMOVE AFTER TESTING #####
-        if rack not in [1, 2]:
-            continue
-        ##### ################### #####
-
+        # #### REMOVE AFTER TESTING #####
+        # if rack not in [1, 2]:
+        #     continue
+        # ##### ################### #####
+        print handle
         RACKS[rack].append(node(handle))
         HANDLE_TO_IP[handle] = ip
     HOSTS_PER_RACK = len(RACKS[1])
     print '--- done...'
 
-    ######## Remove this after testing #######
-    PHYSICAL_NODES = PHYSICAL_NODES[:2]
-    RACKS = RACKS[:3]
-    #######                           #######
-
-    # p = multiprocessing.Pool()
-    # p.map(checkVHost, [h for r in RACKS for h in r])
-    # p.close()
+    # ######## Remove this after testing #######
+    # PHYSICAL_NODES = PHYSICAL_NODES[:2]
+    # RACKS = RACKS[:3]
+    # #######                           #######
 
     initializeClickControl()
 
     print '--- setting default click buffer sizes and traffic sources...'
-    setQueueSize(10)
+    setQueueSize(100)
     setEstimateTrafficSource('QUEUE')
     print '--- done...'
     print '--- done starting experiment...'
     print
     print
-
-# def checkVHost(handle):
-#     i = 0
-#     while 1:
-#         try:
-#             print 'checking if %s is up yet... (%d)' % (handle, i)
-#             sshRun(handle, 'uname -r', printOutput=False)
-#             break
-#         except:
-#             i += 1
 
 ##
 ## Running click commands
@@ -162,14 +144,15 @@ class job:
         self.result = result
 
 class node:
-    def __init__(self, hostname):
+    def __init__(self, hostname, skip=False):
         self.hostname = hostname
-        # should probably loop until i connect
-        self.rpc_conn = rpyc.connect(hostname, RPYC_PORT, 
-                                     config=rpyc.core.protocol.DEFAULT_CONFIG)
         self.work = []
-        self.iperf_async = rpyc.async(self.rpc_conn.root.iperf3)
-        self.ping_async = rpyc.async(self.rpc_conn.root.ping)
+        # should probably loop until i connect
+        if not skip:
+            self.rpc_conn = rpyc.connect(hostname, RPYC_PORT, 
+                                         config=rpyc.core.protocol.DEFAULT_CONFIG)
+            self.iperf_async = rpyc.async(self.rpc_conn.root.iperf3)
+            self.ping_async = rpyc.async(self.rpc_conn.root.ping)
 
     def iperf3(self, server, fn, time=1):
         if server.__class__ == node:
@@ -200,7 +183,8 @@ class node:
             print 'fn = %s' % (done.fn)
             open(done.fn, 'w').write(sout)
         else:
-            print 'error in %s %s %s' % (done.type, done.server, done.time)
+            print '%s: error in %s %s %s' % (self.hostname, done.type, 
+                                             done.server, done.time)
             print 'fn = %s' % (done.fn)
             sys.stdout.write(sout)
             sys.stdout.write(serr)
@@ -230,6 +214,7 @@ def sshRun(hostname, cmd, printOutput=True):
         sesh.get_pty()
         SSH_CONNECTIONS[hostname] = (client, sesh)
 
+    print sesh, cmd
     sesh.exec_command(cmd)
 
     while True:
@@ -246,8 +231,12 @@ def sshRun(hostname, cmd, printOutput=True):
     rc = sesh.recv_exit_status()
 
     # client.close()
+    print rc, out
 
-    return (out, rc)
+    if rc != 0:
+        raise Exception('bad RC (%s) from cmd: %s\n output: %s', 
+                        rc, cmd, out)
+    return out
 
 
 ##
