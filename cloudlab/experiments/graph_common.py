@@ -62,13 +62,13 @@ def get_tput_and_lat(pattern, ts, c):
     print c
     tputs = []
     pings = []
-    fn_format = '%s-%s-%s-%d-%s-%s-*-%s.txt' % (ts, pattern, c['type'],
-                                                c['buffer_size'],
-                                                c['traffic_source'],
-                                                c['queue_resize'])
-    
-    ping_files = glob.glob('/tmp/sdrt/' + fn_format % 'ping')
-    iperf3_files = glob.glob('/tmp/sdrt/' + fn_format % 'iperf3')
+    fn_format = '/tmp/sdrt/%s-%s-%s-%d-%s-%s-*' % (ts, pattern, c['type'],
+                                                   c['buffer_size'],
+                                                   c['traffic_source'],
+                                                   c['queue_resize'])
+    fn_format += '-%s.txt'
+    ping_files = glob.glob(fn_format % 'ping')
+    iperf3_files = glob.glob(fn_format % 'iperf3')
     for ip3fn in iperf3_files:
         tputs.append(get_iperf3_tput_from_file(ip3fn))
     for pfn in ping_files:

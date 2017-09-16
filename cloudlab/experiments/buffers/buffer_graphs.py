@@ -51,7 +51,7 @@ for ct in config_types:
 
     options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
                                      yerr=yerr)]
-    options.output_fn = '%s-buffer_size_vs_latency.pdf' % ct
+    options.output_fn = 'graphs/%s-buffer_size_vs_latency.pdf' % ct
     options.x.label.xlabel = 'Buffer size (packets)'
     options.y.label.ylabel = 'Latency (us)'
     plot(x, y, options)
@@ -67,7 +67,7 @@ for ct in config_types:
 
     options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
                                      yerr=yerr)]
-    options.output_fn = '%s-bufer_size_vs_throughput.pdf' % ct
+    options.output_fn = 'graphs/%s-bufer_size_vs_throughput.pdf' % ct
     options.x.label.xlabel = 'Buffer size (packets)'
     options.y.label.ylabel = 'Throughput (Gbps)'
 
@@ -87,7 +87,7 @@ for ct in config_types:
 
     options.plot_type = 'SCATTER'
     options.series_options = [DotMap(color="C0", marker='o', linewidth=1)]
-    options.output_fn = '%s-throughput_vs_latency.pdf' % ct
+    options.output_fn = 'graphs/%s-throughput_vs_latency.pdf' % ct
     options.x.label.xlabel = 'Throughput (Gbps)'
     options.y.label.ylabel = 'Latency (us)'
 
