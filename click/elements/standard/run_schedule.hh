@@ -38,11 +38,12 @@ class RunSchedule : public Element {
 
     String next_schedule;
     bool do_resize;
+    pthread_mutex_t lock;
 
   private:
 
-    static int handler(int, String&, Element*, const Handler*, ErrorHandler*);
-    static int resize_handler(int, String&, Element*, const Handler*, ErrorHandler*);
+    static int handler(const String&, Element*, void*, ErrorHandler*);
+    static int resize_handler(const String&, Element*, void*, ErrorHandler*);
     static Vector<String> split(const String&, char);
     int execute_schedule(ErrorHandler *);
 
@@ -50,9 +51,9 @@ class RunSchedule : public Element {
     int _num_hosts;
     int _big_buffer_size;
     int _small_buffer_size;
-    pthread_mutex_t _lock;
     HandlerCall **_queue_capacity;
     HandlerCall **_pull_switch;
+    int _print;
 };
 
 CLICK_ENDDECLS

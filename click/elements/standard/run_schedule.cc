@@ -32,9 +32,9 @@
 
 CLICK_DECLS
 
-RunSchedule::RunSchedule() : _timer(this), _num_hosts(0), _big_buffer_size(100), _small_buffer_size(10) 
+RunSchedule::RunSchedule() : _timer(this), _num_hosts(0), _big_buffer_size(100), _small_buffer_size(10), _print(0)
 {
-    pthread_mutex_init(&_lock, NULL);
+    pthread_mutex_init(&lock, NULL);
 }
 
 int
@@ -66,7 +66,7 @@ RunSchedule::initialize(ErrorHandler *errh)
     for(int src = 0; src < _num_hosts; src++) {
 	for(int dst = 0; dst < _num_hosts; dst++) {
 	    char handler[500];
-	    sprintf(handler, "hybrid_switch/q%d%d.capacity", src, dst);
+	    sprintf(handler, "hybrid_switch/q%d%d/q.resize_capacity", src, dst);
 	    _queue_capacity[src * _num_hosts + dst] = new HandlerCall(handler);
 	    _queue_capacity[src * _num_hosts + dst]->initialize(HandlerCall::f_read | HandlerCall::f_write,
 								this, errh);
@@ -85,26 +85,32 @@ RunSchedule::initialize(ErrorHandler *errh)
 }
 
 int
-RunSchedule::handler(int, String &str, Element *t, const Handler *,
-                     ErrorHandler *)
+RunSchedule::handler(const String &str, Element *e, void *, ErrorHandler *)
 {
-    RunSchedule *rs = static_cast<RunSchedule *>(t);
+    RunSchedule *rs = static_cast<RunSchedule *>(e);
 
-    pthread_mutex_lock(&(rs->_lock));
+    pthread_mutex_lock(&(rs->lock));
     rs->next_schedule = String(str);
-    pthread_mutex_unlock(&(rs->_lock));
+    pthread_mutex_unlock(&(rs->lock));
     return 0;
 }
 
 int
-RunSchedule::resize_handler(int, String &str, Element *t, const Handler *,
-                     ErrorHandler *)
+RunSchedule::resize_handler(const String &str, Element *e, void *, ErrorHandler *)
 {
-    RunSchedule *rs = static_cast<RunSchedule *>(t);
+    RunSchedule *rs = static_cast<RunSchedule *>(e);
 
-    pthread_mutex_lock(&(rs->_lock));
+    pthread_mutex_lock(&(rs->lock));
+    bool current = rs->do_resize;
     BoolArg::parse(str, rs->do_resize, ArgContext());
-    pthread_mutex_unlock(&(rs->_lock));
+    if (rs->do_resize && rs->do_resize != current) {
+	// get sizes based on queues sizes
+	rs->_small_buffer_size = atoi(rs->_queue_capacity[0]->call_read().c_str());
+	rs->_big_buffer_size = rs->_small_buffer_size * 10;
+	printf("auto resizing: %d -> %d\n", rs->_small_buffer_size,
+	       rs->_big_buffer_size);
+    }
+    pthread_mutex_unlock(&(rs->lock));
     return 0;
 }
 
@@ -130,12 +136,17 @@ RunSchedule::execute_schedule(ErrorHandler *)
     // num_schedules [duration config]
     // confg = src_for_dst_0/src_for_dst_1/...
     // '2 180 1/2/3/0 20 -1/-1/-1/-1'
-    pthread_mutex_lock(&_lock);
+    pthread_mutex_lock(&lock);
     String current_schedule = String(next_schedule);
     bool resize = do_resize;
-    pthread_mutex_unlock(&_lock);
+    int small_size = _small_buffer_size;
+    int big_size = _big_buffer_size;
+    pthread_mutex_unlock(&lock);
 
-    // printf("running sched %s\n", current_schedule.c_str());
+    _print = (_print+1) % 100;
+    if (!_print) {
+	printf("running sched %s\n", current_schedule.c_str());
+    }
     
     if (current_schedule == "")
         return 0;
@@ -167,7 +178,7 @@ RunSchedule::execute_schedule(ErrorHandler *)
 		int src = configuration[i];
 		if (src == -1)
 		    continue;
-		_queue_capacity[src * _num_hosts + dst]->call_write(String(_big_buffer_size));
+		_queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
 		buffer_times[src * _num_hosts + dst]++;
 	    }
 	}
@@ -232,7 +243,7 @@ RunSchedule::execute_schedule(ErrorHandler *)
 		    continue;
 		buffer_times[src * _num_hosts + dst]--;
 		if (buffer_times[src * _num_hosts + dst] == 0) {
-		    _queue_capacity[src * _num_hosts + dst]->call_write(String(_small_buffer_size));
+		    _queue_capacity[src * _num_hosts + dst]->call_write(String(small_size));
 		}
 	    }
 	}
@@ -255,10 +266,8 @@ RunSchedule::run_timer(Timer *)
 void
 RunSchedule::add_handlers()
 {
-    set_handler("setSchedule", Handler::h_write | Handler::h_write_private,
-                handler, 0, 0);
-    set_handler("setDoResize", Handler::h_write | Handler::h_write_private,
-                resize_handler, 0, 0);
+    add_write_handler("setSchedule", handler, 0);
+    add_write_handler("setDoResize", resize_handler, 0);
 }
 
 CLICK_ENDDECLS
