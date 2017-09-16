@@ -161,6 +161,30 @@ FullNoteQueue::read_bytes(Element *e, void *)
     return r;
 }
 
+int
+FullNoteQueue::resize_capacity(const String &str, Element *e, void *, ErrorHandler *errh)
+{
+    FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
+    pthread_mutex_lock(&(fq->_lock));
+
+    Vector<String> conf;
+    conf.push_back("CAPACITY " + str);
+    fq->live_reconfigure(conf, errh);
+
+    pthread_mutex_unlock(&(fq->_lock));
+    return 0;
+}
+
+String
+FullNoteQueue::get_resize_capacity(Element *e, void *)
+{
+    FullNoteQueue *fq = static_cast<FullNoteQueue *>(e);
+    pthread_mutex_lock(&(fq->_lock));
+    int cap = fq->_capacity;
+    pthread_mutex_unlock(&(fq->_lock));
+    return String(cap);
+}
+
 void
 FullNoteQueue::add_handlers()
 {
@@ -169,6 +193,8 @@ FullNoteQueue::add_handlers()
     add_read_handler("dequeue_bytes", read_dequeue_bytes, 0);
     add_read_handler("dequeue_bytes_no_headers", read_dequeue_bytes_no_headers, 0);
     add_read_handler("bytes", read_bytes, 0);
+    add_write_handler("resize_capacity", resize_capacity, 0);
+    add_read_handler("resize_capacity", get_resize_capacity, 0);
 }
 #endif
 
