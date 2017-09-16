@@ -16,29 +16,21 @@ for config in buffer_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    rackToRackIperf3(1, 2)
     rackToRackIperf3(2, 1)
+    rackToRackIperf3(3, 1)
+    rackToRackIperf3(4, 1)
+    rackToRackIperf3(5, 1)
+    rackToRackIperf3(6, 1)
+    rackToRackIperf3(7, 1)
+    rackToRackIperf3(8, 1)
 
-    rackToRackIperf3(3, 4)
-    rackToRackIperf3(4, 3)
-
-    rackToRackIperf3(5, 6)
-    rackToRackIperf3(6, 5)
-
-    rackToRackIperf3(7, 8)
-    rackToRackIperf3(8, 7)
-
-    rackToRackPing(1, 2)
     rackToRackPing(2, 1)
-
-    rackToRackPing(3, 4)
-    rackToRackPing(4, 3)
-
-    rackToRackPing(5, 6)
-    rackToRackPing(6, 5)
-
-    rackToRackPing(7, 8)
-    rackToRackPing(8, 7)
+    rackToRackPing(3, 1)
+    rackToRackPing(4, 1)
+    rackToRackPing(5, 1)
+    rackToRackPing(6, 1)
+    rackToRackPing(7, 1)
+    rackToRackPing(8, 1)
 
     waitOnNodes()
 

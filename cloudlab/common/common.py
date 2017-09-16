@@ -8,6 +8,8 @@ import socket
 import select
 import paramiko
 import rpyc
+import glob
+import tarfile
 from subprocess import Popen, PIPE, STDOUT, call
 
 rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
@@ -30,13 +32,20 @@ TCP_PORT = 1239
 BUFFER_SIZE = 1024
 CLICK_SOCKET = None
 
-MAX_CONCURRENT = 128
+MAX_CONCURRENT = 1024
 
 THREADS = []
 THREADLOCK = threading.Lock()
 
 IPERF3_CLIENT = 'iperf3 -p53%s -i0.1 -t1 -c %s'
 PING = 'sudo ping -i0.05 -w1 %s'
+
+TIMESTAMP = int(time.time())
+SCRIPT = os.path.splitext(os.path.basename(sys.argv[0]))[0]
+EXPERIMENTS = []
+
+CURRENT_CONFIG = {}
+FN_FORMAT = ''
 
 ##
 ## Experiment commands
@@ -74,12 +83,22 @@ def initializeExperiment():
     initializeClickControl()
 
     print '--- setting default click buffer sizes and traffic sources...'
-    setQueueSize(100)
-    setEstimateTrafficSource('QUEUE')
+    setConfig({})
     print '--- done...'
     print '--- done starting experiment...'
     print
     print
+
+
+def stopExperiment():
+    tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
+    for e in EXPERIMENTS:
+        tar.add(e)
+    tar.close()
+
+    for e in EXPERIMENTS:
+        os.remove(e)
+
 
 ##
 ## Running click commands
@@ -109,7 +128,7 @@ def clickReadHandler(element, handler):
 def setQueueSize(size):
     for i in xrange(len(RACKS) - 1):
         for j in xrange(len(RACKS) - 1):
-            clickWriteHandler('hybrid_switch/q%d%d' % (i, j), 'capacity', size)
+            clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j), 'capacity', size)
 
 def setEstimateTrafficSource(source):
     clickWriteHandler('traffic_matrix', 'setSource', source)
@@ -119,26 +138,79 @@ def setQueueResize(b):
         clickWriteHandler('runner', 'setDoResize', 'true')
     else:
         clickWriteHandler('runner', 'setDoResize', 'false')
+    time.sleep(0.1)
+
+def enableSolstice():
+    clickWriteHandler('sol', 'setEnabled', 'true')
+    time.sleep(0.1)
+
+def disableSolstice():
+    clickWriteHandler('sol', 'setEnabled', 'false')
+    time.sleep(0.1)
+
+def disableCircuit():
+    disableSolstice()
+    off_sched = '1 20000 %s' % (('-1/' * NUM_RACKS)[:-1])
+    clickWriteHandler('runner', 'setSchedule', off_sched)
+    time.sleep(0.1)
+
+def setStrobeSchedule():
+    disableSolstice()
+    schedule = '%d ' % ((NUM_RACKS-1)*2)
+    for i in xrange(NUM_RACKS-1):
+        configstr = '%d %s %d %s '
+        night_len = 20
+        off_config = ('-1/' * NUM_RACKS)[:-1]
+        duration = night_len * 9 * 20  # night_len * duty_cycle * tdf
+        configuration = ''
+        for j in xrange(NUM_RACKS):
+            configuration += '%d/' % ((i + 1 + j) % NUM_RACKS)
+        configuration = configuration[:-1]
+        schedule += (configstr % (duration, configuration, night_len, off_config))
+    schedule = schedule[:-1]
+    clickWriteHandler('runner', 'setSchedule', schedule)
+    time.sleep(0.1)
+
+def setConfig(config):
+    global CURRENT_CONFIG, FN_FORMAT
+    CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 40,
+                      'traffic_source': 'QUEUE', 'queue_resize': False}
+    CURRENT_CONFIG.update(config)
+    c = CURRENT_CONFIG
+    setQueueSize(c['buffer_size'])
+    setEstimateTrafficSource(c['traffic_source'])
+    setQueueResize(c['queue_resize'])
+    t = c['type']
+    if t == 'normal':
+        enableSolstice()
+    if t == 'no_circuit':
+        disableCircuit()
+    if t == 'strobe':
+        setStrobeSchedule()
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
+                                        c['traffic_source'], c['queue_resize'])
+    FN_FORMAT += '%s-%s-%s.txt'
+
 
 ##
 ## Rack level helper functions
 ##
-def rackToRackIperf3(source, dest, fn):
+def rackToRackIperf3(source, dest):
     servers = RACKS[dest]
     for i, host in enumerate(RACKS[source]):
-        out_fn = fn + '-%s-%s.txt' % (host.hostname, 'iperf3')
+        out_fn = FN_FORMAT % (host.hostname, servers[i].hostname, 'iperf3')
         runOnNode(host.hostname,
                   IPERF3_CLIENT % (host.hostname[1:], servers[i].hostname),
                   fn=out_fn, preload=False)
+        EXPERIMENTS.append(out_fn)
 
-def rackToRackPing(source, dest, fn):
+def rackToRackPing(source, dest):
     servers = RACKS[dest]
     for i, host in enumerate(RACKS[source]):
-        out_fn = fn + '-%s-%s.txt' % (host.hostname, 'ping')
+        out_fn = FN_FORMAT % (host.hostname, servers[i].hostname, 'ping')
         runOnNode(host.hostname, PING % (servers[i].hostname),
                   fn=out_fn, preload=False)
-
-
+        EXPERIMENTS.append(out_fn)
 
 
 ##
@@ -227,12 +299,14 @@ def sshRun(hostname, cmd, printOutput=True):
         rs, _, _ = select.select([sesh], [], [], 0.0)
         if len(rs) > 0:
             new = sesh.recv(1024)
+            if new == '':
+                break
             out += new
             if printOutput:
                 sys.stdout.write(new)
                 sys.stdout.flush()
-        if sesh.exit_status_ready():
-            break
+        # if sesh.exit_status_ready():
+        #     break
     rc = sesh.recv_exit_status()
 
     client.close()
@@ -260,7 +334,9 @@ def threadRun(hostname, handle, cmd, current, total, fn, po):
             print '(%s/%s) %s: done\n' % (current, total, handle)
     THREADLOCK.release()
     if fn:
-        open(fn, 'w').write(out)
+        f = open(fn, 'w')
+        f.write(out)
+        f.close()
 
 def runOnNode(handle, cmd, current=0, total=0, preload=True, printOutput=True, fn=None):
     try:
