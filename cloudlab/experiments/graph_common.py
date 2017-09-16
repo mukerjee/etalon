@@ -57,14 +57,18 @@ def untar(fn):
     os.chdir(dir)
 
 
-def get_tput_and_lat(pattern, ts, var):
+def get_tput_and_lat(pattern, ts, c):
     untar('%s-%s.tar.gz' % (ts, pattern))
-    print var
+    print c
     tputs = []
     pings = []
-    ping_files = glob.glob('/tmp/sdrt/%s-%s-%s-*ping.txt' % (ts, pattern, var))
-    iperf3_files = glob.glob('/tmp/sdrt/%s-%s-%s-*iperf3.txt'
-                             % (ts, pattern, var))
+    fn_format = '%s-%s-%s-%d-%s-%s-*-%s.txt' % (ts, pattern, c['type'],
+                                                c['buffer_size'],
+                                                c['traffic_source'],
+                                                c['queue_resize'])
+    
+    ping_files = glob.glob('/tmp/sdrt/' + fn_format % 'ping')
+    iperf3_files = glob.glob('/tmp/sdrt/' + fn_format % 'iperf3')
     for ip3fn in iperf3_files:
         tputs.append(get_iperf3_tput_from_file(ip3fn))
     for pfn in ping_files:

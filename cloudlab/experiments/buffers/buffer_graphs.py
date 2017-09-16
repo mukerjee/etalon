@@ -15,71 +15,80 @@ options.plot_type = 'LINE'
 options.legend.options.labels = ['Rack to Rack']
 options.legend.options.fontsize = 17
 
-experiment_names = {'rack_to_rack': '1505511786'}
-buffer_sizes = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+experiment_names = {'one_to_one': sys.argv[1]}
+config_types = ['normal', 'no_circuit', 'strobe', 'resize']
+buffer_sizes = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
 
-tputs = []
-pings = []
-
-for pattern, t in experiment_names.items():
-    for b in buffer_sizes:
-        tput, ping = get_tput_and_lat(pattern, t, str(b))
-        tputs.append(tput)
-        pings.append(ping)
-
-tputs, pings = zip(*sorted(zip(tputs, pings)))
-
-# throughput vs latency
-x = [zip(*tputs)[0]]
-y = [zip(*pings)[0]]
-xerr = zip(*tputs)[1]
-yerr = zip(*pings)[1]
-print 'tput:', x
-print 'latency:', y
-print 'tput var:', xerr
-print 'lat var:', yerr
-
-options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
-                                 yerr=yerr)]
-options.output_fn = 'throughput_vs_latency.pdf'
-options.x.label.xlabel = 'Throughput (Gbps)'
-options.y.label.ylabel = 'Latency (us)'
-
-print options.output_fn
-plot(x, y, options)
+default_config = {'type': 'normal', 'buffer_size': 40,
+                  'traffic_source': 'QUEUE', 'queue_resize': False}
 
 
-# size vs latency
-x = [buffer_sizes]
-y = [zip(*pings)[0]]
-yerr = zip(*pings)[1]
-print 'buffer:', x
-print 'latency:', y
-print 'lat var:', yerr
+for ct in config_types:
+    config = dict(default_config)
+    config['type'] = ct
+    if ct == 'resize':
+        config['type'] = 'normal'
+        config['queue_resize'] = True
 
-options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
-                                 yerr=yerr)]
-options.output_fn = 'buffer_size_vs_latency.pdf'
-options.x.label.xlabel = 'Buffer size (packets)'
-options.y.label.ylabel = 'Latency (us)'
+    tputs = []
+    pings = []
 
-print options.output_fn
-plot(x, y, options)
+    for pattern, t in experiment_names.items():
+        for b in buffer_sizes:
+            config['buffer_size'] = b
+            tput, ping = get_tput_and_lat(pattern, t, config)
+            tputs.append(tput)
+            pings.append(ping)
 
 
-# size vs throughput
-x = [buffer_sizes]
-y = [zip(*tputs)[0]]
-yerr = zip(*tputs)[1]
-print 'buffer:', x
-print 'tput:', y
-print 'tput var:', yerr
+    # size vs latency
+    x = [buffer_sizes]
+    y = [zip(*pings)[0]]
+    yerr = zip(*pings)[1]
+    print 'buffer:', x
+    print 'latency:', y
+    print 'lat var:', yerr
 
-options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
-                                 yerr=yerr)]
-options.output_fn = 'bufer_size_vs_throughput.pdf'
-options.x.label.xlabel = 'Buffer size (packets)'
-options.y.label.ylabel = 'Throughput (Gbps)'
+    options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
+                                     yerr=yerr)]
+    options.output_fn = '%s-buffer_size_vs_latency.pdf' % ct
+    options.x.label.xlabel = 'Buffer size (packets)'
+    options.y.label.ylabel = 'Latency (us)'
+    plot(x, y, options)
 
-print options.output_fn
-plot(x, y, options)
+
+    # size vs throughput
+    x = [buffer_sizes]
+    y = [zip(*tputs)[0]]
+    yerr = zip(*tputs)[1]
+    print 'buffer:', x
+    print 'tput:', y
+    print 'tput var:', yerr
+
+    options.series_options = [DotMap(color="C0", marker='o', linewidth=1,
+                                     yerr=yerr)]
+    options.output_fn = '%s-bufer_size_vs_throughput.pdf' % ct
+    options.x.label.xlabel = 'Buffer size (packets)'
+    options.y.label.ylabel = 'Throughput (Gbps)'
+
+    plot(x, y, options)
+    tputs_sorted, pings_sorted = zip(*sorted(zip(tputs, pings)))
+
+
+    # throughput vs latency
+    x = [zip(*tputs)[0]]
+    y = [zip(*pings)[0]]
+    xerr = zip(*tputs)[1]
+    yerr = zip(*pings)[1]
+    print 'tput:', x
+    print 'latency:', y
+    print 'tput var:', xerr
+    print 'lat var:', yerr
+
+    options.plot_type = 'SCATTER'
+    options.series_options = [DotMap(color="C0", marker='o', linewidth=1)]
+    options.output_fn = '%s-throughput_vs_latency.pdf' % ct
+    options.x.label.xlabel = 'Throughput (Gbps)'
+    options.y.label.ylabel = 'Latency (us)'
+
+    plot(x, y, options)
