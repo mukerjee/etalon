@@ -136,7 +136,7 @@ EstimateTraffic::initialize(ErrorHandler *errh)
     for(int src = 0; src < _num_hosts; src++) {
         for(int dst = 0; dst < _num_hosts; dst++) {
             char handler[500];
-            sprintf(handler, "hybrid_switch/q%d%d.dequeue_bytes", src, dst);
+            sprintf(handler, "hybrid_switch/q%d%d/q.dequeue_bytes", src, dst);
             _queue_dequeue_bytes[src * _num_hosts + dst] = new HandlerCall(handler);
             _queue_dequeue_bytes[src * _num_hosts + dst]->initialize(HandlerCall::f_read, this, errh);
         }
@@ -146,7 +146,7 @@ EstimateTraffic::initialize(ErrorHandler *errh)
     for(int src = 0; src < _num_hosts; src++) {
         for(int dst = 0; dst < _num_hosts; dst++) {
             char handler[500];
-            sprintf(handler, "hybrid_switch/q%d%d.dequeue_bytes_no_headers", src, dst);
+            sprintf(handler, "hybrid_switch/q%d%d/q.dequeue_bytes_no_headers", src, dst);
             _queue_dequeue_bytes_no_headers[src * _num_hosts + dst] = new HandlerCall(handler);
             _queue_dequeue_bytes_no_headers[src * _num_hosts + dst]->initialize(HandlerCall::f_read, this, errh);
         }
@@ -156,7 +156,7 @@ EstimateTraffic::initialize(ErrorHandler *errh)
     for(int src = 0; src < _num_hosts; src++) {
         for(int dst = 0; dst < _num_hosts; dst++) {
             char handler[500];
-            sprintf(handler, "hybrid_switch/q%d%d.enqueue_bytes", src, dst);
+            sprintf(handler, "hybrid_switch/q%d%d/q.enqueue_bytes", src, dst);
             _queue_enqueue_bytes[src * _num_hosts + dst] = new HandlerCall(handler);
             _queue_enqueue_bytes[src * _num_hosts + dst]->initialize(HandlerCall::f_read, this, errh);
         }
@@ -166,7 +166,7 @@ EstimateTraffic::initialize(ErrorHandler *errh)
     for(int src = 0; src < _num_hosts; src++) {
         for(int dst = 0; dst < _num_hosts; dst++) {
             char handler[500];
-            sprintf(handler, "hybrid_switch/q%d%d.bytes", src, dst);
+            sprintf(handler, "hybrid_switch/q%d%d/q.bytes", src, dst);
             _queue_bytes[src * _num_hosts + dst] = new HandlerCall(handler);
             _queue_bytes[src * _num_hosts + dst]->initialize(HandlerCall::f_read, this, errh);
         }
@@ -311,7 +311,7 @@ EstimateTraffic::run_timer(Timer *)
 	    int i = psrc * _num_hosts + pdst;
 	    char handler[500];
 	    printf("\n");
-	    sprintf(handler, "hybrid_switch/q%d%d.length", psrc, pdst);
+	    sprintf(handler, "hybrid_switch/q%d%d/q.length", psrc, pdst);
 	    int len = atoi(HandlerCall::call_read(handler,
 						  this).c_str());
 	    sprintf(handler, "hybrid_switch/ps/q%d%d.length", psrc, pdst);
@@ -325,7 +325,7 @@ EstimateTraffic::run_timer(Timer *)
 	    psrc = 3;
 	    pdst = 1;
 	    i = psrc * _num_hosts + pdst;
-	    sprintf(handler, "hybrid_switch/q%d%d.length", psrc, pdst);
+	    sprintf(handler, "hybrid_switch/q%d%d/q.length", psrc, pdst);
 	    len = atoi(HandlerCall::call_read(handler,
 					      this).c_str());
 	    sprintf(handler, "hybrid_switch/ps/q%d%d.length", psrc, pdst);
