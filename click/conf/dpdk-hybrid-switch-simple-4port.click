@@ -29,12 +29,12 @@ StaticThreadSched(in 0,
                   hybrid_switch/circuit_link3 4,
 		  hybrid_switch/packet_up_link0 6,
                   hybrid_switch/packet_up_link1 6,
-                  hybrid_switch/packet_up_link2 7,
-                  hybrid_switch/packet_up_link3 7,
+                  hybrid_switch/packet_up_link2 6,
+                  hybrid_switch/packet_up_link3 6,
 		  hybrid_switch/ps/packet_link0 6,
 		  hybrid_switch/ps/packet_link1 6,
-		  hybrid_switch/ps/packet_link2 7,
-		  hybrid_switch/ps/packet_link3 7,
+		  hybrid_switch/ps/packet_link2 6,
+		  hybrid_switch/ps/packet_link3 6,
 		  )
 
 ControlSocket("TCP", 1239)
@@ -42,7 +42,6 @@ ControlSocket("TCP", 1239)
 traffic_matrix :: EstimateTraffic($NUMHOSTS, SOURCE QUEUE)
 sol :: Solstice($NUMHOSTS, $CIRCUIT_BW, $PACKET_BW, $RECONFIG_DELAY, $TDF)
 runner :: RunSchedule($NUMHOSTS, $BIG_BUFFER_SIZE, $SMALL_BUFFER_SIZE, RESIZE false)
-// Script(write runner.setSchedule 1 2000000 -1/-1/-1/-1)
 
 in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
@@ -112,6 +111,12 @@ elementclass packet_switch {
     q01, q11, q21, q31 => packet_link1 -> [1]output
     q02, q12, q22, q32 => packet_link2 -> [2]output
     q03, q13, q23, q33 => packet_link3 -> [3]output
+
+    // would be drops
+    q00[1], q01[1], q02[1], q03[1] => [4]output
+    q10[1], q11[1], q12[1], q13[1] => [5]output
+    q20[1], q21[1], q22[1], q23[1] => [6]output
+    q30[1], q31[1], q32[1], q33[1] => [7]output
 }
 
 hybrid_switch :: {
@@ -121,7 +126,11 @@ hybrid_switch :: {
     q00, q01, q02, q03, 
     q10, q11, q12, q13, 
     q20, q21, q22, q23, 
-    q30, q31, q32, q33  :: Queue(CAPACITY 100)
+    q30, q31, q32, q33  :: {
+      input[0] -> q :: Queue(CAPACITY 100)
+      input[1] -> lq :: Queue(CAPACITY 1) // loss queue
+      lq, q => PrioSched -> output
+}
 
     circuit_link0, circuit_link1, circuit_link2, circuit_link3  :: circuit_link
 
@@ -143,6 +152,12 @@ hybrid_switch :: {
     q10, q11, q12, q13 => packet_up_link1 -> [1]ps[1] -> [1]output
     q20, q21, q22, q23 => packet_up_link2 -> [2]ps[2] -> [2]output
     q30, q31, q32, q33 => packet_up_link3 -> [3]ps[3] -> [3]output
+
+    // dropped
+    ps[4] -> out_classfy => [1]q00, [1]q01, [1]q02, [1]q03
+    ps[5] -> out_classfy => [1]q10, [1]q11, [1]q12, [1]q13
+    ps[6] -> out_classfy => [1]q20, [1]q21, [1]q22, [1]q23
+    ps[7] -> out_classfy => [1]q30, [1]q31, [1]q32, [1]q33
 }
 
 in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16) 
