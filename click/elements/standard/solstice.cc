@@ -66,6 +66,9 @@ Solstice::configure(Vector<String> &conf, ErrorHandler *errh)
     _s.pack_bw = int(packet_bw / 1000000); // 0.5Gbps (in bytes / us)
 
     _print = 0;
+    _print2 = 0;
+
+    enabled = true;
 
     return 0;
 }
@@ -93,6 +96,18 @@ void
 Solstice::run_timer(Timer *)
 {
     while(1) {
+	int stopped = 0;
+	while(!enabled) { // if disabled externally
+	    if (!stopped) {
+		printf("****solstice stopping...\n");
+		stopped = 1;
+	    }
+	    sleep(1);
+	}
+	if (stopped) {
+	    printf("****soltice starting...\n");
+	}
+
 	// get traffic matrix from estimator and unparse.
 	String tm = _tm->call_read();
 	// if(_print == 0) {
@@ -189,6 +204,7 @@ Solstice::run_timer(Timer *)
 
 	// _print = (_print+1) % 50000;
 	_print = (_print+1) % 5000;
+	_print2 = (_print2+1) % 50000;
 
 	// print demand and scaled matrix
 	if(scale_factor && !_print) {
@@ -216,12 +232,31 @@ Solstice::run_timer(Timer *)
 	    printf("schedule == %s\n", schedule);
 	}
 
+	if(!_print2) {
+	    printf("****Solstice still running...\n");
+	}
+
         // tell schedule runner
 	_runner->call_write(schedule);
 
 	free(schedule);
     }
 }
+
+int
+Solstice::set_enabled(const String &str, Element *e, void *, ErrorHandler *)
+{
+    Solstice *s = static_cast<Solstice *>(e);
+    BoolArg::parse(str, s->enabled, ArgContext());
+    return 0;
+}
+
+void
+Solstice::add_handlers()
+{
+    add_write_handler("setEnabled", set_enabled, 0);
+}
+
 
 CLICK_ENDDECLS
 EXPORT_ELEMENT(Solstice)
