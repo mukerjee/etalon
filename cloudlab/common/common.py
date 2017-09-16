@@ -177,6 +177,7 @@ def setConfig(config):
                       'traffic_source': 'QUEUE', 'queue_resize': False}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
+    setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
