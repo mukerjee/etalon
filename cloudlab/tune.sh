@@ -82,6 +82,9 @@ cd $HOME/sdrt/vt-mininet/mininet
 sudo make install
 sudo make install
 
+ulimit -n 119353
+ulimit -Hn 119353
+
 # sudo ln -s $HOME/sdrt/iperf-2.0.10/src/iperf /usr/local/bin/iperf 2>/dev/null
 
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay

@@ -128,14 +128,16 @@ elementclass out_classfy {
 elementclass packet_link {
     input[0,1,2,3,4,5,6,7] 
                            => RoundRobinSched 
-			   -> BandwidthRatedUnqueue($PACKET_BW)
+			   // -> BandwidthRatedUnqueue($PACKET_BW)//, BURST_BYTES 9000)
+			   -> LinkUnqueue(0, $PACKET_BW)
 			   -> output
 }
 
 elementclass circuit_link {
     input[0,1,2,3,4,5,6,7] 
                            => ps :: PullSwitch(-1)
-                           -> BandwidthRatedUnqueue($CIRCUIT_BW)
+                           // -> BandwidthRatedUnqueue($CIRCUIT_BW)//, BURST_BYTES 9000)
+			   -> LinkUnqueue(0, $CIRCUIT_BW)
 		           -> output
 }
 

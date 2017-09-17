@@ -18,6 +18,8 @@ for config in buffer_common.CONFIGS:
 
     for i in xrange(1, 9):
         for j in xrange(1, 9):
+            if i == j:
+                continue
             rackToRackIperf3(i, j)
             rackToRackPing(i, j)
 
