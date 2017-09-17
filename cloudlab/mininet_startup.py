@@ -13,7 +13,7 @@ from mininet.util import waitListening
 
 host = int(gethostname().split('.')[0][4:])
 TDF = 20.0
-CIRCUIT_LINK = 80000  # Mbps
+# CIRCUIT_LINK = 80000  # Mbps
 PACKET_LINK = 10000  # Mbps
 NUM_RACKS = 8
 HOSTS_PER_RACK = 8
@@ -26,7 +26,7 @@ def myNetwork():
 
     info('*** Add switches\n')
     s1 = net.addSwitch('s1')
-    s1_eth2 = TCIntf('eth2', node=s1, bw=CIRCUIT_LINK / TDF)
+    s1_eth2 = TCIntf('eth2', node=s1) #, bw=CIRCUIT_LINK / TDF)
 
     s2 = net.addSwitch('s2')
     s2_eth3 = Intf('eth3', node=s2)
