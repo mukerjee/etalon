@@ -47,6 +47,8 @@ EXPERIMENTS = []
 CURRENT_CONFIG = {}
 FN_FORMAT = ''
 
+MAX_SSH_RUNTIME = 25  # seconds
+
 ##
 ## Experiment commands
 ##
@@ -57,6 +59,8 @@ def initializeExperiment():
     print '--- clearing local arp...'
     call([os.path.expanduser('~/sdrt/cloudlab/clear_arp.sh')])
     print '--- done...'
+
+    call('ulimit -n 4096', shell=True)
 
     print '--- parsing host handles...'
     f = open(NODES_FILE).read().split('\n')[:-1]
@@ -296,6 +300,8 @@ def sshRun(hostname, cmd, printOutput=True):
     print cmd
     sesh.exec_command(cmd)
 
+    t = time.time()
+    timeout = False
     while True:
         rs, _, _ = select.select([sesh], [], [], 0.0)
         if len(rs) > 0:
@@ -306,16 +312,24 @@ def sshRun(hostname, cmd, printOutput=True):
             if printOutput:
                 sys.stdout.write(new)
                 sys.stdout.flush()
+        if (time.time() - t) > MAX_SSH_RUNTIME:
+            timeout = True
+            break
         # if sesh.exit_status_ready():
         #     break
-    rc = sesh.recv_exit_status()
+    if not timeout:
+        rc = sesh.recv_exit_status()
 
     client.close()
 
-    if rc != 0:
-        raise Exception('bad RC (%s) from %s cmd: %s\n output: %s' %
-                        (rc, hostname, cmd, out))
-    return out, rc
+    if not timeout:
+        if rc != 0:
+            raise Exception('bad RC (%s) from %s cmd: %s\n output: %s' %
+                            (rc, hostname, cmd, out))
+        return out, rc
+    else:  # timed out
+        print 'timed out: %s' % cmd
+        return ('bad: timeout\n' + out, -1)
 
 
 ##
