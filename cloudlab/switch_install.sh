@@ -45,4 +45,8 @@ cd $HOME/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j16
 
+# open file limits
+sudo sh -c "echo '* soft nofile unlimited' >> /etc/security/limits.conf"
+sudo sh -c "echo '* hard nofile unlimited' >> /etc/security/limits.conf"
+
 sudo reboot

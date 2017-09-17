@@ -105,8 +105,11 @@ RunSchedule::resize_handler(const String &str, Element *e, void *, ErrorHandler 
     BoolArg::parse(str, rs->do_resize, ArgContext());
     if (rs->do_resize && rs->do_resize != current) {
 	// get sizes based on queues sizes
-	rs->_small_buffer_size = atoi(rs->_queue_capacity[0]->call_read().c_str());
-	rs->_big_buffer_size = rs->_small_buffer_size * 10;
+	rs->_big_buffer_size = atoi(rs->_queue_capacity[0]->call_read().c_str());
+	rs->_small_buffer_size = rs->_big_buffer_size / 2; //* 10;
+	if (rs->_small_buffer_size < 1) {
+	    rs->_small_buffer_size = 1;
+	}
 	printf("auto resizing: %d -> %d\n", rs->_small_buffer_size,
 	       rs->_big_buffer_size);
     }
@@ -168,24 +171,48 @@ RunSchedule::execute_schedule(ErrorHandler *)
     }
 
     // at the beginning of the 'week' set all the buffers to full size
-    int *buffer_times = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
-    if (resize) {
-	memset(buffer_times, 0, sizeof(int) * _num_hosts * _num_hosts);
-	for(int m = 0; m < num_configurations; m++) {
-	    Vector<int> configuration = configurations[m];
-	    for(int i = 0; i < _num_hosts; i++) {
-		int dst = i;
-		int src = configuration[i];
-		if (src == -1)
-		    continue;
-		_queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
-		buffer_times[src * _num_hosts + dst]++;
-	    }
+    // int *buffer_times = (int *)malloc(sizeof(int) * _num_hosts * _num_hosts);
+    // if (resize) {
+    // 	memset(buffer_times, 0, sizeof(int) * _num_hosts * _num_hosts);
+    // 	for(int m = 0; m < num_configurations; m++) {
+    // 	    Vector<int> configuration = configurations[m];
+    // 	    for(int i = 0; i < _num_hosts; i++) {
+    // 		int dst = i;
+    // 		int src = configuration[i];
+    // 		if (src == -1)
+    // 		    continue;
+    // 		_queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
+    // 		buffer_times[src * _num_hosts + dst]++;
+    // 	    }
+    // 	}
+    // }
+
+    // make first days buffers big
+    if(resize) {
+	for(int i = 0; i < _num_hosts; i++) {
+	    int dst = i;
+	    int src = configurations[0][i];
+	    if (src == -1)
+		continue;
+	    _queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
 	}
     }
 
     // for each configuration in schedule
     for(int m = 0; m < num_configurations; m++) {
+	// make next days buffer big
+	if(resize) {
+	    if (m < num_configurations - 1) {
+		for(int i = 0; i < _num_hosts; i++) {
+		    int dst = i;
+		    int src = configurations[m+1][i];
+		    if (src == -1)
+			continue;
+		    _queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
+		}
+	    }
+	}
+
         Vector<int> configuration = configurations[m];
         int duration = durations[m]; // microseconds
 #if defined(__osx__)
@@ -234,22 +261,33 @@ RunSchedule::execute_schedule(ErrorHandler *)
         return -1;
 #endif
 
-	// resize buffer if needed
+	// make this days buffers smaller
 	if(resize) {
 	    for(int i = 0; i < _num_hosts; i++) {
 		int dst = i;
 		int src = configuration[i];
 		if (src == -1)
 		    continue;
-		buffer_times[src * _num_hosts + dst]--;
-		if (buffer_times[src * _num_hosts + dst] == 0) {
-		    _queue_capacity[src * _num_hosts + dst]->call_write(String(small_size));
-		}
+		_queue_capacity[src * _num_hosts + dst]->call_write(String(small_size));
 	    }
 	}
+
+	// resize buffer if needed
+	// if(resize) {
+	//     for(int i = 0; i < _num_hosts; i++) {
+	// 	int dst = i;
+	// 	int src = configuration[i];
+	// 	if (src == -1)
+	// 	    continue;
+	// 	buffer_times[src * _num_hosts + dst]--;
+	// 	if (buffer_times[src * _num_hosts + dst] == 0) {
+	// 	    _queue_capacity[src * _num_hosts + dst]->call_write(String(small_size));
+	// 	}
+	//     }
+	// }
     }    
     free(durations);
-    free(buffer_times);
+    // free(buffer_times);
     return 0;
 }
 
