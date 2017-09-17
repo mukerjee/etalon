@@ -26,7 +26,7 @@ def myNetwork():
 
     info('*** Add switches\n')
     s1 = net.addSwitch('s1')
-    s1_eth2 = TCIntf('eth2', node=s1) #, bw=CIRCUIT_LINK / TDF)
+    s1_eth2 = Intf('eth2', node=s1)
 
     s2 = net.addSwitch('s2')
     s2_eth3 = Intf('eth3', node=s2)
@@ -63,7 +63,6 @@ def myNetwork():
 
     info('*** launching iperf daemon\n')
     for h in hosts:
-        # h.cmd("iperf3 -s -D &")
         h.cmd("./rpyc_daemon.py &")
         for i in xrange(NUM_RACKS):
             for j in xrange(HOSTS_PER_RACK):
@@ -73,6 +72,10 @@ def myNetwork():
     for h in hosts:
         h.cmd('/usr/sbin/sshd -D &')
 
+    info('*** turning off tso on veths and adjusting tc burst\n')
+    for h in hosts:
+        h.cmd('sudo ethtool -K %s-eth1 tso off' % h.name)
+        h.cmd('sudo tc class replace dev %s-eth1 parent root classid 5:1 htb rate %dMbit burst 9000 cburst 9000' % (h.name, PACKET_LINK / TDF))
     CLI(net)
     net.stop()
 
