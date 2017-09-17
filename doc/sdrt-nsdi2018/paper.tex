@@ -1,0 +1,152 @@
+% TEMPLATE for Usenix papers, specifically to meet requirements of
+%  USENIX '05
+% originally a template for producing IEEE-format articles using LaTeX.
+%   written by Matthew Ward, CS Department, Worcester Polytechnic Institute.
+% adapted by David Beazley for his excellent SWIG paper in Proceedings,
+%   Tcl 96
+% turned into a smartass generic template by De Clarke, with thanks to
+%   both the above pioneers
+% use at your own risk.  Complaints to /dev/null.
+% make it two column with no page numbering, default is 10 point
+
+% Munged by Fred Douglis <douglis@research.att.com> 10/97 to separate
+% the .sty file from the LaTeX source template, so that people can
+% more easily include the .sty file into an existing document.  Also
+% changed to more closely follow the style guidelines as represented
+% by the Word sample file. 
+
+% Note that since 2010, USENIX does not require endnotes. If you want
+% foot of page notes, don't include the endnotes package in the 
+% usepackage command, below.
+
+% This version uses the latex2e styles, not the very ancient 2.09 stuff.
+% \documentclass[letterpaper,twocolumn,10pt]{article}
+\pdfminorversion=4
+
+\documentclass{hotnets15}
+
+\usepackage{epsfig,endnotes}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{verbatim}
+\usepackage[font=bf]{caption}
+\usepackage{xspace}
+\usepackage{mdframed}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{newtxmath}
+
+\usepackage{tikz}
+\usepackage{enumitem}
+\usepackage{booktabs}  % for toprule, bottomrule in tables
+\usepackage[sort,space]{cite}
+\usepackage{flushend}  % for balanced final columns
+
+
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subfigure}
+
+\newcommand{\subparagraph}{}
+\usepackage[compact]{titlesec}
+
+\usepackage{url}
+
+
+\newcommand{\tightcaption}[1]{\vspace{-0.3cm}\caption{#1}\vspace{-0.3cm}}
+\newcommand{\tightsection}[1]{\section{#1}}
+\newcommand{\tightsubsection}[1]{\subsection{#1}}
+\newcommand{\tightsubsubsection}[1]{\subsubsection{#1}}
+
+\newcommand{\eg}{{\it e.g.,}\xspace}
+\newcommand{\ie}{{\it i.e.,}\xspace}
+
+\newcounter{note}[section]
+\renewcommand{\thenote}{\thesection.\arabic{note}}
+
+\newcommand{\Section}{\S}
+
+\usepackage{pifont}
+\newcommand{\cmark}{\ding{51}}%
+\newcommand{\xmark}{\ding{55}}%
+
+\newcommand{\fillme}{{\bf XXX}~}
+
+\definecolor{purple}{RGB}{175,0,255}
+
+
+\newcommand{\mypara}[1]{\medskip\noindent{\bf {#1}:}~}
+\newcommand{\myparatight}[1]{\smallskip\noindent{\bf {#1}:}~}
+\newcommand{\myparaq}[1]{\smallskip\noindent{\bf {#1}?}~}
+\newcommand{\mysubparatight}[1]{\noindent {\it {#1}:}~}
+
+\input{std_commands}
+
+%%%
+%%% COMMENTS / TODOS
+%%%
+\usepackage{ifthen}
+\usepackage{xcolor}
+\newcommand{\exclude}[1]{}
+\newcommand{\showComments}{yes}
+\newcommand{\note}[2]{
+    \ifthenelse{\equal{\showComments}{yes}}{\textcolor{#1}{#2}}{}
+}
+\newcommand{\TODO}[1]{%
+	\addcontentsline{tdo}{todo}{\protect{#1}}%
+	\note{red}{TODO: #1}
+}
+
+\makeatletter \newcommand{\listoftodos}
+{\section*{Todo List} \@starttoc{tdo}}
+\newcommand{\l@todo}
+{\@dottedtocline{1}{0em}{2.3em}} \makeatother
+
+
+\newcommand{\myparaittight}[1]{\smallskip\noindent{\emph {#1}:}~}
+\newcommand{\question}[1]{\smallskip\noindent{\emph{Q:~#1}}\smallskip}
+\newcommand{\myparaqtight}[1]{\smallskip\noindent{\bf {#1}}~}
+\newcommand{\jc}[1]{\note{green}{[HZ: #1]}}
+\newcommand{\matt}[1]{\note{blue}{[MKM: #1]}}
+\newcommand{\srini}[1]{\note{magenta}{[SS: #1]}}
+\newcommand{\bruce}[1]{\note{red}{[BMM: #1]}}
+\newcommand{\nadi}[1]{\note{purple}{[INB: #1]}}
+\newcommand{\mycomment}[1]{}
+
+\newcounter{packednmbr}
+
+\newenvironment{packedenumerate}{\begin{list}{\thepackednmbr.}{\usecounter{packednmbr}\setlength{\itemsep}{0.5pt}\addtolength{\labelwidth}{-4pt}\setlength{\leftmargin}{\labelwidth}\setlength{\listparindent}{\parindent}\setlength{\parsep}{1pt}\setlength{\topsep}{0pt}}}{\end{list}}
+
+\newenvironment{packeditemize}{\begin{list}{$\bullet$}{\setlength{\itemsep}{0.5pt}\addtolength{\labelwidth}{-4pt}\setlength{\leftmargin}{\labelwidth}\setlength{\listparindent}{\parindent}\setlength{\parsep}{1pt}\setlength{\topsep}{0pt}}}{\end{list}}
+
+
+%
+\def\sharedaffiliation{%
+\end{tabular}
+\begin{tabular}{c}}
+%
+
+\begin{document}
+
+\title{Characterizing Reconfigurable Topologies in Datacenter Fabrics}
+
+\numberofauthors{1}
+\author{\alignauthor Paper \#16, 7 pages}
+
+
+\maketitle
+
+
+
+\input{abstract}
+\input{intro}
+\input{background}
+\input{optimizations}
+\input{eval}
+\input{conclu}
+
+\newpage\phantom{t}
+\bibliographystyle{acm}
+\bibliography{ref}
+
+\end{document}
