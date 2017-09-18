@@ -205,7 +205,7 @@ RunSchedule::execute_schedule(ErrorHandler *)
     for(int m = 0; m < num_configurations; m++) {
 	// make next days buffer big
 	if(resize) {
-	    for(int k = 0; k < DAYS_OUT; k++) {
+	    for(int k = 0; k <= DAYS_OUT; k++) {
 		for(int i = 0; i < _num_hosts; i++) {
 		    int dst = i;
 		    int src = configurations[(m+k) % num_configurations][i];
