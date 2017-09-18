@@ -174,6 +174,6 @@ int close(int sockfd) {
   get_next_fn((void**)&next_close,fn_name);
 
   /* fprintf(stderr, "close(%i)\n", sockfd); */
-  next_close(ctrl_sock);
+  /* next_close(ctrl_sock); */
   return next_close(sockfd);
 }
