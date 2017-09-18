@@ -154,17 +154,22 @@ Solstice::run_timer(Timer *)
 	    if (current_col > max_col)
 		max_col = current_col;
 	}
-	uint64_t min_demand = _s.week_len * _s.link_bw * 0.5;
+	double min_demand = _s.week_len * _s.link_bw * 0.5;
 	double scale_factor = 0;
 	if (max_row || max_col) {
 	    scale_factor = max_row > max_col ?
 		min_demand / max_row : min_demand / max_col;
 	}
+	if (scale_factor < 1)
+	    scale_factor = 1;
+	int empty_demand = 1;
 	for (int dst = 0; dst < _num_hosts; dst++) {
 	    for (int src = 0; src < _num_hosts; src++) {
 		uint64_t current = sols_mat_get(&_s.future, src, dst);
-		sols_mat_set(&_s.future, src, dst,
-			     static_cast<uint64_t>(current*scale_factor));
+		uint64_t v = current * scale_factor;
+		sols_mat_set(&_s.future, src, dst, static_cast<uint64_t>(v));
+		if (v)
+		    empty_demand = 0;
 	    }
 	}
 
@@ -207,7 +212,7 @@ Solstice::run_timer(Timer *)
 	_print2 = (_print2+1) % 50000;
 
 	// print demand and scaled matrix
-	if(scale_factor && !_print) {
+	if(!empty_demand && !_print) {
 	    printf("[demand]\t\t\t\t\t[scaled]\n");
 	    for (int src = 0; src < _num_hosts; src++) {
 		for (int dst = 0; dst < _num_hosts; dst++) {
