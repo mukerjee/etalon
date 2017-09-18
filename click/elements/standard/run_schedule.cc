@@ -106,7 +106,7 @@ RunSchedule::resize_handler(const String &str, Element *e, void *, ErrorHandler 
     if (rs->do_resize && rs->do_resize != current) {
 	// get sizes based on queues sizes
 	rs->_big_buffer_size = atoi(rs->_queue_capacity[0]->call_read().c_str());
-	rs->_small_buffer_size = rs->_big_buffer_size / 2; //* 10;
+	rs->_small_buffer_size = rs->_big_buffer_size / 10; //* 10;
 	if (rs->_small_buffer_size < 1) {
 	    rs->_small_buffer_size = 1;
 	}
@@ -188,24 +188,27 @@ RunSchedule::execute_schedule(ErrorHandler *)
     // }
 
     // make first days buffers big
-    if(resize) {
-	for(int i = 0; i < _num_hosts; i++) {
-	    int dst = i;
-	    int src = configurations[0][i];
-	    if (src == -1)
-		continue;
-	    _queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
-	}
-    }
+    int DAYS_OUT = 2;
+    // if(resize) {
+    // 	for(int k = 0; k < DAYS_OUT; k++) {
+    // 	    for(int i = 0; i < _num_hosts; i++) {
+    // 		int dst = i;
+    // 		int src = configurations[k % num_configurations][i];
+    // 		if (src == -1)
+    // 		    continue;
+    // 		_queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
+    // 	    }
+    // 	}
+    // }
 
     // for each configuration in schedule
     for(int m = 0; m < num_configurations; m++) {
 	// make next days buffer big
 	if(resize) {
-	    if (m < num_configurations - 1) {
+	    for(int k = 0; k < DAYS_OUT; k++) {
 		for(int i = 0; i < _num_hosts; i++) {
 		    int dst = i;
-		    int src = configurations[m+1][i];
+		    int src = configurations[(m+k) % num_configurations][i];
 		    if (src == -1)
 			continue;
 		    _queue_capacity[src * _num_hosts + dst]->call_write(String(big_size));
