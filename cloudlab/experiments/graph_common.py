@@ -60,6 +60,7 @@ def get_iperf3_tput_from_file(fn):
         elif units == 'bits/sec':
             tp = tp / 1000000000.0
         tps.append(tp)
+    tps = tps[1:-1]  # throw away first and last measurement
     if tps:
         return tps
     else:
@@ -121,5 +122,8 @@ def get_tput_and_lat(pattern, ts, c):
     tputs = (np.average(tputs), np.std(tputs))
     tputs_down = (np.average(tputs_down), np.std(tputs_down))
     pings = (np.median(pings), np.std(pings))
-    tail_pings = (np.percentile(tail_pings, 90), np.percentile(tail_pings, 99))
+    if tail_pings:
+        tail_pings = (np.percentile(tail_pings, 90), np.percentile(tail_pings, 99))
+    else:
+        tail_pings = (np.nan, np.nan)
     return tputs, pings, tputs_down, tail_pings
