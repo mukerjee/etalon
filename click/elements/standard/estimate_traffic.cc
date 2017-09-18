@@ -60,11 +60,15 @@ EstimateTraffic::configure(Vector<String> &conf, ErrorHandler *errh)
     if (_num_hosts == 0)
         return -1;
     _traffic_matrix = (long long *)malloc(sizeof(long long) * _num_hosts * _num_hosts);
+    _adu_enqueue_matrix = (long long *)malloc(sizeof(long long) * _num_hosts * _num_hosts);
     _enqueue_matrix = (long long *)malloc(sizeof(long long) * _num_hosts * _num_hosts);
+    _adu_dequeue_matrix = (long long *)malloc(sizeof(long long) * _num_hosts * _num_hosts);
     _dequeue_matrix = (long long *)malloc(sizeof(long long) * _num_hosts * _num_hosts);
 
     memset(_traffic_matrix, 0, sizeof(long long) * _num_hosts * _num_hosts);
+    memset(_adu_enqueue_matrix, 0, sizeof(long long) * _num_hosts * _num_hosts);
     memset(_enqueue_matrix, 0, sizeof(long long) * _num_hosts * _num_hosts);
+    memset(_adu_dequeue_matrix, 0, sizeof(long long) * _num_hosts * _num_hosts);
     memset(_dequeue_matrix, 0, sizeof(long long) * _num_hosts * _num_hosts);
 
     _print = 0;
@@ -181,109 +185,108 @@ EstimateTraffic::run_timer(Timer *)
 {
     while(1) {
 	// gather traffic matrix from queues
-	if (source == "ADU") {
-	    int clientSocket;
-	    int i;
-	    int nbytes;
-	    struct traffic_info info;
-	    struct sockaddr_storage *clientAddr;
-	    socklen_t sinSize = sizeof(struct sockaddr_storage);
-	    fd_set read_fd_set;
-	    struct timeval timeout;
-	    timeout.tv_sec = 0;
-	    timeout.tv_usec = 0;
+	int clientSocket;
+	int i;
+	int nbytes;
+	struct traffic_info info;
+	struct sockaddr_storage *clientAddr;
+	socklen_t sinSize = sizeof(struct sockaddr_storage);
+	fd_set read_fd_set;
+	struct timeval timeout;
+	timeout.tv_sec = 0;
+	timeout.tv_usec = 0;
 
-	    read_fd_set = _active_fd_set;
-	    int rc = select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout);
-	    if (rc < 0) {
-		perror("select");
-		exit(EXIT_FAILURE);
-	    }
+	read_fd_set = _active_fd_set;
+	int rc = select(FD_SETSIZE, &read_fd_set, NULL, NULL, &timeout);
+	if (rc < 0) {
+	    perror("select");
+	    exit(EXIT_FAILURE);
+	}
 
-	    if (rc > 0) {
-		for (i = 0; i < FD_SETSIZE; ++i) {
-		    if (FD_ISSET(i, &read_fd_set)) {
-			if (i == _serverSocket) {
-			    clientAddr = (struct sockaddr_storage *)malloc(sinSize);
-			    if ((clientSocket = accept(_serverSocket,
-						       (struct sockaddr *)clientAddr,
-						       &sinSize)) == -1) {
-				free(clientAddr);
-				perror("Could not accept() connection");
-				exit (EXIT_FAILURE);
-			    }
-			    FD_SET(clientSocket, &_active_fd_set);
-			    fprintf(stderr, "New connection: %d\n", clientSocket);
+	if (rc > 0) {
+	    for (i = 0; i < FD_SETSIZE; ++i) {
+		if (FD_ISSET(i, &read_fd_set)) {
+		    if (i == _serverSocket) {
+			clientAddr = (struct sockaddr_storage *)malloc(sinSize);
+			if ((clientSocket = accept(_serverSocket,
+						   (struct sockaddr *)clientAddr,
+						   &sinSize)) == -1) {
+			    free(clientAddr);
+			    perror("Could not accept() connection");
+			    exit (EXIT_FAILURE);
 			}
-			else {
-			    nbytes = read(i, &info, sizeof(info));
-			    if (nbytes == 0) {
-				fprintf(stderr, "Closing socket\n");
-				close(i);
-				FD_CLR(i, &_active_fd_set);
-				break;
-			    }
-			    if (nbytes < 0) {
-				perror("Socket read() failed");
-				close(i);
-				FD_CLR (i, &_active_fd_set);
-				exit (EXIT_FAILURE);
-			    }
-			    // fprintf(stderr, "[CTRL] SRC: %s DST: %s SIZE: %ld\n", info.src,
-			    // 	    info.dst, info.size);
+			FD_SET(clientSocket, &_active_fd_set);
+			fprintf(stderr, "New connection: %d\n", clientSocket);
+		    }
+		    else {
+			nbytes = read(i, &info, sizeof(info));
+			if (nbytes == 0) {
+			    fprintf(stderr, "Closing socket\n");
+			    close(i);
+			    FD_CLR(i, &_active_fd_set);
+			    break;
+			}
+			if (nbytes < 0) {
+			    perror("Socket read() failed");
+			    close(i);
+			    FD_CLR (i, &_active_fd_set);
+			    exit (EXIT_FAILURE);
+			}
+			// fprintf(stderr, "[CTRL] SRC: %s DST: %s SIZE: %ld\n", info.src,
+			// 	    info.dst, info.size);
 
-			    int dot_count = 0;
-			    int pos;
-			    for(pos = 0; pos < INET_ADDRSTRLEN; pos++) {
-				if (info.src[pos] == '.') {
-				    dot_count++;
-				    if (dot_count == 3) {
-					pos++;
-					break;
-				    }
+			int dot_count = 0;
+			int pos;
+			for(pos = 0; pos < INET_ADDRSTRLEN; pos++) {
+			    if (info.src[pos] == '.') {
+				dot_count++;
+				if (dot_count == 3) {
+				    pos++;
+				    break;
 				}
 			    }
-			    int src = atoi(&info.src[pos]) - 1;
-			    if (strlen(&info.src[pos]) == 1) // physical hosts
-				src--;
+			}
+			int src = atoi(&info.src[pos]) - 1;
+			if (strlen(&info.src[pos]) == 1) // physical hosts
+			    src--;
 
-			    dot_count = 0;
-			    for(pos = 0; pos < INET_ADDRSTRLEN; pos++) {
-				if (info.dst[pos] == '.') {
-				    dot_count++;
-				    if (dot_count == 3) {
-					pos++;
-					break;
-				    }
+			dot_count = 0;
+			for(pos = 0; pos < INET_ADDRSTRLEN; pos++) {
+			    if (info.dst[pos] == '.') {
+				dot_count++;
+				if (dot_count == 3) {
+				    pos++;
+				    break;
 				}
 			    }
-			    int dst = atoi(&info.dst[pos]) -1;
-			    if (strlen(&info.dst[pos]) == 1) // physical hosts
-				dst--;
-
-			    _enqueue_matrix[src * _num_hosts + dst] += info.size;
 			}
+			int dst = atoi(&info.dst[pos]) -1;
+			if (strlen(&info.dst[pos]) == 1) // physical hosts
+			    dst--;
+
+			_adu_enqueue_matrix[src * _num_hosts + dst] += info.size;
 		    }
 		}
 	    }
+	}
 
-	    for (int src = 0; src < _num_hosts; src++) { // update dequeue bytes and tm
-		for (int dst = 0; dst < _num_hosts; dst++) {
-		    int i = src * _num_hosts + dst;
-		    _dequeue_matrix[i] = atoll(_queue_dequeue_bytes_no_headers[i]->call_read().c_str());
-		    _traffic_matrix[i] = _enqueue_matrix[i] - _dequeue_matrix[i];
-		    if (_traffic_matrix[i] < 0)
-			_traffic_matrix[i] = 0;
-		}
+	for (int src = 0; src < _num_hosts; src++) { // update dequeue bytes and tm
+	    for (int dst = 0; dst < _num_hosts; dst++) {
+		int i = src * _num_hosts + dst;
+		_enqueue_matrix[i] = atoll(_queue_enqueue_bytes[i]->call_read().c_str());
+		_dequeue_matrix[i] = atoll(_queue_dequeue_bytes[i]->call_read().c_str());
+		_adu_dequeue_matrix[i] = atoll(_queue_dequeue_bytes_no_headers[i]->call_read().c_str());
+		_traffic_matrix[i] = _adu_enqueue_matrix[i] - _adu_dequeue_matrix[i];
+		if (_traffic_matrix[i] < 0)
+		    _traffic_matrix[i] = 0;
 	    }
-	} else { // not ADU
+	}
+
+	if (source != "ADU") {
 	    for (int src = 0; src < _num_hosts; src++) {
 		for (int dst = 0; dst < _num_hosts; dst++) {
 		    int i = src * _num_hosts + dst;
-		    _enqueue_matrix[i] = atoll(_queue_enqueue_bytes[i]->call_read().c_str());
-		    _dequeue_matrix[i] = atoll(_queue_dequeue_bytes[i]->call_read().c_str());
 		    _traffic_matrix[i] = atoll(_queue_bytes[i]->call_read().c_str());
-
 		    if (_traffic_matrix[i] < 0)
 			_traffic_matrix[i] = 0;
 		}
@@ -317,8 +320,8 @@ EstimateTraffic::run_timer(Timer *)
 	    sprintf(handler, "hybrid_switch/ps/q%d%d.length", psrc, pdst);
 	    int pslen = atoi(HandlerCall::call_read(handler,
 						    this).c_str());
-	    printf("%s: (0, 1)\te = %lld, d = %lld, tm = %lld, len = %d, pslen= %d\n",
-		   source.c_str(),
+	    printf("%s: (0, 1)\tae = %lld, ad = %lld, e = %lld, d = %lld, tm = %lld, len = %d, pslen= %d\n",
+		   source.c_str(), _adu_enqueue_matrix[i], _adu_dequeue_matrix[i],
 		   _enqueue_matrix[i], _dequeue_matrix[i],
 		   _traffic_matrix[i], len, pslen);
 
@@ -331,8 +334,8 @@ EstimateTraffic::run_timer(Timer *)
 	    sprintf(handler, "hybrid_switch/ps/q%d%d.length", psrc, pdst);
 	    pslen = atoi(HandlerCall::call_read(handler,
 						this).c_str());
-	    printf("%s: (2, 3)\te = %lld, d = %lld, tm = %lld, len = %d, pslen= %d\n",
-		   source.c_str(),
+	    printf("%s: (2, 3)\tae = %lld, ad = %lld, e = %lld, d = %lld, tm = %lld, len = %d, pslen= %d\n",
+		   source.c_str(), _adu_enqueue_matrix[i], _adu_dequeue_matrix[i],
 		   _enqueue_matrix[i], _dequeue_matrix[i],
 		   _traffic_matrix[i], len, pslen);
 	}
