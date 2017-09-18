@@ -3,8 +3,8 @@ Increasing pressure for higher throughput, better response times, and lower cost
 in datacenters have pushed researches to explore alternative technologies for
 network fabrics (e.g., 60GHz wireless, free-space optics, optical circuit
 switching). While these alternatives can theoretically meet the demand, they all
-share a common limitation: some links must be pulled down for other links to be
-up. This limitation can be overcome by specialized software schedulers, thus we
+share a common limitation: some links must be force down for other links to be
+up. As this limitation can be overcome by specialized software schedulers, we
 dub these technologies ``Software Defined Reconfigurable Topology'' (SDRT)
 networks. While specific SDRT technologies differ, we find little work on
 apples-to-apples comparisons nor end-to-end optimization. Thus, in this work we
@@ -12,14 +12,14 @@ make two primary contributions: 1) an open-source framework for evaluating SDRTs
 end-to-end on public testbeds, and 2) an analysis of the three key
 ``choke-points'' (the switch, the network stack, and applications) where
 cross-layer optimizations improve end-to-end performance. We implement one
-mechanism in each choke-point: adaptive ToR switch buffer resizing based on the
-SDRT schedule, a socket API interposition library that provides ADU size
+example mechanism in each choke-point: adaptive ToR switch buffer resizing based
+on the SDRT schedule, a socket API interposition library that provides ADU size
 information to the SDRT scheduler, and a modified HDFS replica placement
 strategy that provides easier to schedule demand. All of these cross-layer
 optimizations fundamentally focus on improving the network schedule: adaptive
 buffer resizing improves TCP performance on the running schedule, communicating
 ADU sizes allows data to be scheduled before it reaches the ToR switch, and
-changing replica placement changes what traffic matrix needs to be scheduled.
+changing replica placement makes the traffic matrix more amenable to scheduling.
 We additionally explore the impact of these optimizations on four real-world
 datacenter applications.
 
