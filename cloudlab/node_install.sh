@@ -3,7 +3,7 @@
 sudo apt-get -y install software-properties-common
 sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
-sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs libcap-dev libidn11-dev nettle-dev autoconf automake libtool make gcc git socat psmisc xterm openjdk-7-jdk ssh iperf iperf3 iproute telnet python-setuptools cgroup-bin ethtool help2man pyflakes pylint pep8 git-core autotools-dev pkg-config libc6-dev python-numpy python-matplotlib nuttcp maven
+sudo apt-get -y install iperf3 git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs libcap-dev libidn11-dev nettle-dev autoconf automake libtool make gcc git socat psmisc xterm openjdk-7-jdk ssh iperf iperf3 iproute telnet python-setuptools cgroup-bin ethtool help2man pyflakes pylint pep8 git-core autotools-dev pkg-config libc6-dev python-numpy python-matplotlib nuttcp maven uuid-dev libcurl4-gnutls-dev libxmlrpc-core-c3-dev
 
 cd $HOME
 git clone git://openflowswitch.org/openflow.git
@@ -16,6 +16,13 @@ sudo make -j16 install
 
 cd $HOME
 git clone https://github.com/intel-hadoop/HiBench.git
+
+cd $HOME
+git clone https://github.com/flowgrind/flowgrind.git
+cd flowgrind
+autoreconf -i
+./configure
+make
 
 sudo apt-get -y install openvswitch-switch
 sudo apt-get -y install openvswitch-controller

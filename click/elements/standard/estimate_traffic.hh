@@ -48,7 +48,9 @@ class EstimateTraffic : public Element {
 
     int _num_hosts;
 
+    long long *_adu_enqueue_matrix;
     long long *_enqueue_matrix;
+    long long *_adu_dequeue_matrix;
     long long *_dequeue_matrix;
     long long *_traffic_matrix;
     Timer _timer;
