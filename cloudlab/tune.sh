@@ -5,12 +5,6 @@ if [[ $EUID -ne 0 ]]; then
     exit 1
 fi
 
-cd $HOME/sdrt/
-OTHER_USER=`who | head -n1 | cut -f1 -d' '`
-su - $OTHER_USER -c "cd sdrt; git pull"
-
-sudo easy_install rpyc
-
 if ! hostname | grep -q router
 then
     h=`hostname | cut -d'.' -f1`
@@ -38,8 +32,8 @@ sudo sysctl -w net.core.wmem_default=16777216
 sudo sysctl -w net.core.rmem_max=268435456
 sudo sysctl -w net.core.wmem_max=268435456
 
-# sudo sysctl -w net.ipv4.tcp_mem="374847 499797 749694"
-# sudo sysctl -w net.ipv4.udp_mem="374847 499797 749694"
+sudo sysctl -w net.ipv4.tcp_mem="374847 499797 749694"
+sudo sysctl -w net.ipv4.udp_mem="374847 499797 749694"
 sudo sysctl -w net.ipv4.tcp_rmem="4096 87380 134217728"
 sudo sysctl -w net.ipv4.tcp_wmem="4096 65536 134217728"
 
@@ -63,32 +57,13 @@ do
     done
 done
 
-if ! grep -q "apt.emulab" ~/.ssh/authorized_keys
+if hostname | grep -q router
 then
-    cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+    sudo sed -i -r 's/10.10.1.([[:digit:]][[:digit:]])/10.10.2.\1/' /etc/hosts
 fi
 
-cd $HOME/sdrt/iputils/
-make
-sudo rm /usr/local/bin/ping 2>/dev/null
-sudo ln -s $HOME/sdrt/iputils/ping /usr/local/bin/ping 2>/dev/null
 
-$HOME/sdrt/cloudlab/kill.sh
-
-cd $HOME/sdrt/sdrt-ctrl/lib
-make
-
-cd $HOME/sdrt/vt-mininet/mininet
-sudo make install
-sudo make install
-
-ulimit -n 119353
-ulimit -Hn 119353
-
-alias ping='sudo ping'
-
-# sudo ln -s $HOME/sdrt/iperf-2.0.10/src/iperf /usr/local/bin/iperf 2>/dev/null
-
+# have acks have own traffic class
 # if ! sudo iptables -C PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay
 # then
 #     sudo iptables -A PREROUTING -t mangle -p tcp --tcp-flags FIN,SYN,RST,ACK ACK -j TOS --set-tos Minimize-Delay

@@ -81,6 +81,6 @@ def myNetwork():
 
 if __name__ == '__main__':
     subprocess.call(['sudo', 'ethtool', '-K', 'eth2', 'tso', 'off'])
-    subprocess.call([os.path.expanduser('~/sdrt/cloudlab/tune.sh')])
+    subprocess.call([os.path.expanduser('~/sdrt/cloudlab/kill.sh')])
     setLogLevel('info')
     myNetwork()
