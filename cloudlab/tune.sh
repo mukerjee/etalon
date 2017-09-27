@@ -30,14 +30,14 @@ sudo ethtool -L eth2 rx 1
 sudo ethtool -L eth3 rx 1 tx 1
 
 # sudo ethtool -C eth2 adaptive-rx off rx-usecs 0 rx-frames 0
-sudo ethtool -C eth2 adaptive-rx off
+# sudo ethtool -C eth2 adaptive-rx off
 sudo ethtool -C eth3 adaptive-rx off
 
 sudo ethtool -G eth2 rx 256
 
 sudo ethtool -K eth2 lro on
 sudo ethtool -K eth2 tx-nocache-copy off
-sudo ethtool -K eth2 ntuple on
+# sudo ethtool -K eth2 ntuple on
 
 # sudo sysctl -w net.core.netdev_max_backlog=1000
 sudo sysctl -w net.core.optmem_max=4194304
@@ -49,9 +49,9 @@ sudo sysctl -w net.core.wmem_max=4194304
 sudo sysctl -w net.ipv4.tcp_rmem="4096 87380 4194304"
 sudo sysctl -w net.ipv4.tcp_wmem="4096 65536 4194304"
 
-sudo sysctl -w net.ipv4.tcp_timestamps=0
+sudo sysctl -w net.ipv4.tcp_timestamps=1
 # sudo sysctl -w net.ipv4.tcp_low_latency=1
-sudo sysctl -w net.ipv4.tcp_mtu_probing=1
+# sudo sysctl -w net.ipv4.tcp_mtu_probing=1
 sudo sysctl -w net.ipv4.tcp_no_metrics_save=1
 
 sudo service irqbalance stop
@@ -59,7 +59,7 @@ sudo set_irq_affinity_bynode.sh 0 eth2
 sudo mlnx_tune -p HIGH_THROUGHPUT
 
 # enable RPS
-cat /sys/class/net/eth2/device/local_cpus | sudo tee /sys/class/net/eth2/queues/rx-0/rps_cpus
+# cat /sys/class/net/eth2/device/local_cpus | sudo tee /sys/class/net/eth2/queues/rx-0/rps_cpus
 
 # enable huge pages?
 echo 1000000000 | sudo tee /proc/sys/kernel/shmmax
