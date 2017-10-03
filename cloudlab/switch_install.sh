@@ -49,5 +49,9 @@ make -j16
 # open file limits
 # sudo sh -c "echo '* soft nofile unlimited' >> /etc/security/limits.conf"
 # sudo sh -c "echo '* hard nofile unlimited' >> /etc/security/limits.conf"
+# printf '\nulimit -n 119353\nulimit -Hn 119353\n' >> $HOME/.bashrc
+
+# sudo easy_install rpyc
+# printf "\nsudo ./sdrt/cloudlab/tune.sh\n" >> $HOME/.bashrc
 
 sudo reboot
