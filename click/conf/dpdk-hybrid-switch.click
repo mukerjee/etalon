@@ -24,7 +24,7 @@ define ($CIRCUIT_BW 4Gbps, $PACKET_BW 0.5Gbps)
 // define ($RTT 60)  // usecs -- measured
 // define ($MTU 9000)  // bytes
 // define ($DELAY_LATENCY 0.000140) // seconds 10 - (RTT / TDF) * TDF, if your target is 10us
-// define ($DELAY_LATENCY 0) // Not worrying about this-- host-to-host ends up being ~15us without delaying
+define ($DELAY_LATENCY 0) // Not worrying about this-- host-to-host ends up being ~15us without delaying
 
 // TODO emperical
 define ($BIG_BUFFER_SIZE 1000)
@@ -128,16 +128,14 @@ elementclass out_classfy {
 elementclass packet_link {
     input[0,1,2,3,4,5,6,7] 
                            => RoundRobinSched 
-			   // -> BandwidthRatedUnqueue($PACKET_BW)//, BURST_BYTES 9000)
-			   -> LinkUnqueue(0, $PACKET_BW)
+			   -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)
 			   -> output
 }
 
 elementclass circuit_link {
     input[0,1,2,3,4,5,6,7] 
                            => ps :: PullSwitch(-1)
-                           // -> BandwidthRatedUnqueue($CIRCUIT_BW)//, BURST_BYTES 9000)
-			   -> LinkUnqueue(0, $CIRCUIT_BW)
+			   -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)
 		           -> output
 }
 
