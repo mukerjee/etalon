@@ -2,11 +2,12 @@
 
 cd $HOME
 
-sudo apt-get -y install software-properties-common
-sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
+# sudo apt-get -y install software-properties-common
+# sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
 sudo apt-get update
-sudo apt-get -y install iperf3 iperf git zsh curl vim tmux python-pip xorg-dev libx11-dev htop git make g++ gcc emacs nuttcp libffi6 libffi-dev python-dev libffi-dev
-sudo easy_install paramiko
+sudo apt-get -y install xorg-dev libx11-dev libffi6 libffi-dev python-dev python-pip iperf
+# sudo apt-get -y install iperf3 nuttcp
+# sudo easy_install paramiko
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
@@ -46,12 +47,11 @@ cd $HOME/sdrt/click
 make -j16
 
 # open file limits
-sudo sh -c "echo '* soft nofile unlimited' >> /etc/security/limits.conf"
-sudo sh -c "echo '* hard nofile unlimited' >> /etc/security/limits.conf"
-printf '\nulimit -n 119353\nulimit -Hn 119353\n' >> $HOME/.bashrc
+# sudo sh -c "echo '* soft nofile unlimited' >> /etc/security/limits.conf"
+# sudo sh -c "echo '* hard nofile unlimited' >> /etc/security/limits.conf"
+# printf '\nulimit -n 119353\nulimit -Hn 119353\n' >> $HOME/.bashrc
 
-sudo easy_install rpyc
-printf "\nsudo ./sdrt/cloudlab/tune.sh\n" >> $HOME/.bashrc
-
+# sudo easy_install rpyc
+# printf "\nsudo ./sdrt/cloudlab/tune.sh\n" >> $HOME/.bashrc
 
 sudo reboot
