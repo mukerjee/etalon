@@ -1,6 +1,16 @@
 #!/bin/bash
 
-echo "$HOME/sdrt/cloudlab/tune.sh" >> $HOME/.bashrc
+OFED_VERSION=4.1-1.0.2.0
+
+(crontab -l 2>/dev/null; echo "@reboot $HOME/sdrt/cloudlab/tune.sh") | crontab -
+
+# Mellanox OFED
+# http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
+cd $HOME
+wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz
+tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz
+sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall
+sudo /etc/init.d/openibd restart
 
 # get docker
 cd $HOME

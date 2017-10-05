@@ -3,8 +3,10 @@
 OFED_VERSION=4.1-1.0.2.0
 DPDK_VERSION=16.11_2.3
 
+(crontab -l 2>/dev/null; echo "@reboot $HOME/sdrt/cloudlab/tune.sh") | crontab -
+
+echo "" >> $HOME/.bashrc
 echo "export SWITCH=1" >> $HOME/.bashrc
-echo "$HOME/sdrt/cloudlab/tune.sh" >> $HOME/.bashrc
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
