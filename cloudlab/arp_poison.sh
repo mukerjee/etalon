@@ -1,10 +1,10 @@
 #!/bin/bash
 
-$HOME/sdrt/cloudlab/clear_arp.sh
+$HOME/sdrt/cloudlab/arp_clear.sh
 
-sudo ping router -c1 -W1
+sudo ping switch -c1 -W1
 
-for i in {0..7}
+for i in {1..8}
 do
-    sudo arp -s host$i `arp | grep router | tr -s ' ' | cut -d' ' -f3`
+    sudo arp -s host$i `arp | grep switch | tr -s ' ' | cut -d' ' -f3`
 done

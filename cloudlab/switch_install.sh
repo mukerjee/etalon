@@ -1,57 +1,46 @@
 #!/bin/bash
 
-cd $HOME
+OFED_VERSION=4.1-1.0.2.0
+DPDK_VERSION=16.11_2.3
 
-# sudo apt-get -y install software-properties-common
-# sudo add-apt-repository -y "ppa:patrickdk/general-lucid"
-sudo apt-get update
-sudo apt-get -y install xorg-dev libx11-dev libffi6 libffi-dev python-dev python-pip iperf
-# sudo apt-get -y install iperf3 nuttcp
-# sudo easy_install paramiko
+echo "export SWITCH=1" >> $HOME/.bashrc
+echo "$HOME/sdrt/cloudlab/tune.sh" >> $HOME/.bashrc
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
-wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-4.0-2.0.0.1/MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu14.04-x86_64.tgz
-tar xfz ./MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu14.04-x86_64.tgz
-sudo ./MLNX_OFED_LINUX-4.0-2.0.0.1-ubuntu14.04-x86_64/mlnxofedinstall --force --dpdk
-sudo /etc/init.d/openibd restart
+cd $HOME
+wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz
+tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz
+sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --dpdk
 
 # Mellanox DPDK
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
-wget http://www.mellanox.com/downloads/Drivers/MLNX_DPDK_16.11_2.3.tar.gz
-tar xfz ./MLNX_DPDK_16.11_2.3.tar.gz
+cd $HOME
 sudo connectx_port_config -c eth,eth
-sudo sh -c "echo 'options mlx4_core log_num_mgm_entry_size=-7' >> /etc/modprobe.d/mlx4.conf"
+echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf
 sudo /etc/init.d/openibd restart
-cd ./MLNX_DPDK_16.11_2.3
+wget http://www.mellanox.com/downloads/Drivers/MLNX_DPDK_$DPDK_VERSION.tar.gz
+tar xfz ./MLNX_DPDK_$DPDK_VERSION.tar.gz
+cd ./MLNX_DPDK_$DPDK_VERSION
 make install T=x86_64-native-linuxapp-gcc
-cd ../
 
 # Huge pages
 # http://dpdk.org/doc/guides-16.04/linux_gsg/sys_reqs.html
+cd $HOME
 sudo sed -i -r 's/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 default_hugepagesz=1G hugepagesz=1G hugepages=4\"/' /etc/default/grub
 sudo update-grub
 sudo mkdir /mnt/huge_1GB
-sudo sh -c "echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' >> /etc/fstab"
+echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab
 
-printf "\n%s%s%s\n%s\n%s\n" 'export RTE_SDK=' $HOME '/MLNX_DPDK_16.11_2.3' 'export RTE_TARGET=x86_64-native-linuxapp-gcc' 'export ROUTER=1' >> $HOME/.bashrc
-export RTE_SDK=$HOME/MLNX_DPDK_16.11_2.3
+echo "" >> $HOME/.bashrc
+echo "export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION" >> $HOME/.bashrc
+echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" >> $HOME/.bashrc
+export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION
 export RTE_TARGET=x86_64-native-linuxapp-gcc
 
 # make Click
-# scp cloudlab_rsa mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa
-# scp cloudlab_rsa.pub mukerjee@aptxxx.apt.emulab.net:~/.ssh/id_rsa.pub
-# git clone git@github.com:mukerjee/sdrt.git
-cd $HOME/sdrt/click
+cd $HOME/sdrt/click-sdrt
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
-make -j16
-
-# open file limits
-# sudo sh -c "echo '* soft nofile unlimited' >> /etc/security/limits.conf"
-# sudo sh -c "echo '* hard nofile unlimited' >> /etc/security/limits.conf"
-# printf '\nulimit -n 119353\nulimit -Hn 119353\n' >> $HOME/.bashrc
-
-# sudo easy_install rpyc
-# printf "\nsudo ./sdrt/cloudlab/tune.sh\n" >> $HOME/.bashrc
+make -j
 
 sudo reboot
