@@ -4,6 +4,10 @@ OFED_VERSION=4.1-1.0.2.0
 
 (crontab -l 2>/dev/null; echo "@reboot $HOME/sdrt/cloudlab/tune.sh") | crontab -
 
+sudo apt-get update && apt-get install -y \
+                               git
+
+
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
 cd $HOME
@@ -21,3 +25,9 @@ sudo sh get-docker.sh
 cd $HOME
 sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework > /usr/local/bin/pipework"
 sudo chmod +x /usr/local/bin/pipework
+
+# get SDRT
+cd $HOME
+git clone --recursive https://github.com/mukerjee/sdrt.git
+
+sudo reboot

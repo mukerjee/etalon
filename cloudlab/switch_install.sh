@@ -5,6 +5,9 @@ DPDK_VERSION=16.11_2.3
 
 (crontab -l 2>/dev/null; echo "@reboot $HOME/sdrt/cloudlab/tune.sh") | crontab -
 
+sudo apt-get update && apt-get install -y \
+                               git
+
 echo "" >> $HOME/.bashrc
 echo "export SWITCH=1" >> $HOME/.bashrc
 
@@ -44,5 +47,9 @@ export RTE_TARGET=x86_64-native-linuxapp-gcc
 cd $HOME/sdrt/click-sdrt
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
+
+# get SDRT
+cd $HOME
+git clone --recursive https://github.com/mukerjee/sdrt.git
 
 sudo reboot
