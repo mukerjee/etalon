@@ -4,3 +4,6 @@
 [submodule "libVT"]
 	path = libVT
 	url = git@github.com:mukerjee/libVT
+[submodule "sdrt-vhost"]
+	path = sdrt-vhost
+	url = git@github.com:mukerjee/sdrt-vhost
