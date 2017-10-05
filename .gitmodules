@@ -1,3 +1,6 @@
 [submodule "click-sdrt"]
 	path = click-sdrt
 	url = https://github.com/mukerjee/click-sdrt
+[submodule "libVT"]
+	path = libVT
+	url = git@github.com:mukerjee/libVT
