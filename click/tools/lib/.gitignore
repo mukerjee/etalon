@@ -1,8 +1,0 @@
-*.bd
-*.bo
-*.d
-*.hd
-*.o
-Makefile
-libclicktool.a
-libclicktool_build.a
