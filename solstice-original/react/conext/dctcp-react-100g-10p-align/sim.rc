@@ -1,8 +1,0 @@
-{
-    "Switch": "react",
-    "Sched": "align",
-    "PackBw": 125,
-    "LoadScaler": 0.5,
-    "UnitScaler": 100,
-    "LinkScaler": 100
-}

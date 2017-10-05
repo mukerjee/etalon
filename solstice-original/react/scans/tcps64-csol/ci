@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-./tcps.r && cp -v ./tcps.pdf ~/papers/react/sched-notes/fig/tcps.pdf

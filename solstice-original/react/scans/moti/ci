@@ -1,3 +1,0 @@
-#!/usr/bin/env bash
-
-./moti.r && cp -v ./moti.pdf ~/papers/react/sched-notes/fig/moti.pdf
