@@ -43,7 +43,7 @@ do
     echo "export RTE_SDK=/local/MLNX_DPDK_$DPDK_VERSION" | sudo tee -a f
     echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" | sudo tee -a f
     echo "cd /local/" | sudo tee -a f
-fi
+done
 export RTE_SDK=/local/MLNX_DPDK_$DPDK_VERSION
 export RTE_TARGET=x86_64-native-linuxapp-gcc
 
