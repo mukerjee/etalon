@@ -13,7 +13,7 @@ sudo apt-get update && apt-get install -y \
 cd $HOME
 wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz
 tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz
-sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall
+sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force
 sudo /etc/init.d/openibd restart
 
 # get docker
@@ -28,6 +28,6 @@ sudo chmod +x /usr/local/bin/pipework
 
 # get SDRT
 cd $HOME
-git clone --recursive https://github.com/mukerjee/sdrt.git
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/mukerjee/sdrt.git
 
 sudo reboot
