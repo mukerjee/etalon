@@ -5,8 +5,8 @@ DPDK_VERSION=16.11_2.3
 
 (crontab -l 2>/dev/null; echo "@reboot $HOME/sdrt/cloudlab/tune.sh") | crontab -
 
-sudo apt-get update && apt-get install -y \
-                               git
+sudo apt-get update && sudo apt-get install -y \
+                            git
 
 echo "" >> $HOME/.bashrc
 echo "export SWITCH=1" >> $HOME/.bashrc

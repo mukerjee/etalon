@@ -4,8 +4,8 @@ OFED_VERSION=4.1-1.0.2.0
 
 (crontab -l 2>/dev/null; echo "@reboot $HOME/sdrt/cloudlab/tune.sh") | crontab -
 
-sudo apt-get update && apt-get install -y \
-                               git
+sudo apt-get update && sudo apt-get install -y \
+                            git
 
 
 # Mellanox OFED
