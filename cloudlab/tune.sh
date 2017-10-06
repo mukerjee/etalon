@@ -25,8 +25,6 @@ sudo ethtool -C $CONTROL_IF tx-usecs 0 rx-usecs 0 adaptive-rx off
 sudo service irqbalance stop
 sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
-sudo sed -i -r 's/10.10.$CONTROL_NET/10.10.$DATA_NET/' /etc/hosts
-
 for i in `seq 1 $NUM_HOSTS`
 do
     for j in `seq 1 $NUM_HOSTS`
@@ -39,6 +37,8 @@ do
 done
 
 if hostname | grep -q switch
-then
-    sudo sed -i -r 's/10.10.$DATA_NET.([[:digit:]][[:digit:]])/10.10.$CONTROL_NET.\1/' /etc/hosts
+then  # switch
+    sudo sed -i "s/10.10.$DATA_NET/10.10.$CONTROL_NET/" /etc/hosts
+else  # host
+    sudo sed -i "s/10.10.$CONTROL_NET/10.10.$DATA_NET/" /etc/hosts
 fi
