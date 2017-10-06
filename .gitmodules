@@ -7,6 +7,3 @@
 [submodule "sdrt-vhost"]
 	path = docker-images/app-image
 	url = git@github.com:mukerjee/sdrt-vhost
-[submodule "base-image"]
-	path = docker-images/base-image
-	url = git@github.com:mukerjee/sdrt-base
