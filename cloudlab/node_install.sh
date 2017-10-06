@@ -41,4 +41,4 @@ do
     echo "cd /local/sdrt/" | sudo tee -a $f
 done
 
-sudo reboot
+/local/sdrt/cloudlab/tune.sh
