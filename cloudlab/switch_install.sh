@@ -60,4 +60,4 @@ cd /local/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
 
-/local/sdrt/cloudlab/tune.sh
+sudo reboot
