@@ -44,7 +44,7 @@ export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION
 export RTE_TARGET=x86_64-native-linuxapp-gcc
 
 # make Click
-cd $HOME/sdrt/click-sdrt
+cd $HOME/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
 
