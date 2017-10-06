@@ -9,7 +9,6 @@ sudo apt-get update && sudo apt-get install -y \
                             git
 
 echo "" >> $HOME/.bashrc
-echo "export SWITCH=1" >> $HOME/.bashrc
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf

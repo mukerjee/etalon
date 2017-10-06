@@ -13,8 +13,8 @@ then
 else
     h='host9'
 fi
-sudo ifconfig $DATA_IF 10.10.$DATA_NET.`echo ${h:4}'`/24 mtu 9000
-sudo ifconfig $CONTROL_IF 10.10.$CONTROL_NET.`echo ${h:4}'`/24
+sudo ifconfig $DATA_IF 10.10.$DATA_NET.`echo ${h:4}`/24 mtu 9000
+sudo ifconfig $CONTROL_IF 10.10.$CONTROL_NET.`echo ${h:4}`/24
 
 sudo ethtool -C $DATA_IF tx-usecs 0
 sudo ethtool -L $DATA_IF rx 1
@@ -27,9 +27,9 @@ sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
 sudo sed -i -r 's/10.10.$CONTROL_NET/10.10.$DATA_NET/' /etc/hosts
 
-for i in {1..$NUM_HOSTS}
+for i in `seq 1 $NUM_HOSTS`
 do
-    for j in {1..$NUM_HOSTS}
+    for j in `seq 1 $NUM_HOSTS`
     do
 	if ! grep -q "h$i$j" /etc/hosts
 	then
