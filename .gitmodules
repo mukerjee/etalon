@@ -5,5 +5,5 @@
 	path = libVT
 	url = git@github.com:mukerjee/libVT
 [submodule "sdrt-vhost"]
-	path = docker-images/app-image
+	path = docker-image-temp/app-image
 	url = git@github.com:mukerjee/sdrt-vhost
