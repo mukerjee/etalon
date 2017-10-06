@@ -3,7 +3,7 @@
 	url = https://github.com/mukerjee/click-sdrt
 [submodule "libVT"]
 	path = libVT
-	url = git@github.com:mukerjee/libVT
+	url = https://github.com/mukerjee/libVT
 [submodule "sdrt-vhost"]
 	path = docker-image
-	url = git@github.com:mukerjee/sdrt-vhost
+	url = https://github.com/mukerjee/sdrt-vhost
