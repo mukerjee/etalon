@@ -6,7 +6,8 @@ DPDK_VERSION=16.11_2.3
 # get SDRT
 cd /local
 GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/mukerjee/sdrt.git
-(crontab -l 2>/dev/null; echo "@reboot local/sdrt/cloudlab/tune.sh") | crontab -
+(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /local/sdrt/cloudlab/tune.sh") | crontab -
+sudo rm /var/run/crond.reboot
 
 sudo apt-get update && sudo apt-get install -y \
                             git
@@ -37,15 +38,22 @@ sudo update-grub
 sudo mkdir /mnt/huge_1GB
 echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab
 
+# RTE_SDK location
 for f in /users/*/.bashrc
 do
-    echo "" | sudo tee -a f
-    echo "export RTE_SDK=/local/MLNX_DPDK_$DPDK_VERSION" | sudo tee -a f
-    echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" | sudo tee -a f
-    echo "cd /local/" | sudo tee -a f
+    echo "" | sudo tee -a $f
+    echo "export RTE_SDK=/local/MLNX_DPDK_$DPDK_VERSION" | sudo tee -a $f
+    echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" | sudo tee -a $f
 done
 export RTE_SDK=/local/MLNX_DPDK_$DPDK_VERSION
 export RTE_TARGET=x86_64-native-linuxapp-gcc
+
+# start in /local/sdrt/
+for f in /users/*/.bashrc
+do
+    echo "" | sudo tee -a $f
+    echo "cd /local/sdrt/" | sudo tee -a $f
+done
 
 # make Click
 cd /local/sdrt/click
