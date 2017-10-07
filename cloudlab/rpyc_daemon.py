@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import socket
+import threading
 import rpyc
 from subprocess import call
 
@@ -19,7 +20,7 @@ CONTROL_INT_IF = 'eth2'
 CONTROL_NET = 2
 CONTROL_RATE = 0.5
 
-CPU_SETS = 1-15
+CPU_SET = "1-15"
 CPU_LIMIT = 75
 
 IMAGES = {
@@ -30,9 +31,11 @@ IMAGES = {
 }
 
 
-DOCKER_CLEAN = 'docker ps | xargs docker stop; docker ps -a | xargs docker rm'
-DOCKER_RUN = 'docker pull {image}; docker run -d -h host{id} ' \
-             '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=host{id} {image}'
+DOCKER_CLEAN = 'docker ps -q | xargs docker stop -t 0 2> /dev/null; ' \
+               'docker ps -aq | xargs docker rm 2> /dev/null'
+DOCKER_PULL = 'docker pull {image}'
+DOCKER_RUN = 'docker run -d -h host{id} --cpuset-cpus={cpu_set} ' \
+             '-c {cpu_limit} --name=host{id} {image}'
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} host{id} ' \
            '10.10.{net}.{id}/24; sudo pipework tc host{id} qdisc add dev ' \
            '{int_if} root fq maxrate {rate}gbit'
@@ -40,31 +43,49 @@ PIPEWORK = 'sudo pipework {ext_if} -i {int_if} host{id} ' \
 
 class SDRTService(rpyc.Service):
     def on_connect(self):
-        pass
+        self.pulled = False
 
     def on_disconnection(self):
         pass
 
+    def call(self, cmd):
+        if not self.pulled:
+            self.pulled = True
+            self.update_images()
+        print cmd
+        call(cmd, shell=True)
+
     def clean(self):
-        call(DOCKER_CLEAN, shell=True)
+        self.call(DOCKER_CLEAN)
+
+    def update_image(self, img):
+        self.call(DOCKER_PULL.format(image=img))
+
+    def update_images(self):
+        ts = []
+        for img in IMAGES.values():
+            ts.append(threading.THREAD(target=self.update_image,
+                                       args=(img,)).start())
+        map(lambda t: t.wait(), ts)
 
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
-        call(DOCKER_RUN.format(image=IMAGES[image],
-                               id=my_id, cpu_sets=CPU_SETS,
-                               cpu_limit=CPU_LIMIT),
-             shell=True)
-        call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
-                             net=DATA_NET, id=my_id, rate=DATA_RATE),
-             shell=True)
-        call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-                             net=CONTROL_NET, id=my_id, rate=CONTROL_RATE),
-             shell=True)
+        self.call(DOCKER_RUN.format(image=IMAGES[image],
+                                    id=my_id, cpu_set=CPU_SET,
+                                    cpu_limit=CPU_LIMIT))
+        self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
+                                  net=DATA_NET, id=my_id, rate=DATA_RATE))
+        self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
+                                  net=CONTROL_NET, id=my_id,
+                                  rate=CONTROL_RATE))
 
     def launch_rack(self, image):
         self.clean()
+        ts = []
         for i in xrange(1, NUM_HOSTS+1):
-            self.launch(image, i)
+            ts.append(threading.Thread(target=self.launch,
+                                       args=(image, i)).start())
+        map(lambda t: t.wait(), ts)
 
     def exposed_flowgrindd(self):
         self.launch_rack('flowgrindd')

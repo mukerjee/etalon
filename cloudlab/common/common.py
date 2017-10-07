@@ -4,53 +4,30 @@ import time
 import threading
 import sys
 import os
-import socket
-import select
-import paramiko
 import rpyc
-import glob
 import tarfile
-from subprocess import Popen, PIPE, STDOUT, call
-
-rpyc.core.protocol.DEFAULT_CONFIG['allow_pickle'] = True
+from subprocess import call, PIPE, STDOUT, Popen
+from click_common import initializeClickControl, setConfig
 
 RPYC_PORT = 18861
-
-NODES_FILE = os.path.expanduser('~/sdrt/cloudlab/common/handles.cloudlab')
-MININET_NODES_FILE = os.path.expanduser('~/sdrt/cloudlab/common/mininet.cloudlab')
 
 ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
 RACKS = []
 PHYSICAL_NODES = []
-HANDLE_TO_IP = {}
-NUM_RACKS = 0
-HOSTS_PER_RACK = 0
-
-TCP_IP = 'localhost'
-TCP_PORT = 1239
-BUFFER_SIZE = 1024
-CLICK_SOCKET = None
-
-MAX_CONCURRENT = 1024
+NUM_RACKS = 8
+HOSTS_PER_RACK = 8
 
 THREADS = []
-THREADLOCK = threading.Lock()
-
-IPERF3_CLIENT = 'iperf3 -p53%s -i0.1 -t1 -c %s'
-PING = 'sudo ping -i0.05 -w1 %s'
+THREAD_LOCK = threading.lock()
 
 TIMESTAMP = int(time.time())
 SCRIPT = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 EXPERIMENTS = []
 
-CURRENT_CONFIG = {}
-FN_FORMAT = ''
-
-MAX_SSH_RUNTIME = 25  # seconds
 
 ##
-## Experiment commands
+# Experiment commands
 ##
 def initializeExperiment():
     global NUM_RACKS, HOSTS_PER_RACK
@@ -60,28 +37,18 @@ def initializeExperiment():
     call([os.path.expanduser('~/sdrt/cloudlab/clear_arp.sh')])
     print '--- done...'
 
-    call('ulimit -n 4096', shell=True)
-
-    print '--- parsing host handles...'
-    f = open(NODES_FILE).read().split('\n')[:-1]
-    for line in f[1:]:
-        handle, hostname = [x.strip() for x in line.split('#')]
-        PHYSICAL_NODES.append(handle)
-        HANDLE_TO_IP[handle] = hostname
+    print '--- populating physical hosts...'
+    PHYSICAL_NODES.append('')
+    for i in xrange(NUM_RACKS):
+        PHYSICAL_NODES.append('host%d' % i)
     print '--- done...'
 
-    print '--- checking if mininet is running on hosts...'
-    f = open(MININET_NODES_FILE).read().split('\n')[:-1]
-    NUM_RACKS = int(f[-1].split('#')[0].strip()[-1])
+    print '--- populating vhosts...'
     RACKS.append([])
     for i in xrange(NUM_RACKS):
         RACKS.append([])
-    for line in f:
-        handle, ip = [x.strip() for x in line.split('#')]
-        rack = int(handle[-2])
-        RACKS[rack].append(node(handle))
-        HANDLE_TO_IP[handle] = ip
-    HOSTS_PER_RACK = len(RACKS[1])
+        for j in xrange(HOSTS_PER_RACK):
+            RACKS[-1].append(node('host%d%d' % (i, j), PHYSICAL_NODES[i]))
     print '--- done...'
 
     initializeClickControl()
@@ -105,152 +72,28 @@ def stopExperiment():
 
 
 ##
-## Running click commands
-##    
-def initializeClickControl():
-    global CLICK_SOCKET
-    print '--- connecting to click socket...'
-    CLICK_SOCKET = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    CLICK_SOCKET.connect((TCP_IP, TCP_PORT))
-    CLICK_SOCKET.recv(BUFFER_SIZE)
-    print '--- done...'
-
-def clickWriteHandler(element, handler, value):
-    message = "WRITE %s.%s %s\n" % (element, handler, value)
-    print message.strip()
-    CLICK_SOCKET.send(message)
-    print CLICK_SOCKET.recv(BUFFER_SIZE).strip()
-
-def clickReadHandler(element, handler):
-    message = "READ %s.%s\n" % (element, handler)
-    print message.strip()
-    CLICK_SOCKET.send(message)
-    data = CLICK_SOCKET.recv(BUFFER_SIZE).strip()
-    print data
-    return data
-
-def setQueueSize(size):
-    for i in xrange(len(RACKS) - 1):
-        for j in xrange(len(RACKS) - 1):
-            clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j), 'capacity', size)
-
-def setEstimateTrafficSource(source):
-    clickWriteHandler('traffic_matrix', 'setSource', source)
-
-def setQueueResize(b):
-    if b:
-        clickWriteHandler('runner', 'setDoResize', 'true')
-    else:
-        clickWriteHandler('runner', 'setDoResize', 'false')
-    time.sleep(0.1)
-
-def enableSolstice():
-    clickWriteHandler('sol', 'setEnabled', 'true')
-    time.sleep(0.1)
-
-def disableSolstice():
-    clickWriteHandler('sol', 'setEnabled', 'false')
-    time.sleep(0.1)
-
-def disableCircuit():
-    disableSolstice()
-    off_sched = '1 20000 %s' % (('-1/' * NUM_RACKS)[:-1])
-    clickWriteHandler('runner', 'setSchedule', off_sched)
-    time.sleep(0.1)
-
-def setStrobeSchedule():
-    disableSolstice()
-    schedule = '%d ' % ((NUM_RACKS-1)*2)
-    for i in xrange(NUM_RACKS-1):
-        configstr = '%d %s %d %s '
-        night_len = 20
-        off_config = ('-1/' * NUM_RACKS)[:-1]
-        duration = night_len * 9 * 20  # night_len * duty_cycle * tdf
-        configuration = ''
-        for j in xrange(NUM_RACKS):
-            configuration += '%d/' % ((i + 1 + j) % NUM_RACKS)
-        configuration = configuration[:-1]
-        schedule += (configstr % (duration, configuration, night_len, off_config))
-    schedule = schedule[:-1]
-    clickWriteHandler('runner', 'setSchedule', schedule)
-    time.sleep(0.1)
-
-def setConfig(config):
-    global CURRENT_CONFIG, FN_FORMAT
-    CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 40,
-                      'traffic_source': 'QUEUE', 'queue_resize': False}
-    CURRENT_CONFIG.update(config)
-    c = CURRENT_CONFIG
-    setQueueResize(False)  # let manual queue sizes be passed through first
-    setQueueSize(c['buffer_size'])
-    setEstimateTrafficSource(c['traffic_source'])
-    setQueueResize(c['queue_resize'])
-    t = c['type']
-    if t == 'normal':
-        enableSolstice()
-    if t == 'no_circuit':
-        disableCircuit()
-    if t == 'strobe':
-        setStrobeSchedule()
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
-                                        c['traffic_source'], c['queue_resize'])
-    FN_FORMAT += '%s-%s-%s.txt'
-
-
-##
-## Rack level helper functions
-##
-def rackToRackIperf3(source, dest):
-    servers = RACKS[dest]
-    for i, host in enumerate(RACKS[source]):
-        out_fn = FN_FORMAT % (host.hostname, servers[i].hostname, 'iperf3')
-        runOnNode(host.hostname,
-                  IPERF3_CLIENT % (host.hostname[1:], servers[i].hostname),
-                  fn=out_fn, preload=False)
-        EXPERIMENTS.append(out_fn)
-
-def rackToRackPing(source, dest):
-    servers = RACKS[dest]
-    for i, host in enumerate(RACKS[source]):
-        out_fn = FN_FORMAT % (host.hostname, servers[i].hostname, 'ping')
-        runOnNode(host.hostname, PING % (servers[i].hostname),
-                  fn=out_fn, preload=False)
-        EXPERIMENTS.append(out_fn)
-
-
-##
-## Running shell commands
+# VHost Node
 ##
 class job:
     def __init__(self, type, server, fn, time, result):
         self.type = type
         self.server = server
         self.fn = fn
-        self.time = time
         self.result = result
 
+
 class node:
-    def __init__(self, hostname, skip=False):
+    def __init__(self, hostname, parent):
         self.hostname = hostname
         self.work = []
-        # should probably loop until i connect
-        if not skip:
-            self.rpc_conn = rpyc.connect(hostname, RPYC_PORT, 
-                                         config=rpyc.core.protocol.DEFAULT_CONFIG)
-            self.iperf_async = rpyc.async(self.rpc_conn.root.iperf3)
-            self.ping_async = rpyc.async(self.rpc_conn.root.ping)
+        self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
+        self.iperf_async = rpyc.async(self.rpc_conn.root.iperf_client)
 
-    def iperf3(self, server, fn, time=1):
+    def iperf(self, server, fn):
         if server.__class__ == node:
             server = server.hostname
-        r = self.iperf_async(server, time)
-        self.work.append(job('iperf3', server, fn, time, r))
-
-    def ping(self, server, fn, time=1):
-        if server.__class__ == node:
-            server = server.hostname
-        r = self.ping_async(server, time)
-        self.work.append(job('ping', server, fn, time, r))
+        r = self.iperf_async(self.hostname, server)
+        self.work.append(job('iperf', server, fn, time, r))
 
     def get_dones(self):
         dones, not_dones = [], []
@@ -269,11 +112,12 @@ class node:
             print 'fn = %s' % (done.fn)
             open(done.fn, 'w').write(sout)
         else:
-            print '%s: error in %s %s %s' % (self.hostname, done.type, 
+            print '%s: error in %s %s %s' % (self.hostname, done.type,
                                              done.server, done.time)
             print 'fn = %s' % (done.fn)
             sys.stdout.write(sout)
             sys.stdout.write(serr)
+
 
 def waitWork(host):
     print 'waiting on %s (%s jobs)' % (host.hostname, len(host.work))
@@ -283,93 +127,67 @@ def waitWork(host):
             for d in ds:
                 host.save_done(d)
 
+
 def waitOnWork():
-    hosts = [host for rack in RACKS for host in rack]    
+    hosts = [host for rack in RACKS for host in rack]
     map(waitWork, hosts)
 
-def sshRun(hostname, cmd, printOutput=True):
+
+##
+# Running shell commands
+##
+def run(cmd, printOutput=True, checkRC=True, redirect=PIPE, input=""):
+    def preexec():  # don't forward signals
+        os.setpgrp()
+
     out = ""
-
-    client = paramiko.SSHClient()
-    client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    client.connect(hostname, timeout=1)
-    sesh = client.get_transport().open_session()
-    sesh.set_combine_stderr(True)
-    sesh.get_pty()
-
-    print cmd
-    sesh.exec_command(cmd)
-
-    t = time.time()
-    timeout = False
-    while True:
-        rs, _, _ = select.select([sesh], [], [], 0.0)
-        if len(rs) > 0:
-            new = sesh.recv(1024)
-            if new == '':
-                break
-            out += new
-            if printOutput:
-                sys.stdout.write(new)
-                sys.stdout.flush()
-        if (time.time() - t) > MAX_SSH_RUNTIME:
-            timeout = True
+    if input:
+        p = Popen(cmd, shell=True, stdout=redirect, stderr=STDOUT,
+                  stdin=PIPE, preexec_fn=preexec)
+        p.stdin.write(input)
+    else:
+        p = Popen(cmd, shell=True, stdout=redirect, stderr=STDOUT,
+                  preexec_fn=preexec)
+    while redirect == PIPE:
+        line = p.stdout.readline()  # this will block
+        if not line:
             break
-        # if sesh.exit_status_ready():
-        #     break
-    if not timeout:
-        rc = sesh.recv_exit_status()
-
-    client.close()
-
-    if not timeout:
-        if rc != 0:
-            raise Exception('bad RC (%s) from %s cmd: %s\n output: %s' %
-                            (rc, hostname, cmd, out))
-        return out, rc
-    else:  # timed out
-        print 'timed out: %s' % cmd
-        return ('bad: timeout\n' + out, -1)
+        if printOutput:
+            sys.stdout.write(line)
+        out += line
+    rc = p.poll()
+    while rc is None:
+        #time.sleep(1)
+        rc = p.poll()
+    if checkRC and rc != 0:
+        raise Exception("subprocess.CalledProcessError: Command '%s'"
+                        "returned non-zero exit status %s\n"
+                        "output was: %s" % (cmd, rc, out))
+    return (rc, out)
 
 
 ##
-## Threading
+# Threading
 ##
-def threadRun(hostname, handle, cmd, current, total, fn, po):
+def backgroundRun(cmd, fn):
     try:
-        out = sshRun(hostname, cmd, printOutput=po)[0]
+        out = run(cmd)[1]
     except Exception, e:
         print e
         out = str(e)
-    THREADLOCK.acquire()
-    THREADS.remove(hostname)
-    if total:
-        out = ('(%s/%s) %s:\n' % (current, total, handle)) + out
-        if po:
-            print '(%s/%s) %s: done\n' % (current, total, handle)
-    THREADLOCK.release()
     if fn:
         f = open(fn, 'w')
         f.write(out)
         f.close()
 
-def runOnNode(handle, cmd, current=0, total=0, preload=True, printOutput=True, fn=None):
-    try:
-        hostname = handle.strip()
-        print hostname, cmd, fn
-        while len(THREADS) >= MAX_CONCURRENT:
-            time.sleep(1)
-        THREADLOCK.acquire()
-        if preload:
-            cmd = 'LD_PRELOAD=%s %s' % (ADU_PRELOAD, cmd)
-        threading.Thread(target=threadRun,
-                         args=(hostname, handle, cmd, current, total, 
-                               fn, printOutput)).start()
-        THREADS.append(hostname)
-        THREADLOCK.release()
-    except Exception, e:
-        print e
 
-def waitOnNodes():
+def threadRun(cmd, fn=None):
+    THREAD_LOCK.lock()
+    THREADS.append(threading.Thread(target=backgroundRun,
+                                    args=(cmd, fn)).start())
+    THREAD_LOCK.unlock()
+
+
+def waitOnThreads():
     while THREADS:
         time.sleep(1)
