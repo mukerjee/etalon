@@ -64,7 +64,7 @@ class SDRTService(rpyc.Service):
     def update_images(self):
         ts = []
         for img in IMAGES.values():
-            ts.append(threading.THREAD(target=self.update_image,
+            ts.append(threading.Thread(target=self.update_image,
                                        args=(img,)).start())
         map(lambda t: t.wait(), ts)
 
