@@ -34,7 +34,7 @@ sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pi
 sudo chmod +x /usr/local/bin/pipework
 
 cd $HOME
-sudo ln -s ./sdrt /local/sdrt
+sudo ln -s $PWD/sdrt /local
 sudo systemctl enable $HOME/sdrt/cloudlab/rpyc_daemon.service
 
 sudo reboot
