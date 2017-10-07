@@ -65,7 +65,8 @@ class SDRTService(rpyc.Service):
         ts = []
         for img in IMAGES.values():
             ts.append(threading.Thread(target=self.update_image,
-                                       args=(img,)).start())
+                                       args=(img,)))
+            ts[-1].start()
         map(lambda t: t.wait(), ts)
 
     def launch(self, image, host_id):
@@ -84,7 +85,8 @@ class SDRTService(rpyc.Service):
         ts = []
         for i in xrange(1, NUM_HOSTS+1):
             ts.append(threading.Thread(target=self.launch,
-                                       args=(image, i)).start())
+                                       args=(image, i)))
+            ts[-1].start()
         map(lambda t: t.wait(), ts)
 
     def exposed_flowgrindd(self):
