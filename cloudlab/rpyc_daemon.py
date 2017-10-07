@@ -3,7 +3,7 @@
 import socket
 import threading
 import rpyc
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError
 
 RPYC_PORT = 18861
 
@@ -55,15 +55,19 @@ class SDRTService(rpyc.Service):
     def on_disconnection(self):
         pass
 
-    def call(self, cmd):
+    def call(self, cmd, check_rc=True):
         if not self.pulled:
             self.pulled = True
             self.update_images()
         print cmd
-        return check_output(cmd, shell=True)
+        try:
+            return check_output(cmd, shell=True)
+        except CalledProcessError as e:
+            if check_rc:
+                raise e
 
     def clean(self):
-        self.call(DOCKER_CLEAN)
+        self.call(DOCKER_CLEAN, check_rc=False)
 
     def update_image(self, img):
         self.call(DOCKER_PULL.format(image=img))
