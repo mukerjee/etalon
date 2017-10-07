@@ -8,20 +8,22 @@ from subprocess import call
 RPYC_PORT = 18861
 
 NUM_HOSTS = 8
+TDF = 20.0
 SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
 DATA_EXT_IF = 'enp8s0'
 DATA_INT_IF = 'eth1'
 DATA_NET = 1
-DATA_RATE = 0.5
+DATA_RATE = 10 / TDF  # Gbps
 
 CONTROL_EXT_IF = 'enp8s0d1'
 CONTROL_INT_IF = 'eth2'
 CONTROL_NET = 2
-CONTROL_RATE = 0.5
+CONTROL_RATE = 10 / TDF  # Gbps
 
-CPU_SET = "1-15"
-CPU_LIMIT = 75
+CPU_COUNT = 16
+CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
+CPU_LIMIT = (CPU_COUNT-1) * 100 / TDF  # 75
 
 IMAGES = {
     'flowgrindd': 'mukerjee/sdrt-flowgrindd',

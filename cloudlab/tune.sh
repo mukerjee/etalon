@@ -29,10 +29,10 @@ for i in `seq 1 $NUM_HOSTS`
 do
     for j in `seq 1 $NUM_HOSTS`
     do
-	if ! grep -q "h$i$j" /etc/hosts
-	then
-	    printf "%s\t%s\n" "10.10.$DATA_NET.$i$j" "h$i$j" | sudo tee -a /etc/hosts
-	fi
+	    if ! grep -q "h$i$j" /etc/hosts
+	    then
+	        printf "%s\t%s\n" "10.10.$DATA_NET.$i$j" "h$i$j" | sudo tee -a /etc/hosts
+	    fi
     done
 done
 
