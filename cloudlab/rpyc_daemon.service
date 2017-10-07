@@ -1,5 +1,7 @@
 [Unit]
 Description=SDRT Docker rpyc daemon
+Requires=network.target
+After=network.target
 
 [Service]
 ExecStart=/usr/bin/python /local/sdrt/cloudlab/rpyc_daemon.py

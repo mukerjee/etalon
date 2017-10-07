@@ -33,8 +33,7 @@ sudo usermod -aG docker `whoami`
 sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework > /usr/local/bin/pipework"
 sudo chmod +x /usr/local/bin/pipework
 
-cd $HOME
-sudo ln -s $PWD/sdrt /local
+sudo ln -s $HOME/sdrt /local
 sudo systemctl enable $HOME/sdrt/cloudlab/rpyc_daemon.service
 
 sudo reboot
