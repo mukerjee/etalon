@@ -10,7 +10,8 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://
 sudo rm /var/run/crond.reboot
 
 sudo apt-get update && sudo apt-get install -y \
-                            git
+                            git \
+                            flowgrind
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf

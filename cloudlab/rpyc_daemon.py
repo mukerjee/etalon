@@ -34,10 +34,10 @@ IMAGES = {
 DOCKER_CLEAN = 'docker ps -q | xargs docker stop -t 0 2> /dev/null; ' \
                'docker ps -aq | xargs docker rm 2> /dev/null'
 DOCKER_PULL = 'docker pull {image}'
-DOCKER_RUN = 'docker run -d -h host{id} --cpuset-cpus={cpu_set} ' \
-             '-c {cpu_limit} --name=host{id} {image}'
-PIPEWORK = 'sudo pipework {ext_if} -i {int_if} host{id} ' \
-           '10.10.{net}.{id}/24; sudo pipework tc host{id} qdisc add dev ' \
+DOCKER_RUN = 'docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
+             '-c {cpu_limit} --name=h{id} {image}'
+PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
+           '10.10.{net}.{id}/24; sudo pipework tc h{id} qdisc add dev ' \
            '{int_if} root fq maxrate {rate}gbit'
 
 
@@ -92,10 +92,10 @@ class SDRTService(rpyc.Service):
     def exposed_flowgrindd(self):
         self.launch_rack('flowgrindd')
 
-    def exposed_iperf(self):
+    def exposed_iperf_server(self):
         self.launch_rack('iperf')
 
-    def exposed_iperf3(self):
+    def exposed_iperf3_server(self):
         self.launch_rack('iperf3')
 
     def exposed_hadoop(self):
