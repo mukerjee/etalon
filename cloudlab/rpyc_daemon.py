@@ -90,7 +90,7 @@ class SDRTService(rpyc.Service):
         self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
                                   net=CONTROL_NET, id=my_id,
                                   rate=CONTROL_RATE))
-        my_pid = self.call(DOCKER_GET_PID.format(id=my_id))
+        my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
 
         my_rack = int(my_id[0])
