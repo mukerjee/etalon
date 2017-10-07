@@ -46,17 +46,20 @@ class SDRTService(rpyc.Service):
         pass
 
     def clean(self):
-        call(DOCKER_CLEAN)
+        call(DOCKER_CLEAN, shell=True)
 
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
         call(DOCKER_RUN.format(image=IMAGES[image],
                                id=my_id, cpu_sets=CPU_SETS,
-                               cpu_limit=CPU_LIMIT))
+                               cpu_limit=CPU_LIMIT),
+             shell=True)
         call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
-                             net=DATA_NET, id=my_id, rate=DATA_RATE))
+                             net=DATA_NET, id=my_id, rate=DATA_RATE),
+             shell=True)
         call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-                             net=CONTROL_NET, id=my_id, rate=CONTROL_RATE))
+                             net=CONTROL_NET, id=my_id, rate=CONTROL_RATE),
+             shell=True)
 
     def launch_rack(self, image):
         self.clean()
