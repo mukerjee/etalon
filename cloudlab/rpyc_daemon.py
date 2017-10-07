@@ -3,11 +3,12 @@
 import socket
 import threading
 import rpyc
-from subprocess import call
+from subprocess import check_output
 
 RPYC_PORT = 18861
 
-NUM_HOSTS = 8
+NUM_RACKS = 8
+HOSTS_PER_RACK = 8
 TDF = 20.0
 SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
@@ -38,9 +39,13 @@ DOCKER_CLEAN = 'docker ps -q | xargs docker stop -t 0 2> /dev/null; ' \
 DOCKER_PULL = 'docker pull {image}'
 DOCKER_RUN = 'docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image}'
+DOCKER_GET_PID = "docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
            '10.10.{net}.{id}/24; sudo pipework tc h{id} qdisc add dev ' \
            '{int_if} root fq maxrate {rate}gbit'
+NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
+SWITCH_PING = 'ping switch -c1'
+ARP_POISON = "arp -s h{id} `arp | grep switch | tr -s ' ' | cut -d' ' -f3`"
 
 
 class SDRTService(rpyc.Service):
@@ -55,7 +60,7 @@ class SDRTService(rpyc.Service):
             self.pulled = True
             self.update_images()
         print cmd
-        call(cmd, shell=True)
+        return check_output(cmd, shell=True)
 
     def clean(self):
         self.call(DOCKER_CLEAN)
@@ -81,11 +86,22 @@ class SDRTService(rpyc.Service):
         self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
                                   net=CONTROL_NET, id=my_id,
                                   rate=CONTROL_RATE))
+        my_pid = self.call(DOCKER_GET_PID.format(id=my_id))
+        self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
+
+        my_rack = int(my_id[0])
+        for i in xrange(1, NUM_RACKS+1):
+            if i == my_rack:
+                continue
+            for j in xrange(1, HOSTS_PER_RACK+1):
+                dst_id = '%d%d' % (i, j)
+                self.call(NS_RUN.format(pid=my_pid,
+                                        cmd=ARP_POISON.format(id=dst_id)))
 
     def launch_rack(self, image):
         self.clean()
         ts = []
-        for i in xrange(1, NUM_HOSTS+1):
+        for i in xrange(1, NUM_RACKS+1):
             ts.append(threading.Thread(target=self.launch,
                                        args=(image, i)))
             ts[-1].start()
