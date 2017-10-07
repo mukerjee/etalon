@@ -1,0 +1,8 @@
+[Unit]
+Description=SDRT Docker rpyc daemon
+
+[Service]
+ExecStart=/usr/bin/python /local/sdrt/cloudlab/rpyc_daemon.py
+
+[Install]
+WantedBy=multi-user.target
