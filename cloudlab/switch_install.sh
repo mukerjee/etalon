@@ -12,7 +12,8 @@ sudo rm /var/run/crond.reboot
 sudo apt-get update && sudo apt-get install -y \
                             git \
                             flowgrind \
-                            python-pip
+                            python-pip \
+                            linuxptp
 
 sudo pip install rpyc
 
@@ -52,5 +53,11 @@ export RTE_TARGET=x86_64-native-linuxapp-gcc
 cd $HOME/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
+
+printf '[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf
+sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service
+sudo sed -i 's/-s eth0/-a -r/' /lib/systemd/system/phc2sys.service
+sudo systemctl daemon-reload
+sudo systemctl enable phc2sys.service
 
 sudo reboot
