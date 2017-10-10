@@ -38,9 +38,11 @@ sudo ln -s $HOME/sdrt /local
 sudo systemctl enable $HOME/sdrt/cloudlab/rpyc_daemon.service
 
 printf 'slaveOnly\t\t1\n[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf
+sudo sed -i '/(PTP) service/a Requires=network.target\nAfter=network.target' /lib/systemd/system/ptp4l.service
 sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service
 sudo sed -i 's/-w -s eth0/-a -r/' /lib/systemd/system/phc2sys.service
 sudo systemctl daemon-reload
 sudo systemctl enable phc2sys.service
+sudo systemctl disable ntp.service
 
 sudo reboot
