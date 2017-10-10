@@ -39,7 +39,7 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_PULL = 'sudo docker pull {image}'
 DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
-             '-c {cpu_limit} --name=h{id} {image} {cmd}'
+             '-c {cpu_limit} --name=h{id} {image}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
            '10.10.{net}.{id}/24; sudo pipework tc h{id} qdisc add dev ' \
@@ -83,10 +83,10 @@ class SDRTService(rpyc.Service):
 
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
-        my_cmd = str(host_id) if image == 'flowgrindd' else ''
+        cpus = str(host_id) if image == 'flowgrindd' else CPU_SET
         self.call(DOCKER_RUN.format(image=IMAGES[image],
-                                    id=my_id, cpu_set=CPU_SET,
-                                    cpu_limit=CPU_LIMIT, cmd=my_cmd))
+                                    id=my_id, cpu_set=cpus,
+                                    cpu_limit=CPU_LIMIT))
         self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
                                   net=DATA_NET, id=my_id, rate=DATA_RATE))
         self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
