@@ -84,19 +84,22 @@ class SDRTService(rpyc.Service):
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
         cpus = str(host_id) if image == 'flowgrindd' else CPU_SET
-        my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
-                 '/root/on_run.sh && taskset -c {id} ' \
-                 'flowgrindd -d -c {id}"'.format(id=host_id) \
+        # my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
+        #          '/root/on_run.sh && taskset -c {id} ' \
+        #          'flowgrindd -d -c {id}"'.format(id=host_id) \
+        #          if image == 'flowgrindd' else ''
+        my_cmd = '"/root/on_run.sh && taskset -c {id} ' \
+                 'flowgrindd -d -c {id} -p 59{id}"'.format(id=host_id) \
                  if image == 'flowgrindd' else ''
         my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
                                     cpu_limit=CPU_LIMIT, cmd=my_cmd))
-        self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
-                                  net=DATA_NET, id=my_id, rate=DATA_RATE))
-        self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-                                  net=CONTROL_NET, id=my_id,
-                                  rate=CONTROL_RATE))
+        # self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
+        #                           net=DATA_NET, id=my_id, rate=DATA_RATE))
+        # self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
+        #                           net=CONTROL_NET, id=my_id,
+        #                           rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
 
