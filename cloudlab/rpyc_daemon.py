@@ -38,7 +38,9 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_PULL = 'sudo docker pull {image}'
-DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} --net=host' \
+# DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set}' \
+#              '-c {cpu_limit} --name=h{id} {image} {cmd}'
+DOCKER_RUN = 'sudo docker run -d --cpuset-cpus={cpu_set} --network=host' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
