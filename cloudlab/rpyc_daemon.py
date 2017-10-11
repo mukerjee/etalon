@@ -84,10 +84,11 @@ class SDRTService(rpyc.Service):
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
         cpus = str(host_id) if image == 'flowgrindd' else CPU_SET
-        my_cmd = 'pipework --wait && pipework --wait -i eth2 && ' \
+        my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
                  '/root/on_run.sh && taskset -c {id} ' \
-                 'flowgrindd -d -c {id}'.format(id=host_id) \
+                 'flowgrindd -d -c {id}"'.format(id=host_id) \
                  if image == 'flowgrindd' else ''
+        my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
                                     cpu_limit=CPU_LIMIT, cmd=my_cmd))
