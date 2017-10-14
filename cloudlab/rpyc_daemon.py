@@ -38,14 +38,15 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_PULL = 'sudo docker pull {image}'
-# DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set}' \
-#              '-c {cpu_limit} --name=h{id} {image} {cmd}'
-DOCKER_RUN = 'sudo docker run -d --cpuset-cpus={cpu_set} --network=host' \
+DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set}' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
-           '10.10.{net}.{id}/24; sudo pipework tc h{id} qdisc add dev ' \
-           '{int_if} root fq maxrate {rate}gbit'
+           '10.10.{net}.{id}/24; ' \
+           'sudo pipework tc h{id} qdisc add dev {int_if} root handle 1: ' \
+           'htb default 10; ' \
+           'sudo pipework tc h{id} class add dev {int_if} classid 1:10 ' \
+           'parent 1: htb rate {rate}gbit'
 NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
 SWITCH_PING = 'ping switch -c1'
 ARP_POISON = "arp -s h{id} `arp | grep switch | tr -s ' ' | cut -d' ' -f3`"
@@ -86,22 +87,19 @@ class SDRTService(rpyc.Service):
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
         cpus = str(host_id) if image == 'flowgrindd' else CPU_SET
-        # my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
-        #          '/root/on_run.sh && taskset -c {id} ' \
-        #          'flowgrindd -d -c {id}"'.format(id=host_id) \
-        #          if image == 'flowgrindd' else ''
-        my_cmd = '"/root/on_run.sh && taskset -c {id} ' \
-                 'flowgrindd -d -c {id} -p 59{id}"'.format(id=host_id) \
+        my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
+                 '/root/on_run.sh && taskset -c {id} ' \
+                 'flowgrindd -d -c {id}"'.format(id=host_id) \
                  if image == 'flowgrindd' else ''
         my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
                                     cpu_limit=CPU_LIMIT, cmd=my_cmd))
-        # self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
-        #                           net=DATA_NET, id=my_id, rate=DATA_RATE))
-        # self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-        #                           net=CONTROL_NET, id=my_id,
-        #                           rate=CONTROL_RATE))
+        self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
+                                  net=DATA_NET, id=my_id, rate=DATA_RATE))
+        self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
+                                  net=CONTROL_NET, id=my_id,
+                                  rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
 
