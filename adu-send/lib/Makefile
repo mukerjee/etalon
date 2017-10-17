@@ -1,9 +1,7 @@
-all:    libs
+all: adu-send.so
 
-install: libs
+install: adu-send.so
 	cp adu-send.so /usr/lib/
-
-libs:   adu-send.so
 
 adu-send.so: adu-send.c
 	rm -f adu-send.so*
