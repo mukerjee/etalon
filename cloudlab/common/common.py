@@ -120,7 +120,7 @@ def flowgrind(settings):
                 flows.append(fl)
         else:
             flows.append(f)
-    cmd += '-N %s ' % len(flows)
+    cmd += '-n %s ' % len(flows)
     for i, f in enumerate(flows):
         if 'time' not in f:
             f['time'] = 2
