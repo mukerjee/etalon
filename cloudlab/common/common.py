@@ -103,7 +103,7 @@ def launch_all_flowgrindd():
 
 
 def get_flowgrind_host(h):
-    return '10.10.%s.%s/10.10.%s.%s' % (DATA_NET, h, CONTROL_NET, h)
+    return '10.10.%s.%s/10.10.%s.%s' % (DATA_NET, h[1:], CONTROL_NET, h[1:])
 
 
 def flowgrind(settings):
@@ -128,6 +128,7 @@ def flowgrind(settings):
                                              get_flowgrind_host(f['dst']),
                                              f['time'])
     print cmd
+    print FN_FORMAT
     fn = FN_FORMAT % ('flowgrind')
     EXPERIMENTS.append(fn)
     backgroundRun(cmd, fn)
