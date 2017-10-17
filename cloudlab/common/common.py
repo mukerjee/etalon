@@ -33,7 +33,7 @@ EXPERIMENTS = []
 def initializeExperiment():
     print '--- starting experiment...'
     print '--- clearing local arp...'
-    call([os.path.expanduser('~/sdrt/cloudlab/clear_arp.sh')])
+    call([os.path.expanduser('~/sdrt/cloudlab/arp_clear.sh')])
     print '--- done...'
 
     print '--- populating physical hosts...'
