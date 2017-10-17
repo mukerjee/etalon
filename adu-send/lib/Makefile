@@ -1,7 +1,7 @@
 all:    libs
 
 install: libs
-	cp adu-send.so /usr/local/lib/
+	cp adu-send.so /usr/lib/
 
 libs:   adu-send.so
 

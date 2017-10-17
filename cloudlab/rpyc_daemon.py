@@ -85,7 +85,7 @@ class SDRTService(rpyc.Service):
         my_id = '%d%d' % (SELF_ID, host_id)
         cpus = str(host_id) if image == 'flowgrindd' else CPU_SET
         my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
-                 '/root/on_run.sh && taskset -c {id} ' \
+                 '/root/on_run.sh && LD_PRELOAD=libVT.so taskset -c {id} ' \
                  'flowgrindd -d -c {id}"'.format(id=host_id) \
                  if image == 'flowgrindd' else ''
         my_cmd = '/bin/sh -c ' + my_cmd
