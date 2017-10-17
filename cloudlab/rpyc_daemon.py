@@ -42,11 +42,8 @@ DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
-           '10.10.{net}.{id}/24; ' \
-           'sudo pipework tc h{id} qdisc add dev {int_if} root handle 1: ' \
-           'htb default 10; ' \
-           'sudo pipework tc h{id} class add dev {int_if} classid 1:10 ' \
-           'parent 1: htb rate {rate}gbit'
+           '10.10.{net}.{id}/24; '
+TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
 NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
 SWITCH_PING = 'ping switch -c1'
 ARP_POISON = "arp -s h{id} `arp | grep switch | tr -s ' ' | cut -d' ' -f3`"
@@ -96,10 +93,12 @@ class SDRTService(rpyc.Service):
                                     id=my_id, cpu_set=cpus,
                                     cpu_limit=CPU_LIMIT, cmd=my_cmd))
         self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
-                                  net=DATA_NET, id=my_id, rate=DATA_RATE))
+                                  net=DATA_NET, id=my_id))
+        self.call(TC.format(int_if=DATA_INT_IF, id=my_id, rate=DATA_RATE))
         self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-                                  net=CONTROL_NET, id=my_id,
-                                  rate=CONTROL_RATE))
+                                  net=CONTROL_NET, id=my_id))
+        self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
+                            rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
 
