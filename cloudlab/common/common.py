@@ -38,15 +38,15 @@ def initializeExperiment():
 
     print '--- populating physical hosts...'
     PHYSICAL_NODES.append('')
-    for i in xrange(NUM_RACKS):
+    for i in xrange(1, NUM_RACKS+1):
         PHYSICAL_NODES.append('host%d' % i)
     print '--- done...'
 
     print '--- populating vhosts...'
     RACKS.append([])
-    for i in xrange(NUM_RACKS):
+    for i in xrange(1, NUM_RACKS+1):
         RACKS.append([])
-        for j in xrange(HOSTS_PER_RACK):
+        for j in xrange(1, HOSTS_PER_RACK+1):
             RACKS[-1].append(node('h%d%d' % (i, j), PHYSICAL_NODES[i]))
     print '--- done...'
 
@@ -82,7 +82,7 @@ def tarExperiment():
 # rpyc_daemon
 ##
 def connect_all_rpyc_daemon():
-    for phost in PHYSICAL_NODES:
+    for phost in PHYSICAL_NODES[1:]:
         RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
 
 
@@ -95,7 +95,7 @@ def launch_flowgrindd(phost):
 
 def launch_all_flowgrindd():
     ts = []
-    for phost in PHYSICAL_NODES:
+    for phost in PHYSICAL_NODES[1:]:
         ts.append(threading.Thread(target=launch_flowgrindd,
                                    args=(phost,)))
         ts[-1].start()
