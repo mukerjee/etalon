@@ -63,6 +63,7 @@ def initializeExperiment():
     print '--- setting default click buffer sizes and traffic sources...'
     click_common.setConfig({})
     print '--- done...'
+    time.sleep(2)
     print '--- done starting experiment...'
     print
     print
@@ -127,6 +128,7 @@ def flowgrind(settings):
         cmd += '-F %d -Hs=%s,d=%s -Ts=%d' % (i, get_flowgrind_host(f['src']),
                                              get_flowgrind_host(f['dst']),
                                              f['time'])
+    cmd = 'echo "%s" && %s' % (cmd, cmd)
     print cmd
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
