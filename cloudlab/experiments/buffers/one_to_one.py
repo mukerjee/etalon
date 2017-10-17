@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-import os
 import sys
 import buffer_common
 sys.path.append("../../common/")
 
-from common import initializeExperiment, rackToRackIperf3, rackToRackPing, \
-    waitOnNodes, setConfig, stopExperiment
+from common import initializeExperiment, flowgrind, tarExperiment
+from click_common import setConfig
 
 initializeExperiment()
 
@@ -16,10 +15,8 @@ for config in buffer_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    rackToRackIperf3(1, 2)
+    settings = {'flows': []}
+    settings['flows'].append({'src': 'r1', 'dst': 'r2'})
+    flowgrind(settings)
 
-    rackToRackPing(1, 2)
-
-    waitOnNodes()
-
-stopExperiment()
+tarExperiment()

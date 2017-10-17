@@ -7,9 +7,13 @@ import os
 import rpyc
 import tarfile
 from subprocess import call, PIPE, STDOUT, Popen
-from click_common import initializeClickControl, setConfig
+from click_common import initializeClickControl, setConfig, FN_FORMAT
 
 RPYC_PORT = 18861
+RPYC_CONNECTIONS = {}
+
+DATA_NET = 1
+CONTROL_NET = 2
 
 ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
@@ -48,7 +52,15 @@ def initializeExperiment():
     for i in xrange(NUM_RACKS):
         RACKS.append([])
         for j in xrange(HOSTS_PER_RACK):
-            RACKS[-1].append(node('host%d%d' % (i, j), PHYSICAL_NODES[i]))
+            RACKS[-1].append(node('h%d%d' % (i, j), PHYSICAL_NODES[i]))
+    print '--- done...'
+
+    print '--- connecting to rpycd...'
+    connect_all_rpyc_daemon()
+    print '--- done...'
+
+    print '--- launching flowgrindd...'
+    launch_all_flowgrindd()
     print '--- done...'
 
     initializeClickControl()
@@ -61,7 +73,7 @@ def initializeExperiment():
     print
 
 
-def stopExperiment():
+def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
         tar.add(e)
@@ -69,6 +81,61 @@ def stopExperiment():
 
     for e in EXPERIMENTS:
         os.remove(e)
+
+
+##
+# rpyc_daemon
+##
+def connect_all_rpyc_daemon():
+    for phost in PHYSICAL_NODES:
+        RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+
+
+##
+# flowgrind
+##
+def launch_flowgrindd(phost):
+    RPYC_CONNECTIONS[phost].root.flowgrindd()
+
+
+def launch_all_flowgrindd():
+    ts = []
+    for phost in PHYSICAL_NODES:
+        ts.append(threading.Thread(target=launch_flowgrindd,
+                                   args=(phost,)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
+
+
+def get_flowgrind_host(h):
+    return '10.10.%s.%s/10.10.%s.%s' % (DATA_NET, h, CONTROL_NET, h)
+
+
+def flowgrind(settings):
+    cmd = 'flowgrind -I '
+    flows = []
+    for f in settings['flows']:
+        if f['src'][0] == 'r' and f['dst'][0] == 'r':
+            s = int(f['src'][1])
+            d = int(f['src'][1])
+            for i in xrange(HOSTS_PER_RACK):
+                fl = dict(f)
+                fl['src'] = 'h%d%d' % (s, i)
+                fl['dst'] = 'h%d%d' % (d, i)
+                flows.append(fl)
+        else:
+            flows.append(f)
+    cmd += '-N %s ' % len(flows)
+    for i, f in enumerate(flows):
+        if 'time' not in f:
+            f['time'] = 2
+        cmd += '-F %d -Hs=%s,d=%s -Ts=%d' % (i, get_flowgrind_host(f['src']),
+                                             get_flowgrind_host(f['dst']),
+                                             f['time'])
+    print cmd
+    fn = FN_FORMAT % ('flowgrind')
+    EXPERIMENTS.append(fn)
+    backgroundRun(cmd, fn)
 
 
 ##

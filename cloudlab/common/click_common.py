@@ -10,6 +10,7 @@ CLICK_SOCKET = None
 CURRENT_CONFIG = {}
 FN_FORMAT = ''
 
+
 ##
 # Running click commands
 ##    
@@ -112,4 +113,4 @@ def setConfig(config):
         setStrobeSchedule()
     FN_FORMAT = '%s-%s-%s-%d-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
                                         c['traffic_source'], c['queue_resize'])
-    FN_FORMAT += '%s-%s-%s.txt'
+    FN_FORMAT += '%s.txt'
