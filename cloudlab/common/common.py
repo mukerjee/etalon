@@ -113,7 +113,7 @@ def flowgrind(settings):
     for f in settings['flows']:
         if f['src'][0] == 'r' and f['dst'][0] == 'r':
             s = int(f['src'][1])
-            d = int(f['src'][1])
+            d = int(f['dst'][1])
             for i in xrange(1, HOSTS_PER_RACK+1):
                 fl = dict(f)
                 fl['src'] = 'h%d%d' % (s, i)
