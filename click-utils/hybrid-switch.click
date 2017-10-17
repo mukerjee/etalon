@@ -1,4 +1,4 @@
-define($DEVNAME eth2)
+define($DEVNAME enp8s0)
 
 define($NUMHOSTS 8)
 define($IP11 10.10.1.11, $IP12 10.10.1.12, $IP13 10.10.1.13, $IP14 10.10.1.14,

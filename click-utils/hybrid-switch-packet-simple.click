@@ -1,4 +1,4 @@
-define($DEVNAME eth2)
+define($DEVNAME enp8s0)
 
 define($IP0 10.10.1.8, $IP1 10.10.1.9)
 

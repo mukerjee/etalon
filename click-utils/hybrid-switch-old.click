@@ -1,4 +1,4 @@
-define($DEVNAME enp8s0d1)
+define($DEVNAME enp8s0)
 
 define($NUMHOSTS 4)
 define($IP0 10.10.1.2, $IP1 10.10.1.3, $IP2 10.10.1.4, $IP3 10.10.1.5)
