@@ -6,9 +6,9 @@ import sys
 import os
 import rpyc
 import tarfile
+import click_common
 from subprocess import call, PIPE, STDOUT, Popen
 from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT
-from click_common import initializeClickControl, setConfig, FN_FORMAT
 
 RPYC_PORT = 18861
 RPYC_CONNECTIONS = {}
@@ -58,10 +58,10 @@ def initializeExperiment():
     launch_all_flowgrindd()
     print '--- done...'
 
-    initializeClickControl()
+    click_common.initializeClickControl()
 
     print '--- setting default click buffer sizes and traffic sources...'
-    setConfig({})
+    click_common.setConfig({})
     print '--- done...'
     print '--- done starting experiment...'
     print
@@ -128,8 +128,8 @@ def flowgrind(settings):
                                              get_flowgrind_host(f['dst']),
                                              f['time'])
     print cmd
-    print FN_FORMAT
-    fn = FN_FORMAT % ('flowgrind')
+    fn = click_common.FN_FORMAT % ('flowgrind')
+    print fn
     EXPERIMENTS.append(fn)
     backgroundRun(cmd, fn)
 
