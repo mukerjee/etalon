@@ -125,9 +125,9 @@ def flowgrind(settings):
     for i, f in enumerate(flows):
         if 'time' not in f:
             f['time'] = 2
-        cmd += '-F %d -Hs=%s,d=%s -Ts=%d' % (i, get_flowgrind_host(f['src']),
-                                             get_flowgrind_host(f['dst']),
-                                             f['time'])
+        cmd += '-F %d -Hs=%s,d=%s -Ts=%d ' % (i, get_flowgrind_host(f['src']),
+                                              get_flowgrind_host(f['dst']),
+                                              f['time'])
     cmd = 'echo "%s" && %s' % (cmd, cmd)
     print cmd
     fn = click_common.FN_FORMAT % ('flowgrind')
