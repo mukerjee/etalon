@@ -148,14 +148,14 @@ class node:
     def __init__(self, hostname, parent):
         self.hostname = hostname
         self.work = []
-        self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
-        self.iperf_async = rpyc.async(self.rpc_conn.root.iperf_client)
+    #     self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
+    #     self.iperf_async = rpyc.async(self.rpc_conn.root.iperf_client)
 
-    def iperf(self, server, fn):
-        if server.__class__ == node:
-            server = server.hostname
-        r = self.iperf_async(self.hostname, server)
-        self.work.append(job('iperf', server, fn, time, r))
+    # def iperf(self, server, fn):
+    #     if server.__class__ == node:
+    #         server = server.hostname
+    #     r = self.iperf_async(self.hostname, server)
+    #     self.work.append(job('iperf', server, fn, time, r))
 
     def get_dones(self):
         dones, not_dones = [], []
