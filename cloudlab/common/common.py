@@ -22,7 +22,7 @@ RACKS = []
 PHYSICAL_NODES = []
 
 THREADS = []
-THREAD_LOCK = threading.lock()
+THREAD_LOCK = threading.Lock()
 
 EXPERIMENTS = []
 
