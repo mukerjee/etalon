@@ -1,6 +1,6 @@
 import socket
 import time
-from common import NUM_RACKS, TIMESTAMP, SCRIPT
+from globals import NUM_RACKS, TIMESTAMP, SCRIPT
 
 TCP_IP = 'localhost'
 TCP_PORT = 1239

@@ -7,6 +7,7 @@ import os
 import rpyc
 import tarfile
 from subprocess import call, PIPE, STDOUT, Popen
+from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT
 from click_common import initializeClickControl, setConfig, FN_FORMAT
 
 RPYC_PORT = 18861
@@ -19,14 +20,10 @@ ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
 RACKS = []
 PHYSICAL_NODES = []
-NUM_RACKS = 8
-HOSTS_PER_RACK = 8
 
 THREADS = []
 THREAD_LOCK = threading.lock()
 
-TIMESTAMP = int(time.time())
-SCRIPT = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 EXPERIMENTS = []
 
 
@@ -34,8 +31,6 @@ EXPERIMENTS = []
 # Experiment commands
 ##
 def initializeExperiment():
-    global NUM_RACKS, HOSTS_PER_RACK
-
     print '--- starting experiment...'
     print '--- clearing local arp...'
     call([os.path.expanduser('~/sdrt/cloudlab/clear_arp.sh')])
