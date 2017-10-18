@@ -83,7 +83,7 @@ print 'in :: FromDPDKDevice(0)'
 print 'out :: ToDPDKDevice(0)'
 print
 
-print 'arp_c :: Classifier(12/0800, 12/0806 20/002, 12/0806 20/0001)'
+print 'arp_c :: Classifier(12/0800, 12/0806 20/0002, 12/0806 20/0001)'
 print 'arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)'
 print 'arp_r :: ARPResponder($DEVNAME)'
 print
