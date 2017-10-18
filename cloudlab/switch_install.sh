@@ -53,6 +53,7 @@ export RTE_TARGET=x86_64-native-linuxapp-gcc
 cd $HOME/sdrt/click
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
+sudo make install
 
 printf '[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf
 sudo sed -i '/(PTP) service/a Requires=network.target\nAfter=network.target' /lib/systemd/system/ptp4l.service
