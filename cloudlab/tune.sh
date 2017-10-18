@@ -25,7 +25,7 @@ sudo ethtool -C $CONTROL_IF tx-usecs 0 rx-usecs 0 adaptive-rx off
 sudo service irqbalance stop
 sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
-# sudo sysctl -w net.ipv4.tcp_wmem="52000 52000 52000"
+sudo sysctl -w net.ipv4.tcp_wmem="65536 65536 65536"
 
 for i in `seq 1 $NUM_HOSTS`
 do
