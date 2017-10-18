@@ -62,7 +62,7 @@ for i in xrange(1, NUM_RACKS+1):
 for i in xrange(1, NUM_RACKS+1):
     print '                  hybrid_switch/packet_up_link%d %d,' % (i, j)
 for i in xrange(1, NUM_RACKS+1):
-    print '                  hybrid_switch/packet_link%d %d,' % (i, j)
+    print '                  hybrid_switch/ps/packet_link%d %d,' % (i, j)
 print ')'
 print
 
