@@ -291,7 +291,7 @@ print
 
 print '  // dropped PS packets -> loss queues'
 for i in xrange(1, NUM_RACKS+1):
-    output = '  ps[%d] -> out_clasfy => ' % (i-1 + NUM_RACKS)
+    output = '  ps[%d] -> out_classfy => ' % (i-1 + NUM_RACKS)
     for j in xrange(1, NUM_RACKS+1):
         output += '[1]q%d%d, ' % (i, j)
     output = output[:-2]
