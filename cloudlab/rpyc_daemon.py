@@ -46,7 +46,8 @@ PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
 NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
 SWITCH_PING = 'ping switch -c1'
-ARP_POISON = "arp -s h{id} `arp | grep switch | tr -s ' ' | cut -d' ' -f3`"
+GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
+ARP_POISON = 'arp -s h{id} {switch_mac}'
 
 
 class SDRTService(rpyc.Service):
@@ -101,6 +102,7 @@ class SDRTService(rpyc.Service):
                             rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
+        smac = self.call(NS_RUN.format(pid=my_pid, cmd=GET_SWITCH_MAC))
 
         my_rack = int(my_id[0])
         for i in xrange(1, NUM_RACKS+1):
@@ -109,7 +111,8 @@ class SDRTService(rpyc.Service):
             for j in xrange(1, HOSTS_PER_RACK+1):
                 dst_id = '%d%d' % (i, j)
                 self.call(NS_RUN.format(pid=my_pid,
-                                        cmd=ARP_POISON.format(id=dst_id)))
+                                        cmd=ARP_POISON.format(
+                                            id=dst_id, switch_mac=smac)))
 
     def launch_rack(self, image):
         self.clean()
