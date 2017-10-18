@@ -40,8 +40,8 @@ def clickReadHandler(element, handler):
 
 
 def setQueueSize(size):
-    for i in xrange(NUM_RACKS - 1):
-        for j in xrange(NUM_RACKS - 1):
+    for i in xrange(1, NUM_RACKS+1):
+        for j in xrange(1, NUM_RACKS+1):
             clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
                               'capacity', size)
 
