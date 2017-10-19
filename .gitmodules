@@ -1,9 +1,0 @@
-[submodule "click-sdrt"]
-	path = click
-	url = https://github.com/mukerjee/click-sdrt
-[submodule "libVT"]
-	path = libVT
-	url = https://github.com/mukerjee/libVT
-[submodule "sdrt-vhost"]
-	path = docker-image
-	url = https://github.com/mukerjee/sdrt-vhost
