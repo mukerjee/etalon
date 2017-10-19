@@ -4,7 +4,7 @@ OFED_VERSION=4.1-1.0.2.0
 
 # get SDRT
 cd $HOME
-GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/mukerjee/sdrt.git
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/sdrt.git
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/sdrt/cloudlab/tune.sh") | crontab -
 sudo rm /var/run/crond.reboot
 

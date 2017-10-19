@@ -5,7 +5,8 @@ DPDK_VERSION=16.11_2.3
 
 # get SDRT
 cd $HOME
-GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/mukerjee/sdrt.git
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/sdrt.git
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/click-sdrt.git
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/sdrt/cloudlab/tune.sh") | crontab -
 sudo rm /var/run/crond.reboot
 
@@ -50,7 +51,7 @@ export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION
 export RTE_TARGET=x86_64-native-linuxapp-gcc
 
 # make Click
-cd $HOME/sdrt/click
+cd $HOME/click-sdrt
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
 sudo make install
