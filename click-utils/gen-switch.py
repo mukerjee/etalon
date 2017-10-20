@@ -20,6 +20,7 @@ print
 k = 0
 ip_def = 'define('
 for i in xrange(1, NUM_RACKS+1):
+    ip_def += '$IP%d 10.10.%d.%d, ' % (i, CONTROL_NET, i)
     for j in xrange(1, HOSTS_PER_RACK+1):
         ip_str = '$IP%d%d' % (i, j)
         ip = '10.10.%d.%d%d' % (CONTROL_NET, i, j)
@@ -91,8 +92,8 @@ print
 print 'elementclass in_classfy {'
 print '  input[0] -> IPClassifier('
 for i in xrange(1, NUM_RACKS+1):
-    rack_str = '    '
-    k = 0
+    rack_str = '    src host $IP%d or ' % (i)
+    k = 1
     for j in xrange(1, HOSTS_PER_RACK+1):
         rack_str += 'src host $IP%d%d or ' % (i, j)
         k += 1
@@ -111,8 +112,8 @@ print
 print 'elementclass out_classfy {'
 print '  input[0] -> IPClassifier('
 for i in xrange(1, NUM_RACKS+1):
-    rack_str = '    '
-    k = 0
+    rack_str = '    dst host $IP%d or ' % (i)
+    k = 1
     for j in xrange(1, HOSTS_PER_RACK+1):
         rack_str += 'dst host $IP%d%d or ' % (i, j)
         k += 1
