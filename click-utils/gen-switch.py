@@ -138,7 +138,7 @@ print
 
 print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
-print '    => ps :: PullSwitch(-1)'
+print '    => ps :: SimplePullSwitch(-1)'
 print '    -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)'
 print '    -> output'
 print '}'
