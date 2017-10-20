@@ -1,6 +1,6 @@
 import socket
 import time
-from globals import NUM_RACKS, TIMESTAMP, SCRIPT
+from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF
 
 TCP_IP = 'localhost'
 TCP_PORT = 1239
@@ -80,9 +80,9 @@ def setStrobeSchedule():
     schedule = '%d ' % ((NUM_RACKS-1)*2)
     for i in xrange(NUM_RACKS-1):
         configstr = '%d %s %d %s '
-        night_len = 20
+        night_len = 20 * TDF
         off_config = ('-1/' * NUM_RACKS)[:-1]
-        duration = night_len * 9 * 20  # night_len * duty_cycle * tdf
+        duration = night_len * 9  # night_len * duty_cycle
         configuration = ''
         for j in xrange(NUM_RACKS):
             configuration += '%d/' % ((i + 1 + j) % NUM_RACKS)
