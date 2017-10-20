@@ -1,6 +1,6 @@
 #!/bin/bash
 
-$NUM_HOSTS=8
+NUM_HOSTS=8
 
 $HOME/sdrt/cloudlab/arp_clear.sh
 
