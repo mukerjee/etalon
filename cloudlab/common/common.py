@@ -236,7 +236,7 @@ def waitWork(host):
 
 
 def waitOnWork():
-    hosts = [host for rack in RACKS for host in rack]
+    hosts = NODES.values()
     map(waitWork, hosts)
 
 
