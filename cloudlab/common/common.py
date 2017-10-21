@@ -78,10 +78,6 @@ def initializeExperiment():
 
 def finishExperiment():
     print '--- finishing experiment...'
-    print '--- waiting on leftover jobs...'
-    waitOnWork()
-    print '--- done...'
-    print
     print '--- killing left over pings...'
     kill_all_ping()
     print '--- done...'
