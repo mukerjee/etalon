@@ -49,6 +49,9 @@ SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
 ARP_POISON = 'arp -s h{id} {switch_mac}'
 
+KILL_PING = 'sudo killall ping'
+PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U -c {count} {dest}'
+
 
 class SDRTService(rpyc.Service):
     def on_connect(self):
@@ -135,6 +138,12 @@ class SDRTService(rpyc.Service):
     def exposed_hadoop(self):
         self.launch_rack('hadoop')
 
+    def exposed_kill_all_ping(self):
+        self.call(KILL_PING)
+
+    def exposed_ping(self, dst, cnt):
+        return self.call(PING.format(interval=str(1.0 / TDF),
+                                     count=cnt, dest=dst))
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer

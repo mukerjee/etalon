@@ -20,6 +20,7 @@ ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
 RACKS = []
 PHYSICAL_NODES = []
+NODES = {}
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -46,12 +47,17 @@ def initializeExperiment():
     RACKS.append([])
     for i in xrange(1, NUM_RACKS+1):
         RACKS.append([])
+        NODES['host%d' % i].append(node('host%d' % i, PHYSICAL_NODES[i]))
         for j in xrange(1, HOSTS_PER_RACK+1):
             RACKS[-1].append(node('h%d%d' % (i, j), PHYSICAL_NODES[i]))
     print '--- done...'
 
     print '--- connecting to rpycd...'
     connect_all_rpyc_daemon()
+    print '--- done...'
+
+    print '--- killing any left over pings...'
+    kill_all_ping()
     print '--- done...'
 
     print '--- launching flowgrindd...'
@@ -69,6 +75,20 @@ def initializeExperiment():
     print
 
 
+def finishExperiment():
+    print '--- finishing experiment...'
+    print '--- waiting on leftover jobs...'
+    waitOnWork()
+    print '--- done...'
+    print
+    print '--- killing left over pings...'
+    kill_all_ping()
+    print '--- done...'
+    print '--- tarring output...'
+    tarExperiment()
+    print '--- done...'
+    print '--- experiment finished'
+
 def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
@@ -85,6 +105,28 @@ def tarExperiment():
 def connect_all_rpyc_daemon():
     for phost in PHYSICAL_NODES[1:]:
         RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+
+
+##
+# ping
+##
+def rack_ping(src, dst):
+    src_node = NODES['host%d' % src]
+    dst_node = NODES['host%d' % dst]
+    fn = click_common.FN_FORMAT % ('ping-%s-%s' % (src, dst))
+    src_node.ping(dst_node, fn)
+
+
+def all_rack_ping():
+    for i in xrange(1, NUM_RACKS+1):
+        for j in xrange(1, NUM_RACKS+1):
+            if i != j:
+                rack_ping(i, j)
+
+
+def kill_all_ping():
+    for phost in PHYSICAL_NODES[1:]:
+        RPYC_CONNECTIONS[phost].root.kill_all_ping()
 
 
 ##
@@ -140,7 +182,7 @@ def flowgrind(settings):
 # VHost Node
 ##
 class job:
-    def __init__(self, type, server, fn, time, result):
+    def __init__(self, type, server, fn, result):
         self.type = type
         self.server = server
         self.fn = fn
@@ -151,14 +193,16 @@ class node:
     def __init__(self, hostname, parent):
         self.hostname = hostname
         self.work = []
-    #     self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
-    #     self.iperf_async = rpyc.async(self.rpc_conn.root.iperf_client)
+        self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
+        self.ping_async = rpyc.async(self.rpc_conn.root.ping)
 
-    # def iperf(self, server, fn):
-    #     if server.__class__ == node:
-    #         server = server.hostname
-    #     r = self.iperf_async(self.hostname, server)
-    #     self.work.append(job('iperf', server, fn, time, r))
+    def ping(self, dst, fn):
+        if dst.__class__ == node:
+            dst = dst.hostname
+        r = self.ping_async(dst, 40)
+        self.work.append(job('ping', dst, fn, r))
+        print fn
+        EXPERIMENTS.append(fn)
 
     def get_dones(self):
         dones, not_dones = [], []
