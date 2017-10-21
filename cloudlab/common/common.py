@@ -47,9 +47,10 @@ def initializeExperiment():
     RACKS.append([])
     for i in xrange(1, NUM_RACKS+1):
         RACKS.append([])
-        NODES['host%d' % i].append(node('host%d' % i, PHYSICAL_NODES[i]))
+        NODES['host%d' % i] = node('host%d' % i, PHYSICAL_NODES[i])
         for j in xrange(1, HOSTS_PER_RACK+1):
             RACKS[-1].append(node('h%d%d' % (i, j), PHYSICAL_NODES[i]))
+            NODES['h%d%d' % (i, j)] = RACKS[-1][-1]
     print '--- done...'
 
     print '--- connecting to rpycd...'
