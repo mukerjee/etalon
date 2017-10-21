@@ -1,33 +1,31 @@
 define($DEVNAME enp8s0)
 
-define($IP0 10.10.1.8, $IP1 10.10.1.9)
+define($IP1 10.10.1.1, $IP2 10.10.1.2)
 
 define ($PACKET_BW 0.5Gbps)
 define ($DELAY_LATENCY 0.1)
 
-StaticThreadSched(in 1,)
-		  hybrid_switch/packet_up_link0 6,
+StaticThreadSched(in 1,
+                  hybrid_switch/packet_up_link0 6,
                   hybrid_switch/packet_up_link1 6,
-		  hybrid_switch/ps/packet_link0 6,
-		  hybrid_switch/ps/packet_link1 6,
-		  )
+                  hybrid_switch/ps/packet_link0 6,
+                  hybrid_switch/ps/packet_link1 6,
+                  )
 
-t :: ARPTable
-elementclass dp { $num |
-in :: FromDPDKDevice(0, BURST 1)
+in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
 
 arp_c :: Classifier(12/0800, 12/0806 20/0002, 12/0806 20/0001)
-arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth, TABLE t)
+arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)
 arp_r :: ARPResponder($DEVNAME)
 
 elementclass in_classfy {
-    input[0] -> IPClassifier(src host $IP0, src host $IP1)
+    input[0] -> IPClassifier(src host $IP1, src host $IP2)
              => [0, 1]output
 }
 
 elementclass out_classfy {
-    input[0] -> IPClassifier(dst host $IP0, dst host $IP1)
+    input[0] -> IPClassifier(dst host $IP1, dst host $IP2)
              => [0, 1]output
 }
 
@@ -62,9 +60,9 @@ hybrid_switch :: {
     // ToR queues (in here for convenience)
     q00, q01, q10, q11
  :: {
-        input[0] -> q ::Queue(CAPACITY 100)
-	input[1] -> lq :: Queue(CAPACITY 1) // loss queue
-	lq, q => PrioSched -> output
+      input[0] -> q ::Queue(CAPACITY 100)
+      input[1] -> lq :: Queue(CAPACITY 1) // loss queue
+      lq, q => PrioSched -> output
     }
 
     packet_up_link0, packet_up_link1 :: packet_link
@@ -88,7 +86,7 @@ in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16)
    => hybrid_switch[0,1]
    -> arp -> out
 
-arp_c[1] -> Print -> [1]arp
+arp_c[1] -> [1]arp
 arp_c[2] -> arp_r -> out
 
 pc -> ICMPPingResponder -> arp
