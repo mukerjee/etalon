@@ -44,3 +44,9 @@ then  # switch
 else  # host
     sudo sed -i "s/10.10.$CONTROL_NET/10.10.$DATA_NET/" /etc/hosts
 fi
+
+if ! hostname | grep -q switch
+then
+    ~/sdrt/cloudlab/arp_clear.sh
+    ~/sdrt/cloudlab/arp_poison.sh
+fi
