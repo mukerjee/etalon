@@ -90,6 +90,7 @@ def finishExperiment():
     print '--- done...'
     print '--- experiment finished'
 
+
 def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
