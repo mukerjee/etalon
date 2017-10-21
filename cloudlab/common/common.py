@@ -213,17 +213,10 @@ class node:
         return dones
 
     def save_done(self, done):
-        rc, sout, serr = done.result.value
-        if rc == 0:
-            print '%s: %s %s done' % (self.hostname, done.type, done.server)
-            print 'fn = %s' % (done.fn)
-            open(done.fn, 'w').write(sout)
-        else:
-            print '%s: error in %s %s %s' % (self.hostname, done.type,
-                                             done.server, done.time)
-            print 'fn = %s' % (done.fn)
-            sys.stdout.write(sout)
-            sys.stdout.write(serr)
+        out = done.result.value
+        print '%s: %s %s done' % (self.hostname, done.type, done.server)
+        print 'fn = %s' % (done.fn)
+        open(done.fn, 'w').write(out)
 
 
 def waitWork(host):
