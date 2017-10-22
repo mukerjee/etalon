@@ -141,9 +141,10 @@ class SDRTService(rpyc.Service):
     def exposed_kill_all_ping(self):
         self.call(KILL_PING, check_rc=False)
 
-    def exposed_ping(self, dst, cnt):
-        return self.call(PING.format(interval=str(1.0 / TDF),
-                                     count=cnt, dest=dst))
+    def exposed_ping(self, dst, t):
+        intv = 0.0002 / TDF
+        return self.call(PING.format(interval=str(intv),
+                                     count=int(t / intv), dest=dst))
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
