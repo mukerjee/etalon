@@ -5,6 +5,7 @@ OFED_VERSION=4.1-1.0.2.0
 # get SDRT
 cd $HOME
 GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/sdrt.git
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/libVT.git
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/sdrt/cloudlab/tune.sh") | crontab -
 sudo rm /var/run/crond.reboot
 
@@ -44,5 +45,8 @@ sudo sed -i 's/-w -s eth0/-a -r/' /lib/systemd/system/phc2sys.service
 sudo systemctl daemon-reload
 sudo systemctl enable phc2sys.service
 sudo systemctl disable ntp.service
+
+cd $HOME/libVT
+sudo make install
 
 sudo reboot
