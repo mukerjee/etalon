@@ -4,7 +4,6 @@ import time
 import threading
 import sys
 import os
-# import multiprocessing
 import tarfile
 import rpyc
 import click_common
@@ -125,10 +124,13 @@ def all_rack_ping():
 
 
 def kill_all_ping():
-    # p = multiprocessing.Pool()
-    map(lambda x: RPYC_CONNECTIONS[x].root.kill_all_ping(),
-        PHYSICAL_NODES[1:])
-    # p.close()
+    results = []
+    for phost in PHYSICAL_NODES[1:]:
+        kp = rpyc.async(RPYC_CONNECTIONS[phost].root.kill_all_ping)
+        results.append(kp())
+    for r in results:
+        while not r.ready:
+            time.sleep(0.1)
 
 
 ##
