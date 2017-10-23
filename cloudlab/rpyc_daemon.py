@@ -49,8 +49,8 @@ SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
 ARP_POISON = 'arp -s h{id} {switch_mac}'
 
-KILL_PING = 'sudo killall ping 2> /dev/null'
-PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U -w {deadline} {dest}'
+KILL_PING = 'sudo killall -s SIGINT ping 2> /dev/null'
+PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U {dest}'
 
 
 class SDRTService(rpyc.Service):
@@ -141,10 +141,9 @@ class SDRTService(rpyc.Service):
     def exposed_kill_all_ping(self):
         self.call(KILL_PING, check_rc=False)
 
-    def exposed_ping(self, dst, t):
+    def exposed_ping(self, dst):
         intv = 0.0001 / TDF
-        return self.call(PING.format(interval=str(intv),
-                                     deadline=t, dest=dst))
+        return self.call(PING.format(interval=str(intv), dest=dst))
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
