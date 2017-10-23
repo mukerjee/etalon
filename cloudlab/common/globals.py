@@ -2,7 +2,7 @@ import time
 import sys
 import os
 
-NUM_RACKS = 2
+NUM_RACKS = 8
 HOSTS_PER_RACK = 8
 TDF = 20
 TIMESTAMP = int(time.time())
