@@ -4,8 +4,9 @@ import time
 import threading
 import sys
 import os
-import rpyc
+import multiprocessing
 import tarfile
+import rpyc
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
 from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT
@@ -124,8 +125,10 @@ def all_rack_ping():
 
 
 def kill_all_ping():
-    for phost in PHYSICAL_NODES[1:]:
-        RPYC_CONNECTIONS[phost].root.kill_all_ping()
+    p = multiprocessing.Pool()
+    p.map(lambda x: RPYC_CONNECTIONS[x].root.kill_all_ping(),
+          PHYSICAL_NODES[1:])
+    p.close()
 
 
 ##
@@ -194,12 +197,12 @@ class node:
         self.hostname = hostname
         self.work = []
         self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
+        self.ping_async = rpyc.async(self.rpc_conn.root.ping)
 
     def ping(self, dst, fn):
         if dst.__class__ == node:
             dst = dst.hostname
-        pa = rpyc.async(self.rpc_conn.root.ping)
-        r = pa(dst)
+        r = self.ping_async(dst)
         self.work.append(job('ping', dst, fn, r))
         print fn
         EXPERIMENTS.append(fn)
