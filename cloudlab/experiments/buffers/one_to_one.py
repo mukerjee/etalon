@@ -5,7 +5,7 @@ import buffer_common
 sys.path.append("../../common/")
 
 from common import initializeExperiment, finishExperiment, flowgrind, \
-    all_rack_ping, waitOnWork
+    rack_ping, waitOnWork
 from click_common import setConfig
 
 initializeExperiment()
@@ -16,7 +16,7 @@ for config in buffer_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    all_rack_ping()
+    rack_ping(1, 2)
 
     settings = {'flows': []}
     settings['flows'].append({'src': 'r1', 'dst': 'r2'})
