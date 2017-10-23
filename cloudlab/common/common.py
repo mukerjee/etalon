@@ -196,13 +196,14 @@ class node:
     def __init__(self, hostname, parent):
         self.hostname = hostname
         self.work = []
-        self.rpc_conn = rpyc.connect(parent, RPYC_PORT)
-        self.ping_async = rpyc.async(self.rpc_conn.root.ping)
+        self.parent = parent
 
     def ping(self, dst, fn):
         if dst.__class__ == node:
             dst = dst.hostname
-        r = self.ping_async(dst)
+        c = rpyc.connect(self.parent, RPYC_PORT)
+        pa = rpyc.async(c.root.ping)
+        r = pa(dst)
         self.work.append(job('ping', dst, fn, r))
         print fn
         EXPERIMENTS.append(fn)
