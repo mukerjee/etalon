@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 NIC = 'enp8s0'
-NUM_RACKS = 4
+NUM_RACKS = 8
 HOSTS_PER_RACK = 8
 CONTROL_NET = 1
 TDF = 20.0
