@@ -142,7 +142,7 @@ class SDRTService(rpyc.Service):
         self.call(KILL_PING, check_rc=False)
 
     def exposed_ping(self, dst, t):
-        intv = 0.0002 / TDF
+        intv = 0.001 / TDF
         return self.call(PING.format(interval=str(intv),
                                      count=int(t / intv), dest=dst))
 
