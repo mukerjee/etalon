@@ -85,6 +85,7 @@ def finishExperiment():
     tarExperiment()
     print '--- done...'
     print '--- experiment finished'
+    print TIMESTAMP
 
 
 def tarExperiment():
@@ -174,6 +175,7 @@ def flowgrind(settings):
     print fn
     EXPERIMENTS.append(fn)
     backgroundRun(cmd, fn)
+    kill_all_ping()
 
 
 ##
@@ -197,7 +199,7 @@ class node:
     def ping(self, dst, fn):
         if dst.__class__ == node:
             dst = dst.hostname
-        r = self.ping_async(dst, 40)
+        r = self.ping_async(dst)
         self.work.append(job('ping', dst, fn, r))
         print fn
         EXPERIMENTS.append(fn)
