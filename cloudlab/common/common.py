@@ -185,11 +185,13 @@ def flowgrind(settings):
 # VHost Node
 ##
 class job:
-    def __init__(self, type, server, fn, result):
+    def __init__(self, type, server, fn, result, conn, async):
         self.type = type
         self.server = server
         self.fn = fn
         self.result = result
+        self.conn = conn
+        self.async = async
 
 
 class node:
@@ -204,7 +206,7 @@ class node:
         c = rpyc.connect(self.parent, RPYC_PORT)
         pa = rpyc.async(c.root.ping)
         r = pa(dst)
-        self.work.append(job('ping', dst, fn, r))
+        self.work.append(job('ping', dst, fn, r, c, pa))
         print fn
         EXPERIMENTS.append(fn)
 
