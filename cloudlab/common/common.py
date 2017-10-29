@@ -59,6 +59,7 @@ def initializeExperiment():
 
     print '--- killing any left over pings...'
     kill_all_ping()
+    kill_all_sockperf()
     print '--- done...'
 
     print '--- launching flowgrindd...'
