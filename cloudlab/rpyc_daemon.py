@@ -54,7 +54,7 @@ PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U {dest}'
 
 KILL_SOCKPERF = 'sudo killall -s SIGINT sockperf 2> /dev/null'
 SOCKPERF = 'sudo LD_PRELOAD=libVT.so sockperf pp -i {dest} -t2'
-SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
+SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize&'
 
 
 class SDRTService(rpyc.Service):
