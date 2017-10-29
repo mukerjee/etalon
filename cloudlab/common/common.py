@@ -59,7 +59,11 @@ def initializeExperiment():
 
     print '--- killing any left over pings...'
     kill_all_ping()
+    print '--- done...'
+
+    print '--- restarting sockperf...'
     kill_all_sockperf()
+    launch_all_sockperf()
     print '--- done...'
 
     print '--- launching flowgrindd...'
@@ -151,6 +155,16 @@ def all_rack_sockperf():
                 rack_sockperf(i, j)
 
 
+def launch_all_sockperf():
+    results = []
+    for phost in PHYSICAL_NODES[1:]:
+        kp = rpyc.async(RPYC_CONNECTIONS[phost].root.launch_sockperf_daemon)
+        results.append(kp())
+    for r in results:
+        while not r.ready:
+            time.sleep(0.1)
+
+
 def kill_all_sockperf():
     results = []
     for phost in PHYSICAL_NODES[1:]:
@@ -229,8 +243,6 @@ class node:
         self.hostname = hostname
         self.work = []
         self.parent = parent
-        c = rpyc.connect(self.parent, RPYC_PORT)
-        c.root.launch_sockperf_daemon()
 
     def ping(self, dst, fn):
         if dst.__class__ == node:
