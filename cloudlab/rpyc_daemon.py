@@ -155,7 +155,7 @@ class SDRTService(rpyc.Service):
     def exposed_sockperf(self, dst):
         return self.call(SOCKPERF.format(dest=dst))
 
-    def exposed_launch_sockperf_daemon(self, dst):
+    def exposed_launch_sockperf_daemon(self):
         return self.call(SOCKPERF_DAEMON)
 
 if __name__ == '__main__':
