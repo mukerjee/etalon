@@ -52,6 +52,10 @@ ARP_POISON = 'arp -s h{id} {switch_mac}'
 KILL_PING = 'sudo killall -s SIGINT ping 2> /dev/null'
 PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U {dest}'
 
+KILL_SOCKPERF = 'sudo killall -s SIGINT sockperf 2> /dev/null'
+SOCKPERF = 'sudo LD_PRELOAD=libVT.so sockperf pp -i {dest} -t2'
+SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
+
 
 class SDRTService(rpyc.Service):
     def on_connect(self):
@@ -144,6 +148,15 @@ class SDRTService(rpyc.Service):
     def exposed_ping(self, dst):
         intv = '%f' % (0.0001 / TDF)
         return self.call(PING.format(interval=intv, dest=dst))
+
+    def exposed_kill_all_sockperf(self):
+        self.call(KILL_SOCKPERF, check_rc=False)
+
+    def exposed_sockperf(self, dst):
+        return self.call(SOCKPERF.format(dest=dst))
+
+    def exposed_launch_sockperf_daemon(self, dst):
+        return self.call(SOCKPERF_DAEMON)
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer

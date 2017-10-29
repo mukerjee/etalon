@@ -134,6 +134,33 @@ def kill_all_ping():
 
 
 ##
+# sockperf
+##
+def rack_sockperf(src, dst):
+    src_node = NODES['host%d' % src]
+    dst_node = NODES['host%d' % dst]
+    fn = click_common.FN_FORMAT % ('sockperf-%s-%s' % (src, dst))
+    src_node.sockperf(dst_node, fn)
+
+
+def all_rack_sockperf():
+    for i in xrange(1, NUM_RACKS+1):
+        for j in xrange(1, NUM_RACKS+1):
+            if i != j:
+                rack_sockperf(i, j)
+
+
+def kill_all_sockperf():
+    results = []
+    for phost in PHYSICAL_NODES[1:]:
+        kp = rpyc.async(RPYC_CONNECTIONS[phost].root.kill_all_sockperf)
+        results.append(kp())
+    for r in results:
+        while not r.ready:
+            time.sleep(0.1)
+
+
+##
 # flowgrind
 ##
 def launch_flowgrindd(phost):
@@ -201,6 +228,8 @@ class node:
         self.hostname = hostname
         self.work = []
         self.parent = parent
+        c = rpyc.connect(self.parent, RPYC_PORT)
+        c.root.launch_sockperf_daemon()
 
     def ping(self, dst, fn):
         if dst.__class__ == node:
@@ -209,6 +238,16 @@ class node:
         pa = rpyc.async(c.root.ping)
         r = pa(dst)
         self.work.append(job('ping', dst, fn, r, c, pa))
+        print fn
+        EXPERIMENTS.append(fn)
+
+    def sockperf(self, dst, fn):
+        if dst.__class__ == node:
+            dst = dst.hostname
+        c = rpyc.connect(self.parent, RPYC_PORT)
+        spa = rpyc.async(c.root.sockperf)
+        r = spa(dst)
+        self.work.append(job('sockperf', dst, fn, r, c, spa))
         print fn
         EXPERIMENTS.append(fn)
 

@@ -46,6 +46,16 @@ sudo systemctl daemon-reload
 sudo systemctl enable phc2sys.service
 sudo systemctl disable ntp.service
 
+# get sockperf
+cd $HOME
+git clone https://github.com/Mellanox/sockperf.git
+cd sockperf
+./autogen.sh
+./configure
+make -j
+sudo make install
+
+
 cd $HOME/libVT
 sudo make install
 
