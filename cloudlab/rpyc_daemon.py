@@ -3,7 +3,7 @@
 import socket
 import threading
 import rpyc
-from subprocess import check_output, CalledProcessError
+from subprocess import check_output, CalledProcessError, Popen
 
 RPYC_PORT = 18861
 
@@ -54,7 +54,7 @@ PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U {dest}'
 
 KILL_SOCKPERF = 'sudo killall -s SIGINT sockperf 2> /dev/null'
 SOCKPERF = 'sudo LD_PRELOAD=libVT.so sockperf pp -i {dest} -t2'
-SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize&'
+SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
 
 
 class SDRTService(rpyc.Service):
@@ -63,6 +63,9 @@ class SDRTService(rpyc.Service):
 
     def on_disconnection(self):
         pass
+
+    def call_background(self, cmd):
+        return Popen(cmd, shell=True)
 
     def call(self, cmd, check_rc=True):
         if not self.pulled:
@@ -156,7 +159,7 @@ class SDRTService(rpyc.Service):
         return self.call(SOCKPERF.format(dest=dst))
 
     def exposed_launch_sockperf_daemon(self):
-        return self.call(SOCKPERF_DAEMON)
+        return self.call_background(SOCKPERF_DAEMON)
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
