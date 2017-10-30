@@ -53,7 +53,8 @@ KILL_PING = 'sudo killall -s SIGINT ping 2> /dev/null'
 PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U {dest}'
 
 KILL_SOCKPERF = 'sudo killall -s SIGINT sockperf 2> /dev/null'
-SOCKPERF = 'sudo LD_PRELOAD=libVT.so sockperf pp -i {dest} -t2'
+SOCKPERF = "sudo LD_PRELOAD=libVT.so sockperf pp -i " \
+           "`getent hosts {dest} | awk '{print $1}'` -t2"
 SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
 
 
