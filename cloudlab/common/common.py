@@ -83,8 +83,8 @@ def initializeExperiment():
 
 def finishExperiment():
     print '--- finishing experiment...'
-    print '--- killing left over pings...'
-    kill_all_ping()
+    print '--- killing left over sockperf...'
+    kill_all_sockperf()
     print '--- done...'
     print '--- tarring output...'
     tarExperiment()
