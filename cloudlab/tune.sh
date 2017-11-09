@@ -27,6 +27,10 @@ sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
 # sudo sysctl -w net.ipv4.tcp_wmem="98304 98304 98304"
 
+sudo insmod $HOME/sdrt/tcp_reno_tuner/tcp_reno_tuner.ko 2> /dev/null
+echo 20 | sudo tee /sys/module/tcp_reno_tuner/parameters/ca_scale
+sudo sysctl -w net.ipv4.tcp_congestion_control=reno-tuner
+
 for i in `seq 1 $NUM_HOSTS`
 do
     for j in `seq 1 $NUM_HOSTS`
