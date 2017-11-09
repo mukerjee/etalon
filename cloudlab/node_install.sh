@@ -48,7 +48,7 @@ sudo systemctl disable ntp.service
 
 # get sockperf
 cd $HOME
-git clone https://github.com/Mellanox/sockperf.git
+git clone https://github.com/mukerjee/sockperf.git
 cd sockperf
 ./autogen.sh
 ./configure
