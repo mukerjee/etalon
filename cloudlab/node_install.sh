@@ -59,4 +59,7 @@ sudo make install
 cd $HOME/libVT
 sudo make install
 
+cd $HOME/sdrt/tcp_reno_tuner
+make
+
 sudo reboot

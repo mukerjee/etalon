@@ -8,7 +8,7 @@ import tarfile
 import rpyc
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
-from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT
+from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, EXPERIMENTS
 
 RPYC_PORT = 18861
 RPYC_CONNECTIONS = {}
@@ -24,8 +24,6 @@ NODES = {}
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
-
-EXPERIMENTS = []
 
 
 ##
@@ -57,14 +55,14 @@ def initializeExperiment():
     connect_all_rpyc_daemon()
     print '--- done...'
 
-    print '--- killing any left over pings...'
-    kill_all_ping()
-    print '--- done...'
+    # print '--- killing any left over pings...'
+    # kill_all_ping()
+    # print '--- done...'
 
-    print '--- restarting sockperf...'
-    kill_all_sockperf()
-    launch_all_sockperf()
-    print '--- done...'
+    # print '--- restarting sockperf...'
+    # kill_all_sockperf()
+    # launch_all_sockperf()
+    # print '--- done...'
 
     print '--- launching flowgrindd...'
     launch_all_flowgrindd()
@@ -83,8 +81,11 @@ def initializeExperiment():
 
 def finishExperiment():
     print '--- finishing experiment...'
-    print '--- killing left over sockperf...'
-    kill_all_sockperf()
+    # print '--- killing left over sockperf...'
+    # kill_all_sockperf()
+    # print '--- done...'
+    print '--- closing final log...'
+    click_common.setLog('/tmp/hslog.log')
     print '--- done...'
     print '--- tarring output...'
     tarExperiment()
@@ -100,7 +101,8 @@ def tarExperiment():
     tar.close()
 
     for e in EXPERIMENTS:
-        os.remove(e)
+        if 'tmp' not in e:
+            os.remove(e)
 
 
 ##
@@ -213,9 +215,9 @@ def flowgrind(settings):
     for i, f in enumerate(flows):
         if 'time' not in f:
             f['time'] = 2
-        cmd += '-F %d -Hs=%s,d=%s -Ts=%d ' % (i, get_flowgrind_host(f['src']),
-                                              get_flowgrind_host(f['dst']),
-                                              f['time'])
+        cmd += '-F %d -Hs=%s,d=%s -Ts=%d -Ss=8948 ' % (i, get_flowgrind_host(f['src']),
+                                                       get_flowgrind_host(f['dst']),
+                                                       f['time'])
     cmd = 'echo "%s" && %s' % (cmd, cmd)
     print cmd
     fn = click_common.FN_FORMAT % ('flowgrind')

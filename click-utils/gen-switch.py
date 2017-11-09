@@ -264,7 +264,8 @@ print '  ps :: packet_switch'
 print
 
 for i in xrange(1, NUM_RACKS+1):
-    input = '  input[%d] -> c%d => ' % (i-1, i)
+    # Input port paint
+    input = '  input[%d] -> Paint(%d, 20) -> c%d => ' % (i-1, i, i)
     for j in xrange(1, NUM_RACKS+1):
         input += 'q%d%d, ' % (i, j)
     input = input[:-2]
@@ -276,7 +277,10 @@ for i in xrange(1, NUM_RACKS+1):
     for j in xrange(1, NUM_RACKS+1):
         output += 'q%d%d, ' % (j, i)
     output = output[:-2]
-    output += ' => circuit_link%d -> [%d]output' % (i, i-1)
+    # circuit for this dest, 'went over circuit', output paint
+    output += ' => circuit_link%d -> coc%d :: Paint(0, 23) -> ' \
+              'Paint(1, 22) -> Paint(%d, 21) -> ' \
+              '[%d]output' % (i, i, i, i-1)
     print output
 print
 
@@ -285,8 +289,10 @@ for i in xrange(1, NUM_RACKS+1):
     for j in xrange(1, NUM_RACKS+1):
         output += 'q%d%d, ' % (i, j)
     output = output[:-2]
-    output += ' => packet_up_link%d -> [%d]ps[%d] -> [%d]output' % (
-        i, i-1, i-1, i-1)
+    # circuit for this dest, 'went over packet', output paint
+    output += ' => packet_up_link%d -> [%d]ps[%d] -> ' \
+              'cop%d :: Paint(0, 23) -> Paint(2, 22) -> ' \
+              'Paint(%d, 21) -> [%d]output' % (i, i-1, i-1, i, i, i-1)
     print output
 print
 
@@ -305,9 +311,11 @@ print
 print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
     '-> GetIPAddress(16)'
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
+# print '   -> ReTimestamp -> SetTCPChecksum -> SetIPChecksum'
+print '   -> SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
-print '   -> arp -> out'
+print '   -> hsl :: HSLog -> arp -> out'
 print
 
 print 'arp_c[1] -> [1]arp'

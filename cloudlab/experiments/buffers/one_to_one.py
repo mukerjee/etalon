@@ -16,7 +16,7 @@ for config in buffer_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    rack_sockperf(1, 2)
+    # rack_sockperf(1, 2)
 
     settings = {'flows': []}
     settings['flows'].append({'src': 'r1', 'dst': 'r2'})
