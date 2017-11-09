@@ -1,6 +1,6 @@
 import socket
 import time
-from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF
+from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS
 
 TCP_IP = 'localhost'
 TCP_PORT = 1239
@@ -37,6 +37,14 @@ def clickReadHandler(element, handler):
     data = CLICK_SOCKET.recv(BUFFER_SIZE).strip()
     print data
     return data
+
+
+def setLog(log):
+    print 'changing log fn to %s' % log
+    clickWriteHandler('hsl', 'openLog', log)
+    if log != '/tmp/hslog.log':
+        EXPERIMENTS.append(log)
+    time.sleep(0.1)
 
 
 def setQueueSize(size):
@@ -114,3 +122,5 @@ def setConfig(config):
     FN_FORMAT = '%s-%s-%s-%d-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
                                         c['traffic_source'], c['queue_resize'])
     FN_FORMAT += '%s.txt'
+    if config:
+        setLog('/tmp/' + FN_FORMAT % 'click')
