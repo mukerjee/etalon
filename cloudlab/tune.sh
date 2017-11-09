@@ -31,6 +31,8 @@ sudo insmod $HOME/sdrt/tcp_reno_tuner/tcp_reno_tuner.ko 2> /dev/null
 echo 20 | sudo tee /sys/module/tcp_reno_tuner/parameters/ca_scale
 sudo sysctl -w net.ipv4.tcp_congestion_control=reno-tuner
 
+$HOME/sdrt/cloudlab/arp_poison.sh
+
 for i in `seq 1 $NUM_HOSTS`
 do
     for j in `seq 1 $NUM_HOSTS`
