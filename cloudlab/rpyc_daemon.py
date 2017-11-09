@@ -57,6 +57,8 @@ SOCKPERF = "sudo LD_PRELOAD=libVT.so sockperf pp -i " \
            "`getent hosts {dest} | awk '{{print $1}}'` -t2"
 SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
 
+RTO_MIN='ip route change 10.10.{net}.0/24 dev {int_if} proto kernel ' \
+    'scope link src 10.10.{net}.{id} rto_min 1ms'
 
 class SDRTService(rpyc.Service):
     def on_connect(self):
@@ -112,6 +114,9 @@ class SDRTService(rpyc.Service):
         self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
                             rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
+        self.call(NS_RUN.format(pid=my_pid, cmd=RTO_MIN.format(net=DATA_NET,
+                                                               int_if=DATA_INT_IF,
+                                                               id=my_id)))
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
         smac = self.call(NS_RUN.format(pid=my_pid, cmd=GET_SWITCH_MAC))
 
