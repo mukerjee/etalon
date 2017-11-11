@@ -8,7 +8,7 @@ from subprocess import check_output, CalledProcessError, Popen
 RPYC_PORT = 18861
 
 NUM_RACKS = 8
-HOSTS_PER_RACK = 8
+HOSTS_PER_RACK = 16
 TDF = 20.0
 SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
@@ -97,10 +97,10 @@ class SDRTService(rpyc.Service):
 
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
-        cpus = str(host_id) if image == 'flowgrindd' else CPU_SET
+        cpus = str((host_id % (CPU_COUNT-1)) + 1) if image == 'flowgrindd' else CPU_SET
         my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
-                 '/root/on_run.sh && LD_PRELOAD=libVT.so taskset -c {id} ' \
-                 'flowgrindd -d -c {id}"'.format(id=host_id) \
+                 '/root/on_run.sh && LD_PRELOAD=libVT.so taskset -c {cpu} ' \
+                 'flowgrindd -d -c {cpu}"'.format(cpu=cpus) \
                  if image == 'flowgrindd' else ''
         my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
@@ -133,7 +133,7 @@ class SDRTService(rpyc.Service):
     def launch_rack(self, image):
         self.clean()
         ts = []
-        for i in xrange(1, NUM_RACKS+1):
+        for i in xrange(1, HOSTS_PER_RACK+1):
             ts.append(threading.Thread(target=self.launch,
                                        args=(image, i)))
             ts[-1].start()
