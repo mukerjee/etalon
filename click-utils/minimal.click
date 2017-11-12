@@ -5,11 +5,12 @@ define($IP1 10.10.1.1, $IP2 10.10.1.2)
 
 define ($CIRCUIT_BW 4Gbps, $PACKET_BW 0.5Gbps)
 define ($DELAY_LATENCY 0.0002)
-// define ($DELAY_LATENCY 0.0)
 define ($BIG_QUEUE_SIZE 64)
 
 Script(write runner.setSchedule 14 3600 1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/0 400 -1/-1)
+// Script(write runner.setSchedule 14 36000 1/-1 4000 -1/-1 36000 -1/-1 4000 -1/-1 36000 -1/-1 4000 -1/-1 36000 -1/-1 4000 -1/-1 36000 -1/-1 4000 -1/-1 36000 -1/-1 4000 -1/-1 36000 -1/0 4000 -1/-1)
 // Script(write runner.setSchedule 1 3600 1/0)
+// Script(write runner.setSchedule 1 3600 -1/-1)
 // Script(write runner.setDoResize true)
 
 
