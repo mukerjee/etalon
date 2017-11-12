@@ -2,7 +2,7 @@
 
 NIC = 'enp8s0'
 NUM_RACKS = 8
-HOSTS_PER_RACK = 8
+HOSTS_PER_RACK = 16
 CONTROL_NET = 1
 TDF = 20.0
 CIRCUIT_BW = 80 / TDF
@@ -95,6 +95,8 @@ for i in xrange(1, NUM_RACKS+1):
     rack_str = '    src host $IP%d or ' % (i)
     k = 1
     for j in xrange(1, HOSTS_PER_RACK+1):
+        if i > 2 and j > 9:
+            continue
         rack_str += 'src host $IP%d%d or ' % (i, j)
         k += 1
         if k == 4:
@@ -115,6 +117,8 @@ for i in xrange(1, NUM_RACKS+1):
     rack_str = '    dst host $IP%d or ' % (i)
     k = 1
     for j in xrange(1, HOSTS_PER_RACK+1):
+        if i > 2 and j > 9:
+            continue
         rack_str += 'dst host $IP%d%d or ' % (i, j)
         k += 1
         if k == 4:
