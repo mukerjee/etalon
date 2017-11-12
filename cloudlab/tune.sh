@@ -37,14 +37,14 @@ do
     done
 done
 
-sudo sed -i "s/10.10.$DATA_NET./10.$DATA_NET.10./" /etc/hosts
-sudo sed -i "s/10.10.$CONTROL_NET./10.$CONTROL_NET.10./" /etc/hosts
+sudo sed -i "s/10\.10\.$DATA_NET\./10\.$DATA_NET\.10\./" /etc/hosts
+sudo sed -i "s/10\.10\.$CONTROL_NET\./10\.$CONTROL_NET\.10\./" /etc/hosts
 
 if hostname | grep -q switch
 then  # switch
-    sudo sed -i "s/10.$DATA_NET./10.$CONTROL_NET./" /etc/hosts
+    sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./" /etc/hosts
 else  # host
-    sudo sed -i "s/10.$CONTROL_NET./10.$DATA_NET./" /etc/hosts
+    sudo sed -i "s/10\.$CONTROL_NET\./10\.$DATA_NET\./" /etc/hosts
 fi
 
 if ! hostname | grep -q switch
