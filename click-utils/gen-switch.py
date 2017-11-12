@@ -3,7 +3,7 @@
 NIC = 'enp8s0'
 NUM_RACKS = 8
 HOSTS_PER_RACK = 16
-CONTROL_NET = 1
+DATA_NET = 1
 TDF = 20.0
 CIRCUIT_BW = 80 / TDF
 PACKET_BW = 10 / TDF
@@ -20,10 +20,10 @@ print
 k = 0
 ip_def = 'define('
 for i in xrange(1, NUM_RACKS+1):
-    ip_def += '$IP%d 10.10.%d.%d, ' % (i, CONTROL_NET, i)
+    ip_def += '$IP%d 10.%d.10.%d, ' % (i, DATA_NET, i)
     for j in xrange(1, HOSTS_PER_RACK+1):
         ip_str = '$IP%d%d' % (i, j)
-        ip = '10.10.%d.%d%d' % (CONTROL_NET, i, j)
+        ip = '10.%d.%d.%d' % (DATA_NET, i, j)
         ip_def += '%s %s, ' % (ip_str, ip)
         k += 1
         if k == 4:
@@ -95,8 +95,6 @@ for i in xrange(1, NUM_RACKS+1):
     rack_str = '    src host $IP%d or ' % (i)
     k = 1
     for j in xrange(1, HOSTS_PER_RACK+1):
-        if i > 2 and j > 9:
-            continue
         rack_str += 'src host $IP%d%d or ' % (i, j)
         k += 1
         if k == 4:
@@ -117,8 +115,6 @@ for i in xrange(1, NUM_RACKS+1):
     rack_str = '    dst host $IP%d or ' % (i)
     k = 1
     for j in xrange(1, HOSTS_PER_RACK+1):
-        if i > 2 and j > 9:
-            continue
         rack_str += 'dst host $IP%d%d or ' % (i, j)
         k += 1
         if k == 4:

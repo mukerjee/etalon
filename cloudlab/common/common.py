@@ -194,7 +194,8 @@ def launch_all_flowgrindd():
 
 
 def get_flowgrind_host(h):
-    return '10.10.%s.%s/10.10.%s.%s' % (DATA_NET, h[1:], CONTROL_NET, h[1:])
+    return '10.%s.%s.%s/10.%s.%s.%s' % (DATA_NET, h[1], h[2:],
+                                        CONTROL_NET, h[1], h[2:])
 
 
 def flowgrind(settings):
