@@ -41,7 +41,7 @@ DOCKER_PULL = 'sudo docker pull {image}'
 DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
-PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
+PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
            '10.{net}.{rack}.{id}/16; '
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
 NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
