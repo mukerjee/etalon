@@ -27,6 +27,7 @@ sudo service irqbalance stop
 sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
 sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=2048
+sudo sysctl -w net.ipv4.tcp_congestion_control=reno
 
 for i in `seq 1 $NUM_RACKS`
 do
