@@ -130,8 +130,14 @@ print '}'
 print
 
 print 'elementclass packet_link {'
-print '  input%s' % (str(list(xrange(NUM_RACKS))))
-print '    => RoundRobinSched'
+# print '  input%s' % (str(list(xrange(NUM_RACKS))))
+# print '    => RoundRobinSched'
+for i in xrange(NUM_RACKS):
+    print '  input[%d] -> ps%d :: SimplePullSwitch(0)' % (i, i+1)
+s = '  '
+for i in xrange(NUM_RACKS):
+    s += 'ps%d, ' % (i+1)
+print '%s => RoundRobinSched' % (s[:-2])
 print '    -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)'
 print '    -> output'
 print '}'
@@ -226,7 +232,7 @@ for i in xrange(1, NUM_RACKS+1):
     else:
         print queues[:-1]
 print ' :: {'
-print '      input[0] -> q :: Queue(CAPACITY $SMALL_BUFFER_SIZE)'
+print '      input[0] -> q :: FrontResizeQueue(CAPACITY $SMALL_BUFFER_SIZE)'
 print '      input[1] -> lq :: Queue(CAPACITY 1)  // loss queue'
 print '      lq, q => PrioSched -> output'
 print ' }'
@@ -315,7 +321,7 @@ print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 print '   -> SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
-print '   -> hsl :: HSLog -> arp -> out'
+print '   -> hsl :: HSLog -> SetIPChecksum -> arp -> out'
 print
 
 print 'arp_c[1] -> [1]arp'
