@@ -41,7 +41,7 @@ DOCKER_PULL = 'sudo docker pull {image}'
 DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
-PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{id} ' \
+PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
            '10.{net}.{rack}.{id}/16; '
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
 NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
@@ -114,10 +114,10 @@ class SDRTService(rpyc.Service):
         self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
                             rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
-        self.call(NS_RUN.format(pid=my_pid, cmd=RTO_MIN.format(net=DATA_NET,
-                                                               int_if=DATA_INT_IF,
-                                                               rack=SELF_ID,
-                                                               id=host_id)))
+        # self.call(NS_RUN.format(pid=my_pid, cmd=RTO_MIN.format(net=DATA_NET,
+        #                                                        int_if=DATA_INT_IF,
+        #                                                        rack=SELF_ID,
+        #                                                        id=host_id)))
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
         smac = self.call(NS_RUN.format(pid=my_pid, cmd=GET_SWITCH_MAC))
 
