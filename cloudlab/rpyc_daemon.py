@@ -114,10 +114,10 @@ class SDRTService(rpyc.Service):
         self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
                             rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
-        self.call(NS_RUN.format(pid=my_pid, cmd=RTO_MIN.format(net=DATA_NET,
-                                                               int_if=DATA_INT_IF,
-                                                               rack=SELF_ID,
-                                                               id=host_id)))
+        # self.call(NS_RUN.format(pid=my_pid, cmd=RTO_MIN.format(net=DATA_NET,
+        #                                                        int_if=DATA_INT_IF,
+        #                                                        rack=SELF_ID,
+        #                                                        id=host_id)))
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
         smac = self.call(NS_RUN.format(pid=my_pid, cmd=GET_SWITCH_MAC))
 
