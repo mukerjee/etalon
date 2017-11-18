@@ -73,8 +73,7 @@ print
 print 'traffic_matrix :: EstimateTraffic($NUM_RACKS, SOURCE QUEUE)'
 print 'sol :: Solstice($NUM_RACKS, $CIRCUIT_BW, $PACKET_BW, ' \
     '$RECONFIG_DELAY, $TDF)'
-print 'runner :: RunSchedule($NUM_RACKS, $BIG_BUFFER_SIZE, ' \
-    '$SMALL_BUFFER_SIZE, RESIZE false)'
+print 'runner :: RunSchedule($NUM_RACKS, RESIZE false)'
 print
 
 print 'Script(wait 1, print hybrid_switch/q12/q.capacity, loop)'
