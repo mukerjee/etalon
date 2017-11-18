@@ -54,6 +54,13 @@ def setQueueSize(size):
                               'capacity', size)
 
 
+def setMarkFraction(mf):
+    for i in xrange(1, NUM_RACKS+1):
+        for j in xrange(1, NUM_RACKS+1):
+            clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
+                              'mark_fraction', mf)
+
+
 def setEstimateTrafficSource(source):
     clickWriteHandler('traffic_matrix', 'setSource', source)
 
@@ -102,16 +109,33 @@ def setStrobeSchedule():
     time.sleep(0.1)
 
 
+# connect rack 1 --> rack 2
+def setCircuitSchedule():
+    disableSolstice()
+    configuration = ''
+    # for j in xrange(NUM_RACKS):
+    #     configuration += '%d/' % ((NUM_RACKS-1 + 1 + j) % NUM_RACKS)
+    configuration += '1/0/'
+    for j in xrange(NUM_RACKS - 2):
+        configuration += '-1/'
+    configuration = configuration[:-1]
+    schedule = '1 %d %s' % (20 * TDF * 9, configuration)
+    clickWriteHandler('runner', 'setSchedule', schedule)
+    time.sleep(0.1)
+
+
 def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 40,
-                      'traffic_source': 'QUEUE', 'queue_resize': False}
+                      'traffic_source': 'QUEUE', 'queue_resize': False,
+                      'mark_fraction': 0.5}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
+    setMarkFraction(c['mark_fraction'])
     t = c['type']
     if t == 'normal':
         enableSolstice()
@@ -119,8 +143,11 @@ def setConfig(config):
         disableCircuit()
     if t == 'strobe':
         setStrobeSchedule()
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
-                                        c['traffic_source'], c['queue_resize'])
+    if t == 'circuit':
+        setCircuitSchedule()
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%f-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
+                                           c['traffic_source'], c['queue_resize'],
+                                           c['mark_fraction'])
     FN_FORMAT += '%s.txt'
     if config:
         setLog('/tmp/' + FN_FORMAT % 'click')
