@@ -1,0 +1,17 @@
+diff --git a/net/ipv4/tcp_input.c b/net/ipv4/tcp_input.c
+index 48e4e89..0edc33d 100644
+--- a/net/ipv4/tcp_input.c
++++ b/net/ipv4/tcp_input.c
+@@ -3603,6 +3603,12 @@ static int tcp_ack(struct sock *sk, const struct sk_buff *skb, int flag)
+ 			ack_ev_flags |= CA_ACK_ECE;
+ 		}
+ 
++		// MUKERJEE
++		// let TCP CC see an ECE even if ECN is disabled
++		if (tcp_hdr(skb)->ece && !tcp_hdr(skb)->syn) {
++		  ack_ev_flags |= CA_ACK_ECE;
++		}
++
+ 		if (flag & FLAG_WIN_UPDATE)
+ 			ack_ev_flags |= CA_ACK_WIN_UPDATE;
+ 
