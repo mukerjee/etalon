@@ -7,7 +7,8 @@ DATA_NET = 1
 TDF = 20.0
 CIRCUIT_BW = 80 / TDF
 PACKET_BW = 10 / TDF
-DELAY_LATENCY = 0.000200
+PACKET_LATENCY = 0.000100
+CIRCUIT_LATENCY = 0.000200
 BIG_BUFFER_SIZE = 1000
 SMALL_BUFFER_SIZE = 100
 RECONFIG_DELAY = 20
@@ -39,7 +40,8 @@ print 'define ($CIRCUIT_BW %.1fGbps, $PACKET_BW %.1fGbps)' % (
     CIRCUIT_BW, PACKET_BW)
 print
 
-print 'define ($DELAY_LATENCY %s)' % DELAY_LATENCY
+print 'define ($PACKET_LATENCY %s)' % PACKET_LATENCY
+print 'define ($CIRCUIT_LATENCY %s)' % CIRCUIT_LATENCY
 print 'define ($BIG_BUFFER_SIZE %s, $SMALL_BUFFER_SIZE %s)' % (
     BIG_BUFFER_SIZE, SMALL_BUFFER_SIZE)
 print
@@ -80,6 +82,7 @@ print 'Script(wait 1, print hybrid_switch/q12/q.capacity, loop)'
 print
 
 print 'in :: FromDPDKDevice(0)'
+# print 'out :: {input -> ToDump(pause-test-switch.pcap, SNAPLEN 128) ->  ToDPDKDevice(0)}'
 print 'out :: ToDPDKDevice(0)'
 print
 
@@ -129,15 +132,9 @@ print '}'
 print
 
 print 'elementclass packet_link {'
-# print '  input%s' % (str(list(xrange(NUM_RACKS))))
-# print '    => RoundRobinSched'
-for i in xrange(NUM_RACKS):
-    print '  input[%d] -> ps%d :: SimplePullSwitch(0)' % (i, i+1)
-s = '  '
-for i in xrange(NUM_RACKS):
-    s += 'ps%d, ' % (i+1)
-print '%s => RoundRobinSched' % (s[:-2])
-print '    -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)'
+print '  input%s' % (str(list(xrange(NUM_RACKS))))
+print '    => RoundRobinSched'
+print '    -> LinkUnqueue($PACKET_LATENCY, $PACKET_BW)'
 print '    -> output'
 print '}'
 print
@@ -145,7 +142,8 @@ print
 print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => ps :: SimplePullSwitch(-1)'
-print '    -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)'
+print '    -> LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)'
+print '    -> StoreData(1, 1)'
 print '    -> output'
 print '}'
 print
@@ -167,7 +165,7 @@ for i in xrange(1, NUM_RACKS+1):
         print queues
     else:
         print queues[:-1]
-print ' :: Queue(CAPACITY 1)'
+print ' :: Queue(CAPACITY 3)'
 print
 
 pl = ''
@@ -231,9 +229,10 @@ for i in xrange(1, NUM_RACKS+1):
     else:
         print queues[:-1]
 print ' :: {'
-print '      input[0] -> q :: FrontResizeQueue(CAPACITY $SMALL_BUFFER_SIZE)'
-print '      input[1] -> lq :: Queue(CAPACITY 1)  // loss queue'
+print '      input[0] -> q :: Queue(CAPACITY $SMALL_BUFFER_SIZE)' # FrontResizeQueue(CAPACITY $SMALL_BUFFER_SIZE)'
+print '      input[1] -> lq :: Queue(CAPACITY 3)  // loss queue'
 print '      lq, q => PrioSched -> output'
+print '      lq[1] -> Print("LQ DROP") -> Discard'
 print ' }'
 print
 
@@ -290,9 +289,13 @@ for i in xrange(1, NUM_RACKS+1):
 print
 
 for i in xrange(1, NUM_RACKS+1):
+    for j in xrange(1, NUM_RACKS+1):
+        print '  q%d%d -> pps%d%d :: SimplePullSwitch(0)' % (i, j, i, j)
+
+for i in xrange(1, NUM_RACKS+1):
     output = '  '
     for j in xrange(1, NUM_RACKS+1):
-        output += 'q%d%d, ' % (i, j)
+        output += 'pps%d%d, ' % (i, j)
     output = output[:-2]
     # circuit for this dest, 'went over packet', output paint
     output += ' => packet_up_link%d -> [%d]ps[%d] -> ' \
@@ -312,7 +315,6 @@ for i in xrange(1, NUM_RACKS+1):
 print '}'
 print
 
-
 print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
     '-> GetIPAddress(16)'
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
@@ -320,7 +322,7 @@ print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 print '   -> SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
-print '   -> hsl :: HSLog -> SetIPChecksum -> arp -> out'
+print '   -> hsl :: HSLog(NUM_RACKS) -> SetTCPChecksum -> SetIPChecksum -> arp -> out'
 print
 
 print 'arp_c[1] -> [1]arp'

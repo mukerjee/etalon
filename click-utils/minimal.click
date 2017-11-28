@@ -4,7 +4,8 @@ define($NUM_RACKS 2)
 define($IP1 10.10.1.1, $IP2 10.10.1.2)
 
 define ($CIRCUIT_BW 4Gbps, $PACKET_BW 0.5Gbps)
-define ($DELAY_LATENCY 0.0002)
+define ($PACKET_LATENCY 0.000100)
+define ($CIRCUIT_LATENCY 0.000200)
 define ($BIG_QUEUE_SIZE 64)
 
 Script(write runner.setSchedule 14 3600 1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/-1 400 -1/-1 3600 -1/0 400 -1/-1)
@@ -54,21 +55,22 @@ elementclass out_classfy {
 elementclass packet_link {
   input[0, 1]
     => RoundRobinSched
-    -> LinkUnqueue($DELAY_LATENCY, $PACKET_BW)
+    -> LinkUnqueue($PACKET_LATENCY, $PACKET_BW)
     -> output
 }
 
 elementclass circuit_link {
   input[0, 1]
     => ps :: SimplePullSwitch(-1)
-    -> LinkUnqueue($DELAY_LATENCY, $CIRCUIT_BW)
+    -> LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)
+    -> StoreData(1, 1)
     -> output
 }
 
 elementclass packet_switch {
   c1, c2 :: out_classfy
 
-  q11, q12, q21, q22 :: Queue(CAPACITY 1)
+  q11, q12, q21, q22 :: Queue(CAPACITY 3)
 
   packet_link1, packet_link2 :: packet_link
 
@@ -87,7 +89,7 @@ hybrid_switch :: {
 
   q11, q12, q21, q22 :: {
       input[0] -> q :: Queue(CAPACITY $BIG_QUEUE_SIZE)
-      input[1] -> lq :: Queue(CAPACITY 1)  // loss queue
+      input[1] -> lq :: Queue(CAPACITY 3)  // loss queue
       lq, q => PrioSched -> output
       lq[1] -> Print("LQ DROP") -> Discard
  }
