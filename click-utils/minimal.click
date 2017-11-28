@@ -26,7 +26,7 @@ StaticThreadSched(in 0,
 
 ControlSocket("TCP", 1239)
 
-runner :: RunSchedule($NUM_RACKS, $BIG_QUEUE_SIZE, 32, RESIZE false)
+runner :: RunSchedule($NUM_RACKS, RESIZE false)
 
 in :: FromDPDKDevice(0)
 out :: ToDPDKDevice(0)
@@ -89,6 +89,7 @@ hybrid_switch :: {
       input[0] -> q :: Queue(CAPACITY $BIG_QUEUE_SIZE)
       input[1] -> lq :: Queue(CAPACITY 1)  // loss queue
       lq, q => PrioSched -> output
+      lq[1] -> Print("LQ DROP") -> Discard
  }
 
   circuit_link1, circuit_link2 :: circuit_link
@@ -103,8 +104,12 @@ hybrid_switch :: {
   q11, q21 => circuit_link1 -> coc1 :: Paint(0, 23) -> Paint(1, 22) -> Paint(1, 21) -> [0]output
   q12, q22 => circuit_link2 -> coc2 :: Paint(0, 23) -> Paint(1, 22) -> Paint(2, 21) -> [1]output
 
-  q11, q12 => packet_up_link1 -> [0]ps[0] -> cop1 :: Paint(0, 23) -> Paint(2, 22) -> Paint(1, 21) -> [0]output
-  q21, q22 => packet_up_link2 -> [1]ps[1] -> cop2 :: Paint(0, 23) -> Paint(2, 22) -> Paint(2, 21) -> [1]output
+  q11 -> pps11 :: SimplePullSwitch(0)
+  q12 -> pps12 :: SimplePullSwitch(0)
+  q21 -> pps21 :: SimplePullSwitch(0)
+  q22 -> pps22 :: SimplePullSwitch(0)
+  pps11, pps12 => packet_up_link1 -> [0]ps[0] -> cop1 :: Paint(0, 23) -> Paint(2, 22) -> Paint(1, 21) -> [0]output
+  pps21, pps22 => packet_up_link2 -> [1]ps[1] -> cop2 :: Paint(0, 23) -> Paint(2, 22) -> Paint(2, 21) -> [1]output
 
   // dropped PS packets -> loss queues
   ps[2] -> out_classfy => [1]q11, [1]q12
@@ -116,7 +121,7 @@ in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader -> GetIPAddress(16)
    -> SetTimestamp(FIRST true)
    -> in_classfy[0, 1]
    => hybrid_switch[0, 1]
-   -> hsl :: HSLog -> SetIPChecksum -> arp -> out
+   -> hsl :: HSLog($NUM_RACKS) -> SetTCPChecksum -> SetIPChecksum -> arp -> out
 
 arp_c[1] -> [1]arp
 arp_c[2] -> arp_r -> out
