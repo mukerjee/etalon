@@ -1,15 +1,12 @@
 import itertools
-# buffer_sizes = [1, 5, 10, 20, 30, 40, 50, 75, 100]
-# buffer_sizes = [10, 20, 30, 40, 50, 75, 100, 200]
-# buffer_sizes = [8, 16, 32, 48, 64, 96, 128, 200, 256, 512, 1024]
-# buffer_sizes = [64, 96, 128, 200, 256]
+# buffer_sizes = [4, 8, 16, 32, 64, 128]
 buffer_sizes = [16]
-# mark_fractions = [0.55, 0.60, 0.65, 0.70, 0.75, 0.80, 0.85]
-mark_fractions = [0.25]
+days_outs = [3]
+ccs = ['reno']
 # types = ['normal', 'no_circuit', 'strobe', 'resize']
-types = ['strobe']
-CONFIGS = [{'type': t, 'buffer_size': b, 'mark_fraction': mf}
-           for (t, b, mf) in itertools.product(types, buffer_sizes, mark_fractions)]
+types = ['resize']
+CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'days_out': do}
+           for (t, b, cc, do) in itertools.product(types, buffer_sizes, ccs, days_outs)]
 
 for c in CONFIGS:
     if c['type'] == 'resize':

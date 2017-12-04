@@ -1,6 +1,7 @@
 import socket
 import time
 from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS
+from common import setCC
 
 TCP_IP = 'localhost'
 TCP_PORT = 1239
@@ -65,6 +66,10 @@ def setEstimateTrafficSource(source):
     clickWriteHandler('traffic_matrix', 'setSource', source)
 
 
+def setDaysOut(days_out):
+    clickWriteHandler('runner', 'setDaysOut', days_out * 2)
+
+
 def setQueueResize(b):
     if b:
         clickWriteHandler('runner', 'setDoResize', 'true')
@@ -126,16 +131,17 @@ def setCircuitSchedule():
 
 def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
-    CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 40,
+    CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'mark_fraction': 0.5}
+                      'days_out': 3, 'cc': 'reno'}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
-    # setMarkFraction(c['mark_fraction'])
+    setDaysOut(c['days_out'])
+    setCC(c['cc'])
     t = c['type']
     if t == 'normal':
         enableSolstice()
@@ -145,9 +151,9 @@ def setConfig(config):
         setStrobeSchedule()
     if t == 'circuit':
         setCircuitSchedule()
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%f-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
-                                           c['traffic_source'], c['queue_resize'],
-                                           c['mark_fraction'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
+                                             c['traffic_source'], c['queue_resize'],
+                                             c['days_out'], c['cc'])
     FN_FORMAT += '%s.txt'
     if config:
         setLog('/tmp/' + FN_FORMAT % 'click')

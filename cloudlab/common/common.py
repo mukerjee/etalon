@@ -22,6 +22,8 @@ RACKS = []
 PHYSICAL_NODES = []
 NODES = {}
 
+CURRENT_CC = ''
+
 THREADS = []
 THREAD_LOCK = threading.Lock()
 
@@ -63,6 +65,10 @@ def initializeExperiment():
     # kill_all_sockperf()
     # launch_all_sockperf()
     # print '--- done...'
+
+    print '--- setting CC to reno...'
+    setCC('reno')
+    print '--- done...'
 
     print '--- launching flowgrindd...'
     launch_all_flowgrindd()
@@ -109,8 +115,16 @@ def tarExperiment():
 # rpyc_daemon
 ##
 def connect_all_rpyc_daemon():
+    bad_hosts = []
     for phost in PHYSICAL_NODES[1:]:
-        RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+        try:
+            RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+        except:
+            print 'could not connect to ' + phost
+            bad_hosts.append(phost)
+    map(lambda x: PHYSICAL_NODES.remove(x), bad_hosts)
+
+
 
 
 ##
@@ -176,6 +190,24 @@ def kill_all_sockperf():
         while not r.ready:
             time.sleep(0.1)
 
+
+##
+# Congestion Control
+##
+def set_cc_host(phost, cc):
+    RPYC_CONNECTIONS[phost].root.set_cc(cc)
+
+def setCC(cc):
+    global CURRENT_CC
+    ts = []
+    for phost in PHYSICAL_NODES[1:]:
+        ts.append(threading.Thread(target=set_cc_host,
+                                   args=(phost, cc)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
+    if CURRENT_CC and cc != CURRENT_CC:
+        launch_all_flowgrindd()
+    CURRENT_CC = cc
 
 ##
 # flowgrind
