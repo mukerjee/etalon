@@ -62,7 +62,7 @@ sudo make install
 cd $HOME/sdrt/tcp_reno_tuner
 make
 
-# install updated kernel
-sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
+# # install updated kernel
+# sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
 
 sudo reboot
