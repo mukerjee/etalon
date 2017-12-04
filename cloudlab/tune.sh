@@ -56,3 +56,6 @@ then
     $HOME/sdrt/cloudlab/arp_clear.sh
     $HOME/sdrt/cloudlab/arp_poison.sh
 fi
+
+cd $HOME/sdrt/tcp_reno_tuner/
+sudo insmod tcp_ocs.ko
