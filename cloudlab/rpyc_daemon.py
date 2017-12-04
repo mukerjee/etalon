@@ -57,6 +57,8 @@ SOCKPERF = "sudo LD_PRELOAD=libVT.so sockperf pp -i " \
            "`getent hosts {dest} | awk '{{print $1}}'` -t2"
 SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
 
+SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
+
 RTO_MIN='ip route change 10.{net}.0.0/16 dev {int_if} proto kernel ' \
     'scope link src 10.{net}.{rack}.{id} rto_min 1ms'
 
@@ -139,6 +141,9 @@ class SDRTService(rpyc.Service):
                                        args=(image, i)))
             ts[-1].start()
         map(lambda t: t.join(), ts)
+
+    def exposed_set_cc(self, new_cc):
+        self.call(SET_CC.format(cc=new_cc))
 
     def exposed_flowgrindd(self):
         self.launch_rack('flowgrindd')
