@@ -8,10 +8,8 @@ import tarfile
 import rpyc
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
-from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, EXPERIMENTS
-
-RPYC_PORT = 18861
-RPYC_CONNECTIONS = {}
+from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, EXPERIMENTS, \
+    PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT
 
 DATA_NET = 1
 CONTROL_NET = 2
@@ -19,10 +17,7 @@ CONTROL_NET = 2
 ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
 RACKS = []
-PHYSICAL_NODES = []
 NODES = {}
-
-CURRENT_CC = ''
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -67,7 +62,7 @@ def initializeExperiment():
     # print '--- done...'
 
     print '--- setting CC to reno...'
-    setCC('reno')
+    click_common.setCC('reno')
     print '--- done...'
 
     print '--- launching flowgrindd...'
@@ -190,24 +185,6 @@ def kill_all_sockperf():
         while not r.ready:
             time.sleep(0.1)
 
-
-##
-# Congestion Control
-##
-def set_cc_host(phost, cc):
-    RPYC_CONNECTIONS[phost].root.set_cc(cc)
-
-def setCC(cc):
-    global CURRENT_CC
-    ts = []
-    for phost in PHYSICAL_NODES[1:]:
-        ts.append(threading.Thread(target=set_cc_host,
-                                   args=(phost, cc)))
-        ts[-1].start()
-    map(lambda t: t.join(), ts)
-    if CURRENT_CC and cc != CURRENT_CC:
-        launch_all_flowgrindd()
-    CURRENT_CC = cc
 
 ##
 # flowgrind

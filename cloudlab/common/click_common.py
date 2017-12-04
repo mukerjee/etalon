@@ -1,7 +1,9 @@
 import socket
 import time
-from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS
-from common import setCC
+import threading
+from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, PHYSICAL_NODES, \
+    RPYC_CONNECTIONS
+import common
 
 TCP_IP = 'localhost'
 TCP_PORT = 1239
@@ -10,6 +12,8 @@ CLICK_SOCKET = None
 
 CURRENT_CONFIG = {}
 FN_FORMAT = ''
+
+CURRENT_CC = ''
 
 
 ##
@@ -78,6 +82,28 @@ def setQueueResize(b):
     time.sleep(0.1)
 
 
+##
+# Congestion Control
+##
+def set_cc_host(phost, cc):
+    RPYC_CONNECTIONS[phost].root.set_cc(cc)
+
+def setCC(cc):
+    global CURRENT_CC
+    ts = []
+    for phost in PHYSICAL_NODES[1:]:
+        ts.append(threading.Thread(target=set_cc_host,
+                                   args=(phost, cc)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
+    if CURRENT_CC and cc != CURRENT_CC:
+        common.launch_all_flowgrindd()
+    CURRENT_CC = cc
+
+
+##
+# Scheduling
+##
 def enableSolstice():
     clickWriteHandler('sol', 'setEnabled', 'true')
     time.sleep(0.1)
@@ -151,9 +177,9 @@ def setConfig(config):
         setStrobeSchedule()
     if t == 'circuit':
         setCircuitSchedule()
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
-                                             c['traffic_source'], c['queue_resize'],
-                                             c['days_out'], c['cc'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
+                                              c['traffic_source'], c['queue_resize'],
+                                              c['days_out'], c['cc'])
     FN_FORMAT += '%s.txt'
     if config:
         setLog('/tmp/' + FN_FORMAT % 'click')
