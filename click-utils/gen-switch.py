@@ -8,7 +8,7 @@ TDF = 20.0
 CIRCUIT_BW = 80 / TDF
 PACKET_BW = 10 / TDF
 PACKET_LATENCY = 0.000100
-CIRCUIT_LATENCY = 0.000200
+CIRCUIT_LATENCY = 0.000600
 BIG_BUFFER_SIZE = 1000
 SMALL_BUFFER_SIZE = 100
 RECONFIG_DELAY = 20
@@ -230,7 +230,7 @@ for i in xrange(1, NUM_RACKS+1):
         print queues[:-1]
 print ' :: {'
 print '      input[0] -> q :: Queue(CAPACITY $SMALL_BUFFER_SIZE)' # FrontResizeQueue(CAPACITY $SMALL_BUFFER_SIZE)'
-print '      input[1] -> lq :: Queue(CAPACITY 3)  // loss queue'
+print '      input[1] -> lq :: Queue(CAPACITY 5)  // loss queue'
 print '      lq, q => PrioSched -> output'
 print '      lq[1] -> Print("LQ DROP") -> Discard'
 print ' }'
@@ -322,7 +322,7 @@ print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 print '   -> SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
-print '   -> hsl :: HSLog(NUM_RACKS) -> SetTCPChecksum -> SetIPChecksum -> arp -> out'
+print '   -> hsl :: HSLog($NUM_RACKS) -> SetTCPChecksum -> SetIPChecksum -> arp -> out'
 print
 
 print 'arp_c[1] -> [1]arp'
