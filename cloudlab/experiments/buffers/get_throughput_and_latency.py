@@ -7,7 +7,8 @@ import numpy as np
 from collections import defaultdict
 
 fns = sys.argv[1]
-fns += '/tmp/*'
+if 'tmp' not in fns:
+    fns += '/tmp/*'
 
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 
@@ -22,7 +23,7 @@ for fn in glob.glob(fns):
         bytes = int(d[0].split('(')[1].split(' ')[0])
         sender = int(d[0].split('->')[0])
         recv = int(d[0].split('->')[1].split('(')[0])
-        latency = float(d[-1].split(' ')[-1].split('us')[0])
+        latency = float(d[-2].split(' ')[-1].split('us')[0])
         sr = (sender, recv)
         if bytes < 100:
             continue
@@ -30,7 +31,7 @@ for fn in glob.glob(fns):
             flow_start[sr] = float(ts) / 20.0  # TDF
         throughputs[sr] += bytes
         flow_end[sr] = float(ts) / 20.0  # TDF
-        if bytes == 9000:  # 9014:
+        if bytes > 1000:  # 9014:
             latencies.append(latency)
     lat = zip(percentiles, map(lambda x: np.percentile(latencies, x),
                                percentiles))

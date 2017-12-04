@@ -194,6 +194,8 @@ def launch_all_flowgrindd():
 
 
 def get_flowgrind_host(h):
+    # return '10.%s.10.%s/10.%s.10.%s' % (DATA_NET, h[1],
+    #                                     CONTROL_NET, h[1])
     return '10.%s.%s.%s/10.%s.%s.%s' % (DATA_NET, h[1], h[2:],
                                         CONTROL_NET, h[1], h[2:])
 
@@ -210,6 +212,7 @@ def flowgrind(settings):
                 fl['src'] = 'h%d%d' % (s, i)
                 fl['dst'] = 'h%d%d' % (d, i)
                 flows.append(fl)
+            # flows.append({'src': 'h1', 'dst': 'h2'})
         else:
             flows.append(f)
     cmd += '-n %s ' % len(flows)

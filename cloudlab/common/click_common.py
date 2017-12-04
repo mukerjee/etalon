@@ -105,6 +105,8 @@ def setStrobeSchedule():
         schedule += (configstr % (duration, configuration, night_len,
                                   off_config))
     schedule = schedule[:-1]
+    # schedule = schedule.replace(' 1/2/', ' 2/1/')
+    # schedule = schedule.replace(' 7/0/1/', ' 1/0/7/')
     clickWriteHandler('runner', 'setSchedule', schedule)
     time.sleep(0.1)
 
@@ -113,8 +115,6 @@ def setStrobeSchedule():
 def setCircuitSchedule():
     disableSolstice()
     configuration = ''
-    # for j in xrange(NUM_RACKS):
-    #     configuration += '%d/' % ((NUM_RACKS-1 + 1 + j) % NUM_RACKS)
     configuration += '1/0/'
     for j in xrange(NUM_RACKS - 2):
         configuration += '-1/'
@@ -135,7 +135,7 @@ def setConfig(config):
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
-    setMarkFraction(c['mark_fraction'])
+    # setMarkFraction(c['mark_fraction'])
     t = c['type']
     if t == 'normal':
         enableSolstice()
