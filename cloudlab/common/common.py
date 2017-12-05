@@ -8,10 +8,8 @@ import tarfile
 import rpyc
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
-from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, EXPERIMENTS
-
-RPYC_PORT = 18861
-RPYC_CONNECTIONS = {}
+from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, EXPERIMENTS, \
+    PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT
 
 DATA_NET = 1
 CONTROL_NET = 2
@@ -19,7 +17,6 @@ CONTROL_NET = 2
 ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
 
 RACKS = []
-PHYSICAL_NODES = []
 NODES = {}
 
 THREADS = []
@@ -63,6 +60,10 @@ def initializeExperiment():
     # kill_all_sockperf()
     # launch_all_sockperf()
     # print '--- done...'
+
+    print '--- setting CC to reno...'
+    click_common.setCC('reno')
+    print '--- done...'
 
     print '--- launching flowgrindd...'
     launch_all_flowgrindd()
@@ -109,8 +110,16 @@ def tarExperiment():
 # rpyc_daemon
 ##
 def connect_all_rpyc_daemon():
+    bad_hosts = []
     for phost in PHYSICAL_NODES[1:]:
-        RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+        try:
+            RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+        except:
+            print 'could not connect to ' + phost
+            bad_hosts.append(phost)
+    map(lambda x: PHYSICAL_NODES.remove(x), bad_hosts)
+
+
 
 
 ##

@@ -19,7 +19,7 @@ for config in buffer_common.CONFIGS:
     # rack_sockperf(1, 2)
 
     settings = {'flows': []}
-    settings['flows'].append({'src': 'r1', 'dst': 'r2'})
+    settings['flows'].append({'src': 'r1', 'dst': 'r3'})
     flowgrind(settings)
     waitOnWork()
 
