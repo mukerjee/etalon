@@ -58,4 +58,5 @@ then
 fi
 
 cd $HOME/sdrt/tcp_reno_tuner/
+make
 sudo insmod tcp_ocs.ko

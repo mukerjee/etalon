@@ -59,9 +59,6 @@ sudo make install
 cd $HOME/libVT
 sudo make install
 
-cd $HOME/sdrt/tcp_reno_tuner
-make
-
 # install updated kernel
 # sudo mkdir /mnt/extra
 # sudo /usr/local/etc/emulab/mkextrafs.pl /mnt/extra
@@ -79,6 +76,9 @@ make
 # sudo apt-get install linux-cloud-tools-common linux-tools-common
 # sudo dpkg -i ../*.deb
 
+sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get -y build-dep linux-image-$(uname -r)
 sudo apt-get install linux-cloud-tools-common linux-tools-common
 sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
 
