@@ -70,8 +70,8 @@ def setEstimateTrafficSource(source):
     clickWriteHandler('traffic_matrix', 'setSource', source)
 
 
-def setDaysOut(days_out):
-    clickWriteHandler('runner', 'setDaysOut', days_out * 2)
+def setInAdvance(in_advance):
+    clickWriteHandler('runner', 'setInAdvance', in_advance)
 
 
 def setQueueResize(b):
@@ -159,14 +159,14 @@ def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'days_out': 3, 'cc': 'reno'}
+                      'in_advance': 12000, 'cc': 'reno'}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
-    setDaysOut(c['days_out'])
+    setInAdvance(c['in_advance'])
     setCC(c['cc'])
     t = c['type']
     if t == 'normal':
@@ -179,7 +179,7 @@ def setConfig(config):
         setCircuitSchedule()
     FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
                                               c['traffic_source'], c['queue_resize'],
-                                              c['days_out'], c['cc'])
+                                              c['in_advance'], c['cc'])
     FN_FORMAT += '%s.txt'
     if config:
         setLog('/tmp/' + FN_FORMAT % 'click')
