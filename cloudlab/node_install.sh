@@ -59,10 +59,27 @@ sudo make install
 cd $HOME/libVT
 sudo make install
 
-cd $HOME/sdrt/tcp_reno_tuner
-make
+# install updated kernel
+# sudo mkdir /mnt/extra
+# sudo /usr/local/etc/emulab/mkextrafs.pl /mnt/extra
+# cd /mnt
+# sudo chown `whoami` extra
+# cd extra
+# git clone git://kernel.ubuntu.com/ubuntu/ubuntu-xenial.git
+# cd ubuntu-xenial
+# sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list
+# sudo apt-get update
+# sudo apt-get -y build-dep linux-image-$(uname -r)
+# git apply $HOME/sdrt/tcp_reno_tuner/kernel-patch.patch
+# fakeroot debian/rules clean
+# MAKEFLAGS="-j 16" fakeroot debian/rules binary-headers binary-generic binary-perarch
+# sudo apt-get install linux-cloud-tools-common linux-tools-common
+# sudo dpkg -i ../*.deb
 
-# # install updated kernel
-# sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
+sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list
+sudo apt-get update
+sudo apt-get -y build-dep linux-image-$(uname -r)
+sudo apt-get install linux-cloud-tools-common linux-tools-common
+sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
 
 sudo reboot
