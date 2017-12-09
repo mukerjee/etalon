@@ -172,7 +172,7 @@ if __name__ == '__main__':
     
     graph(buffer_data, 'Buffer size (packets)', 'buffer_size')
 
-    days_out_data = {}
+    days_out_data = {0: buffer_data[2][1]}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
                         'QUEUE-True-*-reno-click.txt'):
     # for fn in glob.glob('buffer-data-12-14/tmp/resize-days-out/*.txt'):
@@ -197,9 +197,9 @@ if __name__ == '__main__':
         ocs_strobe_data = [(1, (tput, lat50, lat99, pack_util.values()[0],
                                 circ_util.values()[0], rtt_data.values()[0]))]
     print ocs_strobe_data
-    graph(ocs_strobe_data, 'None', 'ocs_strobe')
+    # graph(ocs_strobe_data, 'None', 'ocs_strobe')
 
-    ocs_days_out_data = {}
+    ocs_days_out_data = {0: ocs_strobe_data[0][1]}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
                         'QUEUE-True-*-ocs-click.txt'):
     # for fn in glob.glob('buffer-data-12-14/tmp/ocs-days-out/*.txt'):
@@ -215,6 +215,9 @@ if __name__ == '__main__':
     ocs_days_out_data = sorted(ocs_days_out_data.items())
     print ocs_days_out_data
     graph(ocs_days_out_data, 'Early buffer resize (us)', 'ocs_days_out')
+
+    days_out_data = days_out_data[1:]
+    ocs_days_out_data = ocs_days_out_data[1:]
 
 
 
