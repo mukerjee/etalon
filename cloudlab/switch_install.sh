@@ -56,6 +56,7 @@ cd $HOME/click-sdrt
 make -j
 sudo make install
 
+# PTP
 printf '[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf
 sudo sed -i '/(PTP) service/a Requires=network.target\nAfter=network.target' /lib/systemd/system/ptp4l.service
 sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service

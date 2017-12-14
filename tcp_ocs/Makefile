@@ -1,4 +1,4 @@
-obj-m += tcp_reno_tuner.o tcp_ocs.o tcp_ss.o
+obj-m += tcp_ocs.o
 
 all:
 		make -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules

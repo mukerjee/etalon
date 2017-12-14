@@ -18,7 +18,6 @@ def get_tput_and_lat(fn):
     packet_bytes = defaultdict(int)
     flow_start = {}
     flow_end = {}
-    # total_circuit_time = defaultdict(int)
     number_circuit_ups = defaultdict(int)
     circuit_starts = defaultdict(list)
     most_recent_circuit_up = defaultdict(int)
@@ -36,7 +35,6 @@ def get_tput_and_lat(fn):
             if 'closing' in d:
                 circuit_starts[sr].append(ts / 20.0)
                 number_circuit_ups[sr] += 1
-                # total_circuit_time[sr] += ts - most_recent_circuit_up[sr]
             continue
 
         d = d.split(',')
@@ -59,7 +57,7 @@ def get_tput_and_lat(fn):
 
         throughputs[sr] += bytes
         flow_end[sr] = ts / 20.0  # TDF
-        if bytes > 1000:  # 9014:
+        if bytes > 1000:
             latencies.append(latency)
     lat = zip(percentiles, map(lambda x: np.percentile(latencies, x),
                                percentiles))
@@ -83,7 +81,6 @@ def get_tput_and_lat(fn):
         print n, number_circuit_ups[sr]
         max_bytes = n * RTT * (CIRCUIT_BW * 10**9 / 8.0)
         for i, r in sorted(bytes_in_rtt[sr].items()):
-            # max_bytes = (float(total_circuit_time[sr]) * CIRCUIT_BW * 10**9) / 8.0
             b[sr][i] = (r / max_bytes) * 100
 
     print

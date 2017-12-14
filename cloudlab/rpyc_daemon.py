@@ -28,8 +28,6 @@ CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
 
 IMAGES = {
     'flowgrindd': 'mukerjee/sdrt-flowgrindd',
-    'iperf': 'mukerjee/sdrt-iperf',
-    'iperf3': 'mukerjee/sdrt-iperf3',
     'hadoop': 'mukerjee/sdrt-hadoop',
 }
 
@@ -49,18 +47,8 @@ SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
 ARP_POISON = 'arp -s h{id} {switch_mac}'
 
-KILL_PING = 'sudo killall -s SIGINT ping 2> /dev/null'
-PING = 'sudo LD_PRELOAD=libVT.so ping -i {interval} -D -U {dest}'
-
-KILL_SOCKPERF = 'sudo killall -s SIGINT sockperf 2> /dev/null'
-SOCKPERF = "sudo LD_PRELOAD=libVT.so sockperf pp -i " \
-           "`getent hosts {dest} | awk '{{print $1}}'` -t2"
-SOCKPERF_DAEMON = 'LD_PRELOAD=libVT.so sockperf sr --daemonize'
-
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
-RTO_MIN='ip route change 10.{net}.0.0/16 dev {int_if} proto kernel ' \
-    'scope link src 10.{net}.{rack}.{id} rto_min 1ms'
 
 class SDRTService(rpyc.Service):
     def on_connect(self):
@@ -99,7 +87,8 @@ class SDRTService(rpyc.Service):
 
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
-        cpus = str((host_id % (CPU_COUNT-1)) + 1) if image == 'flowgrindd' else CPU_SET
+        cpus = str((host_id % (CPU_COUNT-1)) + 1) \
+            if image == 'flowgrindd' else CPU_SET
         my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
                  '/root/on_run.sh && LD_PRELOAD=libVT.so taskset -c {cpu} ' \
                  'flowgrindd -d -c {cpu}"'.format(cpu=cpus) \
@@ -116,10 +105,6 @@ class SDRTService(rpyc.Service):
         self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
                             rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
-        # self.call(NS_RUN.format(pid=my_pid, cmd=RTO_MIN.format(net=DATA_NET,
-        #                                                        int_if=DATA_INT_IF,
-        #                                                        rack=SELF_ID,
-        #                                                        id=host_id)))
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
         smac = self.call(NS_RUN.format(pid=my_pid, cmd=GET_SWITCH_MAC))
 
@@ -148,30 +133,8 @@ class SDRTService(rpyc.Service):
     def exposed_flowgrindd(self):
         self.launch_rack('flowgrindd')
 
-    def exposed_iperf_server(self):
-        self.launch_rack('iperf')
-
-    def exposed_iperf3_server(self):
-        self.launch_rack('iperf3')
-
     def exposed_hadoop(self):
         self.launch_rack('hadoop')
-
-    def exposed_kill_all_ping(self):
-        self.call(KILL_PING, check_rc=False)
-
-    def exposed_ping(self, dst):
-        intv = '%f' % (0.0001 / TDF)
-        return self.call(PING.format(interval=intv, dest=dst))
-
-    def exposed_kill_all_sockperf(self):
-        self.call(KILL_SOCKPERF, check_rc=False)
-
-    def exposed_sockperf(self, dst):
-        return self.call(SOCKPERF.format(dest=dst))
-
-    def exposed_launch_sockperf_daemon(self):
-        return self.call_background(SOCKPERF_DAEMON)
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer

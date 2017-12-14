@@ -1,8 +1,8 @@
 import socket
 import time
 import threading
-from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, PHYSICAL_NODES, \
-    RPYC_CONNECTIONS
+from globals import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
+    PHYSICAL_NODES, RPYC_CONNECTIONS
 import common
 
 TCP_IP = 'localhost'
@@ -18,7 +18,7 @@ CURRENT_CC = ''
 
 ##
 # Running click commands
-##    
+##
 def initializeClickControl():
     global CLICK_SOCKET
     print '--- connecting to click socket...'
@@ -59,13 +59,6 @@ def setQueueSize(size):
                               'capacity', size)
 
 
-def setMarkFraction(mf):
-    for i in xrange(1, NUM_RACKS+1):
-        for j in xrange(1, NUM_RACKS+1):
-            clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
-                              'mark_fraction', mf)
-
-
 def setEstimateTrafficSource(source):
     clickWriteHandler('traffic_matrix', 'setSource', source)
 
@@ -87,6 +80,7 @@ def setQueueResize(b):
 ##
 def set_cc_host(phost, cc):
     RPYC_CONNECTIONS[phost].root.set_cc(cc)
+
 
 def setCC(cc):
     global CURRENT_CC
@@ -136,8 +130,6 @@ def setStrobeSchedule():
         schedule += (configstr % (duration, configuration, night_len,
                                   off_config))
     schedule = schedule[:-1]
-    # schedule = schedule.replace(' 1/2/', ' 2/1/')
-    # schedule = schedule.replace(' 7/0/1/', ' 1/0/7/')
     clickWriteHandler('runner', 'setSchedule', schedule)
     time.sleep(0.1)
 
@@ -177,8 +169,10 @@ def setConfig(config):
         setStrobeSchedule()
     if t == 'circuit':
         setCircuitSchedule()
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t, c['buffer_size'],
-                                              c['traffic_source'], c['queue_resize'],
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
+                                              c['buffer_size'],
+                                              c['traffic_source'],
+                                              c['queue_resize'],
                                               c['in_advance'], c['cc'])
     FN_FORMAT += '%s.txt'
     if config:

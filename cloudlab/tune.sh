@@ -28,7 +28,6 @@ sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
 sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=2048
 sudo sysctl -w net.ipv4.tcp_congestion_control=reno
-# sudo sysctl -w net.ipv4.tcp_ecn=1
 
 for i in `seq 1 $NUM_RACKS`
 do
@@ -57,6 +56,6 @@ then
     $HOME/sdrt/cloudlab/arp_poison.sh
 fi
 
-cd $HOME/sdrt/tcp_reno_tuner/
+cd $HOME/sdrt/tcp_ocs/
 make
 sudo insmod tcp_ocs.ko

@@ -22,20 +22,15 @@ def graph(data, x_label, fn):
 
 
 def graph_lat50(data, x_label, fn):
-    # size vs latency
     x = [zip(*data)[0]]
     y = [zip(*zip(*data)[1])[1]]
-    # yerr = ping_std
     print 'buffer:', x
     print 'latency:', y
-    # print 'lat std:', yerr
 
     options = DotMap()
     options.plot_type = 'LINE'
     options.legend.options.labels = ['Strobe']
     options.legend.options.fontsize = 12
-    # options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1,
-    #                                  yerr=yerr[i]) for i in range(len(x))]
     options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1)
                               for i in range(len(x))]
     options.output_fn = 'graphs/%s_vs_latency.pdf' % fn
@@ -45,7 +40,6 @@ def graph_lat50(data, x_label, fn):
 
 
 def graph_lat99(data, x_label, fn):
-    # size vs latency (99)
     x = [zip(*data)[0]]
     y = [zip(*zip(*data)[1])[2]]
     print 'buffer:', x
@@ -75,8 +69,6 @@ def graph_packet_util(data, x_label, fn):
     options.legend.options.fontsize = 12
     options.bar_labels.format_string = '%1.2f'
     options.bar_labels.options.fontsize = 16
-    # options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1,
-    #                                  ) for i in range(len(x))]
     options.output_fn = 'graphs/%s_vs_packet_util.pdf' % fn
     options.x.label.xlabel = x_label
     options.y.label.ylabel = 'Avg. packet utilization (%)'
@@ -95,8 +87,6 @@ def graph_circuit_util(data, x_label, fn):
     options.legend.options.fontsize = 12
     options.bar_labels.format_string = '%1.2f'
     options.bar_labels.options.fontsize = 16
-    # options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1,
-    #                                  ) for i in range(len(x))]
     options.output_fn = 'graphs/%s_vs_circuit_util.pdf' % fn
     options.x.label.xlabel = x_label
     options.y.label.ylabel = 'Avg. circuit utilization (%)'
@@ -110,7 +100,6 @@ def graph_rtts(data, x_label, fn):
     for i in xrange(len(rtts)):
         print rtts[i]
         rtts[i] = {k: v for (k, v) in rtts[i].items() if k < 6}
-    # rtts = [{k: v for (k, v) in r if k < 6} for r in rtts]
     x = [np.asarray(k.keys()) for k in rtts]
     y = [k.values() for k in rtts]
     print 'labels:', labels
@@ -121,11 +110,7 @@ def graph_rtts(data, x_label, fn):
     options.plot_type = 'BAR'
     options.legend.options.labels = labels
     options.legend.options.fontsize = 12
-    # options.bar_labels.format_string = '%1.2f'
-    # options.bar_labels.options.fontsize = 16
     options.bar_labels.show = False
-    # options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1,
-    #                                  ) for i in range(len(x))]
     options.output_fn = 'graphs/%s_rtts.pdf' % fn
     options.x.label.xlabel = 'RTTs since circuit start'
     options.y.label.ylabel = 'Avg. circuit utilization (%)'
@@ -133,13 +118,10 @@ def graph_rtts(data, x_label, fn):
 
     
 def graph_tput(data, x_label, fn):
-    # size vs throughput
     x = [zip(*data)[0]]
     y = [zip(*zip(*data)[1])[0]]
-    # yerr = tput_std
     print 'buffer:', x
     print 'tput:', y
-    # print 'tput std:', yerr
 
     options = DotMap()
     options.plot_type = 'LINE'
@@ -147,8 +129,6 @@ def graph_tput(data, x_label, fn):
     options.legend.options.fontsize = 12
     options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1)
                               for i in range(len(x))]
-    # options.series_options = [DotMap(color='C%d' % i, marker='o', linewidth=1,
-    #                                  yerr=yerr[i]) for i in range(len(x))]
     options.output_fn = 'graphs/%s_vs_tput.pdf' % fn
     options.x.label.xlabel = x_label
     options.y.label.ylabel = 'Rack throughput (Gbps)'
@@ -159,14 +139,14 @@ if __name__ == '__main__':
     buffer_data = {}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-*-'
                         'QUEUE-False-*-reno-click.txt'):
-    # for fn in glob.glob('buffer-data-12-14/tmp/strobe-buffer-size/*.txt'):
         buffer_size = int(fn.split('/')[-1].split('strobe-')[1].split('-')[0])
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
         tput = tput.values()[0]
         lat50 = lat[1][1]
         lat99 = lat[3][1]
         buffer_data[buffer_size] = (tput, lat50, lat99, pack_util.values()[0],
-                                    circ_util.values()[0], rtt_data.values()[0])
+                                    circ_util.values()[0],
+                                    rtt_data.values()[0])
     buffer_data = sorted(buffer_data.items())
     print buffer_data
     
@@ -175,7 +155,6 @@ if __name__ == '__main__':
     days_out_data = {0: buffer_data[2][1]}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
                         'QUEUE-True-*-reno-click.txt'):
-    # for fn in glob.glob('buffer-data-12-14/tmp/resize-days-out/*.txt'):
         days_out = int(fn.split('/')[-1].split('True-')[1].split('-')[0])
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
         tput = tput.values()[0]
@@ -189,7 +168,6 @@ if __name__ == '__main__':
 
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
                         'QUEUE-False-*-ocs-click.txt'):
-    # for fn in glob.glob('buffer-data-12-14/tmp/ocs-strobe/*.txt'):
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
         tput = tput.values()[0]
         lat50 = lat[1][1]
@@ -197,12 +175,10 @@ if __name__ == '__main__':
         ocs_strobe_data = [(1, (tput, lat50, lat99, pack_util.values()[0],
                                 circ_util.values()[0], rtt_data.values()[0]))]
     print ocs_strobe_data
-    # graph(ocs_strobe_data, 'None', 'ocs_strobe')
 
     ocs_days_out_data = {0: ocs_strobe_data[0][1]}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
                         'QUEUE-True-*-ocs-click.txt'):
-    # for fn in glob.glob('buffer-data-12-14/tmp/ocs-days-out/*.txt'):
         days_out = int(fn.split('/')[-1].split('True-')[1].split('-')[0])
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
         tput = tput.values()[0]
@@ -218,7 +194,6 @@ if __name__ == '__main__':
 
     days_out_data = days_out_data[1:]
     ocs_days_out_data = ocs_days_out_data[1:]
-
 
 
     # throughput vs latency (50)
@@ -254,7 +229,6 @@ if __name__ == '__main__':
 
     plot(x, y, options)
 
-
     # throughput vs latency (99)
     x = []
     x.append(zip(*zip(*buffer_data)[1])[0])
@@ -283,7 +257,6 @@ if __name__ == '__main__':
                               for i in range(len(x))]
     options.output_fn = 'graphs/throughput_vs_latency99.pdf'
     options.x.label.xlabel = 'Rack throughput (Gbps)'
-    # options.x.label.xlabel = 'Avg. Cir. Up Link Util. (%)'
     options.y.label.ylabel = '99th percentile latency (us)'
 
     plot(x, y, options)
