@@ -82,7 +82,6 @@ print 'Script(wait 1, print hybrid_switch/q12/q.capacity, loop)'
 print
 
 print 'in :: FromDPDKDevice(0)'
-# print 'out :: {input -> ToDump(pause-test-switch.pcap, SNAPLEN 128) ->  ToDPDKDevice(0)}'
 print 'out :: ToDPDKDevice(0)'
 print
 
@@ -229,7 +228,7 @@ for i in xrange(1, NUM_RACKS+1):
     else:
         print queues[:-1]
 print ' :: {'
-print '      input[0] -> q :: Queue(CAPACITY $SMALL_BUFFER_SIZE)' # FrontResizeQueue(CAPACITY $SMALL_BUFFER_SIZE)'
+print '      input[0] -> q :: Queue(CAPACITY $SMALL_BUFFER_SIZE)'
 print '      input[1] -> lq :: Queue(CAPACITY 5)  // loss queue'
 print '      lq, q => PrioSched -> output'
 print '      lq[1] -> Print("LQ DROP") -> Discard'
@@ -318,11 +317,11 @@ print
 print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
     '-> GetIPAddress(16)'
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
-# print '   -> ReTimestamp -> SetTCPChecksum -> SetIPChecksum'
 print '   -> SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
-print '   -> hsl :: HSLog($NUM_RACKS) -> SetTCPChecksum -> SetIPChecksum -> arp -> out'
+print '   -> hsl :: HSLog($NUM_RACKS) -> ecem :: ECEMark($NUM_RACKS) -> ' \
+    'SetTCPChecksum -> SetIPChecksum -> arp -> out'
 print
 
 print 'arp_c[1] -> [1]arp'
