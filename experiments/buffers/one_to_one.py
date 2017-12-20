@@ -17,7 +17,7 @@ for config in buffer_common.CONFIGS:
     print '--- done...'
 
     settings = {'flows': []}
-    settings['flows'].append({'src': 'r1', 'dst': 'r3'})
+    settings['flows'].append({'src': 'r1', 'dst': 'r2'})
     flowgrind(settings)
 
 finishExperiment()
