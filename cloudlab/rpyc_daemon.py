@@ -27,8 +27,8 @@ CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
 
 IMAGES = {
-    'flowgrindd': 'mukerjee/sdrt-flowgrindd',
-    'hadoop': 'mukerjee/sdrt-hadoop',
+    'flowgrindd': 'flowgrindd.dockerfile',
+    'hadoop': 'hadoop.dockerfile',
 }
 
 
