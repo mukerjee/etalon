@@ -41,7 +41,7 @@ def get_tput_and_lat(fn):
         bytes = int(d[0].split('(')[1].split(' ')[0])
         sender = int(d[0].split('->')[0])
         recv = int(d[0].split('->')[1].split('(')[0])
-        latency = float(d[-2].split(' ')[-1].split('us')[0])
+        latency = float(d[-1].split(' ')[-1].split('us')[0])
         sr = (sender, recv)
         if bytes < 100:
             continue
