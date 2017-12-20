@@ -35,7 +35,7 @@ IMAGES = {
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
-DOCKER_PULL = 'sudo docker pull {image}'
+DOCKER_BUILD = 'sudo docker build - < ~/sdrt/vhost/{image}'
 DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
@@ -75,7 +75,7 @@ class SDRTService(rpyc.Service):
         self.call(DOCKER_CLEAN, check_rc=False)
 
     def update_image(self, img):
-        self.call(DOCKER_PULL.format(image=img))
+        self.call(DOCKER_BUILD.format(image=img))
 
     def update_images(self):
         ts = []
