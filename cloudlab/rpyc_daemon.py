@@ -27,15 +27,16 @@ CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
 
 IMAGES = {
-    'flowgrindd': 'flowgrindd.dockerfile',
-    'hadoop': 'hadoop.dockerfile',
+    'flowgrindd': 'flowgrindd',
+    'hadoop': 'hadoop',
 }
 
 
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
-DOCKER_BUILD = 'sudo docker build - < ~/sdrt/vhost/{image}'
+DOCKER_BUILD = 'sudo docker build -t {image} - ' \
+               '< ~/sdrt/vhost/{image}.dockerfile'
 DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
