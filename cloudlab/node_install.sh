@@ -51,6 +51,10 @@ sudo systemctl disable ntp.service
 cd $HOME/libVT
 sudo make install
 
+# libADU
+cd $HOME/sdrt/libADU
+sudo make install
+
 
 # install updated kernel
 # sudo mkdir /mnt/extra
