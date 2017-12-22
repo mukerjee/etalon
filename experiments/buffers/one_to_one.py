@@ -2,7 +2,7 @@
 
 import sys
 import buffer_common
-sys.path.append("../../common/")
+sys.path.append("../")
 
 from common import initializeExperiment, finishExperiment, flowgrind, \
     rack_sockperf, waitOnWork

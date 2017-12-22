@@ -1,3 +1,3 @@
 #!/bin/bash
 
-scp apt108.apt.emulab.net:~/sdrt/cloudlab/experiments/buffers/$1-\*.tar.gz ./
+scp apt093.apt.emulab.net:~/sdrt/experiments/buffers/$1-\*.tar.gz ./
