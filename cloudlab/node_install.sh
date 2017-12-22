@@ -75,4 +75,7 @@ sudo apt-get -y build-dep linux-image-$(uname -r)
 sudo apt-get install linux-cloud-tools-common linux-tools-common
 sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
 
+cd /
+sudo ln -s ~/sdrt
+
 sudo reboot
