@@ -4,8 +4,7 @@ import sys
 import buffer_common
 sys.path.append("../")
 
-from common import initializeExperiment, finishExperiment, flowgrind, \
-    rack_sockperf, waitOnWork
+from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 
 initializeExperiment()
