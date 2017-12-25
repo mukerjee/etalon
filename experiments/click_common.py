@@ -52,6 +52,12 @@ def setLog(log):
     time.sleep(0.1)
 
 
+def disableLog():
+    print 'diabling packet logging'
+    clickWriteHandler('hsl', 'disableLog', '')
+    time.sleep(0.1)
+
+
 def setQueueSize(size):
     for i in xrange(1, NUM_RACKS+1):
         for j in xrange(1, NUM_RACKS+1):
@@ -138,11 +144,8 @@ def setStrobeSchedule():
 def setCircuitSchedule():
     disableSolstice()
     configuration = ''
-    configuration += '1/0/'
-    for j in xrange(NUM_RACKS - 2):
-        configuration += '-1/'
-    configuration = configuration[:-1]
-    schedule = '1 %d %s' % (20 * TDF * 9, configuration)
+    configuration += '1/0/3/2/5/4/7/6'
+    schedule = '1 %d %s' % (20 * TDF * 10 * 10, configuration)
     clickWriteHandler('runner', 'setSchedule', schedule)
     time.sleep(0.1)
 
@@ -151,7 +154,7 @@ def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'in_advance': 12000, 'cc': 'reno'}
+                      'in_advance': 12000, 'cc': 'reno', 'packet_log': True}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     setQueueResize(False)  # let manual queue sizes be passed through first
@@ -175,5 +178,7 @@ def setConfig(config):
                                               c['queue_resize'],
                                               c['in_advance'], c['cc'])
     FN_FORMAT += '%s.txt'
-    if config:
+    if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')
+    if not c['packet_log']:
+        disableLog()

@@ -59,13 +59,21 @@ k = 0
 for i in xrange(1, NUM_RACKS+1):
     print '                  hybrid_switch/circuit_link%d %d,' % (i, j)
     k += 1
+    j += 1
+k = 0
+for i in xrange(1, NUM_RACKS+1):
+    print '                  hybrid_switch/packet_up_link%d %d,' % (i, j)
+    k += 1
     if k == 4:
         j += 1
         k = 0
-for i in xrange(1, NUM_RACKS+1):
-    print '                  hybrid_switch/packet_up_link%d %d,' % (i, j)
+k = 0
 for i in xrange(1, NUM_RACKS+1):
     print '                  hybrid_switch/ps/packet_link%d %d,' % (i, j)
+    k += 1
+    if k == 4:
+        j += 1
+        k = 0
 print ')'
 print
 
@@ -228,7 +236,7 @@ for i in xrange(1, NUM_RACKS+1):
     else:
         print queues[:-1]
 print ' :: {'
-print '      input[0] -> q :: Queue(CAPACITY $SMALL_BUFFER_SIZE)'
+print '      input[0] -> q :: LockQueue(CAPACITY $SMALL_BUFFER_SIZE)'
 print '      input[1] -> lq :: Queue(CAPACITY 5)  // loss queue'
 print '      lq, q => PrioSched -> output'
 print '      lq[1] -> Print("LQ DROP") -> Discard'
