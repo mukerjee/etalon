@@ -11,6 +11,8 @@ import numpy as np
 from get_throughput_and_latency import get_tput_and_lat
 from simpleplotlib import plot
 
+SR = (1, 2)
+
 
 def graph(data, x_label, fn):
     graph_lat50(data, x_label, fn)
@@ -99,7 +101,7 @@ def graph_rtts(data, x_label, fn):
     print rtts
     for i in xrange(len(rtts)):
         print rtts[i]
-        rtts[i] = {k: v for (k, v) in rtts[i].items() if k < 6}
+        rtts[i] = {k: v for (k, v) in rtts[i].items() if v > 1.0}
     x = [np.asarray(k.keys()) for k in rtts]
     y = [k.values() for k in rtts]
     print 'labels:', labels
@@ -141,12 +143,12 @@ if __name__ == '__main__':
                         'QUEUE-False-*-reno-click.txt'):
         buffer_size = int(fn.split('/')[-1].split('strobe-')[1].split('-')[0])
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
-        tput = tput.values()[0]
+        tput = tput[SR]
         lat50 = lat[1][1]
         lat99 = lat[3][1]
-        buffer_data[buffer_size] = (tput, lat50, lat99, pack_util.values()[0],
-                                    circ_util.values()[0],
-                                    rtt_data.values()[0])
+        buffer_data[buffer_size] = (tput, lat50, lat99, pack_util[SR],
+                                    circ_util[SR],
+                                    rtt_data[SR])
     buffer_data = sorted(buffer_data.items())
     print buffer_data
     
@@ -157,11 +159,11 @@ if __name__ == '__main__':
                         'QUEUE-True-*-reno-click.txt'):
         days_out = int(fn.split('/')[-1].split('True-')[1].split('-')[0])
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
-        tput = tput.values()[0]
+        tput = tput[SR]
         lat50 = lat[1][1]
         lat99 = lat[3][1]
-        days_out_data[days_out] = (tput, lat50, lat99, pack_util.values()[0],
-                                   circ_util.values()[0], rtt_data.values()[0])
+        days_out_data[days_out] = (tput, lat50, lat99, pack_util[SR],
+                                   circ_util[SR], rtt_data[SR])
     days_out_data = sorted(days_out_data.items())
     print days_out_data
     graph(days_out_data, 'Early buffer resize (us)', 'days_out')
@@ -169,11 +171,11 @@ if __name__ == '__main__':
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
                         'QUEUE-False-*-ocs-click.txt'):
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
-        tput = tput.values()[0]
+        tput = tput[SR]
         lat50 = lat[1][1]
         lat99 = lat[3][1]
-        ocs_strobe_data = [(1, (tput, lat50, lat99, pack_util.values()[0],
-                                circ_util.values()[0], rtt_data.values()[0]))]
+        ocs_strobe_data = [(1, (tput, lat50, lat99, pack_util[SR],
+                                circ_util[SR], rtt_data[SR]))]
     print ocs_strobe_data
 
     ocs_days_out_data = {0: ocs_strobe_data[0][1]}
@@ -181,13 +183,13 @@ if __name__ == '__main__':
                         'QUEUE-True-*-ocs-click.txt'):
         days_out = int(fn.split('/')[-1].split('True-')[1].split('-')[0])
         tput, lat, pack_util, circ_util, rtt_data = get_tput_and_lat(fn)
-        tput = tput.values()[0]
+        tput = tput[SR]
         lat50 = lat[1][1]
         lat99 = lat[3][1]
         ocs_days_out_data[days_out] = (tput, lat50, lat99,
-                                       pack_util.values()[0],
-                                       circ_util.values()[0],
-                                       rtt_data.values()[0])
+                                       pack_util[SR],
+                                       circ_util[SR],
+                                       rtt_data[SR])
     ocs_days_out_data = sorted(ocs_days_out_data.items())
     print ocs_days_out_data
     graph(ocs_days_out_data, 'Early buffer resize (us)', 'ocs_days_out')
