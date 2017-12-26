@@ -92,11 +92,11 @@ class SDRTService(rpyc.Service):
             if 'flowgrindd' in image else CPU_SET
         my_cmd = ''
         if image == 'flowgrindd':
-            my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
+            my_cmd = '"pipework --wait && pipework --wait -i eth2 && sleep 2 && ' \
                      'LD_PRELOAD=libVT.so taskset -c {cpu} ' \
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
         if image == 'flowgrindd_adu':
-            my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
+            my_cmd = '"pipework --wait && pipework --wait -i eth2 && sleep 2 && ' \
                      'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} ' \
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
