@@ -47,6 +47,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable phc2sys.service
 sudo systemctl disable ntp.service
 
+cd /
+sudo ln -s ~/sdrt
+
 # libVT
 cd $HOME/libVT
 sudo make install
@@ -78,8 +81,5 @@ sudo apt-get update
 sudo apt-get -y build-dep linux-image-$(uname -r)
 sudo apt-get install linux-cloud-tools-common linux-tools-common
 sudo dpkg -i /proj/dna-PG0/sdrt/*.deb
-
-cd /
-sudo ln -s ~/sdrt
 
 sudo reboot

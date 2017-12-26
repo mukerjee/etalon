@@ -2,6 +2,7 @@ all: libADU.so
 
 install: libADU.so
 	cp libADU.so /usr/lib/
+	cp libADU.so /sdrt/vhost/
 
 libADU.so: libADU.c
 	rm -f libADU.so*
