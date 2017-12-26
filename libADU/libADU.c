@@ -17,19 +17,17 @@
 #define SWITCH_CTRL_IP "10.2.10.9"
 #define SWITCH_CTRL_PORT "8123"
 
+#define MAX_FD 4096
+
 struct traffic_info {
   char src[INET_ADDRSTRLEN];
   char dst[INET_ADDRSTRLEN];
   size_t size;
 };
 
-struct traffic_info* info;
+struct traffic_info* info_table[MAX_FD] = {NULL};
 char local_ip[NI_MAXHOST];
 int ctrl_sock = -1;
-
-ssize_t write(int fd, void *buffer, size_t size);
-int socket(int domain, int type, int protocol);
-int close(int sockfd);
 
 static int (*next_socket)(int domain, int type, int protocol) = NULL;
 static int (*next_send)(int socket, const void *buffer, size_t length,
@@ -38,13 +36,10 @@ static int (*next_write)(int fd, void *buffer, size_t size) = NULL;
 static int (*next_close)(int sockfd) = NULL;
 
 void get_local_ip(int fd, char* saddr) {
-  struct ifreq ifr;
-
-  ifr.ifr_addr.sa_family = AF_INET;
-  strncpy(ifr.ifr_name, LOCAL_CTRL_DEVNAME, IFNAMSIZ-1);
-  ioctl(fd, SIOCGIFADDR, &ifr);
-
-  strncpy(saddr, inet_ntoa(((struct sockaddr_in *)&ifr.ifr_addr)->sin_addr),
+  struct sockaddr_in localAddress;
+  socklen_t addressLength = sizeof(localAddress);
+  getsockname(fd, (struct sockaddr*)&localAddress, &addressLength);
+  strncpy(saddr, inet_ntoa(localAddress.sin_addr),
           INET_ADDRSTRLEN);
 }
 
@@ -114,16 +109,22 @@ static void get_next_fn(void** next_fn, char* fn) {
 int socket(int domain, int type, int protocol) {
   char* fn_name = "socket";
   get_next_fn((void**)&next_socket, fn_name);
+  get_next_fn((void**)&next_close, fn_name);
 
   open_ctrl_socket();
 
   int sockfd = next_socket(domain, type, protocol);
 
-  info = (struct traffic_info *)malloc(sizeof(struct traffic_info));
-  memset(info, 0, sizeof(struct traffic_info));
+  if (sockfd > MAX_FD) {
+    fprintf(stderr, "Sockfd larger than MAX_FD\n");
+    return -1;
+  }
+  if (sockfd < 0) {
+    return sockfd;
+  }
 
-  get_local_ip(sockfd, info->src);
-  /* fprintf(stderr, "LOCAL_IP: %s\n", info->src); */
+  info_table[sockfd] = (struct traffic_info *)malloc(sizeof(struct traffic_info));
+  memset(info_table[sockfd], 0, sizeof(struct traffic_info));
 
   return sockfd;
 }
@@ -137,10 +138,13 @@ ssize_t write(int fd, void *buffer, size_t size) {
   ssize_t true_size = next_write(fd, buffer, size);
 
   // Get the destination address
-  if (fd != ctrl_sock) {
-    get_remote_ip(fd, info->dst);
-    info->size = true_size;
-    nbytes = next_write(ctrl_sock, info, sizeof(struct traffic_info));
+  if (info_table[fd] && fd != ctrl_sock) {
+    get_local_ip(fd, info_table[fd]->src);
+    get_remote_ip(fd, info_table[fd]->dst);
+    /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", info_table[fd]->src, */
+    /* 	    info_table[fd]->dst); */
+    info_table[fd]->size = true_size;
+    nbytes = next_write(ctrl_sock, info_table[fd], sizeof(struct traffic_info));
 
     if (nbytes != sizeof(struct traffic_info)){
       fprintf(stderr, "Failed to send ctrl message\n");
@@ -160,10 +164,13 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags) {
   ssize_t true_size = next_send(fd, buffer, size, flags);
 
   // Get the destination address
-  if (fd != ctrl_sock) {
-    get_remote_ip(fd, info->dst);
-    info->size = true_size;
-    nbytes = next_send(ctrl_sock, info, sizeof(struct traffic_info), flags);
+  if (info_table[fd] && fd != ctrl_sock) {
+    get_local_ip(fd, info_table[fd]->src);
+    get_remote_ip(fd, info_table[fd]->dst);
+    /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", info_table[fd]->src, */
+    /* 	    info_table[fd]->dst); */
+    info_table[fd]->size = true_size;
+    nbytes = next_send(ctrl_sock, info_table[fd], sizeof(struct traffic_info), flags);
     if (nbytes != sizeof(struct traffic_info)){
       fprintf(stderr, "Failed to send ctrl message\n");
       return nbytes;
@@ -176,6 +183,9 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags) {
 int close(int sockfd) {
   char* fn_name = "close";
   get_next_fn((void**)&next_close, fn_name);
+
+  free(info_table[sockfd]);
+  info_table[sockfd] = NULL;
 
   /* fprintf(stderr, "close(%i)\n", sockfd); */
   /* next_close(ctrl_sock); */
