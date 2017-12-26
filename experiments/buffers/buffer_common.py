@@ -1,10 +1,11 @@
 import itertools
 buffer_sizes = [16]
 in_advances = [12000]
-ccs = ['ocs']
+ccs = ['reno']
 # types = ['normal', 'circuit', 'no_circuit', 'strobe', 'resize']
-types = ['resize']
-CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia}
+types = ['strobe']
+CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
+            'packet_log': False}
            for (t, b, cc, ia) in itertools.product(types, buffer_sizes, ccs,
                                                    in_advances)]
 
