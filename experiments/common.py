@@ -14,8 +14,6 @@ from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
 DATA_NET = 1
 CONTROL_NET = 2
 
-ADU_PRELOAD = os.path.expanduser('~/sdrt/sdrt-ctrl/lib/sdrt-ctrl.so')
-
 THREADS = []
 THREAD_LOCK = threading.Lock()
 
@@ -23,7 +21,7 @@ THREAD_LOCK = threading.Lock()
 ##
 # Experiment commands
 ##
-def initializeExperiment():
+def initializeExperiment(adu=False):
     print '--- starting experiment...'
     print '--- clearing local arp...'
     call([os.path.expanduser('~/sdrt/cloudlab/arp_clear.sh')])
@@ -44,7 +42,7 @@ def initializeExperiment():
     print '--- done...'
 
     print '--- launching flowgrindd...'
-    launch_all_flowgrindd()
+    launch_all_flowgrindd(adu)
     print '--- done...'
 
     click_common.initializeClickControl()
@@ -98,15 +96,18 @@ def connect_all_rpyc_daemon():
 ##
 # flowgrind
 ##
-def launch_flowgrindd(phost):
-    RPYC_CONNECTIONS[phost].root.flowgrindd()
+def launch_flowgrindd(phost, adu):
+    if adu:
+        RPYC_CONNECTIONS[phost].root.flowgrindd_adu()
+    else:
+        RPYC_CONNECTIONS[phost].root.flowgrindd()
 
 
-def launch_all_flowgrindd():
+def launch_all_flowgrindd(adu):
     ts = []
     for phost in PHYSICAL_NODES[1:]:
         ts.append(threading.Thread(target=launch_flowgrindd,
-                                   args=(phost,)))
+                                   args=(phost, adu)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
 

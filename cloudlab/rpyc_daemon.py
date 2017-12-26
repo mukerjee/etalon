@@ -89,11 +89,17 @@ class SDRTService(rpyc.Service):
     def launch(self, image, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
         cpus = str((host_id % (CPU_COUNT-1)) + 1) \
-            if image == 'flowgrindd' else CPU_SET
-        my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
-                 'LD_PRELOAD=libVT.so taskset -c {cpu} ' \
-                 'flowgrindd -d -c {cpu}"'.format(cpu=cpus) \
-                 if image == 'flowgrindd' else ''
+            if 'flowgrindd' in image else CPU_SET
+        my_cmd = ''
+        if image == 'flowgrindd':
+            my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
+                     'LD_PRELOAD=libVT.so taskset -c {cpu} ' \
+                     'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
+        if image == 'flowgrindd_adu':
+            my_cmd = '"pipework --wait && pipework --wait -i eth2 && ' \
+                     'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} ' \
+                     'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
+            image = 'flowgrindd'
         my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
@@ -133,6 +139,9 @@ class SDRTService(rpyc.Service):
 
     def exposed_flowgrindd(self):
         self.launch_rack('flowgrindd')
+
+    def exposed_flowgrindd_adu(self):
+        self.launch_rack('flowgrindd_adu')
 
     def exposed_hadoop(self):
         self.launch_rack('hadoop')
