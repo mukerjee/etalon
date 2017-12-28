@@ -3,9 +3,9 @@ buffer_sizes = [16]
 in_advances = [12000]
 ccs = ['reno']
 # types = ['normal', 'circuit', 'no_circuit', 'strobe', 'resize']
-types = ['strobe']
+types = ['normal']
 CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
-            'packet_log': False, 'traffic_source': 'QUEUE'}
+            'packet_log': False, 'traffic_source': 'ADU'}
            for (t, b, cc, ia) in itertools.product(types, buffer_sizes, ccs,
                                                    in_advances)]
 
