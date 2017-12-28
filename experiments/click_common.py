@@ -81,6 +81,14 @@ def setQueueResize(b):
     time.sleep(0.1)
 
 
+def clearCounters():
+    for i in xrange(1, NUM_RACKS+1):
+        for j in xrange(1, NUM_RACKS+1):
+            clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
+                              'clear', "")
+    clickWriteHandler('traffic_matrix', 'clear', "")
+
+
 ##
 # Congestion Control
 ##
@@ -157,6 +165,7 @@ def setConfig(config):
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
+    clearCounters()
     setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
