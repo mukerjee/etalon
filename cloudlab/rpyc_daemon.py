@@ -107,10 +107,6 @@ class SDRTService(rpyc.Service):
         self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
                                   net=DATA_NET, rack=SELF_ID, id=host_id))
         self.call(TC.format(int_if=DATA_INT_IF, id=my_id, rate=DATA_RATE))
-        self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-                                  net=CONTROL_NET, rack=SELF_ID, id=host_id))
-        self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
-                            rate=CONTROL_RATE))
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         self.call(NS_RUN.format(pid=my_pid, cmd=SWITCH_PING))
         smac = self.call(NS_RUN.format(pid=my_pid, cmd=GET_SWITCH_MAC))
@@ -124,6 +120,11 @@ class SDRTService(rpyc.Service):
                 self.call(NS_RUN.format(pid=my_pid,
                                         cmd=ARP_POISON.format(
                                             id=dst_id, switch_mac=smac)))
+
+        self.call(PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
+                                  net=CONTROL_NET, rack=SELF_ID, id=host_id))
+        self.call(TC.format(int_if=CONTROL_INT_IF, id=my_id,
+                            rate=CONTROL_RATE))
 
     def launch_rack(self, image):
         self.clean()

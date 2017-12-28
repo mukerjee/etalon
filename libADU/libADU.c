@@ -18,6 +18,7 @@
 #define SWITCH_CTRL_PORT "8123"
 
 #define MAX_FD 4096
+#define EXIT_FAILED -1
 
 struct traffic_info {
   char src[INET_ADDRSTRLEN];
@@ -132,8 +133,11 @@ int socket(int domain, int type, int protocol) {
 // Wrap up the write() call
 ssize_t write(int fd, void *buffer, size_t size) {
   ssize_t nbytes = -1;
-  char* fn_name = "write";
-  get_next_fn((void**)&next_write, fn_name);
+
+  if (!next_write) {
+    char* fn_name = "write";
+    get_next_fn((void**)&next_write, fn_name);
+  }
 
   ssize_t true_size = next_write(fd, buffer, size);
 
@@ -148,7 +152,7 @@ ssize_t write(int fd, void *buffer, size_t size) {
 
     if (nbytes != sizeof(struct traffic_info)){
       fprintf(stderr, "Failed to send ctrl message\n");
-      return nbytes;
+      exit(EXIT_FAILED);
     }
   /* fprintf(stderr, "SIZE: %ld\n", true_size); */
   }
@@ -158,6 +162,12 @@ ssize_t write(int fd, void *buffer, size_t size) {
 // Wrap up the send() call
 ssize_t send(int fd, const void *buffer, size_t size, int flags) {
   ssize_t nbytes = -1;
+
+  if (!next_write) {
+    char* fn_name = "write";
+    get_next_fn((void**)&next_write, fn_name);
+  }
+
   char* fn_name = "send";
   get_next_fn((void**)&next_send, fn_name);
 
@@ -170,10 +180,10 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags) {
     /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", info_table[fd]->src, */
     /* 	    info_table[fd]->dst); */
     info_table[fd]->size = true_size;
-    nbytes = next_send(ctrl_sock, info_table[fd], sizeof(struct traffic_info), flags);
+    nbytes = next_write(ctrl_sock, info_table[fd], sizeof(struct traffic_info));
     if (nbytes != sizeof(struct traffic_info)){
       fprintf(stderr, "Failed to send ctrl message\n");
-      return nbytes;
+      exit(EXIT_FAILED);
     }
   }
   return true_size;
