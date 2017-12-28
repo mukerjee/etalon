@@ -5,9 +5,13 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 RUN apt-get update && apt-get install -y \
                               gcc \
                               cmake \
+                              dh-autoreconf \
                               wget \
                               libcurl4-gnutls-dev \
-                              libxmlrpc-core-c3-dev
+                              libxmlrpc-core-c3-dev \
+                              libpcap-dev \
+                              libgsl-dev \
+                              uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pipework
