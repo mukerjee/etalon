@@ -25,14 +25,14 @@ COPY libVT.so /usr/lib/libVT.so
 
 # build custom flowgrind
 WORKDIR /root
-RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/master.tar.gz \
-    && tar xfz master.tar.gz \
-    && cd flowgrind-sdrt-master \
+RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/next.tar.gz \
+    && tar xfz next.tar.gz \
+    && cd flowgrind-sdrt-next \
     && autoreconf -i \
     && ./configure \
     && make -j install \
     && cd /root \
-    && rm -rf flowgrind-sdrt-master master.tar.gz
+    && rm -rf flowgrind-sdrt-next next.tar.gz
 
 CMD pipework --wait \
     && pipework --wait -i eth2 \
