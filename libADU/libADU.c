@@ -116,6 +116,9 @@ void send_adu_info(int fd, int true_size) {
   adu_info.size = true_size;
   /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", adu_info.src, adu_info.dst); */
 
+  if (true_size <= 0)
+    return;
+
   ssize_t (*next_write)(int, const void*, size_t);
   get_next_fn((void**)&next_write, "write");
   ssize_t nbytes = next_write(ctrl_sock, &adu_info, sizeof(struct traffic_info));
