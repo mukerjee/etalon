@@ -20,20 +20,22 @@ CONTROL_NET = 2
 THREADS = []
 THREAD_LOCK = threading.Lock()
 
-DCTCP_CDF = [
-    (0, 0),
-    (10000, 0.15),
-    (20000, 0.2),
-    (30000, 0.3),
-    (50000, 0.4),
-    (80000, 0.53),
-    (200000, 0.6),
-    (1e+06, 0.7),
-    (2e+06, 0.8),
-    (5e+06, 0.9),
-    (1e+07, 0.97),
-    (3e+07, 1),
-]
+CDFs = {
+    'DCTCP': [
+        (0, 0),
+        (10000, 0.15),
+        (20000, 0.2),
+        (30000, 0.3),
+        (50000, 0.4),
+        (80000, 0.53),
+        (200000, 0.6),
+        (1e+06, 0.7),
+        (2e+06, 0.8),
+        (5e+06, 0.9),
+        (1e+07, 0.97),
+        (3e+07, 1),
+    ],
+}
 
 FANOUT = [
     (1, 50),
@@ -143,8 +145,9 @@ def get_flowgrind_host(h):
                                         CONTROL_NET, h[1], h[2:])
 
 
-def gen_empirical_flows(seed="Brock", cdf=DCTCP_CDF):
+def gen_empirical_flows(seed="Brock", cdf_key='DCTCP'):
     random.seed(seed)
+    cdf = CDFs[cdf_key]
     target_bw = 1/2.0 * \
         (PACKET_BW + 1.0/NUM_RACKS * CIRCUIT_BW) / HOSTS_PER_RACK
     flows = []
@@ -176,7 +179,7 @@ def flowgrind(settings):
     cmd = 'flowgrind -I '
     flows = []
     if 'empirical' in settings:
-        flows = gen_empirical_flows(cdf=settings['empirical'])
+        flows = gen_empirical_flows(cdf_key=settings['empirical'])
     else:
         for f in settings['flows']:
             if f['src'][0] == 'r' and f['dst'][0] == 'r':
