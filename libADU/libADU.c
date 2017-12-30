@@ -107,7 +107,9 @@ void send_adu_info(int fd, int true_size) {
   get_local_ip(fd, adu_info.src);
   get_remote_ip(fd, adu_info.dst);
   adu_info.size = true_size;
-  // fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", adu_info.src, traffic_info.dst);
+  /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", adu_info.src, adu_info.dst); */
+  if (strncmp(adu_info.src, "10.", 3))
+    return;
 
   ssize_t (*next_write)(int, void*, size_t);
   get_next_fn((void**)&next_write, "write");
