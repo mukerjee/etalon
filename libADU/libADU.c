@@ -12,6 +12,8 @@
 #include <netdb.h>
 #include <sys/ioctl.h>
 #include <net/if.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #define LOCAL_CTRL_DEVNAME "enp8s0d1"
 #define SWITCH_CTRL_IP "10.2.10.9"
@@ -98,6 +100,11 @@ static void open_ctrl_socket() {
 }
 
 void send_adu_info(int fd, int true_size) {
+  struct stat statbuf;
+  fstat(fd, &statbuf);
+  if (!S_ISSOCK(statbuf.st_mode))
+    return;
+
   if (fd == ctrl_sock)
     return;
 
@@ -108,10 +115,8 @@ void send_adu_info(int fd, int true_size) {
   get_remote_ip(fd, adu_info.dst);
   adu_info.size = true_size;
   /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", adu_info.src, adu_info.dst); */
-  if (strncmp(adu_info.src, "10.", 3))
-    return;
 
-  ssize_t (*next_write)(int, void*, size_t);
+  ssize_t (*next_write)(int, const void*, size_t);
   get_next_fn((void**)&next_write, "write");
   ssize_t nbytes = next_write(ctrl_sock, &adu_info, sizeof(struct traffic_info));
   if (nbytes != sizeof(struct traffic_info)){
@@ -121,8 +126,8 @@ void send_adu_info(int fd, int true_size) {
 }
 
 // Wrap up the write() call
-ssize_t write(int fd, void *buffer, size_t size) {
-  ssize_t (*next_write)(int, void*, size_t);
+ssize_t write(int fd, const void *buffer, size_t size) {
+  ssize_t (*next_write)(int, const void*, size_t);
   get_next_fn((void**)&next_write, "write");
 
   ssize_t true_size = next_write(fd, buffer, size);
