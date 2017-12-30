@@ -202,8 +202,8 @@ def gen_empirical_flows(seed="Brock", cdf_key='DCTCP'):
                     dst_num = random.choice([x for x in
                                              xrange(NUM_RACKS * HOSTS_PER_RACK)
                                              if x != src_num])
-                    dst = 'h%d%d' ((dst_num / HOSTS_PER_RACK) + 1,
-                                   (dst_num % HOSTS_PER_RACK) + 1)
+                    dst = 'h%d%d' % ((dst_num / HOSTS_PER_RACK) + 1,
+                                     (dst_num % HOSTS_PER_RACK) + 1)
                     flows.append({'src': src, 'dst': dst, 'start': t,
                                   'size': request_size,
                                   'response_size': response_size / fout})
@@ -212,7 +212,7 @@ def gen_empirical_flows(seed="Brock", cdf_key='DCTCP'):
 
 
 def flowgrind(settings):
-    cmd = 'flowgrind -I '
+    cmd = '-I '
     flows = []
     if 'empirical' in settings:
         flows = gen_empirical_flows(cdf_key=settings['empirical'])
@@ -242,8 +242,13 @@ def flowgrind(settings):
              f['time'], f['start'], f['size'])
         if 'response_size' in f:
             cmd += '-Gs=p:C:%d -Z 1 ' % f['response_size']
-    cmd = 'echo "%s" && %s' % (cmd, cmd)
+    fg_config = click_common.FN_FORMAT % ('flowgrind.config')
+    fp = open(fg_config, 'w')
+    fp.write(cmd)
+    fp.close()
+    cmd = 'flowgrind --configure %s' % fg_config
     print cmd
+    EXPERIMENTS.append(fg_config)
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
     runWriteFile(cmd, fn)
