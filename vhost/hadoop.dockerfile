@@ -20,9 +20,8 @@ RUN wget https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework \
     && chmod +x pipework
 
 # copy SDRT libADU and libVT
-WORKDIR /usr/lib
-COPY /usr/lib/libADU /usr/lib/
-COPY /usr/lib/libVT /usr/lib/
+COPY libADU.so /usr/lib/libADU.so
+COPY libVT.so /usr/lib/libVT.so
 
 # hadoop
 WORKDIR /root

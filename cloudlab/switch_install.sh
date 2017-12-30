@@ -7,14 +7,16 @@ DPDK_VERSION=16.11_2.3
 cd $HOME
 GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/sdrt.git
 GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/click-sdrt.git
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone https://github.com/mukerjee/flowgrind-sdrt.git
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/sdrt/cloudlab/tune.sh") | crontab -
 sudo rm /var/run/crond.reboot
 
 sudo apt-get update && sudo apt-get install -y \
                             git \
-                            flowgrind \
                             python-pip \
-                            linuxptp
+                            linuxptp \
+			    libcurl4-gnutls-dev \
+			    libxmlrpc-core-c3-dev
 
 sudo pip install rpyc
 
@@ -54,6 +56,13 @@ export RTE_TARGET=x86_64-native-linuxapp-gcc
 cd $HOME/click-sdrt
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j
+sudo make install
+
+# make flowgrind
+cd $HOME/flowgrind-sdrt
+autoreconf -i
+./configure
+make
 sudo make install
 
 # PTP

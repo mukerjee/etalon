@@ -3,8 +3,15 @@ FROM ubuntu AS flowgrindd
 MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
 RUN apt-get update && apt-get install -y \
+                              gcc \
+                              cmake \
+                              dh-autoreconf \
                               wget \
-                              flowgrind \
+                              libcurl4-gnutls-dev \
+                              libxmlrpc-core-c3-dev \
+                              libpcap-dev \
+                              libgsl-dev \
+                              uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
 # Install pipework
@@ -13,9 +20,19 @@ RUN wget https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework \
     && chmod +x pipework
 
 # copy SDRT libADU and libVT
-WORKDIR /usr/lib
-COPY /usr/lib/libADU /usr/lib/
-COPY /usr/lib/libVT /usr/lib/
+COPY libADU.so /usr/lib/libADU.so
+COPY libVT.so /usr/lib/libVT.so
+
+# build custom flowgrind
+WORKDIR /root
+RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/next.tar.gz \
+    && tar xfz next.tar.gz \
+    && cd flowgrind-sdrt-next \
+    && autoreconf -i \
+    && ./configure \
+    && make -j install \
+    && cd /root \
+    && rm -rf flowgrind-sdrt-next next.tar.gz
 
 CMD pipework --wait \
     && pipework --wait -i eth2 \
