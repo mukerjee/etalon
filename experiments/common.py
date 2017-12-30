@@ -5,17 +5,41 @@ import threading
 import sys
 import os
 import tarfile
+import random
 import rpyc
+import numpy as np
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
 from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
-    EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT
+    EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
+    PACKET_BW
 
 DATA_NET = 1
 CONTROL_NET = 2
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
+
+DCTCP_CDF = [
+    (0, 0),
+    (10000, 0.15),
+    (20000, 0.2),
+    (30000, 0.3),
+    (50000, 0.4),
+    (80000, 0.53),
+    (200000, 0.6),
+    (1e+06, 0.7),
+    (2e+06, 0.8),
+    (5e+06, 0.9),
+    (1e+07, 0.97),
+    (3e+07, 1),
+]
+
+FANOUT = [
+    (1, 50),
+    (2, 30),
+    (4, 20),
+]
 
 
 ##
@@ -119,28 +143,66 @@ def get_flowgrind_host(h):
                                         CONTROL_NET, h[1], h[2:])
 
 
+def gen_empirical_flows(seed="Brock", cdf=DCTCP_CDF):
+    random.seed(seed)
+    target_bw = 1/2.0 * \
+        (PACKET_BW + 1.0/NUM_RACKS * CIRCUIT_BW) / HOSTS_PER_RACK
+    flows = []
+    for r in xrange(1, NUM_RACKS+1):
+        for h in xrange(1, HOSTS_PER_RACK+1):
+            src = 'h%d%d' % (r, h)
+            src_num = (r-1)*HOSTS_PER_RACK + (h-1)
+            t = 0.0
+            while t < 2.0:
+                request_size = random.randint(20, 60)
+                response_size = int(round(np.interp(random.random(),
+                                                    zip(*cdf)[1],
+                                                    zip(*cdf)[0])))
+                fout = np.random.choice(zip(*FANOUT)[0], p=zip(*FANOUT)[1])
+                for i in xrange(fout):
+                    dst_num = random.choice([x for x in
+                                             xrange(NUM_RACKS * HOSTS_PER_RACK)
+                                             if x != src_num])
+                    dst = 'h%d%d' ((dst_num / HOSTS_PER_RACK) + 1,
+                                   (dst_num % HOSTS_PER_RACK) + 1)
+                    flows.append({'src': src, 'dst': dst, 'start': t,
+                                  'size': request_size,
+                                  'response_size': response_size / fout})
+                t += response_size / target_bw
+    return flows
+
+
 def flowgrind(settings):
     cmd = 'flowgrind -I '
     flows = []
-    for f in settings['flows']:
-        if f['src'][0] == 'r' and f['dst'][0] == 'r':
-            s = int(f['src'][1])
-            d = int(f['dst'][1])
-            for i in xrange(1, HOSTS_PER_RACK+1):
-                fl = dict(f)
-                fl['src'] = 'h%d%d' % (s, i)
-                fl['dst'] = 'h%d%d' % (d, i)
-                flows.append(fl)
-            # flows.append({'src': 'h1', 'dst': 'h2'})
-        else:
-            flows.append(f)
+    if 'empirical' in settings:
+        flows = gen_empirical_flows(cdf=settings['empirical'])
+    else:
+        for f in settings['flows']:
+            if f['src'][0] == 'r' and f['dst'][0] == 'r':
+                s = int(f['src'][1])
+                d = int(f['dst'][1])
+                for i in xrange(1, HOSTS_PER_RACK+1):
+                    fl = dict(f)
+                    fl['src'] = 'h%d%d' % (s, i)
+                    fl['dst'] = 'h%d%d' % (d, i)
+                    flows.append(fl)
+                # flows.append({'src': 'h1', 'dst': 'h2'})
+            else:
+                flows.append(f)
     cmd += '-n %s ' % len(flows)
     for i, f in enumerate(flows):
         if 'time' not in f:
             f['time'] = 2
-        cmd += '-F %d -Hs=%s,d=%s -Ts=%d -Ss=8948 ' % \
+        if 'start' not in f:
+            f['start'] = 0
+        if 'size' not in f:
+            f['size'] = 8948
+        cmd += '-F %d -Hs=%s,d=%s -Ts=%d -Ys=%d -Gs=q:C:%d ' % \
             (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
-             f['time'])
+             f['time'], f['start'], f['size'])
+        if 'response_size' in f:
+            cmd += '-Gs=p:C:%d -Z 1 ' % f['response_size']
     cmd = 'echo "%s" && %s' % (cmd, cmd)
     print cmd
     fn = click_common.FN_FORMAT % ('flowgrind')
