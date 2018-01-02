@@ -59,3 +59,5 @@ fi
 cd $HOME/sdrt/tcp_ocs/
 make
 sudo insmod tcp_ocs.ko
+
+ulimit -n 4096
