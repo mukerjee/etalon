@@ -5,7 +5,6 @@ import threading
 import sys
 import os
 import tarfile
-import random
 import rpyc
 import numpy as np
 import click_common
@@ -74,9 +73,9 @@ CDFs = {
 }
 
 FANOUT = [
-    (1, 50),
-    (2, 30),
-    (4, 20),
+    (1, .50),
+    (2, .30),
+    (4, .20),
 ]
 
 
@@ -181,8 +180,8 @@ def get_flowgrind_host(h):
                                         CONTROL_NET, h[1], h[2:])
 
 
-def gen_empirical_flows(seed="Brock", cdf_key='DCTCP'):
-    random.seed(seed)
+def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
+    np.random.seed(seed)
     cdf = CDFs[cdf_key]
     target_bw = 1/2.0 * \
         (PACKET_BW + 1.0/NUM_RACKS * CIRCUIT_BW) / HOSTS_PER_RACK
@@ -193,26 +192,25 @@ def gen_empirical_flows(seed="Brock", cdf_key='DCTCP'):
             src_num = (r-1)*HOSTS_PER_RACK + (h-1)
             t = 0.0
             while t < 2.0:
-                request_size = random.randint(20, 60)
-                response_size = int(round(np.interp(random.random(),
+                request_size = np.random.randint(60, 120)
+                response_size = int(round(np.interp(np.random.random(),
                                                     zip(*cdf)[1],
                                                     zip(*cdf)[0])))
                 fout = np.random.choice(zip(*FANOUT)[0], p=zip(*FANOUT)[1])
                 for i in xrange(fout):
-                    dst_num = random.choice([x for x in
-                                             xrange(NUM_RACKS * HOSTS_PER_RACK)
-                                             if x != src_num])
-                    dst = 'h%d%d' ((dst_num / HOSTS_PER_RACK) + 1,
-                                   (dst_num % HOSTS_PER_RACK) + 1)
+                    dst_num = np.random.choice([x for x in
+                                                xrange(NUM_RACKS * HOSTS_PER_RACK)
+                                                if x != src_num])
+                    dst = 'h%d%d' % ((dst_num / HOSTS_PER_RACK) + 1,
+                                     (dst_num % HOSTS_PER_RACK) + 1)
                     flows.append({'src': src, 'dst': dst, 'start': t,
                                   'size': request_size,
-                                  'response_size': response_size / fout})
+                                  'response_size': max(response_size / fout, 1)})
                 t += response_size / target_bw
     return flows
 
 
 def flowgrind(settings):
-    cmd = 'flowgrind -I '
     flows = []
     if 'empirical' in settings:
         flows = gen_empirical_flows(cdf_key=settings['empirical'])
@@ -229,21 +227,27 @@ def flowgrind(settings):
                 # flows.append({'src': 'h1', 'dst': 'h2'})
             else:
                 flows.append(f)
-    cmd += '-n %s ' % len(flows)
+    cmd = '-n %s ' % len(flows)
     for i, f in enumerate(flows):
         if 'time' not in f:
-            f['time'] = 2
+            f['time'] = 2.0
         if 'start' not in f:
             f['start'] = 0
         if 'size' not in f:
             f['size'] = 8948
-        cmd += '-F %d -Hs=%s,d=%s -Ts=%d -Ys=%d -Gs=q:C:%d ' % \
+        cmd += '-F %d -Q -Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
             (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
              f['time'], f['start'], f['size'])
         if 'response_size' in f:
             cmd += '-Gs=p:C:%d -Z 1 ' % f['response_size']
-    cmd = 'echo "%s" && %s' % (cmd, cmd)
+    cmd += '-I '
+    fg_config = click_common.FN_FORMAT % ('flowgrind.config')
+    fp = open(fg_config, 'w')
+    fp.write(cmd)
+    fp.close()
+    cmd = 'flowgrind --configure %s' % fg_config
     print cmd
+    EXPERIMENTS.append(fg_config)
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
     runWriteFile(cmd, fn)

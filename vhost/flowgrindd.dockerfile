@@ -19,10 +19,6 @@ WORKDIR /usr/local/bin
 RUN wget https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework \
     && chmod +x pipework
 
-# copy SDRT libADU and libVT
-COPY libADU.so /usr/lib/libADU.so
-COPY libVT.so /usr/lib/libVT.so
-
 # build custom flowgrind
 WORKDIR /root
 RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/next.tar.gz \
@@ -33,6 +29,10 @@ RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/next.tar.gz \
     && make -j install \
     && cd /root \
     && rm -rf flowgrind-sdrt-next next.tar.gz
+
+# copy SDRT libADU and libVT
+COPY libADU.so /usr/lib/libADU.so
+COPY libVT.so /usr/lib/libVT.so
 
 CMD pipework --wait \
     && pipework --wait -i eth2 \
