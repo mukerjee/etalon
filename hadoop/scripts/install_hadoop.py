@@ -6,12 +6,12 @@ import argparse
 import os
 #import re
 
-VERSION='3.0.0'
+VERSION='3.0.0-SNAPSHOT'
 USERNAME = 'mukerjee'
 
-publicIP = {'namenode':['10.10.1.11'], 'datanode':['10.10.1.12', '10.10.1.21', '10.10.1.22']}
-privateDNS = {'namenode':['10.10.1.11'], 'datanode':['10.10.1.12', '10.10.1.21', '10.10.1.22']}
-namenode_publicDNS = '10.10.1.11'
+publicIP = {'namenode':['10.1.10.1'], 'datanode':['10.1.10.2', '10.1.10.3', '10.1.10.4']}
+privateDNS = {'namenode':['10.1.10.1'], 'datanode':['10.1.10.2', '10.1.10.3', '10.1.10.4']}
+namenode_publicDNS = '10.1.10.1'
 num_datanode = 3
 
 def run_cmd(host, cmd):
@@ -29,12 +29,14 @@ def run_cmd(host, cmd):
     ssh.close()
 
 def run_install():
-
     HADOOP_CONF_DIR = '/hadoop/etc/hadoop'
     HADOOP_INSTALL = '/hadoop'
     HADOOP_BIN = '/hadoop/bin'
 
     #Install hadoop
+    run_cmd(publicIP['namenode'][0], 'rm -rf /users/%s/hadoop-%s'%(USERNAME,VERSION))
+    cmd = 'scp -r ~/hadoop-'+VERSION+'/ '+USERNAME+'@%s:%s' % (publicIP['namenode'][0], '~/')
+    os.system(cmd)
     run_cmd(publicIP['namenode'][0], 'pkill -9 java')
     run_cmd(publicIP['namenode'][0], 'rm -rf /hadoop/*')
     run_cmd(publicIP['namenode'][0], 'rm -rf /tmp/hadoop*')
@@ -44,6 +46,7 @@ def run_install():
     os.system(cmd)
     cmd = 'scp ./config '+USERNAME+'@%s:~/.ssh/' % (publicIP['namenode'][0])
     os.system(cmd)
+    run_cmd(publicIP['namenode'][0], 'chmod 400 /users/'+USERNAME+'/.ssh/id_rsa')
     run_cmd(publicIP['namenode'][0], 'chmod 600 /users/'+USERNAME+'/.ssh/config')
 
     # Clean namenode directory
@@ -75,12 +78,16 @@ def run_install():
     # Set datanode
     for i in range (0, num_datanode):
         print 'Setup datanode %d'%i
+        run_cmd(publicIP['datanode'][i], 'rm -rf /users/%s/hadoop-%s'%(USERNAME,VERSION))
+        cmd = 'scp -r ~/hadoop-3.0.0-SNAPSHOT/ '+USERNAME+'@%s:%s' % (publicIP['namenode'][0], '~/')
+        os.system(cmd)
         run_cmd(publicIP['datanode'][i], 'rm -rf /tmp/hadoop*')
         run_cmd(publicIP['datanode'][i], 'rm -rf /hadoop/*')
         run_cmd(publicIP['datanode'][i], 'pkill -9 java')
         run_cmd(publicIP['datanode'][i], 'cp -r /users/'+USERNAME+'/hadoop-'+VERSION+'/* /hadoop/')
         cmd = 'scp ./config '+USERNAME+'@%s:~/.ssh/' % (publicIP['datanode'][i])
         os.system(cmd)
+        run_cmd(publicIP['datanode'][i], 'chmod 400 /users/'+USERNAME+'/.ssh/id_rsa')
         run_cmd(publicIP['datanode'][i], 'chmod 600 /users/'+USERNAME+'/.ssh/config')
         cmd = 'scp -r ./conf/* '+USERNAME+'@%s:%s' % (publicIP['datanode'][i], HADOOP_CONF_DIR)
         os.system(cmd)
