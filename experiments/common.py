@@ -100,7 +100,7 @@ def initializeExperiment(adu=False):
     print '--- done...'
 
     print '--- setting CC to reno...'
-    click_common.setCC('reno')
+    click_common.setCC('reno', adu)
     print '--- done...'
 
     print '--- launching flowgrindd...'
