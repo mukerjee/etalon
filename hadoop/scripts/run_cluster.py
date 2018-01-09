@@ -6,6 +6,8 @@ import argparse
 import os
 import re
 
+USERNAME='mukerjee'
+
 publicIP = {'namenode':['10.10.1.11'], 'datanode':['10.10.1.12', '10.10.1.21', '10.10.1.22']}
 privateDNS = {'namenode':['10.10.1.11'], 'datanode':['10.10.1.12', '10.10.1.21', '10.10.1.22']}
 namenode_publicDNS = '10.10.1.11'
@@ -15,7 +17,7 @@ def run_cmd(host, cmd):
     print host, cmd
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect(host, username='dkim')
+    ssh.connect(host, username=USERNAME)
     stdin, stdout, stderr = ssh.exec_command(cmd)
     exit_status = stdout.channel.recv_exit_status()          # Blocking call
     if exit_status == 0:
