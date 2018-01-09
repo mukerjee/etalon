@@ -90,6 +90,8 @@ def initializeExperiment(adu=False):
     print '--- done...'
 
     print '--- populating physical hosts...'
+
+    del PHYSICAL_NODES[:]  # clear in place
     PHYSICAL_NODES.append('')
     for i in xrange(1, NUM_RACKS+1):
         PHYSICAL_NODES.append('host%d' % i)
@@ -148,7 +150,8 @@ def connect_all_rpyc_daemon():
     bad_hosts = []
     for phost in PHYSICAL_NODES[1:]:
         try:
-            RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+            if phost not in RPYC_CONNECTIONS:
+                RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
         except:
             print 'could not connect to ' + phost
             bad_hosts.append(phost)
