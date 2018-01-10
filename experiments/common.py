@@ -263,6 +263,12 @@ def flowgrind(settings):
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
     runWriteFile(cmd, fn)
+    counters_fn = click_common.FN_FORMAT % ('flowgrind.counters')
+    fp = open(counters_fn, 'w')
+    counter_data = click_common.getCounters()
+    fp.write(str(counter_data))
+    fp.close()
+    EXPERIMENTS.append(counters_fn)
 
 
 ##
