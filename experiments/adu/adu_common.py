@@ -4,10 +4,11 @@ in_advances = [12000]
 ccs = ['reno']
 # types = ['normal', 'circuit', 'no_circuit', 'strobe', 'resize']
 types = ['normal']
+traffic_sources = ['ADU', 'QUEUE']
 CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
-            'packet_log': False, 'traffic_source': 'ADU'}
-           for (t, b, cc, ia) in itertools.product(types, buffer_sizes, ccs,
-                                                   in_advances)]
+            'packet_log': False, 'traffic_source': ts}
+           for (t, b, cc, ia, ts) in itertools.product(types, buffer_sizes, ccs,
+                                                       in_advances, traffic_sources)]
 
 # CONFIGS = [
 #     {'type': 'strobe', 'buffer_size':   4},
@@ -31,5 +32,5 @@ CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
 
 for c in CONFIGS:
     if c['type'] == 'resize':
-        c['type'] = 'strobe'
+        c['type'] = 'normal'
         c['queue_resize'] = True

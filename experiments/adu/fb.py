@@ -15,7 +15,7 @@ for config in adu_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    settings = {'empirical': 'DCTCP'}
+    settings = {'empirical': 'FB'}
     flowgrind(settings)
 
 finishExperiment()

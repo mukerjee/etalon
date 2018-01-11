@@ -3,6 +3,7 @@
 from dotmap import DotMap
 
 import sys
+sys.path.insert(0, '../../')
 sys.path.insert(0, '/Users/mukerjee/Dropbox/Research/simpleplotlib/')
 
 import glob

@@ -23,6 +23,6 @@
   </property>
   <property>
     <name>dfs.namenode.name.dir</name>
-    <value>file:///hadoop/hadoop_data/hdfs/namenode</value>
+    <value>file:///usr/local/hadoop/hadoop_data/hdfs/namenode</value>
   </property>
 </configuration>
