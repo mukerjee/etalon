@@ -90,6 +90,8 @@ def initializeExperiment(adu=False):
     print '--- done...'
 
     print '--- populating physical hosts...'
+
+    del PHYSICAL_NODES[:]  # clear in place
     PHYSICAL_NODES.append('')
     for i in xrange(1, NUM_RACKS+1):
         PHYSICAL_NODES.append('host%d' % i)
@@ -148,7 +150,8 @@ def connect_all_rpyc_daemon():
     bad_hosts = []
     for phost in PHYSICAL_NODES[1:]:
         try:
-            RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+            if phost not in RPYC_CONNECTIONS:
+                RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
         except:
             print 'could not connect to ' + phost
             bad_hosts.append(phost)
@@ -217,10 +220,39 @@ def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
     return flows
 
 
+def gen_big_and_small_flows(seed=92611):
+    np.random.seed(seed)
+    big_bw = 1/3.0 * CIRCUIT_BW / 8.0
+    little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
+    big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
+                 (5, 6), (6, 7), (7, 8), (8, 1)]
+    flows = []
+    psize = 9000
+    for s in xrange(1, NUM_RACKS+1):
+        for d in xrange(1, NUM_RACKS+1):
+            t = 0.0
+            while t < 2.0:
+                src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
+                dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
+                size = np.random.randint(10 * psize, 100 * psize)
+                if (s, d) in big_nodes:
+                    size = np.random.randint(1000 * psize, 10000 * psize)
+                flows.append({'src': src, 'dst': dst, 'start': t,
+                              'size': size,
+                              'response_size': 60,
+                              'single': True})
+                target_bw = big_bw if (s, d) in big_nodes else little_bw
+                t += size / target_bw
+    print len(flows)
+    return flows
+
+
 def flowgrind(settings):
     flows = []
     if 'empirical' in settings:
         flows = gen_empirical_flows(cdf_key=settings['empirical'])
+    if 'big_and_small' in settings:
+        flows = gen_big_and_small_flows()
     else:
         for f in settings['flows']:
             if f['src'][0] == 'r' and f['dst'][0] == 'r':
@@ -260,6 +292,12 @@ def flowgrind(settings):
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
     runWriteFile(cmd, fn)
+    counters_fn = click_common.FN_FORMAT % ('flowgrind.counters')
+    fp = open(counters_fn, 'w')
+    counter_data = click_common.getCounters()
+    fp.write(str(counter_data))
+    fp.close()
+    EXPERIMENTS.append(counters_fn)
 
 
 ##
