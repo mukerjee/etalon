@@ -220,10 +220,38 @@ def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
     return flows
 
 
+def gen_big_and_small_flows(seed=92611):
+    np.random.seed(seed)
+    big_bw = CIRCUIT_BW / 8.0
+    little_bw = 1/2.0 * PACKET_BW / 8.0 / NUM_RACKS
+    big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
+                 (5, 6), (6, 7), (7, 8), (8, 1)]
+    flows = []
+    psize = 9000
+    for s in xrange(1, NUM_RACKS+1):
+        for d in xrange(1, NUM_RACKS+1):
+            t = 0.0
+            while t < 2.0:
+                src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
+                dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
+                response_size = np.random.randint(10 * psize, 100 * psize)
+                if (s, d) in big_nodes:
+                    response_size = np.random.randint(1000 * psize, 10000 * psize)
+                flows.append({'src': src, 'dst': dst, 'start': t,
+                              'size': response_size,
+                              'single': True})
+                target_bw = big_bw if (s, d) in big_nodes else little_bw
+                t += response_size / target_bw
+    print len(flows)
+    return flows
+
+
 def flowgrind(settings):
     flows = []
     if 'empirical' in settings:
         flows = gen_empirical_flows(cdf_key=settings['empirical'])
+    if 'big_and_small' in settings:
+        flows = gen_big_and_small_flows()
     else:
         for f in settings['flows']:
             if f['src'][0] == 'r' and f['dst'][0] == 'r':
