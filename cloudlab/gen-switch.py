@@ -141,7 +141,7 @@ print
 print 'elementclass packet_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => RoundRobinSched'
-print '    -> LinkUnqueue($PACKET_LATENCY, $PACKET_BW)'
+print '    -> lu :: LinkUnqueue($PACKET_LATENCY, $PACKET_BW)'
 print '    -> output'
 print '}'
 print
@@ -149,7 +149,7 @@ print
 print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => ps :: SimplePullSwitch(-1)'
-print '    -> LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)'
+print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)'
 print '    -> StoreData(1, 1)'
 print '    -> output'
 print '}'
@@ -239,7 +239,7 @@ print ' :: {'
 print '      input[0] -> q :: LockQueue(CAPACITY $SMALL_BUFFER_SIZE)'
 print '      input[1] -> lq :: Queue(CAPACITY 5)  // loss queue'
 print '      lq, q => PrioSched -> output'
-print '      lq[1] -> Print("LQ DROP") -> Discard'
+# print '      lq[1] -> Print("LQ DROP") -> Discard'
 print ' }'
 print
 

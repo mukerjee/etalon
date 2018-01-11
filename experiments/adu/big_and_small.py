@@ -15,7 +15,7 @@ for config in adu_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    settings = {'empirical': 'DCTCP'}
+    settings = {'big_and_small': True}
     flowgrind(settings)
 
 finishExperiment()
