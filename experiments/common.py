@@ -73,9 +73,10 @@ CDFs = {
 }
 
 FANOUT = [
-    (1, .50),
-    (2, .30),
-    (4, .20),
+    (1, 1.0),
+    # (1, .50),
+    # (2, .30),
+    # (4, .20),
 ]
 
 
@@ -89,6 +90,8 @@ def initializeExperiment(adu=False):
     print '--- done...'
 
     print '--- populating physical hosts...'
+
+    del PHYSICAL_NODES[:]  # clear in place
     PHYSICAL_NODES.append('')
     for i in xrange(1, NUM_RACKS+1):
         PHYSICAL_NODES.append('host%d' % i)
@@ -147,7 +150,8 @@ def connect_all_rpyc_daemon():
     bad_hosts = []
     for phost in PHYSICAL_NODES[1:]:
         try:
-            RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+            if phost not in RPYC_CONNECTIONS:
+                RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
         except:
             print 'could not connect to ' + phost
             bad_hosts.append(phost)
@@ -174,17 +178,19 @@ def launch_all_flowgrindd(adu):
 
 
 def get_flowgrind_host(h):
-    # return '10.%s.10.%s/10.%s.10.%s' % (DATA_NET, h[1],
-    #                                     CONTROL_NET, h[1])
-    return '10.%s.%s.%s/10.%s.%s.%s' % (DATA_NET, h[1], h[2:],
-                                        CONTROL_NET, h[1], h[2:])
+    if len(h) == 2:
+        return '10.%s.10.%s/10.%s.10.%s' % (DATA_NET, h[1],
+                                            CONTROL_NET, h[1])
+    else:
+        return '10.%s.%s.%s/10.%s.%s.%s' % (DATA_NET, h[1], h[2:],
+                                            CONTROL_NET, h[1], h[2:])
 
 
 def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
     np.random.seed(seed)
     cdf = CDFs[cdf_key]
     target_bw = 1/2.0 * \
-        (PACKET_BW + 1.0/NUM_RACKS * CIRCUIT_BW) / HOSTS_PER_RACK
+        ((PACKET_BW + 1.0/NUM_RACKS * CIRCUIT_BW) / 8.0) / HOSTS_PER_RACK
     flows = []
     for r in xrange(1, NUM_RACKS+1):
         for h in xrange(1, HOSTS_PER_RACK+1):
@@ -196,6 +202,7 @@ def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
                 response_size = int(round(np.interp(np.random.random(),
                                                     zip(*cdf)[1],
                                                     zip(*cdf)[0])))
+                response_size = min(response_size, target_bw)
                 fout = np.random.choice(zip(*FANOUT)[0], p=zip(*FANOUT)[1])
                 for i in xrange(fout):
                     dst_num = np.random.choice([x for x in
@@ -204,9 +211,38 @@ def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
                     dst = 'h%d%d' % ((dst_num / HOSTS_PER_RACK) + 1,
                                      (dst_num % HOSTS_PER_RACK) + 1)
                     flows.append({'src': src, 'dst': dst, 'start': t,
-                                  'size': request_size,
-                                  'response_size': max(response_size / fout, 1)})
+                                  # 'size': request_size,
+                                  # 'response_size': max(response_size / fout, 1),
+                                  'size': max(response_size / fout, 1),
+                                  'single': True})
                 t += response_size / target_bw
+    print len(flows)
+    return flows
+
+
+def gen_big_and_small_flows(seed=92611):
+    np.random.seed(seed)
+    big_bw = CIRCUIT_BW / 8.0
+    little_bw = 1/2.0 * PACKET_BW / 8.0 / NUM_RACKS
+    big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
+                 (5, 6), (6, 7), (7, 8), (8, 1)]
+    flows = []
+    psize = 9000
+    for s in xrange(1, NUM_RACKS+1):
+        for d in xrange(1, NUM_RACKS+1):
+            t = 0.0
+            while t < 2.0:
+                src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
+                dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
+                response_size = np.random.randint(10 * psize, 100 * psize)
+                if (s, d) in big_nodes:
+                    response_size = np.random.randint(1000 * psize, 10000 * psize)
+                flows.append({'src': src, 'dst': dst, 'start': t,
+                              'size': response_size,
+                              'single': True})
+                target_bw = big_bw if (s, d) in big_nodes else little_bw
+                t += response_size / target_bw
+    print len(flows)
     return flows
 
 
@@ -214,6 +250,8 @@ def flowgrind(settings):
     flows = []
     if 'empirical' in settings:
         flows = gen_empirical_flows(cdf_key=settings['empirical'])
+    if 'big_and_small' in settings:
+        flows = gen_big_and_small_flows()
     else:
         for f in settings['flows']:
             if f['src'][0] == 'r' and f['dst'][0] == 'r':
@@ -235,11 +273,13 @@ def flowgrind(settings):
             f['start'] = 0
         if 'size' not in f:
             f['size'] = 8948
-        cmd += '-F %d -Q -Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
+        cmd += '-F %d -Q -i 2 -Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
             (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
              f['time'], f['start'], f['size'])
         if 'response_size' in f:
-            cmd += '-Gs=p:C:%d -Z 1 ' % f['response_size']
+            cmd += '-Gs=p:C:%d ' % f['response_size']
+        if 'single' in f:
+            cmd += '-Z 1 '
     cmd += '-I '
     fg_config = click_common.FN_FORMAT % ('flowgrind.config')
     fp = open(fg_config, 'w')
@@ -251,6 +291,12 @@ def flowgrind(settings):
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
     runWriteFile(cmd, fn)
+    counters_fn = click_common.FN_FORMAT % ('flowgrind.counters')
+    fp = open(counters_fn, 'w')
+    counter_data = click_common.getCounters()
+    fp.write(str(counter_data))
+    fp.close()
+    EXPERIMENTS.append(counters_fn)
 
 
 ##

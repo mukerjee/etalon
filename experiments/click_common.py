@@ -81,11 +81,34 @@ def setQueueResize(b):
     time.sleep(0.1)
 
 
+def getCounters():
+    circuit_bytes = []
+    packet_up_bytes = []
+    packet_down_bytes = []
+    for i in xrange(1, NUM_RACKS+1):
+        circuit_bytes.append(
+            clickReadHandler('hybrid_switch/circuit_link%d/lu' % (i),
+                             'total_bytes'))
+        packet_up_bytes.append(
+            clickReadHandler('hybrid_switch/packet_up_link%d/lu' % (i),
+                             'total_bytes'))
+        packet_down_bytes.append(
+            clickReadHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
+                             'total_bytes'))
+    return (circuit_bytes, packet_up_bytes, packet_down_bytes)
+
+
 def clearCounters():
     for i in xrange(1, NUM_RACKS+1):
         for j in xrange(1, NUM_RACKS+1):
             clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
                               'clear', "")
+        clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
+                          'clear', "")
+        clickWriteHandler('hybrid_switch/packet_up_link%d/lu' % (i),
+                          'clear', "")
+        clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
+                          'clear', "")
     clickWriteHandler('traffic_matrix', 'clear', "")
 
 
