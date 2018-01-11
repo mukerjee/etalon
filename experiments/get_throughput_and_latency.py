@@ -11,6 +11,40 @@ RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
 
 
+def get_tput_and_dur(fn):
+    flows = defaultdict(list)
+    sizes = {}
+    for l in open(fn.split('.txt')[0] + '.config.txt'):
+        l = l.split('-F')[1:]
+        for x in l:
+            id = int(x.strip().split()[0])
+            bytes = int(x.strip().split('-Gs=q:C:')[1].split()[0])
+            sizes[id] = bytes
+    for l in open(fn):
+        if 'seed' in l:
+            id = int(l[4:].strip().split()[0])
+            rack = int(l.split('/')[0].split()[-1].split('.')[2])
+            flows[id].append(rack)
+            if l.split(":")[0][-1] == 'S':
+                time = float(l.split('duration = ')[1].split('/')[0]) * 1000000
+                tp = float(l.split('through = ')[1].split('/')[0]) / 1000.0
+            else:
+                flows[id].append(time)
+                flows[id].append(tp)
+                flows[id].append(sizes[id])
+
+    for f in flows.keys():
+        if flows[f][3] == float('inf'):
+            del flows[f]
+    tps = [f[3] for f in flows.values()]
+    durs = [f[2] for f in flows.values()]
+    bytes = [f[4] for f in flows.values()]
+
+    print len(tps), len(durs), len(bytes)
+
+    return tps, durs, bytes
+
+
 def get_tput_and_lat(fn):
     latencies = []
     throughputs = defaultdict(int)
