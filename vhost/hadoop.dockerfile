@@ -5,11 +5,20 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 RUN apt-get update && apt-get install -y \
                               wget \
                               software-properties-common \
+                              openssh-server \
     && rm -rf /var/lib/apt/lists/*
 
-RUN add-apt-repository ppa:openjdk-r/ppa 
+RUN mkdir /var/run/sshd
+RUN echo 'root:root' |chpasswd
+RUN sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
+
+EXPOSE 22
+
+
+#RUN add-apt-repository ppa:openjdk-r/ppa 
 RUN apt-get update && apt-get install -y \
-                              openjdk-7-jdk \
+                              openjdk-8-jdk \
                               maven \
                               wget \
     && rm -rf /var/lib/apt/lists/*
@@ -25,10 +34,13 @@ COPY libVT.so /usr/lib/libVT.so
 
 # hadoop
 WORKDIR /root
-RUN wget https://github.com/intel-hadoop/HiBench/archive/master.tar.gz \
-    && tar xfz master.tar.gz \
-    && mv HiBench-master HiBench \
-    && rm master.tar.gz
+#RUN wget https://github.com/intel-hadoop/HiBench/archive/master.tar.gz \
+#    && tar xfz master.tar.gz \
+#    && mv HiBench-master HiBench \
+#    && rm master.tar.gz
+
+CMD    ["/usr/sbin/sshd", "-D"]
 
 CMD pipework --wait \
-    && pipework --wait -i eth2
+    && pipework --wait -i eth2 \
+    && sleep infinity 
