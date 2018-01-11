@@ -100,6 +100,8 @@ class SDRTService(rpyc.Service):
                      'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} ' \
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
+        if image == 'hadoop':
+            my_cmd = '"pipework --wait && pipework --wait -i eth2 && sleep infinity"' 
         my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
