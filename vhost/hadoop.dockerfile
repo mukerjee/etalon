@@ -1,4 +1,4 @@
-FROM ubuntu AS hadoop
+FROM ubuntu:16.04 AS hadoop
 
 MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
