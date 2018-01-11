@@ -222,8 +222,8 @@ def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
 
 def gen_big_and_small_flows(seed=92611):
     np.random.seed(seed)
-    big_bw = CIRCUIT_BW / 8.0
-    little_bw = 1/2.0 * PACKET_BW / 8.0 / NUM_RACKS
+    big_bw = 1/3.0 * CIRCUIT_BW / 8.0
+    little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
     big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
                  (5, 6), (6, 7), (7, 8), (8, 1)]
     flows = []
@@ -234,14 +234,15 @@ def gen_big_and_small_flows(seed=92611):
             while t < 2.0:
                 src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
                 dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
-                response_size = np.random.randint(10 * psize, 100 * psize)
+                size = np.random.randint(10 * psize, 100 * psize)
                 if (s, d) in big_nodes:
-                    response_size = np.random.randint(1000 * psize, 10000 * psize)
+                    size = np.random.randint(1000 * psize, 10000 * psize)
                 flows.append({'src': src, 'dst': dst, 'start': t,
-                              'size': response_size,
+                              'size': size,
+                              'response_size': 60,
                               'single': True})
                 target_bw = big_bw if (s, d) in big_nodes else little_bw
-                t += response_size / target_bw
+                t += size / target_bw
     print len(flows)
     return flows
 
