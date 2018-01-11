@@ -1,5 +1,5 @@
 #!/bin/bash
-HADOOP_CONF=/hadoop/etc/hadoop
+HADOOP_CONF=/usr/local/hadoop/etc/hadoop
 echo `date` input: $@ >> $HADOOP_CONF/topology.log
 while [ $# -gt 0 ] ; do
   nodeArg=$1
