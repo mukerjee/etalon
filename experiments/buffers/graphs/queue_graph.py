@@ -10,15 +10,17 @@ def get_data(fn):
     start_ts = -1
     data = [[], []]
     for l in open(fn):
+        if 'closing' in l or 'starting' in l:
+            continue
         l = l.split(':')
         if len(l) != 2:
             break
         ts, d = l
         d = d.split(',')
-        if len(d) != 5:
+        if len(d) != 8:
             break
         occ, length = map(lambda x: int(x), d[2].split())
-        ts = float(ts)
+        ts = float(ts) / 20.0
         if start_ts == -1:
             start_ts = ts
         data[0].append((ts - start_ts, occ))

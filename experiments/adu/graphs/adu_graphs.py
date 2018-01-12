@@ -29,8 +29,8 @@ def graph_small_durs(d2, x_label, fn):
         data[i] = [[d[0], d[1] / 1000.0, d[2]]
                    for d in data[i] if d[2] <= SMALL_FLOW_MAX_SIZE]
     x = [sorted(zip(*data[0])[1]), sorted(zip(*data[1])[1])]
-    y = [[float(i) / (len(x[0])-1) for i in xrange(len(x[0]))]]
-    y.append([float(i) / (len(x[1])-1) for i in xrange(len(x[1]))])
+    y = [[float(i) / (len(x[0])-1) * 100 for i in xrange(len(x[0]))]]
+    y.append([float(i) / (len(x[1])-1) * 100 for i in xrange(len(x[1]))])
     print
     print len(x[0])
     # print 'durations:', x
@@ -49,7 +49,7 @@ def graph_small_durs(d2, x_label, fn):
     # options.x.limits = [0, 5000]
     options.output_fn = 'graphs/mice_fct_cdf.pdf'
     options.x.label.xlabel = 'Flow completion time (ms)'
-    options.y.label.ylabel = 'CDF'
+    options.y.label.ylabel = 'CDF (%)'
     plot(x, y, options)
 
 
@@ -59,8 +59,8 @@ def graph_big_durs(d2, x_label, fn):
         data[i] = [[d[0], d[1] / 1000.0, d[2]]
                    for d in data[i] if d[2] > SMALL_FLOW_MAX_SIZE]
     x = [sorted(zip(*data[0])[1]), sorted(zip(*data[1])[1])]
-    y = [[float(i) / (len(x[0])-1) for i in xrange(len(x[0]))]]
-    y.append([float(i) / (len(x[1])-1) for i in xrange(len(x[1]))])
+    y = [[float(i) / (len(x[0])-1) * 100 for i in xrange(len(x[0]))]]
+    y.append([float(i) / (len(x[1])-1) * 100 for i in xrange(len(x[1]))])
     print
     print len(x[0])
     # print 'durations:', x
@@ -79,7 +79,7 @@ def graph_big_durs(d2, x_label, fn):
     # options.x.log = True
     options.output_fn = 'graphs/elephant_fct_cdf.pdf'
     options.x.label.xlabel = 'Flow completion time (ms)'
-    options.y.label.ylabel = 'CDF'
+    options.y.label.ylabel = 'CDF (%)'
     plot(x, y, options)
 
 
@@ -88,8 +88,8 @@ def graph_small_tp(d2, x_label, fn):
     for i in xrange(len(data)):
         data[i] = [d for d in data[i] if d[2] <= SMALL_FLOW_MAX_SIZE]
     x = [sorted(zip(*data[0])[0]), sorted(zip(*data[1])[0])]
-    y = [[float(i) / (len(x[0])-1) for i in xrange(len(x[0]))]]
-    y.append([float(i) / (len(x[1])-1) for i in xrange(len(x[1]))])
+    y = [[float(i) / (len(x[0])-1) * 100 for i in xrange(len(x[0]))]]
+    y.append([float(i) / (len(x[1])-1) * 100 for i in xrange(len(x[1]))])
     print
     print len(x[0])
     # print 'durations:', x
@@ -107,7 +107,7 @@ def graph_small_tp(d2, x_label, fn):
     options.x.limits = [0, 10]
     options.output_fn = 'graphs/mice_tp_cdf.pdf'
     options.x.label.xlabel = 'Throughput (Gbps)'
-    options.y.label.ylabel = 'CDF'
+    options.y.label.ylabel = 'CDF (%)'
     plot(x, y, options)
 
 
@@ -116,8 +116,8 @@ def graph_big_tp(d2, x_label, fn):
     for i in xrange(len(data)):
         data[i] = [d for d in data[i] if d[2] > SMALL_FLOW_MAX_SIZE]
     x = [sorted(zip(*data[0])[0]), sorted(zip(*data[1])[0])]
-    y = [[float(i) / (len(x[0])-1) for i in xrange(len(x[0]))]]
-    y.append([float(i) / (len(x[1])-1) for i in xrange(len(x[1]))])
+    y = [[float(i) / (len(x[0])-1) * 100 for i in xrange(len(x[0]))]]
+    y.append([float(i) / (len(x[1])-1) * 100 for i in xrange(len(x[1]))])
     print
     print len(x[0])
     # print 'durations:', x
@@ -136,7 +136,7 @@ def graph_big_tp(d2, x_label, fn):
     # options.x.log = True
     options.output_fn = 'graphs/elephant_tp_cdf.pdf'
     options.x.label.xlabel = 'Throughput (Gbps)'
-    options.y.label.ylabel = 'CDF'
+    options.y.label.ylabel = 'CDF (%)'
     plot(x, y, options)
 
 
