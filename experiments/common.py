@@ -175,6 +175,7 @@ def launch_all_flowgrindd(adu):
                                    args=(phost, adu)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
+    time.sleep(5)
 
 
 def get_flowgrind_host(h):
