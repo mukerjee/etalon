@@ -11,6 +11,8 @@ RUN apt-get update && apt-get install -y \
                               maven \
                               wget \
                               iputils-ping \
+                              python \
+                              bc \
     && rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
