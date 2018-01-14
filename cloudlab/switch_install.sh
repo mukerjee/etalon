@@ -19,6 +19,7 @@ sudo apt-get update && sudo apt-get install -y \
 			    libxmlrpc-core-c3-dev
 
 sudo pip install rpyc
+sudo pip install numpy
 
 # Mellanox OFED
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf

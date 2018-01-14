@@ -47,6 +47,8 @@ def get_tput_and_dur(fn):
 
 def get_tput_and_lat(fn):
     latencies = []
+    latencies_circuit = []
+    latencies_packet = []
     throughputs = defaultdict(int)
     circuit_bytes = defaultdict(int)
     packet_bytes = defaultdict(int)
@@ -82,7 +84,8 @@ def get_tput_and_lat(fn):
         if sr not in flow_start:
             flow_start[sr] = ts / 20.0  # TDF
 
-        if d[1].strip() == 'circuit':
+        circuit = (d[1].strip() == 'circuit')
+        if circuit:
             which_rtt = int((ts - most_recent_circuit_up[sr]) / RTT)
             bytes_in_rtt[sr][which_rtt] += bytes
             circuit_bytes[sr] += bytes
@@ -93,8 +96,16 @@ def get_tput_and_lat(fn):
         flow_end[sr] = ts / 20.0  # TDF
         if bytes > 1000:
             latencies.append(latency)
+            if circuit:
+                latencies_circuit.append(latency)
+            else:
+                latencies_packet.append(latency)
     lat = zip(percentiles, map(lambda x: np.percentile(latencies, x),
                                percentiles))
+    latc = zip(percentiles, map(lambda x: np.percentile(latencies_circuit, x),
+                                percentiles))
+    latp = zip(percentiles, map(lambda x: np.percentile(latencies_packet, x),
+                                percentiles))
     tp = {}
     b = defaultdict(dict)
     p = {}
@@ -124,7 +135,8 @@ def get_tput_and_lat(fn):
     print sorted(b.items())
     print p
     print c
-    return tp, lat, p, c, b
+    return tp, (lat, latc, latp), p, c, b, \
+        sum(circuit_bytes.values()), sum(packet_bytes.values())
 
 if __name__ == "__main__":
     fns = sys.argv[1]
