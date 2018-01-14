@@ -51,9 +51,13 @@ void get_sock_info(int fd, struct traffic_info *info) {
   getsockname(fd, (struct sockaddr*)&localAddress, &addressLength);
   getpeername(fd, (struct sockaddr*)&remoteAddress, &addressLength);
 
+  int type;
+  socklen_t type_length = sizeof(int);
+  getsockopt(fd, SOL_SOCKET, SO_TYPE, &type, &type_length);
+
   info->src = localAddress.sin_addr;
   info->dst = remoteAddress.sin_addr;
-  info->proto = 0;
+  info->proto = (type == SOCK_STREAM) ? 6 : 0;
   info->sport = localAddress.sin_port;
   info->dport = remoteAddress.sin_port;
 }
