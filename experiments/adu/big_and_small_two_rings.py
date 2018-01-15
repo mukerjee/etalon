@@ -14,7 +14,7 @@ for config in adu_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    settings = {'big_and_small': True}
+    settings = {'big_and_small_two_rings': True}
     flowgrind(settings)
 
 finishExperiment()
