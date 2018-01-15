@@ -11,15 +11,16 @@ CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
                                                        in_advances, traffic_sources)]
 
 CONFIGS = [
-    {'packet_log': False, 'type': 'normal', 'traffic_source': 'QUEUE'},
-    {'packet_log': False, 'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 16000},
-    {'packet_log': False, 'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 16000, 'cc': 'ocs'},
-    {'packet_log': False, 'type': 'normal', 'traffic_source': 'ADU'},
-    {'packet_log': False, 'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 16000},
-    {'packet_log': False, 'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 16000, 'cc': 'ocs'},
+    {'type': 'normal', 'traffic_source': 'QUEUE'},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 16000},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 16000, 'cc': 'ocs'},
+    {'type': 'normal', 'traffic_source': 'ADU'},
+    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 16000},
+    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 16000, 'cc': 'ocs'},
 ]
 
 for c in CONFIGS:
+    c['packet_log'] = False
     if c['type'] == 'resize':
         c['type'] = 'normal'
         c['queue_resize'] = True
