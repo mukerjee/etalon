@@ -181,6 +181,12 @@ def setCircuitSchedule():
     time.sleep(0.1)
 
 
+def setFixedSchedule(schedule):
+    disableSolstice()
+    clickWriteHandler('runner', 'setSchedule', schedule)
+    time.sleep(0.1)
+
+
 def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
@@ -204,6 +210,8 @@ def setConfig(config):
         setStrobeSchedule()
     if t == 'circuit':
         setCircuitSchedule()
+    if t == 'fixed':
+        setFixedSchedule(c['fixed_schedule'])
     FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
                                               c['buffer_size'],
                                               c['traffic_source'],
