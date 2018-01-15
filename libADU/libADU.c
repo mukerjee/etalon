@@ -22,9 +22,12 @@
 #define EXIT_FAILED -1
 
 struct traffic_info {
-  char src[INET_ADDRSTRLEN];
-  char dst[INET_ADDRSTRLEN];
-  size_t size;
+  struct in_addr src;
+  struct in_addr dst;
+  uint8_t proto;
+  uint16_t sport;
+  uint16_t dport;
+  long size;
 };
 
 char local_ip[NI_MAXHOST];
@@ -40,25 +43,23 @@ static void get_next_fn(void** next_fn, char* fn) {
   }
 }
 
-void get_local_ip(int fd, char* saddr) {
+void get_sock_info(int fd, struct traffic_info *info) {
   struct sockaddr_in localAddress;
+  struct sockaddr_in remoteAddress;
   socklen_t addressLength = sizeof(localAddress);
+
   getsockname(fd, (struct sockaddr*)&localAddress, &addressLength);
-  strncpy(saddr, inet_ntoa(localAddress.sin_addr),
-          INET_ADDRSTRLEN);
-}
+  getpeername(fd, (struct sockaddr*)&remoteAddress, &addressLength);
 
-void get_remote_ip(int fd, char* raddr) {
-  socklen_t len;
-  struct sockaddr_storage addr;
+  int type;
+  socklen_t type_length = sizeof(int);
+  getsockopt(fd, SOL_SOCKET, SO_TYPE, &type, &type_length);
 
-  len = sizeof addr;
-  getpeername(fd, (struct sockaddr*)&addr, &len);
-
-  if (addr.ss_family == AF_INET) {
-    struct sockaddr_in *s = (struct sockaddr_in *)&addr;
-    inet_ntop(AF_INET, &s->sin_addr, raddr, INET_ADDRSTRLEN);
-  }
+  info->src = localAddress.sin_addr;
+  info->dst = remoteAddress.sin_addr;
+  info->proto = (type == SOCK_STREAM) ? 6 : 0;
+  info->sport = localAddress.sin_port;
+  info->dport = remoteAddress.sin_port;
 }
 
 static void open_ctrl_socket() {
@@ -111,8 +112,7 @@ void send_adu_info(int fd, int true_size) {
   open_ctrl_socket();
 
   struct traffic_info adu_info;
-  get_local_ip(fd, adu_info.src);
-  get_remote_ip(fd, adu_info.dst);
+  get_sock_info(fd, &adu_info);
   adu_info.size = true_size;
   /* fprintf(stderr, "LOCAL_IP: %s REMOTE_IP: %s\n", adu_info.src, adu_info.dst); */
 
@@ -150,4 +150,28 @@ ssize_t send(int fd, const void *buffer, size_t size, int flags) {
   send_adu_info(fd, true_size);
 
   return true_size;
+}
+
+// Wrap up the shutdown() call
+int shutdown(int fd, int how) {
+  int (*next_shutdown)(int, int);
+  get_next_fn((void**)&next_shutdown, "shutdown");
+
+  int rc = next_shutdown(fd, how);
+
+  if (how == SHUT_WR || how == SHUT_RDWR)
+    send_adu_info(fd, -1);
+
+  return rc;
+}
+
+// Wrap up the close() call
+int close(int fd) {
+  int (*next_close)(int);
+  get_next_fn((void**)&next_close, "close");
+
+  int rc = next_close(fd);
+  send_adu_info(fd, -1);
+
+  return rc;
 }
