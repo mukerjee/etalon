@@ -20,9 +20,17 @@
 <property>
     <name>dfs.replication</name>
     <value>3</value>
-  </property>
-  <property>
+</property>
+<property>
+    <name>dfs.namenode.name.dir</name>
+    <value>file:///usr/local/hadoop/hadoop_data/hdfs/namenode</value>
+</property>
+<property>
     <name>dfs.datanode.name.dir</name>
     <value>file:///usr/local/hadoop/hadoop_data/hdfs/datanode</value>
-  </property>
+</property>
+<property>
+    <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
+    <value>false</value>
+</property>
 </configuration>
