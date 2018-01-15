@@ -12,11 +12,11 @@ CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
 
 CONFIGS = [
     {'type': 'normal', 'traffic_source': 'QUEUE'},
-    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 16000},
-    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 16000, 'cc': 'ocs'},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 12000},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 12000, 'cc': 'ocs'},
     {'type': 'normal', 'traffic_source': 'ADU'},
-    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 16000},
-    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 16000, 'cc': 'ocs'},
+    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000},
+    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000, 'cc': 'ocs'},
 ]
 
 for c in CONFIGS:
