@@ -315,8 +315,13 @@ def flowgrind(settings):
             f['start'] = 0
         if 'size' not in f:
             f['size'] = 8948
-        cmd += '-F %d -Q -i 2 -Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
-            (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
+        cmd += '-F %d ' % (i)
+        if 'fg_report_interval' in settings:
+            cmd += '-i %f ' % (settings['fg_report_interval'])
+        else:
+            cmd += '-Q -i 2 '
+        cmd += '-Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
+            (get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
              f['time'], f['start'], f['size'])
         if 'response_size' in f:
             cmd += '-Gs=p:C:%d ' % f['response_size']
