@@ -150,7 +150,7 @@ print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => ps :: SimplePullSwitch(-1)'
 print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)'
-print '    -> StoreData(1, 1)'
+print '    -> StoreData(1, 1) -> SetIPChecksum'
 print '    -> output'
 print '}'
 print
@@ -329,7 +329,7 @@ print '   -> SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
 print '   -> hsl :: HSLog($NUM_RACKS) -> ecem :: ECEMark($NUM_RACKS) -> ' \
-    'SetTCPChecksum -> SetIPChecksum -> arp -> out'
+    'arp -> out'
 print
 
 print 'arp_c[1] -> [1]arp'
