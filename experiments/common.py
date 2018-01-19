@@ -5,6 +5,7 @@ import threading
 import sys
 import os
 import tarfile
+import socket
 import rpyc
 import numpy as np
 import click_common
@@ -175,6 +176,14 @@ def launch_all_flowgrindd(adu):
                                    args=(phost, adu)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
+    for r in xrange(1, NUM_RACKS+1):
+        for h in xrange(1, HOSTS_PER_RACK+1):
+            ip = '10.2.%d.%d' % (r, h)
+            port = 5999
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            while sock.connect_ex((ip, port)):
+                time.sleep(1)
+            sock.close()
 
 
 def get_flowgrind_host(h):
@@ -247,25 +256,57 @@ def gen_big_and_small_flows(seed=92611):
     return flows
 
 
+def gen_big_and_small_two_rings_flows(seed=92611):
+    np.random.seed(seed)
+    big_bw = 1/6.0 * CIRCUIT_BW / 8.0
+    little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
+    big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
+                 (5, 6), (6, 7), (7, 8), (8, 1),
+                 (1, 3), (2, 4), (3, 5), (4, 6),
+                 (5, 7), (6, 8), (7, 1), (8, 2),]
+    flows = []
+    psize = 9000
+    for s in xrange(1, NUM_RACKS+1):
+        for d in xrange(1, NUM_RACKS+1):
+            t = 0.0
+            while t < 2.0:
+                src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
+                dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
+                size = np.random.randint(10 * psize, 100 * psize)
+                if (s, d) in big_nodes:
+                    size = np.random.randint(1000 * psize, 10000 * psize)
+                flows.append({'src': src, 'dst': dst, 'start': t,
+                              'size': size,
+                              'response_size': 60,
+                              'single': True})
+                target_bw = big_bw if (s, d) in big_nodes else little_bw
+                t += size / target_bw
+    print len(flows)
+    return flows
+
+
 def flowgrind(settings):
     flows = []
     if 'empirical' in settings:
         flows = gen_empirical_flows(cdf_key=settings['empirical'])
     if 'big_and_small' in settings:
         flows = gen_big_and_small_flows()
+    if 'big_and_small_two_rings' in settings:
+        flows = gen_big_and_small_two_rings_flows()
     else:
-        for f in settings['flows']:
-            if f['src'][0] == 'r' and f['dst'][0] == 'r':
-                s = int(f['src'][1])
-                d = int(f['dst'][1])
-                for i in xrange(1, HOSTS_PER_RACK+1):
-                    fl = dict(f)
-                    fl['src'] = 'h%d%d' % (s, i)
-                    fl['dst'] = 'h%d%d' % (d, i)
-                    flows.append(fl)
-                # flows.append({'src': 'h1', 'dst': 'h2'})
-            else:
-                flows.append(f)
+        if 'flows' in settings:
+            for f in settings['flows']:
+                if f['src'][0] == 'r' and f['dst'][0] == 'r':
+                    s = int(f['src'][1])
+                    d = int(f['dst'][1])
+                    for i in xrange(1, HOSTS_PER_RACK+1):
+                        fl = dict(f)
+                        fl['src'] = 'h%d%d' % (s, i)
+                        fl['dst'] = 'h%d%d' % (d, i)
+                        flows.append(fl)
+                    # flows.append({'src': 'h1', 'dst': 'h2'})
+                else:
+                    flows.append(f)
     cmd = '-n %s ' % len(flows)
     for i, f in enumerate(flows):
         if 'time' not in f:
@@ -274,8 +315,13 @@ def flowgrind(settings):
             f['start'] = 0
         if 'size' not in f:
             f['size'] = 8948
-        cmd += '-F %d -Q -i 2 -Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
-            (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
+        cmd += '-F %d ' % (i)
+        if 'fg_report_interval' in settings:
+            cmd += '-i %f ' % (settings['fg_report_interval'])
+        else:
+            cmd += '-Q -i 2 '
+        cmd += '-Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
+            (get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
              f['time'], f['start'], f['size'])
         if 'response_size' in f:
             cmd += '-Gs=p:C:%d ' % f['response_size']
@@ -314,7 +360,7 @@ def run(cmd):
         line = p.stdout.readline()  # this will block
         if not line:
             break
-        sys.stdout.write(line)
+        # sys.stdout.write(line)
         out += line
     rc = p.poll()
     while rc is None:

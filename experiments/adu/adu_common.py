@@ -10,27 +10,17 @@ CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
            for (t, b, cc, ia, ts) in itertools.product(types, buffer_sizes, ccs,
                                                        in_advances, traffic_sources)]
 
-# CONFIGS = [
-#     {'type': 'strobe', 'buffer_size':   4},
-#     {'type': 'strobe', 'buffer_size':   8},
-#     {'type': 'strobe', 'buffer_size':  16},
-#     {'type': 'strobe', 'buffer_size':  32},
-#     {'type': 'strobe', 'buffer_size':  64},
-#     {'type': 'strobe', 'buffer_size': 128},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance':  4000},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance':  8000},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance': 12000},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance': 16000},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance': 20000},
-#     {'type': 'strobe', 'buffer_size':  16, 'cc': 'ocs'},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance':  4000, 'cc': 'ocs'},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance':  8000, 'cc': 'ocs'},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance': 12000, 'cc': 'ocs'},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance': 16000, 'cc': 'ocs'},
-#     {'type': 'resize', 'buffer_size':  16, 'in_advance': 20000, 'cc': 'ocs'},
-# ]
+CONFIGS = [
+    {'type': 'normal', 'traffic_source': 'QUEUE'},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 12000},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 12000, 'cc': 'ocs'},
+    {'type': 'normal', 'traffic_source': 'ADU'},
+    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000},
+    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000, 'cc': 'ocs'},
+]
 
 for c in CONFIGS:
+    c['packet_log'] = False
     if c['type'] == 'resize':
         c['type'] = 'normal'
         c['queue_resize'] = True
