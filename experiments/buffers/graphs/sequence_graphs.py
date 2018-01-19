@@ -16,7 +16,7 @@ from simpleplotlib import plot
 if __name__ == '__main__':
     circuit_data = {}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-circuit-*-'
-                        'QUEUE-False-*-reno-click.txt'):
+                        'QUEUE-False-*-reno-*click.txt'):
         buffer_size = int(fn.split('/')[-1].split('circuit-')[1].split('-')[0])
         print fn
         circuit_data[buffer_size] = get_seq_data(fn)
@@ -38,7 +38,7 @@ if __name__ == '__main__':
     
     packet_data = {}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-no_circuit-*-'
-                        'QUEUE-False-*-reno-click.txt'):
+                        'QUEUE-False-*-reno-*click.txt'):
         buffer_size = int(fn.split('/')[-1].split('no_circuit-')[1].split(
             '-')[0])
         print fn
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     
     buffer_data = {}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-*-'
-                        'QUEUE-False-*-reno-click.txt'):
+                        'QUEUE-False-*-reno-*click.txt'):
         buffer_size = int(fn.split('/')[-1].split('strobe-')[1].split('-')[0])
         print fn
         buffer_data[buffer_size] = get_seq_data(fn)
@@ -83,7 +83,7 @@ if __name__ == '__main__':
 
     days_out_data = {0: buffer_data[2][1]}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
-                        'QUEUE-True-*-reno-click.txt'):
+                        'QUEUE-True-*-reno-*click.txt'):
         days_out = int(fn.split('/')[-1].split('True-')[1].split('-')[0])
         print fn
         days_out_data[days_out] = get_seq_data(fn)
@@ -104,13 +104,13 @@ if __name__ == '__main__':
     plot(x, y, options)
 
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
-                        'QUEUE-False-*-ocs-click.txt'):
+                        'QUEUE-False-*-ocs-*click.txt'):
         print fn
         ocs_strobe_data = get_seq_data(fn)
 
     ocs_days_out_data = {0: ocs_strobe_data}
     for fn in glob.glob(sys.argv[1] + '/tmp/*-one_to_one-strobe-16-'
-                        'QUEUE-True-*-ocs-click.txt'):
+                        'QUEUE-True-*-ocs-*click.txt'):
         days_out = int(fn.split('/')[-1].split('True-')[1].split('-')[0])
         print fn
         ocs_days_out_data[days_out] = get_seq_data(fn)
