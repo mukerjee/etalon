@@ -19,7 +19,7 @@
 <configuration>
 <property>
     <name>mapreduce.jobtracker.address</name>
-    <value>10.1.1.1:54311</value>
+    <value>h11.sdrt.cs.cmu.edu:54311</value>
   </property>
   <property>
     <name>mapreduce.framework.name</name>
