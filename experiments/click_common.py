@@ -112,6 +112,9 @@ def clearCounters():
     clickWriteHandler('traffic_matrix', 'clear', "")
 
 
+def divertACKs(divert):
+    clickWriteHandler('divert_acks', 'switch', 1 if divert else 0)
+
 ##
 # Congestion Control
 ##
@@ -191,7 +194,8 @@ def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'in_advance': 12000, 'cc': 'reno', 'packet_log': True}
+                      'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
+                      'divert_acks': False}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -212,6 +216,7 @@ def setConfig(config):
         setCircuitSchedule()
     if t == 'fixed':
         setFixedSchedule(c['fixed_schedule'])
+    divertACKs(c['divert_acks'])
     FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
                                               c['buffer_size'],
                                               c['traffic_source'],

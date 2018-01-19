@@ -9,8 +9,11 @@ from click_common import setConfig
 
 initializeExperiment()
 
-configs = [{'type': 'no_circuit', 'buffer_size': 64},
-           {'type': 'circuit', 'buffer_size': 64}]
+configs = [{'type': 'no_circuit'}, {'type': 'circuit'}]
+
+for c in configs:
+    c['buffer_size'] = 2048
+    c['divert_acks'] = True
 
 for config in configs:
     print '--- running test type %s...' % config['type']
