@@ -39,9 +39,9 @@ RUN mkdir -p /root/.ssh && \
     chmod 400 ~/.ssh/id_rsa
 
 RUN mkdir -p /usr/local/hadoop && \
-    wget http://128.2.213.69/hadoop-3.0.0-SNAPSHOT.tar.gz && \
-    tar xvzf hadoop-3.0.0-SNAPSHOT.tar.gz && \
-    mv hadoop-3.0.0-SNAPSHOT/* /usr/local/hadoop/ && \
+    wget http://128.2.213.69/hadoop-2.7.5.tar.gz && \
+    tar xvzf hadoop-2.7.5.tar.gz && \
+    mv hadoop-2.7.5/* /usr/local/hadoop/ && \
     mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \ 
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/namenode && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode 
