@@ -19,7 +19,7 @@
 <configuration>
 <property>
     <name>fs.defaultFS</name>
-    <value>hdfs://10.1.1.1:9000</value>
+    <value>hdfs://h11.sdrt.cs.cmu.edu:9000</value>
 </property>
 <property>
     <name>topology.script.file.name</name>

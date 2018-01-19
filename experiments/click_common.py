@@ -112,6 +112,15 @@ def clearCounters():
     clickWriteHandler('traffic_matrix', 'clear', "")
 
 
+def divertACKs(divert):
+    clickWriteHandler('divert_acks', 'switch', 1 if divert else 0)
+
+
+def setCircuitLinkDelay(delay):
+    for i in xrange(1, NUM_RACKS+1):
+        clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
+                          'latency', delay)
+
 ##
 # Congestion Control
 ##
@@ -152,12 +161,12 @@ def disableCircuit():
     time.sleep(0.1)
 
 
-def setStrobeSchedule():
+def setStrobeSchedule(reconfig_delay=20):
     disableSolstice()
     schedule = '%d ' % ((NUM_RACKS-1)*2)
     for i in xrange(NUM_RACKS-1):
         configstr = '%d %s %d %s '
-        night_len = 20 * TDF
+        night_len = reconfig_delay * TDF
         off_config = ('-1/' * NUM_RACKS)[:-1]
         duration = night_len * 9  # night_len * duty_cycle
         configuration = ''
@@ -191,7 +200,8 @@ def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'in_advance': 12000, 'cc': 'reno', 'packet_log': True}
+                      'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
+                      'divert_acks': False, 'circuit_link_delay': 0.000600}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -208,15 +218,21 @@ def setConfig(config):
         disableCircuit()
     if t == 'strobe':
         setStrobeSchedule()
+    if t == 'short_reconfig':
+        setStrobeSchedule(reconfig_delay=10)
     if t == 'circuit':
         setCircuitSchedule()
     if t == 'fixed':
         setFixedSchedule(c['fixed_schedule'])
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
-                                              c['buffer_size'],
-                                              c['traffic_source'],
-                                              c['queue_resize'],
-                                              c['in_advance'], c['cc'])
+    divertACKs(c['divert_acks'])
+    setCircuitLinkDelay(c['circuit_link_delay'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
+                                                c['buffer_size'],
+                                                c['traffic_source'],
+                                                c['queue_resize'],
+                                                c['in_advance'],
+                                                c['cc'],
+                                                c['circuit_link_delay'])
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')
