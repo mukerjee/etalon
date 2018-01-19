@@ -7,10 +7,9 @@ import tarfile
 
 from collections import defaultdict
 
-flows = defaultdict(list)
-
 
 def parse_flowgrind(fn):
+    flows = defaultdict(list)
     for l in open(fn):
         if 'seed' in l:
             id = int(l[4:].strip().split()[0])
@@ -18,7 +17,10 @@ def parse_flowgrind(fn):
             flows[id].append(rack)
             if l.split(":")[0][-1] == 'S':
                 time = float(l.split('duration = ')[1].split('/')[0][:-1])
-                tp = float(l.split('through = ')[1].split('/')[0]) / 1000.0
+                if time < 1.0:
+                    tp = float(l.split('through = ')[1].split('/')[0]) / 1000.0 * time
+                else:
+                    tp = float(l.split('through = ')[1].split('/')[0]) / 1000.0
             else:
                 flows[id].append(time)
                 flows[id].append(tp)
@@ -49,7 +51,7 @@ if __name__ == "__main__":
             os.mkdir(dir)
         t = tarfile.open(fns)
         t.extractall(dir)
-        fns = dir + '/*.txt'
+        fns = dir + '/*flowgrind.txt'
     # if 'tmp' not in fns:
     #     fns += '/tmp/*'
     for fn in glob.glob(fns):
