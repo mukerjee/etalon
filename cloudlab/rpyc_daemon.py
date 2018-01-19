@@ -118,7 +118,7 @@ class SDRTService(rpyc.Service):
             if i == my_rack:
                 continue
             for j in xrange(1, HOSTS_PER_RACK+1):
-                dst_id = '%d%d' % (i, j)
+                dst_id = '%d%d.sdrt.cs.cmu.edu' % (i, j)
                 self.call(NS_RUN.format(pid=my_pid,
                                         cmd=ARP_POISON.format(
                                             id=dst_id, switch_mac=smac)))
