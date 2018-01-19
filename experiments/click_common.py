@@ -121,6 +121,13 @@ def setCircuitLinkDelay(delay):
         clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
                           'latency', delay)
 
+def setPacketLinkBandwidth(bw):
+    for i in xrange(1, NUM_RACKS+1):
+        clickWriteHandler('hybrid_switch/packet_up_link%d/lu' % (i),
+                          'bandwidth', '%.1fGbps' % bw)
+        clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
+                          'bandwidth', '%.1fGbps' % bw)
+
 ##
 # Congestion Control
 ##
@@ -201,7 +208,8 @@ def setConfig(config):
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
-                      'divert_acks': False, 'circuit_link_delay': 0.000600}
+                      'divert_acks': False, 'circuit_link_delay': 0.000600,
+                      'packet_link_bandwidth': 10 / 20.0}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -226,13 +234,15 @@ def setConfig(config):
         setFixedSchedule(c['fixed_schedule'])
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
-                                                c['buffer_size'],
-                                                c['traffic_source'],
-                                                c['queue_resize'],
-                                                c['in_advance'],
-                                                c['cc'],
-                                                c['circuit_link_delay'])
+    setPacketLinkBandwidth(c['packet_link_bandwidth'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
+                                                    c['buffer_size'],
+                                                    c['traffic_source'],
+                                                    c['queue_resize'],
+                                                    c['in_advance'],
+                                                    c['cc'],
+                                                    c['circuit_link_delay'],
+                                                    c['packet_link_bandwidth'])
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')
