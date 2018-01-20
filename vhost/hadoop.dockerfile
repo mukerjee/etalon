@@ -29,7 +29,7 @@ ENV HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
 
 COPY config /tmp/config
 
-ADD  http://128.2.213.69/hadoop-2.7.5.tar.gz
+ADD  http://128.2.213.69/hadoop-2.7.5.tar.gz /root/
 
 # passwordless ssh setup
 RUN mkdir -p /root/.ssh && \ 
