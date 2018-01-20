@@ -29,6 +29,8 @@ ENV HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
 
 COPY config /tmp/config
 
+ADD  http://128.2.213.69/hadoop-2.7.5.tar.gz
+
 # passwordless ssh setup
 RUN mkdir -p /root/.ssh && \ 
     mv /tmp/config/id_rsa ~/.ssh/id_rsa && \
@@ -40,7 +42,6 @@ RUN mkdir -p /root/.ssh && \
     chmod 400 ~/.ssh/id_rsa
 
 RUN mkdir -p /usr/local/hadoop && \
-    wget http://128.2.213.69/hadoop-2.7.5.tar.gz && \
     tar xvzf hadoop-2.7.5.tar.gz && \
     mv hadoop-2.7.5/* /usr/local/hadoop/ && \
     mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \ 
