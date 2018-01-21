@@ -37,7 +37,6 @@ RUN mkdir -p /root/.ssh && \
     mv /tmp/config/id_rsa.pub ~/.ssh/id_rsa.pub && \
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && \
     mv /tmp/config/config ~/.ssh/config && \
-    mv /tmp/config/hosts /etc/hosts && \
     chmod 600 ~/.ssh/config && \
     chmod 400 ~/.ssh/id_rsa
 

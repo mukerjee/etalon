@@ -27,6 +27,8 @@ for t in sched:
         for config in CONFIGS:
             config['circuit_link_delay'] = d
             config['type'] = t
+            if t == 'short_reconfig' and 'in_advance' in config:
+                config['in_advance'] = 10000
             print '--- running test type %s...' % config['type']
             print '--- setting switch buffer size to %d...' % config['buffer_size']
             setConfig(config)
