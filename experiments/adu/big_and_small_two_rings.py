@@ -10,13 +10,13 @@ from click_common import setConfig
 adu_common.CONFIGS.append({'packet_log': False,
                            'type': 'fixed',
                            'traffic_source': 'ADU',
-                           'fixed_schedule': '2 39600 7/0/1/2/3/4/5/6 400 -1/-1/-1/-1/-1/-1/-1/-1'})
+                           'fixed_schedule': '4 19600 7/0/1/2/3/4/5/6 400 -1/-1/-1/-1/-1/-1/-1/-1 19600 6/7/0/1/2/3/4/5 400 -1/-1/-1/-1/-1/-1/-1/-1'})
 
 adu_common.CONFIGS.append({'packet_log': False,
                            'type': 'fixed',
                            'traffic_source': 'ADU',
                            'buffer_size': 128,
-                           'fixed_schedule': '2 39600 7/0/1/2/3/4/5/6 400 -1/-1/-1/-1/-1/-1/-1/-1'})
+                           'fixed_schedule': '4 19600 7/0/1/2/3/4/5/6 400 -1/-1/-1/-1/-1/-1/-1/-1 19600 6/7/0/1/2/3/4/5 400 -1/-1/-1/-1/-1/-1/-1/-1'})
 
 for config in adu_common.CONFIGS:
     initializeExperiment(adu=(config['traffic_source']=='ADU'))
@@ -25,7 +25,7 @@ for config in adu_common.CONFIGS:
     setConfig(config)
     print '--- done...'
 
-    settings = {'big_and_small': True}
+    settings = {'big_and_small_two_rings': True}
     flowgrind(settings)
 
 finishExperiment()

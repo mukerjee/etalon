@@ -49,6 +49,6 @@
   </property>
   <property>
     <name>yarn.resourcemanager.hostname</name>
-    <value>10.1.1.1</value>
+    <value>h11.sdrt.cs.cmu.edu</value>
   </property>
 </configuration>

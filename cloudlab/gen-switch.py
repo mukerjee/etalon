@@ -150,7 +150,7 @@ print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => ps :: SimplePullSwitch(-1)'
 print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)'
-print '    -> StoreData(1, 1)'
+print '    -> StoreData(1, 1) -> SetIPChecksum'
 print '    -> output'
 print '}'
 print
@@ -288,10 +288,9 @@ for i in xrange(1, NUM_RACKS+1):
     for j in xrange(1, NUM_RACKS+1):
         output += 'q%d%d, ' % (j, i)
     output = output[:-2]
-    # circuit for this dest, 'went over circuit', output paint
-    output += ' => circuit_link%d -> coc%d :: Paint(0, 23) -> ' \
-              'Paint(1, 22) -> Paint(%d, 21) -> ' \
-              '[%d]output' % (i, i, i, i-1)
+    # dest paint
+    output += ' => circuit_link%d -> Paint(%d, 21) -> ' \
+              '[%d]output' % (i, i, i-1)
     print output
 print
 
@@ -304,10 +303,9 @@ for i in xrange(1, NUM_RACKS+1):
     for j in xrange(1, NUM_RACKS+1):
         output += 'pps%d%d, ' % (i, j)
     output = output[:-2]
-    # circuit for this dest, 'went over packet', output paint
+    # dest paint
     output += ' => packet_up_link%d -> [%d]ps[%d] -> ' \
-              'cop%d :: Paint(0, 23) -> Paint(2, 22) -> ' \
-              'Paint(%d, 21) -> [%d]output' % (i, i-1, i-1, i, i, i-1)
+              'Paint(%d, 21) -> [%d]output' % (i, i-1, i-1, i, i-1)
     print output
 print
 
@@ -325,15 +323,19 @@ print
 print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
     '-> GetIPAddress(16)'
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
-print '   -> SetTimestamp(FIRST true)'
+print '   -> divert_acks :: Switch(0)'
+print '   -> st :: SetTimestamp(FIRST true)'
 print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
 print '   -> hsl :: HSLog($NUM_RACKS) -> ecem :: ECEMark($NUM_RACKS) -> ' \
-    'SetTCPChecksum -> SetIPChecksum -> arp -> out'
+    'arp -> out'
 print
-
+print 'divert_acks[1] ' \
+    '-> acks :: IPClassifier(tcp ack and len < 100, -)[1] -> st'
+print
 print 'arp_c[1] -> [1]arp'
 print 'arp_c[2] -> arp_r -> out'
 print
 
+print 'acks -> arp'
 print 'pc -> ICMPPingResponder -> arp'

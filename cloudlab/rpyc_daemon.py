@@ -37,7 +37,7 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_BUILD = 'sudo docker build -t {image} -f /sdrt/vhost/{image}.dockerfile ' \
                '/sdrt/vhost/'
-DOCKER_RUN = 'sudo docker run -d -h h{id} --cpuset-cpus={cpu_set} ' \
+DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu --cpuset-cpus={cpu_set} ' \
              '-c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
@@ -118,7 +118,7 @@ class SDRTService(rpyc.Service):
             if i == my_rack:
                 continue
             for j in xrange(1, HOSTS_PER_RACK+1):
-                dst_id = '%d%d' % (i, j)
+                dst_id = '%d%d.sdrt.cs.cmu.edu' % (i, j)
                 self.call(NS_RUN.format(pid=my_pid,
                                         cmd=ARP_POISON.format(
                                             id=dst_id, switch_mac=smac)))
