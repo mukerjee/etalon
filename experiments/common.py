@@ -166,7 +166,8 @@ def launch_flowgrindd(phost, adu):
     if adu:
         RPYC_CONNECTIONS[phost].root.flowgrindd_adu()
     else:
-        RPYC_CONNECTIONS[phost].root.flowgrindd()
+        #RPYC_CONNECTIONS[phost].root.flowgrindd()
+        RPYC_CONNECTIONS[phost].root.hadoop()
 
 
 def launch_all_flowgrindd(adu):
@@ -176,14 +177,14 @@ def launch_all_flowgrindd(adu):
                                    args=(phost, adu)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
-    for r in xrange(1, NUM_RACKS+1):
-        for h in xrange(1, HOSTS_PER_RACK+1):
-            ip = '10.2.%d.%d' % (r, h)
-            port = 5999
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            while sock.connect_ex((ip, port)):
-                time.sleep(1)
-            sock.close()
+    #for r in xrange(1, NUM_RACKS+1):
+    #    for h in xrange(1, HOSTS_PER_RACK+1):
+    #        ip = '10.2.%d.%d' % (r, h)
+    #        port = 5999
+    #        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    #        while sock.connect_ex((ip, port)):
+    #            time.sleep(1)
+    #        sock.close()
 
 
 def get_flowgrind_host(h):
