@@ -3,5 +3,5 @@
 import os
 
 for i in range(1, 9):
-    cmd = "ssh mukerjee@host%d /users/mukerjee/sdrt/vhost/config/clean_docker_img.sh"
+    cmd = "ssh mukerjee@host%d /users/mukerjee/sdrt/vhost/config/clean_docker_img.sh"%(i)
     os.system(cmd)
