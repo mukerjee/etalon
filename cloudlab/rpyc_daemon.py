@@ -62,9 +62,9 @@ class SDRTService(rpyc.Service):
         return Popen(cmd, shell=True)
 
     def call(self, cmd, check_rc=True):
-        if not self.pulled:
-            self.pulled = True
-            self.update_images()
+        # if not self.pulled:
+        #     self.pulled = True
+        #     self.update_images()
         print cmd
         try:
             return check_output(cmd, shell=True)
