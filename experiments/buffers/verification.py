@@ -12,7 +12,7 @@ initializeExperiment()
 configs = [{'type': 'no_circuit'}, {'type': 'circuit'}]
 
 for c in configs:
-    c['buffer_size'] = 2048
+    c['buffer_size'] = 128
     c['divert_acks'] = True
 
 for config in configs:
