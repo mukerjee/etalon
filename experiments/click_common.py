@@ -135,7 +135,7 @@ def set_cc_host(phost, cc):
     RPYC_CONNECTIONS[phost].root.set_cc(cc)
 
 
-def setCC(cc, traffic_source):
+def setCC(cc, traffic_source, hadoop):
     global CURRENT_CC
     ts = []
     for phost in PHYSICAL_NODES[1:]:
@@ -144,7 +144,7 @@ def setCC(cc, traffic_source):
         ts[-1].start()
     map(lambda t: t.join(), ts)
     if CURRENT_CC and cc != CURRENT_CC:
-        common.launch_all_flowgrindd(traffic_source == 'ADU')
+        common.launch_all_flowgrindd(traffic_source == 'ADU', hadoop)
     CURRENT_CC = cc
 
 
@@ -209,7 +209,7 @@ def setConfig(config):
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
                       'divert_acks': False, 'circuit_link_delay': 0.000600,
-                      'packet_link_bandwidth': 10 / 20.0}
+                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -218,7 +218,7 @@ def setConfig(config):
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
-    setCC(c['cc'], c['traffic_source'])
+    setCC(c['cc'], c['traffic_source'], c['hadoop'])
     t = c['type']
     if t == 'normal':
         enableSolstice()

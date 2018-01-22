@@ -84,7 +84,7 @@ FANOUT = [
 ##
 # Experiment commands
 ##
-def initializeExperiment(adu=False):
+def initializeExperiment(adu=False, hadoop=False):
     print '--- starting experiment...'
     print '--- clearing local arp...'
     call([os.path.expanduser('~/sdrt/cloudlab/arp_clear.sh')])
@@ -103,11 +103,11 @@ def initializeExperiment(adu=False):
     print '--- done...'
 
     print '--- setting CC to reno...'
-    click_common.setCC('reno', adu)
+    click_common.setCC('reno', adu, hadoop)
     print '--- done...'
 
     print '--- launching flowgrindd...'
-    launch_all_flowgrindd(adu)
+    launch_all_flowgrindd(adu, hadoop)
     print '--- done...'
 
     click_common.initializeClickControl()
@@ -162,29 +162,35 @@ def connect_all_rpyc_daemon():
 ##
 # flowgrind
 ##
-def launch_flowgrindd(phost, adu):
-    if adu:
-        RPYC_CONNECTIONS[phost].root.flowgrindd_adu()
+def launch_flowgrindd(phost, adu, hadoop):
+    if hadoop:
+        if adu:
+            RPYC_CONNECTIONS[phost].root.hadoop_adu()
+        else:
+            RPYC_CONNECTIONS[phost].root.hadoop()
     else:
-        #RPYC_CONNECTIONS[phost].root.flowgrindd()
-        RPYC_CONNECTIONS[phost].root.hadoop()
+        if adu:
+            RPYC_CONNECTIONS[phost].root.flowgrindd_adu()
+        else:
+            RPYC_CONNECTIONS[phost].root.flowgrindd()
 
 
-def launch_all_flowgrindd(adu):
+def launch_all_flowgrindd(adu, hadoop):
     ts = []
     for phost in PHYSICAL_NODES[1:]:
         ts.append(threading.Thread(target=launch_flowgrindd,
-                                   args=(phost, adu)))
+                                   args=(phost, adu, hadoop)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
-    #for r in xrange(1, NUM_RACKS+1):
-    #    for h in xrange(1, HOSTS_PER_RACK+1):
-    #        ip = '10.2.%d.%d' % (r, h)
-    #        port = 5999
-    #        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    #        while sock.connect_ex((ip, port)):
-    #            time.sleep(1)
-    #        sock.close()
+    if not hadoop:
+        for r in xrange(1, NUM_RACKS+1):
+           for h in xrange(1, HOSTS_PER_RACK+1):
+               ip = '10.2.%d.%d' % (r, h)
+               port = 5999
+               sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+               while sock.connect_ex((ip, port)):
+                   time.sleep(1)
+               sock.close()
 
 
 def get_flowgrind_host(h):
