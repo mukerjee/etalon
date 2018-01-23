@@ -115,6 +115,19 @@ def clearCounters():
 def divertACKs(divert):
     clickWriteHandler('divert_acks', 'switch', 1 if divert else 0)
 
+
+def setCircuitLinkDelay(delay):
+    for i in xrange(1, NUM_RACKS+1):
+        clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
+                          'latency', delay)
+
+def setPacketLinkBandwidth(bw):
+    for i in xrange(1, NUM_RACKS+1):
+        clickWriteHandler('hybrid_switch/packet_up_link%d/lu' % (i),
+                          'bandwidth', '%.1fGbps' % bw)
+        clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
+                          'bandwidth', '%.1fGbps' % bw)
+
 ##
 # Congestion Control
 ##
@@ -122,7 +135,7 @@ def set_cc_host(phost, cc):
     RPYC_CONNECTIONS[phost].root.set_cc(cc)
 
 
-def setCC(cc, traffic_source):
+def setCC(cc, traffic_source, hadoop):
     global CURRENT_CC
     ts = []
     for phost in PHYSICAL_NODES[1:]:
@@ -131,7 +144,7 @@ def setCC(cc, traffic_source):
         ts[-1].start()
     map(lambda t: t.join(), ts)
     if CURRENT_CC and cc != CURRENT_CC:
-        common.launch_all_flowgrindd(traffic_source == 'ADU')
+        common.launch_all_flowgrindd(traffic_source == 'ADU', hadoop)
     CURRENT_CC = cc
 
 
@@ -155,12 +168,12 @@ def disableCircuit():
     time.sleep(0.1)
 
 
-def setStrobeSchedule():
+def setStrobeSchedule(reconfig_delay=20):
     disableSolstice()
     schedule = '%d ' % ((NUM_RACKS-1)*2)
     for i in xrange(NUM_RACKS-1):
         configstr = '%d %s %d %s '
-        night_len = 20 * TDF
+        night_len = reconfig_delay * TDF
         off_config = ('-1/' * NUM_RACKS)[:-1]
         duration = night_len * 9  # night_len * duty_cycle
         configuration = ''
@@ -195,7 +208,8 @@ def setConfig(config):
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
-                      'divert_acks': False}
+                      'divert_acks': False, 'circuit_link_delay': 0.000600,
+                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -204,7 +218,7 @@ def setConfig(config):
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
-    setCC(c['cc'], c['traffic_source'])
+    setCC(c['cc'], c['traffic_source'], c['hadoop'])
     t = c['type']
     if t == 'normal':
         enableSolstice()
@@ -212,16 +226,23 @@ def setConfig(config):
         disableCircuit()
     if t == 'strobe':
         setStrobeSchedule()
+    if t == 'short_reconfig':
+        setStrobeSchedule(reconfig_delay=10)
     if t == 'circuit':
         setCircuitSchedule()
     if t == 'fixed':
         setFixedSchedule(c['fixed_schedule'])
     divertACKs(c['divert_acks'])
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
-                                              c['buffer_size'],
-                                              c['traffic_source'],
-                                              c['queue_resize'],
-                                              c['in_advance'], c['cc'])
+    setCircuitLinkDelay(c['circuit_link_delay'])
+    setPacketLinkBandwidth(c['packet_link_bandwidth'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
+                                                    c['buffer_size'],
+                                                    c['traffic_source'],
+                                                    c['queue_resize'],
+                                                    c['in_advance'],
+                                                    c['cc'],
+                                                    c['circuit_link_delay'],
+                                                    c['packet_link_bandwidth'])
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')

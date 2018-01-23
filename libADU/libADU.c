@@ -30,7 +30,6 @@ struct traffic_info {
   long size;
 };
 
-char local_ip[NI_MAXHOST];
 int ctrl_sock = -1;
 
 // Find the library version of the function that we are wrapping

@@ -288,10 +288,9 @@ for i in xrange(1, NUM_RACKS+1):
     for j in xrange(1, NUM_RACKS+1):
         output += 'q%d%d, ' % (j, i)
     output = output[:-2]
-    # circuit for this dest, 'went over circuit', output paint
-    output += ' => circuit_link%d -> coc%d :: Paint(0, 23) -> ' \
-              'Paint(1, 22) -> Paint(%d, 21) -> ' \
-              '[%d]output' % (i, i, i, i-1)
+    # dest paint
+    output += ' => circuit_link%d -> Paint(%d, 21) -> ' \
+              '[%d]output' % (i, i, i-1)
     print output
 print
 
@@ -304,10 +303,9 @@ for i in xrange(1, NUM_RACKS+1):
     for j in xrange(1, NUM_RACKS+1):
         output += 'pps%d%d, ' % (i, j)
     output = output[:-2]
-    # circuit for this dest, 'went over packet', output paint
+    # dest paint
     output += ' => packet_up_link%d -> [%d]ps[%d] -> ' \
-              'cop%d :: Paint(0, 23) -> Paint(2, 22) -> ' \
-              'Paint(%d, 21) -> [%d]output' % (i, i-1, i-1, i, i, i-1)
+              'Paint(%d, 21) -> [%d]output' % (i, i-1, i-1, i, i-1)
     print output
 print
 
