@@ -29,8 +29,6 @@ ENV HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
 
 COPY config /tmp/config
 
-ADD  http://128.2.213.69/hadoop-2.7.5.tar.gz /root/
-
 # passwordless ssh setup
 RUN mkdir -p /root/.ssh && \ 
     mv /tmp/config/id_rsa ~/.ssh/id_rsa && \
@@ -40,12 +38,19 @@ RUN mkdir -p /root/.ssh && \
     chmod 600 ~/.ssh/config && \
     chmod 400 ~/.ssh/id_rsa
 
+COPY hadoop-2.7.5.tar.gz /root/
+
 RUN mkdir -p /usr/local/hadoop && \
     tar xvzf hadoop-2.7.5.tar.gz && \
     mv hadoop-2.7.5/* /usr/local/hadoop/ && \
     mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \ 
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/namenode && \
-    mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode 
+    mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode
+
+COPY HiBench.tar.gz /root/
+
+RUN tar xfvz HiBench.tar.gz
+
 
 # Install pipework
 WORKDIR /usr/local/bin
