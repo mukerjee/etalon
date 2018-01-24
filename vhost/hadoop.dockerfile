@@ -39,8 +39,6 @@ RUN tar xfvz hadoop-2.7.5.tar.gz && \
     mv hadoop-2.7.5 hadoop && \
     rm hadoop-2.7.5.tar.gz && \
     mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
-    cp /tmp/config/slaves /usr/local/hadoop/etc/hadoop/ && \
-    cp /tmp/config/masters /usr/local/hadoop/etc/hadoop/ && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/namenode && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode
 
