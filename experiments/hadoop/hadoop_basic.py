@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import sys
-import buffer_common
 sys.path.append("../")
 
 from common import initializeExperiment, finishExperiment, flowgrind
