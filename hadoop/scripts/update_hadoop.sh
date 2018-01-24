@@ -7,5 +7,5 @@ do
     echo $i
     scp -o StrictHostKeyChecking=no ~/hadoop-2.7.5.tar.gz host$i:/sdrt/vhost/
     scp -o StrictHostKeyChecking=no ~/hadoop-SDRT-2.7.5.tar.gz host$i:/sdrt/vhost/
-    scp -o StrictHostKeyChecking=no ~/HiBench.tar.gz host$i:/sdrt/vhost/
+    # scp -o StrictHostKeyChecking=no ~/HiBench.tar.gz host$i:/sdrt/vhost/
 done
