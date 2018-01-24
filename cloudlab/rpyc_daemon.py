@@ -25,6 +25,7 @@ CONTROL_RATE = 10 / TDF  # Gbps
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
+# CPU_LIMIT = 1500
 
 IMAGES = {
     'flowgrindd': 'flowgrindd',
