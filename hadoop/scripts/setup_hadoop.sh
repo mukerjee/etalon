@@ -12,3 +12,4 @@ sudo mkdir -p /mnt/hdfs/tmp
 sudo chmod 777 /mnt/hdfs/namenode
 sudo chmod 777 /mnt/hdfs/datanode
 sudo chmod 777 /mnt/hdfs/tmp
+sudo chmod 777 /mnt/hdfs
