@@ -106,7 +106,7 @@ class SDRTService(rpyc.Service):
         if image == 'hadoop' and my_id == '11':
             my_cmd = '"service ssh start && ' \
                      'pipework --wait && pipework --wait -i eth2 && ' \
-                     '/usr/local/hadoop/hdfs namenode -format -force && '\
+                     '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
                      '/tmp/config/start_hadoop.sh && sleep infinity"'
         my_cmd = '/bin/sh -c ' + my_cmd
         self.call(DOCKER_RUN.format(image=IMAGES[image],
