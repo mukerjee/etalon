@@ -18,6 +18,10 @@
 
 <configuration>
 <property>
+    <name>hadoop.tmp.dir</name>
+    <value>/mnt/hdfs/tmp</value>
+</property>
+<property>
     <name>fs.defaultFS</name>
     <value>hdfs://host1.sdrt.dna-pg0.apt.emulab.net:9000</value>
 </property>

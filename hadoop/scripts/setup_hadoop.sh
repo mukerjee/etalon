@@ -8,4 +8,7 @@ sudo mkdir -p /mnt/hdfs
 /usr/local/etc/emulab/mkextrafs.pl /mnt/hdfs
 sudo mkdir -p /mnt/hdfs/namenode
 sudo mkdir -p /mnt/hdfs/datanode
-
+sudo mkdir -p /mnt/hdfs/tmp
+sudo chmod 777 /mnt/hdfs/namenode
+sudo chmod 777 /mnt/hdfs/datanode
+sudo chmod 777 /mnt/hdfs/tmp
