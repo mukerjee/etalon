@@ -37,8 +37,8 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_BUILD = 'sudo docker build -t {image} -f /sdrt/vhost/{image}.dockerfile ' \
                '/sdrt/vhost/'
-DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu --cpuset-cpus={cpu_set} ' \
-             '-c {cpu_limit} --name=h{id} {image} {cmd}'
+DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu -v /sdrt/vhost/config/hosts:/etc/hosts:ro' \
+             '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
            '10.{net}.{rack}.{id}/16; '
@@ -101,10 +101,10 @@ class SDRTService(rpyc.Service):
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
         if image == 'hadoop':
-            my_cmd = '"mv /tmp/config/hosts /etc/hosts && service ssh start && ' \
+            my_cmd = '"service ssh start && ' \
                      'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         if image == 'hadoop' and my_id == '11':
-            my_cmd = '"mv /tmp/config/hosts /etc/hosts && service ssh start && ' \
+            my_cmd = '"service ssh start && ' \
                      'pipework --wait && pipework --wait -i eth2 && ' \
                      '/usr/local/hadoop/hdfs namenode -format -force && '\
                      '/tmp/config/start_hadoop.sh && sleep infinity"'
