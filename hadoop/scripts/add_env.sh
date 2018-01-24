@@ -9,5 +9,5 @@ echo "export HADOOP_COMMON_HOME=\$HADOOP_INSTALL" >> $HOME/.bashrc
 echo "export HADOOP_HDFS_HOME=\$HADOOP_INSTALL" >> $HOME/.bashrc
 echo "export YARN_HOME=\$HADOOP_INSTALL" >> $HOME/.bashrc
 echo "export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_INSTALL/lib/native" >> $HOME/.bashrc
-echo "export HADOOP_OPTS="-Djava.library.path=$HADOOP_INSTALL/lib"" >> $HOME/.bashrc
+echo "export HADOOP_OPTS=\"-Djava.library.path=$HADOOP_INSTALL/lib/native\"" >> $HOME/.bashrc
 echo "export HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop" >> $HOME/.bashrc
