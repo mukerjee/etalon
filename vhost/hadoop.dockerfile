@@ -4,14 +4,12 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
 WORKDIR /root
 RUN apt-get update && apt-get install -y \
-                              wget \
-                              software-properties-common \
+                              # software-properties-common \
                               openssh-server \
-                              openjdk-8-jdk \
-                              maven \
-                              wget \
-                              iputils-ping \
-                              python \
+                              # openjdk-8-jdk \
+                              # maven \
+                              # iputils-ping \
+                              # python \
                               bc \
     && rm -rf /var/lib/apt/lists/*
 
@@ -30,42 +28,32 @@ ENV HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
 COPY config /tmp/config
 
 # passwordless ssh setup
-RUN mkdir -p /root/.ssh && \ 
-    mv /tmp/config/id_rsa ~/.ssh/id_rsa && \
-    mv /tmp/config/id_rsa.pub ~/.ssh/id_rsa.pub && \
+RUN mkdir -p /root/.ssh && \
+    mv /tmp/config/ssh/* ~/.ssh/ && \
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && \
-    mv /tmp/config/config ~/.ssh/config && \
     chmod 600 ~/.ssh/config && \
     chmod 400 ~/.ssh/id_rsa
 
-COPY hadoop-2.7.5.tar.gz /root/
-
-RUN mkdir -p /usr/local/hadoop && \
-    tar xvzf hadoop-2.7.5.tar.gz && \
-    mv hadoop-2.7.5/* /usr/local/hadoop/ && \
+WORKDIR /usr/local/
+COPY hadoop-2.7.5.tar.gz .
+RUN tar xfvz hadoop-2.7.5.tar.gz && \
+    mv hadoop-2.7.5 hadoop && \
+    rm hadoop-2.7.5.tar.gz && \
     mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \ 
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/namenode && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode
 
-COPY HiBench.tar.gz /root/
-
-RUN tar xfvz HiBench.tar.gz
-
+# COPY HiBench.tar.gz /root/
+# RUN tar xfvz HiBench.tar.gz
 
 # Install pipework
 WORKDIR /usr/local/bin
-RUN wget https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework \
-    && chmod +x pipework
+ADD https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework /usr/local/bin/
+RUN chmod +x pipework
 
 # copy SDRT libADU and libVT
 COPY libADU.so /usr/lib/libADU.so
 COPY libVT.so /usr/lib/libVT.so
-
-# hadoop
-#RUN wget https://github.com/intel-hadoop/HiBench/archive/master.tar.gz \
-#    && tar xfz master.tar.gz \
-#    && mv HiBench-master HiBench \
-#    && rm master.tar.gz
 
 CMD pipework --wait \
     && pipework --wait -i eth2 \
