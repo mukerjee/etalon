@@ -30,15 +30,15 @@
 </property>
 
 
- <property>
-            <name>yarn.scheduler.minimum-allocation-mb</name>
-            <value>2048</value>
-</property>
-<property>
-<name>yarn.nodemanager.resource.memory-mb</name>
+<!--  <property> -->
+<!--             <name>yarn.scheduler.minimum-allocation-mb</name> -->
+<!--             <value>2048</value> -->
+<!-- </property> -->
+<!-- <property> -->
+<!-- <name>yarn.nodemanager.resource.memory-mb</name> -->
 
-<value>40960</value>
-    </property>
+<!-- <value>40960</value> -->
+<!--     </property> -->
 <property>
     <name>yarn.nodemanager.aux-services</name>
     <value>mapreduce_shuffle</value>
