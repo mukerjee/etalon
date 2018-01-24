@@ -4,12 +4,11 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
 WORKDIR /root
 RUN apt-get update && apt-get install -y \
-                              # software-properties-common \
                               openssh-server \
-                              # openjdk-8-jdk \
-                              # maven \
-                              # iputils-ping \
-                              # python \
+                              openjdk-8-jdk \
+                              maven \
+                              iputils-ping \
+                              python \
                               bc \
     && rm -rf /var/lib/apt/lists/*
 

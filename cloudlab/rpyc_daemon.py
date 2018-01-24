@@ -103,8 +103,6 @@ class SDRTService(rpyc.Service):
         if image == 'hadoop':
             my_cmd = '"service ssh start && pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         my_cmd = '/bin/sh -c ' + my_cmd
-        self.pulled = True
-        self.update_image(IMAGES[image])
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
                                     cpu_limit=CPU_LIMIT, cmd=my_cmd))
@@ -132,6 +130,8 @@ class SDRTService(rpyc.Service):
 
     def launch_rack(self, image):
         self.clean()
+        self.pulled = True
+        self.update_image(IMAGES[image])
         ts = []
         for i in xrange(1, HOSTS_PER_RACK+1):
             ts.append(threading.Thread(target=self.launch,
