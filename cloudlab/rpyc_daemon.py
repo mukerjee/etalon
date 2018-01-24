@@ -41,6 +41,7 @@ DOCKER_BUILD = 'sudo docker build -t {image} -f /sdrt/vhost/{image}.dockerfile '
 DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu -v /sdrt/vhost/config/hosts:/etc/hosts:ro ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
+DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
            '10.{net}.{rack}.{id}/16; '
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
@@ -146,6 +147,20 @@ class SDRTService(rpyc.Service):
             ts[-1].start()
         map(lambda t: t.join(), ts)
 
+    def run_host(self, my_cmd, host_id):
+        my_id = '%d%d' % (SELF_ID, host_id)
+        self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
+        # my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
+        # self.call(NS_RUN.format(pid=my_pid, cmd=my_cmd))
+
+    def run_rack(self, cmd):
+        ts = []
+        for i in xrange(1, HOSTS_PER_RACK+1):
+            ts.append(threading.Thread(target=self.run_host,
+                                       args=(cmd, i)))
+            ts[-1].start()
+        map(lambda t: t.join(), ts)
+
     def exposed_set_cc(self, new_cc):
         self.call(SET_CC.format(cc=new_cc))
 
@@ -157,6 +172,9 @@ class SDRTService(rpyc.Service):
 
     def exposed_hadoop(self):
         self.launch_rack('hadoop')
+
+    def exposed_file_put_test(self):
+        self.run_rack('/tmp/config/file_put_test.sh')
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
