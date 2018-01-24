@@ -101,9 +101,11 @@ class SDRTService(rpyc.Service):
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
         if image == 'hadoop':
-            my_cmd = '"service ssh start && pipework --wait && pipework --wait -i eth2 && sleep infinity"'
+            my_cmd = '"mv /tmp/config/hosts /etc/hosts && service ssh start && ' \
+                     'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         if image == 'hadoop' and my_id == '11':
-            my_cmd = '"service ssh start && pipework --wait && pipework --wait -i eth2 && ' \
+            my_cmd = '"mv /tmp/config/hosts /etc/hosts && service ssh start && ' \
+                     'pipework --wait && pipework --wait -i eth2 && ' \
                      '/usr/local/hadoop/hdfs namenode -format -force && '\
                      '/tmp/config/start_hadoop.sh && sleep infinity"'
         my_cmd = '/bin/sh -c ' + my_cmd
