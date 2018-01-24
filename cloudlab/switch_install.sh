@@ -75,4 +75,9 @@ sudo systemctl daemon-reload
 sudo systemctl enable phc2sys.service
 sudo systemctl disable ntp.service
 
+cp $HOME/sdrt/vhost/config/ssh/id_rsa $HOME/.ssh/
+cp $HOME/sdrt/vhost/config/ssh/id_rsa.pub $HOME/.ssh/
+chmod 600 $HOME/.ssh/id_rsa
+chmod 600 $HOME/.ssh/id_rsa.pub
+
 sudo reboot
