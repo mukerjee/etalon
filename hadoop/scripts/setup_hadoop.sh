@@ -4,8 +4,8 @@ sudo rm -rf /usr/local/hadoop
 sudo rm -rf /tmp/*
 sudo rm -rf /mnt/hdfs/*
 
-cd /sdrt/
-git pull
+# cd /sdrt/
+# git pull
 
 cd /sdrt/vhost/
 tar xfz hadoop-$12.7.5.tar.gz
