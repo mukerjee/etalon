@@ -1,7 +1,14 @@
 #!/bin/bash
 
+sudo rm -rf /usr/local/hadoop
+sudo rm -rf /tmp/*
+sudo rm -rf /mnt/hdfs/*
+
+cd /sdrt/
+git pull
+
 cd /sdrt/vhost/
-tar xfvz hadoop-2.7.5.tar.gz
+tar xfz hadoop-$12.7.5.tar.gz
 sudo mv hadoop-2.7.5 /usr/local/hadoop
 cp /sdrt/hadoop/config/* /usr/local/hadoop/etc/hadoop/
 sudo mkdir -p /mnt/hdfs
