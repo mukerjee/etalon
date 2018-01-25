@@ -1,5 +1,7 @@
 #!/bin/bash
 
+pkill java
+
 sudo rm -rf /usr/local/hadoop
 sudo rm -rf /tmp/*
 sudo rm -rf /mnt/hdfs/*
