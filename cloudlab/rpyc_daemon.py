@@ -29,6 +29,7 @@ CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
 
 IMAGES = {
     'flowgrindd': 'flowgrindd',
+    'flowgrindd_adu': 'flowgrindd',
     'hadoop': 'hadoop',
 }
 
