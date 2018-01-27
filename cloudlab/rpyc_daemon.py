@@ -31,6 +31,7 @@ IMAGES = {
     'flowgrindd': 'flowgrindd',
     'flowgrindd_adu': 'flowgrindd',
     'hadoop': 'hadoop',
+    'hadoop-sdrt': 'hadoop-sdrt',
 }
 
 
@@ -103,10 +104,10 @@ class SDRTService(rpyc.Service):
                      'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} ' \
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
-        if image == 'hadoop':
+        if 'hadoop' in image:
             my_cmd = '"service ssh start && ' \
                      'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
-        if image == 'hadoop' and my_id == '11':
+        if 'hadoop' in image and my_id == '11':
             my_cmd = '"service ssh start && ' \
                      'pipework --wait && pipework --wait -i eth2 && ' \
                      '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
@@ -173,6 +174,9 @@ class SDRTService(rpyc.Service):
 
     def exposed_hadoop(self):
         self.launch_rack('hadoop')
+
+    def exposed_hadoop_sdrt(self):
+        self.launch_rack('hadoop-sdrt')
 
     def exposed_file_put_test(self):
         self.run_rack('/tmp/config/file_put_test.sh')
