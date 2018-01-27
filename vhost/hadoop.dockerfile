@@ -42,6 +42,7 @@ RUN tar xfvz hadoop-2.7.5.tar.gz && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/namenode && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs/datanode
 
+WORKDIR /root/
 COPY HiBench.tar.gz /root/
 RUN tar xfvz HiBench.tar.gz
 
