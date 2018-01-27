@@ -54,6 +54,28 @@ RUN chmod +x pipework
 COPY libADU.so /usr/lib/libADU.so
 COPY libVT.so /usr/lib/libVT.so
 
+# build fixed kill
+# WORKDIR /root/
+# RUN apt-get update
+# RUN apt-get install -y git
+# RUN apt-get install -y autoconf
+# RUN apt-get install -y automake
+# RUN apt-get install -y libtool
+# RUN apt-get install -y libtool-bin
+# RUN apt-get install -y autopoint
+# RUN apt-get install -y pkg-config
+# RUN apt-get install -y libncurses5-dev
+# RUN apt-get install -y gettext
+#     # && rm -rf /var/lib/apt/lists/*
+# RUN git clone https://gitlab.com/procps-ng/procps.git && \
+#     cd procps && \
+#     ./autogen.sh && \
+#     ./configure && \
+#     make && \
+#     make install
+
+COPY kill /bin/kill
+
 CMD pipework --wait \
     && pipework --wait -i eth2 \
     && sleep infinity 
