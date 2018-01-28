@@ -145,7 +145,9 @@ class SDRTService(rpyc.Service):
         self.pulled = True
         self.update_image(IMAGES[image])
         ts = []
-        num_hosts = 4 if 'hadoop' in image else HOSTS_PER_RACK
+        num_hosts = 2 if 'hadoop' in image else HOSTS_PER_RACK
+        if 'hadoop' in image and SELF_ID == 1:
+            num_hosts = 3
         for i in xrange(1, num_hosts+1):
             ts.append(threading.Thread(target=self.launch,
                                        args=(image, i)))
