@@ -22,6 +22,10 @@
     <value>3</value>
 </property>
 <property>
+    <name>dfs.blocksize</name>
+    <value>32m</value>
+</property>
+<property>
     <name>dfs.namenode.name.dir</name>
     <value>file:///usr/local/hadoop/hadoop_data/hdfs</value>
 </property>
