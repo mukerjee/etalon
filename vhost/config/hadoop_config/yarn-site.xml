@@ -15,38 +15,34 @@
 <configuration>
 
 <!-- Site specific YARN configuration properties -->
-<property>
-<name>yarn.nodemanager.vmem-pmem-ratio</name>
- <value>5</value>
-</property>
-<property>
-<name>yarn.nodemanager.pmem-check-enabled</name>
-
- <value>false</value>
-</property>
-<property>
-<name>yarn.nodemanager.vmem-check-enabled</name> 
- <value>false</value>
-</property>
-
-
- <property>
-            <name>yarn.scheduler.minimum-allocation-mb</name>
-            <value>2048</value>
-</property>
-<property>
-<name>yarn.nodemanager.resource.memory-mb</name>
-
-<value>40960</value>
-    </property>
-<property>
-    <name>yarn.nodemanager.aux-services</name>
-    <value>mapreduce_shuffle</value>
-  </property> 
-  <property>
-    <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name>
-    <value>org.apache.hadoop.mapred.ShuffleHandler</value>
-  </property>
+  <!-- <property> -->
+  <!--   <name>yarn.nodemanager.vmem-pmem-ratio</name> -->
+  <!--   <value>5</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>yarn.nodemanager.pmem-check-enabled</name> -->
+  <!--   <value>false</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>yarn.nodemanager.vmem-check-enabled</name>  -->
+  <!--   <value>false</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>yarn.scheduler.minimum-allocation-mb</name> -->
+  <!--   <value>2048</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>yarn.nodemanager.resource.memory-mb</name> -->
+  <!--   <value>40960</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>yarn.nodemanager.aux-services</name> -->
+  <!--   <value>mapreduce_shuffle</value> -->
+  <!-- </property>  -->
+  <!-- <property> -->
+  <!--   <name>yarn.nodemanager.aux-services.mapreduce.shuffle.class</name> -->
+  <!--   <value>org.apache.hadoop.mapred.ShuffleHandler</value> -->
+  <!-- </property> -->
   <property>
     <name>yarn.resourcemanager.hostname</name>
     <value>h11.sdrt.cs.cmu.edu</value>
