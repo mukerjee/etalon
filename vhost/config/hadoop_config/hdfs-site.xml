@@ -27,7 +27,8 @@
 </property>
 <property>
     <name>dfs.datanode.data.dir</name>
-    <value>file:///usr/local/hadoop/hadoop_data/backing/,[RAM_DISK]file:///usr/local/hadoop/hadoop_data/hdfs</value>
+    <!-- <value>file:///usr/local/hadoop/hadoop_data/backing/,[RAM_DISK]file:///usr/local/hadoop/hadoop_data/hdfs</value> -->
+    <value>file:///usr/local/hadoop/hadoop_data/hdfs</value>
 </property>
 <property>
     <name>dfs.datanode.max.transfer.threads</name>
