@@ -39,6 +39,7 @@ RUN tar xfvz hadoop-2.7.5.tar.gz && \
     mv hadoop-2.7.5 hadoop && \
     rm hadoop-2.7.5.tar.gz && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs && \
+    mkdir -p /usr/local/hadoop/hadoop_data/hdfs-nn && \
     mkdir -p /usr/local/hadoop/hadoop_data/backing
 
 WORKDIR /root/

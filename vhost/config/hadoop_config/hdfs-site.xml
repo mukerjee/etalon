@@ -27,7 +27,7 @@
 <!-- </property> -->
 <property>
     <name>dfs.namenode.name.dir</name>
-    <value>file:///usr/local/hadoop/hadoop_data/hdfs</value>
+    <value>file:///usr/local/hadoop/hadoop_data/hdfs-nn</value>
 </property>
 <property>
     <name>dfs.datanode.data.dir</name>
