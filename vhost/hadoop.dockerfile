@@ -24,11 +24,11 @@ ENV HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_INSTALL/lib/native
 ENV HADOOP_OPTS="-Djava.library.path=$HADOOP_INSTALL/lib/native"
 ENV HADOOP_CONF_DIR=/usr/local/hadoop/etc/hadoop
 
-COPY config /tmp/config
-
 # passwordless ssh setup
+WORKDIR /tmp/
+COPY config/ssh /tmp/ssh
 RUN mkdir -p /root/.ssh && \
-    mv /tmp/config/ssh/* ~/.ssh/ && \
+    mv /tmp/ssh/* ~/.ssh/ && \
     cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys && \
     chmod 600 ~/.ssh/config && \
     chmod 400 ~/.ssh/id_rsa
@@ -38,16 +38,15 @@ COPY hadoop-2.7.5.tar.gz .
 RUN tar xfvz hadoop-2.7.5.tar.gz && \
     mv hadoop-2.7.5 hadoop && \
     rm hadoop-2.7.5.tar.gz && \
-    mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs && \
     mkdir -p /usr/local/hadoop/hadoop_data/backing
 
 WORKDIR /root/
 COPY HiBench.tar.gz /root/
 RUN tar xfvz HiBench.tar.gz && \
+    rm HiBench.tar.gz && \
     mv /tmp/config/hibench.conf ./HiBench/conf/ && \
-    mv /tmp/config/hadoop.conf ./HiBench/conf/ && \
-    mv /tmp/config/dfsioe.conf ./HiBench/conf/workloads/micro/
+    mv /tmp/config/hadoop.conf ./HiBench/conf/
 
 # Install pipework
 WORKDIR /usr/local/bin
@@ -79,6 +78,10 @@ COPY libVT.so /usr/lib/libVT.so
 #     make install
 
 COPY kill /bin/kill
+
+COPY config /tmp/config
+RUN mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
+    mv /tmp/config/dfsioe.conf ./HiBench/conf/workloads/micro/
 
 CMD pipework --wait \
     && pipework --wait -i eth2 \
