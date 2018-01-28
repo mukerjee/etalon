@@ -19,12 +19,12 @@
 <configuration>
 <property>
     <name>dfs.replication</name>
-    <value>2</value>
+    <value>3</value>
 </property>
-<property>
-    <name>dfs.blocksize</name>
-    <value>32m</value>
-</property>
+<!-- <property> -->
+<!--     <name>dfs.blocksize</name> -->
+<!--     <value>32m</value> -->
+<!-- </property> -->
 <property>
     <name>dfs.namenode.name.dir</name>
     <value>file:///usr/local/hadoop/hadoop_data/hdfs</value>
@@ -34,10 +34,10 @@
     <!-- <value>file:///usr/local/hadoop/hadoop_data/backing/,[RAM_DISK]file:///usr/local/hadoop/hadoop_data/hdfs</value> -->
     <value>file:///usr/local/hadoop/hadoop_data/hdfs</value>
 </property>
-<property>
-    <name>dfs.datanode.max.transfer.threads</name>
-    <value>16000</value>
-</property>
+<!-- <property> -->
+<!--     <name>dfs.datanode.max.transfer.threads</name> -->
+<!--     <value>16000</value> -->
+<!-- </property> -->
 <property>
     <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
     <value>false</value>
