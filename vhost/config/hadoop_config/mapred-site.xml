@@ -25,6 +25,10 @@
     <name>mapreduce.framework.name</name>
     <value>yarn</value>
   </property>
+  <property>
+    <name>mapreduce.tasktracker.map.tasks.maximum</name>
+    <value>1</value>
+  </property>
   <!-- <property> -->
   <!--   <name>mapreduce.map.memory.mb</name> -->
   <!--   <value>2048</value> -->
