@@ -40,7 +40,7 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_BUILD = 'sudo docker build -t {image} -f /sdrt/vhost/{image}.dockerfile ' \
                '/sdrt/vhost/'
-DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu -v /sdrt/vhost/config/hosts:/etc/hosts:ro ' \
+DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu -v /sdrt/vhost/config/hosts:/etc/hosts:ro --tempfs /usr/local/hadoop/hadoop_data/hdfs:rw,size=2g ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
