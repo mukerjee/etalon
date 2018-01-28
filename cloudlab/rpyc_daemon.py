@@ -25,7 +25,7 @@ CONTROL_RATE = 10 / TDF  # Gbps
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
-# CPU_LIMIT = 1500
+CPU_LIMIT = 1500
 
 IMAGES = {
     'flowgrindd': 'flowgrindd',
@@ -41,8 +41,8 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
 DOCKER_BUILD = 'sudo docker build -t {image} -f /sdrt/vhost/{image}.dockerfile ' \
                '/sdrt/vhost/'
 DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu -v /sdrt/vhost/config/hosts:/etc/hosts:ro ' \
-             '--mount=type=tmpfs,tmpfs-size=3G,destination=/usr/local/hadoop/hadoop_data/hdfs ' \
-             '--ulimit nofile=262144:262144 ' \
+             '--mount=type=tmpfs,tmpfs-size=8G,destination=/usr/local/hadoop/hadoop_data/hdfs ' \
+             # '--ulimit nofile=262144:262144 ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} {image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
@@ -147,9 +147,9 @@ class SDRTService(rpyc.Service):
         self.pulled = True
         self.update_image(IMAGES[image])
         ts = []
-        num_hosts = 2 if 'hadoop' in image else HOSTS_PER_RACK
-        if 'hadoop' in image and SELF_ID == 1:
-            num_hosts = 3
+        num_hosts = 1 if 'hadoop' in image else HOSTS_PER_RACK
+        # if 'hadoop' in image and SELF_ID == 1:
+        #     num_hosts = 3
         for i in xrange(1, num_hosts+1):
             ts.append(threading.Thread(target=self.launch,
                                        args=(image, i)))
