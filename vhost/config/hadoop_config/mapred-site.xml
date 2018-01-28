@@ -17,7 +17,7 @@
 <!-- Put site-specific property overrides in this file. -->
 
 <configuration>
-<property>
+  <property>
     <name>mapreduce.jobtracker.address</name>
     <value>h11.sdrt.cs.cmu.edu:54311</value>
   </property>
@@ -25,20 +25,20 @@
     <name>mapreduce.framework.name</name>
     <value>yarn</value>
   </property>
-  <property>
-    <name>mapreduce.map.memory.mb</name>
-    <value>4096</value>
-  </property>
-  <property>
-    <name>mapreduce.reducememory.mb</name>
-    <value>8092</value>
-  </property>
-  <property>
-    <name>mapreduce.map.java.opts</name>
-    <value>-Xmx3072m</value>
-  </property>
-  <property>
-    <name>mapreduce.reduce.java.opts</name>
-    <value>-Xmx6144m</value>
-  </property>
+  <!-- <property> -->
+  <!--   <name>mapreduce.map.memory.mb</name> -->
+  <!--   <value>2048</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>mapreduce.reducememory.mb</name> -->
+  <!--   <value>4096</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>mapreduce.map.java.opts</name> -->
+  <!--   <value>-Xmx1536m</value> -->
+  <!-- </property> -->
+  <!-- <property> -->
+  <!--   <name>mapreduce.reduce.java.opts</name> -->
+  <!--   <value>-Xmx3072m</value> -->
+  <!-- </property> -->
 </configuration>
