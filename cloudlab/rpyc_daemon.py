@@ -25,7 +25,7 @@ CONTROL_RATE = 10 / TDF  # Gbps
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
-# CPU_LIMIT = 1500
+CPU_LIMIT = 1500
 
 IMAGES = {
     'flowgrindd': 'flowgrindd',
@@ -145,7 +145,8 @@ class SDRTService(rpyc.Service):
         self.pulled = True
         self.update_image(IMAGES[image])
         ts = []
-        for i in xrange(1, HOSTS_PER_RACK+1):
+        num_hosts = 4 if 'hadoop' in image else HOSTS_PER_RACK
+        for i in xrange(1, num_hosts+1):
             ts.append(threading.Thread(target=self.launch,
                                        args=(image, i)))
             ts[-1].start()
