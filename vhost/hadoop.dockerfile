@@ -44,9 +44,7 @@ RUN tar xfvz hadoop-2.7.5.tar.gz && \
 WORKDIR /root/
 COPY HiBench.tar.gz /root/
 RUN tar xfvz HiBench.tar.gz && \
-    rm HiBench.tar.gz && \
-    mv /tmp/config/hibench.conf ./HiBench/conf/ && \
-    mv /tmp/config/hadoop.conf ./HiBench/conf/
+    rm HiBench.tar.gz
 
 # Install pipework
 WORKDIR /usr/local/bin
@@ -81,6 +79,8 @@ COPY kill /bin/kill
 
 COPY config /tmp/config
 RUN mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
+    mv /tmp/config/hibench.conf ./HiBench/conf/ && \
+    mv /tmp/config/hadoop.conf ./HiBench/conf/ && \
     mv /tmp/config/dfsioe.conf ./HiBench/conf/workloads/micro/
 
 CMD pipework --wait \
