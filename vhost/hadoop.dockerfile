@@ -78,6 +78,7 @@ COPY libVT.so /usr/lib/libVT.so
 COPY kill /bin/kill
 
 COPY config /tmp/config
+WORKDIR /root/
 RUN mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
     mv /tmp/config/hibench.conf ./HiBench/conf/ && \
     mv /tmp/config/hadoop.conf ./HiBench/conf/ && \
