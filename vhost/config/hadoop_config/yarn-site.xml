@@ -51,4 +51,8 @@
     <name>yarn.resourcemanager.hostname</name>
     <value>h11.sdrt.cs.cmu.edu</value>
   </property>
+  <property>
+    <name>yarn.resourcemanager.bind-host</name>
+    <value>0.0.0.0</value>
+  </property>
 </configuration>
