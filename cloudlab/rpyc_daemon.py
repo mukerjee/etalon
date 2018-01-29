@@ -42,7 +42,7 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
 DOCKER_BUILD = 'sudo docker build -t {image} -f /sdrt/vhost/{image}.dockerfile ' \
                '/sdrt/vhost/'
 DOCKER_RUN = 'sudo docker run -d -h h{id}.sdrt.cs.cmu.edu -v /sdrt/vhost/config/hosts:/etc/hosts:ro ' \
-             '--mount=type=tmpfs,tmpfs-size=8G,destination=/usr/local/hadoop/hadoop_data/hdfs ' \
+             '--mount=type=tmpfs,tmpfs-size=10G,destination=/usr/local/hadoop/hadoop_data/hdfs ' \
              '--mount=type=tmpfs,tmpfs-size=128M,destination=/usr/local/hadoop/hadoop_data/hdfs-nn ' \
              '--ulimit nofile=262144:262144 ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} {image} {cmd}'
@@ -110,14 +110,14 @@ class SDRTService(rpyc.Service):
             image = 'flowgrindd'
         if 'hadoop' in image:
             if 'adu'  in image:
-                my_cmd = '"echo export LD_PRELOAD=libADU.so > /etc/profile && service ssh start && ' \
+                my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
             else:
                 my_cmd = '"service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         if 'hadoop' in image and my_id == '11':
             if 'adu' in image:
-                my_cmd = '"echo export LD_PRELOAD=libADU.so > /etc/profile && service ssh start && ' \
+                my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && ' \
                          '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
                          '/tmp/config/start_hadoop.sh && sleep infinity"'
