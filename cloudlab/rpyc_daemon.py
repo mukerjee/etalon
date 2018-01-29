@@ -169,7 +169,7 @@ class SDRTService(rpyc.Service):
 
     def run_host(self, my_cmd, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
-        return self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
+        return self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd), check_rc=False)
 
     def run_rack(self, cmd):
         ts = []
