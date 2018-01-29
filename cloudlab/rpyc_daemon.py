@@ -110,14 +110,14 @@ class SDRTService(rpyc.Service):
             image = 'flowgrindd'
         if 'hadoop' in image:
             if 'adu'  in image:
-                my_cmd = '"echo export LD_PRELOAD=libADU.so > /etc/profile && service ssh start && ' \
+                my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
             else:
                 my_cmd = '"service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         if 'hadoop' in image and my_id == '11':
             if 'adu' in image:
-                my_cmd = '"echo export LD_PRELOAD=libADU.so > /etc/profile && service ssh start && ' \
+                my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && ' \
                          '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
                          '/tmp/config/start_hadoop.sh && sleep infinity"'
