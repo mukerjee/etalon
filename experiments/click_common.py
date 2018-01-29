@@ -128,6 +128,11 @@ def setPacketLinkBandwidth(bw):
         clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
                           'bandwidth', '%.1fGbps' % bw)
 
+
+def setSolsticeThresh(thresh):
+    clickWriteHandler('sol', 'setThresh', thresh)
+
+
 ##
 # Congestion Control
 ##
@@ -209,7 +214,8 @@ def setConfig(config):
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
                       'divert_acks': False, 'circuit_link_delay': 0.000600,
-                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False}
+                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False,
+                      'thresh': 1000000}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -219,6 +225,7 @@ def setConfig(config):
     setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
     setCC(c['cc'], c['traffic_source'], c['hadoop'])
+    setSolsticeThresh(c['thresh'])
     t = c['type']
     if t == 'normal':
         enableSolstice()
