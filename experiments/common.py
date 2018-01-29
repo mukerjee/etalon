@@ -365,7 +365,10 @@ def dfsioe(host, hadoop):
     hb_host = FQDN % (int(host[1]), int(host[2]))
     fn = click_common.FN_FORMAT % ('dfsioe')
     print fn
+    print 'sleeping 60...'
     time.sleep(60)
+    print 'done sleeping...'
+    print 'starting dfsioe...'
     bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.dfsioe(int(host[2]))
     if bench_out:
         print bench_out
@@ -373,6 +376,7 @@ def dfsioe(host, hadoop):
         fp = open(fn, 'w')
         fp.write(bench_out)
         fp.close()
+    print 'done dfsioe...'
 
     SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:/usr/local/hadoop/logs/* %s'
     tmp_dir = '/tmp/' + fn.split('.txt')[0]
