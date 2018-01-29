@@ -25,13 +25,14 @@ CONTROL_RATE = 10 / TDF  # Gbps
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
-CPU_LIMIT = 1500
 
 IMAGES = {
     'flowgrindd': 'flowgrindd',
     'flowgrindd_adu': 'flowgrindd',
     'hadoop': 'hadoop',
     'hadoop-sdrt': 'hadoop-sdrt',
+    'hadoop_adu': 'hadoop',
+    'hadoop-sdrt_adu': 'hadoop-sdrt',
 }
 
 
@@ -108,17 +109,28 @@ class SDRTService(rpyc.Service):
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
         if 'hadoop' in image:
-            my_cmd = '"service ssh start && ' \
-                     'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
+            if 'adu'  in image:
+                my_cmd = '"echo export LD_PRELOAD=libADU.so > /etc/profile && service ssh start && ' \
+                         'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
+            else:
+                my_cmd = '"service ssh start && ' \
+                         'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         if 'hadoop' in image and my_id == '11':
-            my_cmd = '"service ssh start && ' \
-                     'pipework --wait && pipework --wait -i eth2 && ' \
-                     '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
-                     '/tmp/config/start_hadoop.sh && sleep infinity"'
+            if 'adu' in image:
+                my_cmd = '"echo export LD_PRELOAD=libADU.so > /etc/profile && service ssh start && ' \
+                         'pipework --wait && pipework --wait -i eth2 && ' \
+                         '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
+                         '/tmp/config/start_hadoop.sh && sleep infinity"'
+            else:
+                my_cmd = '"service ssh start && ' \
+                         'pipework --wait && pipework --wait -i eth2 && ' \
+                         '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
+                         '/tmp/config/start_hadoop.sh && sleep infinity"'
         my_cmd = '/bin/sh -c ' + my_cmd
+        cpu_lim = 1500 if 'hadoop' in image else CPU_LIMIT
         self.call(DOCKER_RUN.format(image=IMAGES[image],
                                     id=my_id, cpu_set=cpus,
-                                    cpu_limit=CPU_LIMIT, cmd=my_cmd))
+                                    cpu_limit=cpu_lim, cmd=my_cmd))
         self.call(PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
                                   net=DATA_NET, rack=SELF_ID, id=host_id))
         if 'hadoop' not in image:
@@ -149,8 +161,6 @@ class SDRTService(rpyc.Service):
         self.update_image(IMAGES[image])
         ts = []
         num_hosts = 1 if 'hadoop' in image else HOSTS_PER_RACK
-        # if 'hadoop' in image and SELF_ID == 1:
-        #     num_hosts = 3
         for i in xrange(1, num_hosts+1):
             ts.append(threading.Thread(target=self.launch,
                                        args=(image, i)))
@@ -160,8 +170,6 @@ class SDRTService(rpyc.Service):
     def run_host(self, my_cmd, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
         self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
-        # my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
-        # self.call(NS_RUN.format(pid=my_pid, cmd=my_cmd))
 
     def run_rack(self, cmd):
         ts = []
@@ -185,6 +193,12 @@ class SDRTService(rpyc.Service):
 
     def exposed_hadoop_sdrt(self):
         self.launch_rack('hadoop-sdrt')
+
+    def exposed_hadoop_adu(self):
+        self.launch_rack('hadoop_adu')
+
+    def exposed_hadoop_sdrt_adu(self):
+        self.launch_rack('hadoop-sdrt_adu')
 
     def exposed_file_put_test(self):
         self.run_rack('/tmp/config/file_put_test.sh')
