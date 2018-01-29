@@ -106,7 +106,7 @@ def initializeExperiment(adu=False, hadoop=False):
     click_common.setCC('reno', adu, hadoop)
     print '--- done...'
 
-    print '--- launching flowgrindd...'
+    print '--- launching containers...'
     launch_all_flowgrindd(adu, hadoop)
     print '--- done...'
 
