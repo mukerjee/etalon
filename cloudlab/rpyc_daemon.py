@@ -111,7 +111,7 @@ class SDRTService(rpyc.Service):
         if 'hadoop' in image:
             if 'adu'  in image:
                 my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && export LD_PRELOAD=libADU.so && '\
-                         'ervice ssh start && ' \
+                         'service ssh start && ' \
                          'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
             else:
                 my_cmd = '"service ssh start && ' \
