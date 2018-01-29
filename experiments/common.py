@@ -6,13 +6,14 @@ import sys
 import os
 import tarfile
 import socket
+import glob
 import rpyc
 import numpy as np
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
 from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
-    PACKET_BW
+    PACKET_BW, HADOOP_HOSTS_PER_RACK, FQDN
 
 DATA_NET = 1
 CONTROL_NET = 2
@@ -136,7 +137,8 @@ def finishExperiment():
 def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
-        tar.add(e)
+        for fn in glob.glob(e):
+            tar.add(fn)
     tar.close()
 
     for e in EXPERIMENTS:
@@ -164,10 +166,16 @@ def connect_all_rpyc_daemon():
 ##
 def launch_flowgrindd(phost, adu, hadoop):
     if hadoop:
-        if adu:
-            RPYC_CONNECTIONS[phost].root.hadoop_adu()
+        if hadoop == 'Hadoop-SDRT':
+            if adu:
+                RPYC_CONNECTIONS[phost].root.hadoop_sdrt_adu()
+            else:
+                RPYC_CONNECTIONS[phost].root.hadoop_sdrt()
         else:
-            RPYC_CONNECTIONS[phost].root.hadoop()
+            if adu:
+                RPYC_CONNECTIONS[phost].root.hadoop_adu()
+            else:
+                RPYC_CONNECTIONS[phost].root.hadoop()
     else:
         if adu:
             RPYC_CONNECTIONS[phost].root.flowgrindd_adu()
@@ -353,6 +361,39 @@ def flowgrind(settings):
     EXPERIMENTS.append(counters_fn)
 
 
+def dfsioe(host, hadoop):
+    hb_host = FQDN % (int(host[1]), int(host[2]))
+    fn = click_common.FN_FORMAT % ('dfsioe')
+    print fn
+    time.sleep(60)
+    bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.dfsioe(int(host[2]))
+    if bench_out:
+        print bench_out
+
+        fp = open(fn, 'w')
+        fp.write(bench_out)
+        fp.close()
+
+    SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:/usr/local/hadoop/logs/* %s'
+    tmp_dir = '/tmp/' + fn.split('.txt')[0]
+    for rack in xrange(1, NUM_RACKS+1):
+        for host in xrange(1, HADOOP_HOSTS_PER_RACK+1):
+            hn = FQDN % (rack, host)
+            log_dir = tmp_dir + '/h%d%d-logs' % (rack, host)
+            runWriteFile('mkdir -p %s' % log_dir, None)
+            runWriteFile(SCP % (hn, log_dir), None)
+
+    SCP_HB = 'scp -r -o StrictHostKeyChecking=no root@%s:~/HiBench/report %s'
+    runWriteFile(SCP_HB % (hb_host, tmp_dir), None)
+    EXPERIMENTS.append(tmp_dir + '/*')
+
+    counters_fn = click_common.FN_FORMAT % ('dfsioe.counters')
+    fp = open(counters_fn, 'w')
+    counter_data = click_common.getCounters()
+    fp.write(str(counter_data))
+    fp.close()
+    EXPERIMENTS.append(counters_fn)
+
 ##
 # Running shell commands
 ##
@@ -380,7 +421,8 @@ def run(cmd):
 
 
 def runWriteFile(cmd, fn):
-    EXPERIMENTS.append(fn)
+    if fn:
+        EXPERIMENTS.append(fn)
     try:
         out = run(cmd)[1]
     except Exception, e:

@@ -235,14 +235,15 @@ def setConfig(config):
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
     setPacketLinkBandwidth(c['packet_link_bandwidth'])
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
-                                                    c['buffer_size'],
-                                                    c['traffic_source'],
-                                                    c['queue_resize'],
-                                                    c['in_advance'],
-                                                    c['cc'],
-                                                    c['circuit_link_delay'],
-                                                    c['packet_link_bandwidth'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
+                                                       c['buffer_size'],
+                                                       c['traffic_source'],
+                                                       c['queue_resize'],
+                                                       c['in_advance'],
+                                                       c['cc'],
+                                                       c['circuit_link_delay'],
+                                                       c['packet_link_bandwidth'],
+                                                       c['hadoop'])
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')
