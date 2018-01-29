@@ -169,7 +169,7 @@ class SDRTService(rpyc.Service):
 
     def run_host(self, my_cmd, host_id):
         my_id = '%d%d' % (SELF_ID, host_id)
-        self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
+        return self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
 
     def run_rack(self, cmd):
         ts = []
@@ -204,8 +204,8 @@ class SDRTService(rpyc.Service):
         self.run_rack('/tmp/config/file_put_test.sh')
 
     def exposed_dfsioe(self, host_id):
-        self.run_host('/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh',
-                      host_id)
+        return self.run_host('/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh',
+                             host_id)
 
 if __name__ == '__main__':
     from rpyc.utils.server import ThreadedServer
