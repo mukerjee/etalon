@@ -18,6 +18,7 @@ CONFIGS = [
     {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000},
     {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000, 'cc': 'ocs'},
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 0.5},
+    {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 1.0},
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 2.0},
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 4.0},
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 4.5},
