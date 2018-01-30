@@ -109,29 +109,29 @@ class SDRTService(rpyc.Service):
                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus)
             image = 'flowgrindd'
         if 'hadoop' in image:
-            if 'adu'  in image:
-                my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && export LD_PRELOAD=libADU.so && '\
-                         'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '\
-                         'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '\
-                         'service ssh start && ' \
-                         'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
-            else:
-                my_cmd = '"service ssh start && ' \
-                         'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
+            # if 'adu'  in image:
+            #     my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && export LD_PRELOAD=libADU.so && '\
+            #              'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '\
+            #              'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '\
+            #              'service ssh start && ' \
+            #              'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
+            # else:
+            my_cmd = '"service ssh start && ' \
+                     'pipework --wait && pipework --wait -i eth2 && sleep infinity"'
         if 'hadoop' in image and my_id == '11':
-            if 'adu' in image:
-                my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && export LD_PRELOAD=libADU.so && ' \
-                         'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '\
-                         'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '\
-                         'service ssh start && ' \
-                         'pipework --wait && pipework --wait -i eth2 && ' \
-                         '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
-                         '/tmp/config/start_hadoop.sh && sleep infinity"'
-            else:
-                my_cmd = '"service ssh start && ' \
-                         'pipework --wait && pipework --wait -i eth2 && ' \
-                         '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
-                         '/tmp/config/start_hadoop.sh && sleep infinity"'
+            # if 'adu' in image:
+            #     my_cmd = '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && export LD_PRELOAD=libADU.so && ' \
+            #              'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '\
+            #              'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '\
+            #              'service ssh start && ' \
+            #              'pipework --wait && pipework --wait -i eth2 && ' \
+            #              '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
+            #              '/tmp/config/start_hadoop.sh && sleep infinity"'
+            # else:
+            my_cmd = '"service ssh start && ' \
+                     'pipework --wait && pipework --wait -i eth2 && ' \
+                     '/usr/local/hadoop/bin/hdfs namenode -format -force && '\
+                     '/tmp/config/start_hadoop.sh && sleep infinity"'
         my_cmd = '/bin/sh -c ' + my_cmd
         cpu_lim = 1500 if 'hadoop' in image else CPU_LIMIT
         self.call(DOCKER_RUN.format(image=IMAGES[image],
