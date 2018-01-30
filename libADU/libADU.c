@@ -102,7 +102,7 @@ static void open_ctrl_socket() {
 void send_adu_info(int fd, int true_size) {
   struct stat statbuf;
   fstat(fd, &statbuf);
-  if (!S_ISSOCK(statbuf.st_mode))
+  if (!S_ISSOCK(statbuf.st_mode) || true_size < 1500)
     return;
 
   if (fd == ctrl_sock)
