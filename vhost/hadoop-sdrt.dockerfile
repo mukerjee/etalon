@@ -4,6 +4,15 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
 WORKDIR /root
 RUN apt-get update && apt-get install -y \
+                              gcc \
+                              cmake \
+                              dh-autoreconf \
+                              wget \
+                              libcurl4-gnutls-dev \
+                              libxmlrpc-core-c3-dev \
+                              libpcap-dev \
+                              libgsl-dev \
+                              uuid-dev \
                               openssh-server \
                               openjdk-8-jdk \
                               maven \
@@ -11,6 +20,17 @@ RUN apt-get update && apt-get install -y \
                               python \
                               bc \
     && rm -rf /var/lib/apt/lists/*
+
+# build custom flowgrind
+WORKDIR /root
+RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/next.tar.gz \
+    && tar xfz next.tar.gz \
+    && cd flowgrind-sdrt-next \
+    && autoreconf -i \
+    && ./configure \
+    && make -j install \
+    && cd /root \
+    && rm -rf flowgrind-sdrt-next next.tar.gz
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
 ENV HADOOP_INSTALL=/usr/local/hadoop
