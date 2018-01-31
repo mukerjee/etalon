@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 AS hadoop
+FROM flowgrindd AS hadoop
 
 MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
@@ -90,24 +90,6 @@ RUN apt-get update && apt-get install -y --allow-unathenticated \
                               uuid-dev \
     && rm -rf /var/lib/apt/lists/*
     
-# build custom flowgrind
-WORKDIR /root
-RUN wget https://github.com/mukerjee/flowgrind-sdrt/archive/next.tar.gz \
-    && tar xfz next.tar.gz \
-    && cd flowgrind-sdrt-next \
-    && autoreconf -i \
-    && ./configure \
-    && make -j install \
-    && cd /root \
-    && rm -rf flowgrind-sdrt-next next.tar.gz
-
-COPY config /tmp/config
-WORKDIR /root/
-RUN mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
-    mv /tmp/config/hibench.conf ./HiBench/conf/ && \
-    mv /tmp/config/hadoop.conf ./HiBench/conf/ && \
-    mv /tmp/config/dfsioe.conf ./HiBench/conf/workloads/micro/
-
 CMD pipework --wait \
     && pipework --wait -i eth2 \
     && sleep infinity 
