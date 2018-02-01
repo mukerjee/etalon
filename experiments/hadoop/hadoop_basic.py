@@ -12,9 +12,9 @@ CONFIGS = [
     {'type': 'normal', 'traffic_source': 'QUEUE'},
     {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 20000},
     {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 20000, 'cc': 'ocs'},
-    {'type': 'normal', 'traffic_source': 'ADU'},
-    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000},
-    {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000, 'cc': 'ocs'},
+    # {'type': 'normal', 'traffic_source': 'ADU'},
+    # {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000},
+    # {'type': 'resize', 'traffic_source': 'ADU', 'in_advance': 20000, 'cc': 'ocs'},
 ]
 
 for c in CONFIGS:
@@ -26,6 +26,7 @@ for c in CONFIGS:
         c['queue_resize'] = False
     if 'cc' not in c:
         c['cc'] = 'reno'
+    c['thresh'] = 8000
 
 for h in ['Hadoop', 'Hadoop-SDRT']:
     for c in CONFIGS:
