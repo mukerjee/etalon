@@ -128,6 +128,11 @@ def setPacketLinkBandwidth(bw):
         clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
                           'bandwidth', '%.1fGbps' % bw)
 
+
+def setSolsticeThresh(thresh):
+    clickWriteHandler('sol', 'setThresh', thresh)
+
+
 ##
 # Congestion Control
 ##
@@ -209,7 +214,8 @@ def setConfig(config):
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
                       'divert_acks': False, 'circuit_link_delay': 0.000600,
-                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False}
+                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False,
+                      'thresh': 1000000}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
     clearCounters()
@@ -219,6 +225,7 @@ def setConfig(config):
     setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
     setCC(c['cc'], c['traffic_source'], c['hadoop'])
+    setSolsticeThresh(c['thresh'])
     t = c['type']
     if t == 'normal':
         enableSolstice()
@@ -235,14 +242,15 @@ def setConfig(config):
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
     setPacketLinkBandwidth(c['packet_link_bandwidth'])
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
-                                                    c['buffer_size'],
-                                                    c['traffic_source'],
-                                                    c['queue_resize'],
-                                                    c['in_advance'],
-                                                    c['cc'],
-                                                    c['circuit_link_delay'],
-                                                    c['packet_link_bandwidth'])
+    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
+                                                       c['buffer_size'],
+                                                       c['traffic_source'],
+                                                       c['queue_resize'],
+                                                       c['in_advance'],
+                                                       c['cc'],
+                                                       c['circuit_link_delay'],
+                                                       c['packet_link_bandwidth'],
+                                                       c['hadoop'])
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')

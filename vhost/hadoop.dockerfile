@@ -1,4 +1,4 @@
-FROM ubuntu:16.04 AS hadoop
+FROM flowgrindd AS hadoop
 
 MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 
@@ -77,13 +77,6 @@ COPY libVT.so /usr/lib/libVT.so
 #     make install
 
 COPY kill /bin/kill
-
-COPY config /tmp/config
-WORKDIR /root/
-RUN mv /tmp/config/hadoop_config/* /usr/local/hadoop/etc/hadoop/ && \
-    mv /tmp/config/hibench.conf ./HiBench/conf/ && \
-    mv /tmp/config/hadoop.conf ./HiBench/conf/ && \
-    mv /tmp/config/dfsioe.conf ./HiBench/conf/workloads/micro/
 
 CMD pipework --wait \
     && pipework --wait -i eth2 \
