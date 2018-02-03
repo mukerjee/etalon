@@ -1,14 +1,3 @@
-import itertools
-buffer_sizes = [16]
-in_advances = [12000]
-ccs = ['reno']
-# types = ['normal', 'circuit', 'no_circuit', 'strobe', 'resize']
-types = ['strobe']
-CONFIGS = [{'type': t, 'buffer_size': b, 'cc': cc, 'in_advance': ia,
-            'packet_log': False}
-           for (t, b, cc, ia) in itertools.product(types, buffer_sizes, ccs,
-                                                   in_advances)]
-
 CONFIGS = [
     {'type': 'strobe', 'buffer_size':   4},
     {'type': 'strobe', 'buffer_size':   8},
@@ -16,18 +5,6 @@ CONFIGS = [
     {'type': 'strobe', 'buffer_size':  32},
     {'type': 'strobe', 'buffer_size':  64},
     {'type': 'strobe', 'buffer_size': 128},
-    {'type': 'circuit', 'buffer_size':   4},
-    {'type': 'circuit', 'buffer_size':   8},
-    {'type': 'circuit', 'buffer_size':  16},
-    {'type': 'circuit', 'buffer_size':  32},
-    {'type': 'circuit', 'buffer_size':  64},
-    {'type': 'circuit', 'buffer_size': 128},
-    {'type': 'no_circuit', 'buffer_size':   4},
-    {'type': 'no_circuit', 'buffer_size':   8},
-    {'type': 'no_circuit', 'buffer_size':  16},
-    {'type': 'no_circuit', 'buffer_size':  32},
-    {'type': 'no_circuit', 'buffer_size':  64},
-    {'type': 'no_circuit', 'buffer_size': 128},
     {'type': 'resize', 'buffer_size':  16, 'in_advance':  4000},
     {'type': 'resize', 'buffer_size':  16, 'in_advance':  8000},
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 12000},

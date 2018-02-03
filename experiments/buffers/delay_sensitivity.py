@@ -6,7 +6,7 @@ sys.path.append("../")
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 
-CONFIGS = [    
+CONFIGS = [
     {'buffer_size':   4},
     {'buffer_size':   8},
     {'buffer_size':  16},
@@ -18,7 +18,7 @@ CONFIGS = [
 
 #               0.5    1    1.5    2     3     4     6      8      12
 link_delays = [1e-4, 2e-4, 3e-4, 4e-4, 6e-4, 8e-4, 12e-4, 16e-4, 24e-4]
-sched = ['strobe', 'short_reconfig']
+sched = ['strobe']
 
 initializeExperiment()
 
