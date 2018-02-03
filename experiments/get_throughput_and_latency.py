@@ -60,9 +60,10 @@ def get_seq_data(fn):
     circuit_starts = defaultdict(list)
     circuit_ends = defaultdict(list)
     flows = defaultdict(list)
+    seen = defaultdict(list)
     for msg in msg_from_file(fn):
         (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
-        bytes = unpack('!H', data[2:4])[0]
+        ip_bytes = unpack('!H', data[2:4])[0]
         a, b, c, d = [ord(x) for x in data[12:16]]
         sender = '%d.%d.%d.%d' % (a, b, c, d)
         a, b, c, d = [ord(x) for x in data[16:20]]
@@ -72,10 +73,13 @@ def get_seq_data(fn):
         sport = 0
         dport = 0
         seq = 0
+        thl = 0
         if proto == 6:  # TCP
             sport = unpack('!H', data[ihl:ihl+2])[0]
             dport = unpack('!H', data[ihl+2:ihl+4])[0]
             seq = unpack('!I', data[ihl+4:ihl+8])[0]
+            thl = (ord(data[ihl+12]) >> 4) * 4
+        bytes = ip_bytes - ihl - thl
 
         for i in xrange(len(ts)):
             if ord(ts[i]) == 0:
@@ -93,9 +97,29 @@ def get_seq_data(fn):
             continue
 
         flow = (sender, recv, proto, sport, dport)
-        flows[flow].append((ts, seq))
-        if bytes < 100:
-            continue
+        if not flows[flow]:
+        # if True:
+            flows[flow].append((ts, seq, bytes))
+        else:
+            last_ts, last_seq, last_bytes = flows[flow][-1]
+            # print flow, bytes, seq, last_seq, last_bytes
+            # print last_good_packet[1] + last_good_packet[2] - seq
+            if abs(last_seq + last_bytes - seq) < 2:
+                updated = True
+                while updated:
+                    updated = False
+                    for prev_seen in seen[flow]:
+                        prev_seq = prev_seen[1]
+                        prev_bytes = prev_seen[2]
+                        if abs(seq + bytes - prev_seq) < 2:
+                            seq = prev_seq
+                            bytes = prev_bytes
+                            seen[flow].remove(prev_seen)
+                            updated = True
+                            break
+                flows[flow].append((ts, seq, bytes))
+            else:
+                seen[flow].append((ts, seq, bytes))
 
     day_lens = []
     week_lens = []
@@ -103,31 +127,42 @@ def get_seq_data(fn):
     ends = []
     next_starts = []
     next_ends = []
-    for i in xrange(1, len(circuit_starts[(1, 2)])-1):
-        prev_end = circuit_ends[(1, 2)][i-1]
-        curr = circuit_starts[(1, 2)][i]
-        curr_end = circuit_ends[(1, 2)][i]
-        next = circuit_starts[(1, 2)][i+1]
-        if i+1 >= len(circuit_ends[(1, 2)]):
+    next_next_starts = []
+    next_next_ends = []
+    sr = (1, 2)
+    for i in xrange(1, len(circuit_starts[sr])-2):
+        prev_end = circuit_ends[sr][i-1]
+        curr = circuit_starts[sr][i]
+        curr_end = circuit_ends[sr][i]
+        next = circuit_starts[sr][i+1]
+        if i+1 >= len(circuit_ends[sr]):
             continue
-        next_end = circuit_ends[(1, 2)][i+1]
+        next_end = circuit_ends[sr][i+1]
+        next_next = circuit_starts[sr][i+2]
+        if i+2 >= len(circuit_ends[sr]):
+            continue
+        next_next_end = circuit_ends[sr][i+2]
         day_lens.append((curr_end - curr)*1e6)
         week_lens.append((next - curr)*1e6)
         starts.append((curr - prev_end)*1e6)
         ends.append((curr_end - prev_end)*1e6)
         next_starts.append((next - prev_end)*1e6)
         next_ends.append((next_end - prev_end)*1e6)
+        next_next_starts.append((next_next - prev_end)*1e6)
+        next_next_ends.append((next_next_end - prev_end)*1e6)
     out_start = np.average(starts[5:-5])
     out_end = np.average(ends[5:-5])
     out_next_start = np.average(next_starts[5:-5])
     out_next_end = np.average(next_ends[5:-5])
+    out_next_next_start = np.average(next_next_starts[5:-5])
+    out_next_next_end = np.average(next_next_ends[5:-5])
     day_lens = day_lens[5:-5]
     week_lens = week_lens[5:-5]
     print 'circuit day avg and std dev', np.average(day_lens), np.std(day_lens)
     print 'week avg and std dev', np.average(week_lens), np.std(week_lens)
     print out_start, out_end, out_next_start, out_next_end
 
-    if len(circuit_starts[(1, 2)]) < 50:
+    if len(circuit_starts[sr]) < 50:
         ts_start = flows.values()[0][0][0]
         ts_end = flows.values()[0][-1][0]
         for f in flows:
@@ -137,9 +172,9 @@ def get_seq_data(fn):
                 ts_start = fstart
             if fend > ts_end:
                 ts_end = fend
-        circuit_starts[(1, 2)] = np.arange(ts_start - 0.002,
-                                           ts_end + 0.002, 0.002)
-        circuit_ends[(1, 2)] = np.arange(ts_start, ts_end + 0.004, 0.002)
+        circuit_starts[sr] = np.arange(ts_start - 0.002,
+                                       ts_end + 0.002, 0.002)
+        circuit_ends[sr] = np.arange(ts_start, ts_end + 0.004, 0.002)
 
     print len(flows)
     results = defaultdict(list)
@@ -149,44 +184,48 @@ def get_seq_data(fn):
         print f
         chunks = []
         last = 0
-        print len(circuit_starts[(1, 2)])
+        print len(circuit_starts[sr])
         bad_windows = 0
         first_ts = flows[f][0][0]
         last_ts = flows[f][-1][0]
-        for i in xrange(1, len(circuit_starts[(1, 2)])-2):
-            prev_end = circuit_ends[(1, 2)][i-1]
-            curr = circuit_starts[(1, 2)][i]
-            curr_end = circuit_ends[(1, 2)][i]
+        for i in xrange(1, len(circuit_starts[sr])-2):
+            prev_end = circuit_ends[sr][i-1]
+            curr = circuit_starts[sr][i]
+            curr_end = circuit_ends[sr][i]
             if curr_end < first_ts:
                 continue
             if curr > last_ts:
                 continue
-            next = circuit_starts[(1, 2)][i+1]
-            if i+1 >= len(circuit_ends[(1, 2)]):
+            next = circuit_starts[sr][i+1]
+            if i+1 >= len(circuit_ends[sr]):
                 continue
-            next_end = circuit_ends[(1, 2)][i+1]
-            next_next = circuit_starts[(1, 2)][i+2]
+            next_end = circuit_ends[sr][i+1]
+            next_next = circuit_starts[sr][i+2]
+            if i+2 >= len(circuit_ends[sr]):
+                continue
+            next_next_end = circuit_ends[sr][i+2]
             out = []
             first = -1
+            timing_offset = 30e-6
             for i in xrange(last, len(flows[f])):
-                (ts, seq) = flows[f][i]
-                if ts > next_next:
+                (ts, seq, _) = flows[f][i]
+                if ts > next_next_end + timing_offset:
                     break
-                if ts >= prev_end:
+                if ts >= prev_end + timing_offset:
                     if first == -1:
                         first = seq
-                    out.append(((ts - prev_end)*1e6, seq - first))
-                if ts < curr_end:
+                    out.append(((ts - prev_end - timing_offset)*1e6, seq - first))
+                if ts < curr_end + timing_offset:
                     last = i
             if not out:
                 bad_windows += 1
-                out = [(0, 0), (4000, 0)]
+                out = [(0, 0), (4200, 0)]
             wraparound = False
             for ts, seq in out:
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if not wraparound:
-                chunks.append(np.interp(xrange(4000),
+                chunks.append(np.interp(xrange(4200),
                                         zip(*out)[0],
                                         zip(*out)[1]))
         print len(chunks)
@@ -195,7 +234,9 @@ def get_seq_data(fn):
         print 'bad windows', bad_windows
     unzipped = zip(*results.values())
     results = [np.average(q) for q in unzipped]
-    return results, (out_start, out_end, out_next_start, out_next_end)
+    # results = [np.sum(q) for q in unzipped]
+    return results, (out_start, out_end, out_next_start, out_next_end,
+                     out_next_next_start, out_next_next_end)
 
 
 def get_tput_and_lat(fn):
