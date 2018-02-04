@@ -49,7 +49,6 @@ def get_data(name):
         data['lat'][50] = list(zip(*sorted(data['lat'][50].items()))[1])
         data['lat'][99] = list(zip(*sorted(data['lat'][99].items()))[1])
         data['circ_util'] = list(zip(*sorted(data['circ_util'].items()))[1])
-        print dict(data)
         return dict(data)
 
 

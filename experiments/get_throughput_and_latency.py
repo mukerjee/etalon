@@ -2,6 +2,7 @@
 
 import sys
 import glob
+import socket
 import numpy as np
 
 from struct import unpack
@@ -64,10 +65,8 @@ def get_seq_data(fn):
     for msg in msg_from_file(fn):
         (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
         ip_bytes = unpack('!H', data[2:4])[0]
-        a, b, c, d = [ord(x) for x in data[12:16]]
-        sender = '%d.%d.%d.%d' % (a, b, c, d)
-        a, b, c, d = [ord(x) for x in data[16:20]]
-        recv = '%d.%d.%d.%d' % (a, b, c, d)
+        sender = socket.inet_ntoa(data[12:16])
+        recv = socket.inet_ntoa(data[16:20])
         proto = ord(data[9])
         ihl = (ord(data[0]) & 0xF) * 4
         sport = 0
