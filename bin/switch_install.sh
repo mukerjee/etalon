@@ -124,6 +124,7 @@ cd $HOME
 wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz
 tar xfvz hadoop-2.9.0-src.tar.gz
 cd hadoop-2.9.0-src.tar.gz
+cp /etalon/reHDFS/* ./hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/
 mvn package -Pdist,native -DskipTests -Dtar
 
 # Fix broken kill in 16.04
