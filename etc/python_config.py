@@ -6,6 +6,8 @@ NUM_RACKS = 8
 HOSTS_PER_RACK = 16
 HADOOP_HOSTS_PER_RACK = 1
 
+TDF = 20.0
+
 DATA_EXT_IF = 'enp8s0'
 DATA_INT_IF = 'eth1'
 DATA_NET = 1
@@ -20,7 +22,6 @@ CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
 
-TDF = 20.0
 TIMESTAMP = int(time.time())
 SCRIPT = os.path.splitext(os.path.basename(sys.argv[0]))[0]
 EXPERIMENTS = []
@@ -43,19 +44,23 @@ RECONFIG_DELAY = 20
 
 CONTROL_SOCKET_PORT = 1239
 
-NODES_FILE = '/etalon/etc/handles.cloudlab'
+NODES_FILE = '../etc/handles'
 
 # host commands
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
-DOCKER_BUILD = 'sudo docker build -t etalon -f /etalon/vhost/etalon.dockerfile ' \
-               '/etalon/vhost/'
-DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v /etalon/vhost/config/hosts:/etc/hosts:ro ' \
-             '--mount=type=tmpfs,tmpfs-size=10G,destination=/usr/local/hadoop/hadoop_data/hdfs ' \
-             '--mount=type=tmpfs,tmpfs-size=128M,destination=/usr/local/hadoop/hadoop_data/hdfs-nn ' \
+DOCKER_BUILD = 'sudo docker build -t etalon -f ' \
+               '/etalon/vhost/etalon.dockerfile /etalon/vhost/'
+DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
+             '/etalon/vhost/config/hosts:/etc/hosts:ro ' \
+             '--mount=type=tmpfs,tmpfs-size=10G,destination=' \
+             '/usr/local/hadoop/hadoop_data/hdfs ' \
+             '--mount=type=tmpfs,tmpfs-size=128M,destination=' \
+             '/usr/local/hadoop/hadoop_data/hdfs-nn ' \
              '--ulimit nofile=262144:262144 ' \
-             '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} {image} {cmd}'
+             '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
+             '{image} {cmd}'
 DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
 DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
@@ -79,6 +84,5 @@ def handle_to_machine(h):
     for machine in machines:
         handle, hostname = [m.strip() for m in machine.split('#')]
         if handle == h:
-            return handle
+            return hostname
     return None
-
