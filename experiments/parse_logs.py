@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import sys
 import glob
 import socket
 import numpy as np
@@ -11,6 +10,7 @@ from collections import defaultdict
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
+TDF = 20.0
 
 
 def get_tput_and_dur(fn):
@@ -332,9 +332,38 @@ def get_tput_and_lat(fn):
     return tp, (lat, latc, latp), p, c, b, \
         sum(circuit_bytes.values()), sum(packet_bytes.values())
 
-if __name__ == "__main__":
-    fns = sys.argv[1]
-    if 'tmp' not in fns:
-        fns += '/tmp/*'
-    for fn in glob.glob(fns):
-        get_tput_and_lat(fn)
+
+def parse_hdfs_logs(folder):
+    data = []
+    durations = []
+
+    fn = folder + '/*-logs/hadoop*-datanode*.log'
+    print fn
+    logs = glob.glob(fn)
+
+    for log in logs:
+        for line in open(log):
+            if 'clienttrace' in line and 'HDFS_WRITE' in line:
+                bytes = int(line.split('bytes: ')[1].split()[0][:-1])
+                if bytes > 1024 * 1024 * 99:
+                    duration = (float(line.split(
+                        "duration: ")[1].split()[0]) * 1e-6) / TDF
+                    data.append((bytes / 1024. / 1024., duration))
+
+    durations = sorted(zip(*data)[1])
+    # print durations
+    print np.percentile(durations, 50), np.percentile(durations, 99)
+    return durations
+
+
+def parse_hdfs_throughput(folder):
+    fn = folder + '/report/dfsioe/hadoop/bench.log'
+    logs = glob.glob(fn)
+
+    for log in logs:
+        for line in open(log):
+            if 'Number of files' in line:
+                num_files = int(line.split('files: ')[1])
+            if 'Throughput mb/sec:' in line:
+                return (float(line.split('mb/sec:')[1]) *
+                        num_files * 8 / 1024.0) * TDF

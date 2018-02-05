@@ -1,16 +1,12 @@
-#!/usr/bin/env PYTHON_PATH=../ python
+#!/usr/bin/env PYTHONPATH=../../ python
 
-from dotmap import DotMap
-
+import sys
 import glob
 import numpy as np
 
-
-import sys
-sys.path.insert(0, '../')
-from parse_logs import parse_hadoop_logs, parse_throughput
-sys.path.insert(0, '/Users/mukerjee/Dropbox/Research/simpleplotlib/')
+from dotmap import DotMap
 from simpleplotlib import plot
+from parse_logs import parse_hdfs_logs, parse_hdfs_throughput
 
 bytes_units = 2.0**-30
 
@@ -128,7 +124,7 @@ def bytes_graph():
     plot(x, y, options)
 
 if __name__ == '__main__':
-    graph_wct([parse_hadoop_logs(sys.argv[1] + n) for n in files_short])
-    graph_tail([parse_hadoop_logs(sys.argv[1] + n) for n in files])
-    graph_throughput([parse_throughput(sys.argv[1] + n) for n in files])
+    graph_wct([parse_hdfs_logs(sys.argv[1] + n) for n in files_short])
+    graph_tail([parse_hdfs_logs(sys.argv[1] + n) for n in files])
+    graph_throughput([parse_hdfs_throughput(sys.argv[1] + n) for n in files])
     bytes_graph()

@@ -1,17 +1,14 @@
 #!/usr/bin/env PYTHONPATH=../../ python
 
+import sys
 import glob
 import numpy as np
 
 from collections import defaultdict
 from dotmap import DotMap
 from tabulate import tabulate
-
-from get_throughput_and_latency import get_tput_and_dur
-
-import sys
-sys.path.insert(0, '/Users/mukerjee/Dropbox/Research/simpleplotlib/')
 from simpleplotlib import plot
+from parse_logs import get_tput_and_dur
 
 SMALL_FLOW_MAX_SIZE = 1000000
 dur_units = 1e-3
@@ -50,6 +47,8 @@ files = {
     'packet80': '/*-no_circuit-*-4.0-*flowgrind.txt',
 }
 
+all_file_data = defaultdict(list)
+
 
 def get_default_plot_options(x, y):
     options = DotMap()
@@ -65,9 +64,6 @@ def get_default_plot_options(x, y):
     options.series_options[1].zorder = 5
     options.y.label.ylabel = 'CDF (%)'
     return options
-
-
-all_file_data = defaultdict(list)
 
 
 def get_data(type):

@@ -1,19 +1,15 @@
-#!/usr/bin/env python
-
-from dotmap import DotMap
+#!/usr/bin/env PYTHONPATH=../../ python
 
 import sys
-sys.path.insert(0, '../../')
-sys.path.insert(0, '/Users/mukerjee/Dropbox/Research/simpleplotlib/')
-
-import shelve
 import os
+import shelve
 import glob
 import numpy as np
 
 from collections import defaultdict
-from get_throughput_and_latency import get_tput_and_lat
+from dotmap import DotMap
 from simpleplotlib import plot
+from parse_logs import get_tput_and_lat
 
 SR = (1, 2)
 
