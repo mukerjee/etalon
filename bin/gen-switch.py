@@ -2,7 +2,7 @@
 
 from python_config import *
 
-print 'define($DEVNAME %s)' % NIC
+print 'define($DEVNAME %s)' % DATA_EXT_IF
 print 'define($NUM_RACKS %s)' % NUM_RACKS
 print
 
@@ -25,7 +25,7 @@ print ip_def
 print
 
 print 'define ($CIRCUIT_BW %.1fGbps, $PACKET_BW %.1fGbps)' % (
-    CIRCUIT_BW, PACKET_BW)
+    CIRCUIT_BW_BY_TDF, PACKET_BW_BY_TDF)
 print
 
 print 'define ($PACKET_LATENCY %s)' % PACKET_LATENCY
