@@ -1,0 +1,9 @@
+[submodule "libVT"]
+	path = libVT
+	url = https://github.com/mukerjee/libVT
+[submodule "click-etalon"]
+	path = click-etalon
+	url = https://github.com/mukerjee/click-etalon
+[submodule "flowgrind-etalon"]
+	path = flowgrind-etalon
+	url = https://github.com/mukerjee/flowgrind-etalon

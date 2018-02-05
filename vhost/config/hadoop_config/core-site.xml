@@ -18,10 +18,6 @@
 
 <configuration>
 <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://h11.sdrt.cs.cmu.edu:9000</value>
-</property>
-<property>
     <name>topology.script.file.name</name>
     <value>/usr/local/hadoop/etc/hadoop/topology.script.sh</value>
 </property>

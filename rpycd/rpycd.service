@@ -1,0 +1,10 @@
+[Unit]
+Description=Etalon Docker Rpyc Daemon
+Requires=network.target
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python /etalon/rpycd/rpycd.py
+
+[Install]
+WantedBy=multi-user.target

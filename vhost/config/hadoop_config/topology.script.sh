@@ -1,20 +1,4 @@
 #!/bin/bash
-HADOOP_CONF=/usr/local/hadoop/etc/hadoop
-echo `date` input: $@ >> $HADOOP_CONF/topology.log
-while [ $# -gt 0 ] ; do
-  nodeArg=$1
-  exec< ${HADOOP_CONF}/topology.data
-  result=""
-  while read line ; do
-    ar=( $line )
-    if [ "${ar[0]}" = "$nodeArg" ] ; then
-      result="${ar[1]}"
-    fi
-  done
-  shift
-  if [ -z "$result" ] ; then
-     echo -n "/rack01"
-  else
-    echo -n "$result "
-  fi
-done
+# 10.1.3.16 --> /rack-03
+# 10.1.4.27 --> /rack-04
+echo $@ | xargs -n 1 | awk -F '.' '{printf "/rack-%02d\n", $3}'

@@ -1,0 +1,10 @@
+#!/usr/bin/env PYTHONPATH=../etc/ python
+
+import sys
+import os
+
+from python_config import *
+
+if __name__ == '__main__':
+    os.system('ssh -A -o StrictHostKeyChecking=no %s' % (
+        handle_to_machine(sys.argv[1])))
