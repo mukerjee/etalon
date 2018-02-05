@@ -15,72 +15,8 @@ from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
     PACKET_BW, HADOOP_HOSTS_PER_RACK, FQDN
 
-DATA_NET = 1
-CONTROL_NET = 2
-
 THREADS = []
 THREAD_LOCK = threading.Lock()
-
-CDFs = {
-    'DCTCP': [
-        (0, 0),
-        (10000, 0.15),
-        (20000, 0.2),
-        (30000, 0.3),
-        (50000, 0.4),
-        (80000, 0.53),
-        (200000, 0.6),
-        (1e+06, 0.7),
-        (2e+06, 0.8),
-        (5e+06, 0.9),
-        (1e+07, 0.97),
-        (3e+07, 1),
-    ],
-
-    'VL2': [
-        (0, 0),
-        (180, 0.1),
-        (216, 0.2),
-        (560, 0.3),
-        (900, 0.4),
-        (1100, 0.5),
-        (1870, 0.6),
-        (3160, 0.7),
-        (10000, 0.8),
-        (400000, 0.9),
-        (3.16e+06, 0.95),
-        (1e+08, 0.98),
-        (1e+09, 1),
-    ],
-
-    'FB': [
-        (0, 0),
-        (3, 0.28),
-        (10, 0.32),
-        (12, 0.44),
-        (75, 0.5),
-        (250, 0.75),
-        (350, 0.9),
-        (1000, 0.965),
-        (2515, 0.98),
-        (6326, 0.99),
-        (10032, 0.995),
-        (15910, 0.997),
-        (23009, 0.9992),
-        (24094, 0.9996),
-        (25000, 0.9999),
-        (100000, 0.99999),
-        (1e+06, 1),
-    ],
-}
-
-FANOUT = [
-    (1, 1.0),
-    # (1, .50),
-    # (2, .30),
-    # (4, .20),
-]
-
 
 ##
 # Experiment commands
@@ -88,7 +24,7 @@ FANOUT = [
 def initializeExperiment(adu=False, hadoop=False):
     print '--- starting experiment...'
     print '--- clearing local arp...'
-    call([os.path.expanduser('~/sdrt/cloudlab/arp_clear.sh')])
+    call([os.path.expanduser('/etalon/cloudlab/arp_clear.sh')])
     print '--- done...'
 
     print '--- populating physical hosts...'
@@ -105,6 +41,14 @@ def initializeExperiment(adu=False, hadoop=False):
 
     print '--- setting CC to reno...'
     click_common.setCC('reno', adu, hadoop)
+    print '--- done...'
+
+    print '--- building etalon docker image...'
+    runWriteFile(DOCKER_BUILD, None):
+    print '--- done...'
+
+    print '--- copying image to physical hosts...'
+
     print '--- done...'
 
     print '--- launching containers...'
@@ -161,9 +105,6 @@ def connect_all_rpyc_daemon():
     map(lambda x: PHYSICAL_NODES.remove(x), bad_hosts)
 
 
-##
-# flowgrind
-##
 def launch_flowgrindd(phost, adu, hadoop):
     if hadoop:
         if hadoop == 'Hadoop-SDRT':
@@ -201,6 +142,9 @@ def launch_all_flowgrindd(adu, hadoop):
                sock.close()
 
 
+##
+# flowgrind
+##
 def get_flowgrind_host(h):
     if len(h) == 2:
         return '10.%s.10.%s/10.%s.10.%s' % (DATA_NET, h[1],
@@ -210,75 +154,15 @@ def get_flowgrind_host(h):
                                             CONTROL_NET, h[1], h[2:])
 
 
-def gen_empirical_flows(seed=92611, cdf_key='DCTCP'):
-    np.random.seed(seed)
-    cdf = CDFs[cdf_key]
-    target_bw = 1/2.0 * \
-        ((PACKET_BW + 1.0/NUM_RACKS * CIRCUIT_BW) / 8.0) / HOSTS_PER_RACK
-    flows = []
-    for r in xrange(1, NUM_RACKS+1):
-        for h in xrange(1, HOSTS_PER_RACK+1):
-            src = 'h%d%d' % (r, h)
-            src_num = (r-1)*HOSTS_PER_RACK + (h-1)
-            t = 0.0
-            while t < 2.0:
-                request_size = np.random.randint(60, 120)
-                response_size = int(round(np.interp(np.random.random(),
-                                                    zip(*cdf)[1],
-                                                    zip(*cdf)[0])))
-                response_size = min(response_size, target_bw)
-                fout = np.random.choice(zip(*FANOUT)[0], p=zip(*FANOUT)[1])
-                for i in xrange(fout):
-                    dst_num = np.random.choice([x for x in
-                                                xrange(NUM_RACKS * HOSTS_PER_RACK)
-                                                if x != src_num])
-                    dst = 'h%d%d' % ((dst_num / HOSTS_PER_RACK) + 1,
-                                     (dst_num % HOSTS_PER_RACK) + 1)
-                    flows.append({'src': src, 'dst': dst, 'start': t,
-                                  # 'size': request_size,
-                                  # 'response_size': max(response_size / fout, 1),
-                                  'size': max(response_size / fout, 1),
-                                  'single': True})
-                t += response_size / target_bw
-    print len(flows)
-    return flows
-
-
-def gen_big_and_small_flows(seed=92611):
+def gen_big_and_small_flows(seed=92611, rings=1):
     np.random.seed(seed)
     big_bw = 1/3.0 * CIRCUIT_BW / 8.0
     little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
     big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
                  (5, 6), (6, 7), (7, 8), (8, 1)]
-    flows = []
-    psize = 9000
-    for s in xrange(1, NUM_RACKS+1):
-        for d in xrange(1, NUM_RACKS+1):
-            t = 0.0
-            while t < 2.0:
-                src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
-                dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
-                size = np.random.randint(10 * psize, 100 * psize)
-                if (s, d) in big_nodes:
-                    size = np.random.randint(1000 * psize, 10000 * psize)
-                flows.append({'src': src, 'dst': dst, 'start': t,
-                              'size': size,
-                              'response_size': 60,
-                              'single': True})
-                target_bw = big_bw if (s, d) in big_nodes else little_bw
-                t += size / target_bw
-    print len(flows)
-    return flows
-
-
-def gen_big_and_small_two_rings_flows(seed=92611):
-    np.random.seed(seed)
-    big_bw = 1/6.0 * CIRCUIT_BW / 8.0
-    little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
-    big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
-                 (5, 6), (6, 7), (7, 8), (8, 1),
-                 (1, 3), (2, 4), (3, 5), (4, 6),
-                 (5, 7), (6, 8), (7, 1), (8, 2),]
+    if rings == 2:
+        big_nodes += [(1, 3), (2, 4), (3, 5), (4, 6),
+                      (5, 7), (6, 8), (7, 1), (8, 2),]
     flows = []
     psize = 9000
     for s in xrange(1, NUM_RACKS+1):
@@ -302,12 +186,10 @@ def gen_big_and_small_two_rings_flows(seed=92611):
 
 def flowgrind(settings):
     flows = []
-    if 'empirical' in settings:
-        flows = gen_empirical_flows(cdf_key=settings['empirical'])
     if 'big_and_small' in settings:
         flows = gen_big_and_small_flows()
     if 'big_and_small_two_rings' in settings:
-        flows = gen_big_and_small_two_rings_flows()
+        flows = gen_big_and_small_flows(rings=2)
     else:
         if 'flows' in settings:
             for f in settings['flows']:
@@ -319,7 +201,6 @@ def flowgrind(settings):
                         fl['src'] = 'h%d%d' % (s, i)
                         fl['dst'] = 'h%d%d' % (d, i)
                         flows.append(fl)
-                    # flows.append({'src': 'h1', 'dst': 'h2'})
                 else:
                     flows.append(f)
     cmd = '-n %s ' % len(flows)
@@ -360,7 +241,9 @@ def flowgrind(settings):
     fp.close()
     EXPERIMENTS.append(counters_fn)
 
-
+##
+# DFSIOE
+##
 def dfsioe(host, hadoop):
     hb_host = FQDN % (int(host[1]), int(host[2]))
     fn = click_common.FN_FORMAT % ('dfsioe')
@@ -369,7 +252,8 @@ def dfsioe(host, hadoop):
     time.sleep(60)
     print 'done sleeping...'
     print 'starting dfsioe...'
-    bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.dfsioe(int(host[2]))
+    bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.run_host(DFSIOE,
+                                                                        int(host[2]))
     if bench_out:
         print bench_out
 
@@ -397,6 +281,7 @@ def dfsioe(host, hadoop):
     fp.write(str(counter_data))
     fp.close()
     EXPERIMENTS.append(counters_fn)
+
 
 ##
 # Running shell commands
