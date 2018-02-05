@@ -21,4 +21,8 @@
     <name>mapreduce.framework.name</name>
     <value>yarn</value>
   </property>
+  <property>
+    <name>mapreduce.jobtracker.address</name>
+    <value>nn.etalon.local:54311</value>
+  </property>
 </configuration>

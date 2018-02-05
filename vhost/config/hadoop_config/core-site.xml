@@ -21,4 +21,8 @@
     <name>topology.script.file.name</name>
     <value>/usr/local/hadoop/etc/hadoop/topology.script.sh</value>
 </property>
+<property>
+  <name>fs.defaultFS</name>
+  <value>hdfs://nn.etalon.local:9000</value>
+</property>
 </configuration>

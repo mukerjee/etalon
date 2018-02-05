@@ -10,7 +10,8 @@ sudo apt-get update && sudo apt-get install -y \
 			    libcurl4-gnutls-dev \
 			    libxmlrpc-core-c3-dev \
 			    maven \
-			    openjdk-8-jdk
+			    openjdk-8-jdk \
+			    cmake
 sudo pip install rpyc
 sudo pip install numpy
 
@@ -69,6 +70,15 @@ autoreconf -i
 ./configure
 make
 sudo make install
+cp /usr/local/sbin/flowgrindd /etalon/vhost/
+
+# libVT
+cd /etalon/libVT
+sudo make install
+
+# libADU
+cd /etalon/libADU
+sudo make install
 
 # get docker
 cd $HOME
@@ -97,5 +107,42 @@ cd HiBench/
 mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package
 cd ../
 tar cfvz ./HiBench.tar.gz ./HiBench/
+
+# protobuff
+cd $HOME
+wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz
+tar zxvf protobuf-2.5.0.tar.gz
+cd protobuf-2.5.0
+./configure
+make
+make check
+sudo make install
+sudo ldconfig
+
+# Hadoop 2.9
+cd $HOME
+wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz
+tar xfvz hadoop-2.9.0-src.tar.gz
+cd hadoop-2.9.0-src.tar.gz
+mvn package -Pdist,native -DskipTests -Dtar
+
+# Fix broken kill in 16.04
+cd $HOME
+sudo apt-get source procps
+sudo apt-get build-dep procps
+cd procps-3.3.10
+sudo dpkg-buildpackage
+cp ./.libs/kill /sdrt/vhost/
+
+# get extra space
+sudo mkdir /mnt/hdfs
+/usr/local/etc/emulab/mkextrafs.pl /mnt/hdfs
+sudo chown `whoami` /mnt/hdfs
+
+# move docker dir
+sudo service docker stop
+sudo mv /var/lib/docker /mnt/hdfs/
+sudo ln -s /mnt/hdfs/docker /var/lib/docker
+sudo service docker start
 
 sudo reboot

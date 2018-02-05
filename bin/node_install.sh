@@ -50,14 +50,6 @@ sudo systemctl daemon-reload
 sudo systemctl enable phc2sys.service
 sudo systemctl disable ntp.service
 
-# libVT
-cd /etalon/libVT
-sudo make install
-
-# libADU
-cd /etalon/libADU
-sudo make install
-
 sudo mkdir /mnt/hdfs
 /usr/local/etc/emulab/mkextrafs.pl /mnt/hdfs
 sudo chown `whoami` /mnt/hdfs
@@ -75,5 +67,11 @@ git apply /etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 MAKEFLAGS="-j 16" fakeroot debian/rules binary-headers binary-generic binary-perarch
 sudo dpkg -i ../*.deb
+
+# move docker dir
+sudo service docker stop
+sudo mv /var/lib/docker /mnt/hdfs/
+sudo ln -s /mnt/hdfs/docker /var/lib/docker
+sudo service docker start
 
 sudo reboot
