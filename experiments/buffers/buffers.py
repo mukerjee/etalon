@@ -1,8 +1,6 @@
-#!/usr/bin/env python
+#!/usr/bin/env PYTHONPATH=../ python
 
-import sys
 import buffer_common
-sys.path.append("../")
 
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig

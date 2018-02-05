@@ -1,4 +1,4 @@
-#!/usr/bin/env PYTHONPATH=../../ python
+#!/usr/bin/env PYTHONPATH=../ python
 
 import sys
 import glob
@@ -8,7 +8,7 @@ from collections import defaultdict
 from dotmap import DotMap
 from tabulate import tabulate
 from simpleplotlib import plot
-from parse_logs import get_tput_and_dur
+from parse_logs import parse_flowgrind_config
 
 SMALL_FLOW_MAX_SIZE = 1000000
 dur_units = 1e-3
@@ -70,7 +70,7 @@ def get_data(type):
     data = [(0, 0, 0), (0, 0, SMALL_FLOW_MAX_SIZE+1)]
     if glob.glob(sys.argv[1] + files[type]):
         fn = glob.glob(sys.argv[1] + files[type])[0]
-        tputs, durs, bytes = get_tput_and_dur(fn)
+        tputs, durs, bytes = parse_flowgrind_config(fn)
         data = zip(tputs, durs, bytes)
 
         all_file_data['big_tp'].append([d[0] for d in data
@@ -196,4 +196,7 @@ if __name__ == '__main__':
     graph_big_durs(data)
     graph_small_tp(data)
     graph_big_tp(data)
-    bytes_graph()
+    try:
+        bytes_graph()
+    except:
+        pass

@@ -1,4 +1,4 @@
-#!/usr/bin/env PYTHONPATH=../../ python
+#!/usr/bin/env PYTHONPATH=../ python
 
 import sys
 import os
@@ -9,7 +9,7 @@ import numpy as np
 from multiprocessing import Pool
 from dotmap import DotMap
 from simpleplotlib import plot
-from parse_logs import get_tput_and_lat
+from parse_logs import parse_packet_log
 
 DAY_LEN = 180
 TDF = 20
@@ -32,7 +32,7 @@ key_fn = {
 def get_data_from_file(fn):
     key = key_fn['static'](fn.split('/')[-1])
     print fn, key
-    _, lat, _, circ_util, _, _, _ = get_tput_and_lat(fn)
+    _, lat, _, circ_util, _, _, _ = parse_packet_log(fn)
     lat50 = [x[1] for x in zip(*lat)[1]][0]
     circ_util = circ_util[SR]
     return key, (circ_util, lat50)
@@ -51,7 +51,7 @@ def get_data():
         buffer_data = sorted(buffer_data.values())
         fn = glob.glob(sys.argv[1] + files['resize'] % d)[-1]
         print fn
-        _, lat, _, circ_util, _, _, _ = get_tput_and_lat(fn)
+        _, lat, _, circ_util, _, _, _ = parse_packet_log(fn)
         lat50 = [x[1] for x in zip(*lat)[1]][0]
         circ_util = circ_util[SR]
         interp_latency = np.interp(

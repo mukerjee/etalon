@@ -1,4 +1,4 @@
-#!/usr/bin/env PYTHONPATH=../../ python
+#!/usr/bin/env PYTHONPATH=../ python
 
 import sys
 import os
@@ -9,7 +9,7 @@ import numpy as np
 from collections import defaultdict
 from dotmap import DotMap
 from simpleplotlib import plot
-from parse_logs import get_tput_and_lat
+from parse_logs import parse_packet_log
 
 SR = (1, 2)
 
@@ -37,7 +37,7 @@ def get_data(name):
         data = defaultdict(lambda: defaultdict(dict))
         for fn in glob.glob(sys.argv[1] + files[name]):
             key = key_fn[name](fn.split('/')[-1])
-            _, lat, _, circ_util, _, _, _ = get_tput_and_lat(fn)
+            _, lat, _, circ_util, _, _, _ = parse_packet_log(fn)
             data['lat'][50][key] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][key] = [x[1] for x in zip(*lat)[3]]
             data['circ_util'][key] = circ_util[SR]

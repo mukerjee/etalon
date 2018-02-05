@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 import glob
 import socket
 import numpy as np
@@ -11,9 +12,10 @@ percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
 TDF = 20.0
+bin_size = 1
 
 
-def get_tput_and_dur(fn):
+def parse_flowgrind_config(fn):
     flows = defaultdict(list)
     sizes = {}
     for l in open(fn.split('.txt')[0] + '.config.txt'):
@@ -97,12 +99,9 @@ def get_seq_data(fn):
 
         flow = (sender, recv, proto, sport, dport)
         if not flows[flow]:
-        # if True:
             flows[flow].append((ts, seq, bytes))
         else:
             last_ts, last_seq, last_bytes = flows[flow][-1]
-            # print flow, bytes, seq, last_seq, last_bytes
-            # print last_good_packet[1] + last_good_packet[2] - seq
             if abs(last_seq + last_bytes - seq) < 2:
                 updated = True
                 while updated:
@@ -213,7 +212,8 @@ def get_seq_data(fn):
                 if ts >= prev_end + timing_offset:
                     if first == -1:
                         first = seq
-                    out.append(((ts - prev_end - timing_offset)*1e6, seq - first))
+                    out.append(((ts - prev_end - timing_offset)*1e6,
+                                seq - first))
                 if ts < curr_end + timing_offset:
                     last = i
             if not out:
@@ -233,12 +233,11 @@ def get_seq_data(fn):
         print 'bad windows', bad_windows
     unzipped = zip(*results.values())
     results = [np.average(q) for q in unzipped]
-    # results = [np.sum(q) for q in unzipped]
     return results, (out_start, out_end, out_next_start, out_next_end,
                      out_next_next_start, out_next_next_end)
 
 
-def get_tput_and_lat(fn):
+def parse_packet_log(fn):
     latencies = []
     latencies_circuit = []
     latencies_packet = []
@@ -266,7 +265,7 @@ def get_tput_and_lat(fn):
             if t == 1:  # starting
                 most_recent_circuit_up[sr] = ts
             if t == 2:  # closing
-                circuit_starts[sr].append(ts / 20.0)
+                circuit_starts[sr].append(ts / TDF)
                 number_circuit_ups[sr] += 1
             continue
 
@@ -275,7 +274,7 @@ def get_tput_and_lat(fn):
         if bytes < 100:
             continue
         if sr not in flow_start:
-            flow_start[sr] = ts / 20.0  # TDF
+            flow_start[sr] = ts / TDF
 
         if circuit:
             which_rtt = int((ts - most_recent_circuit_up[sr] - 0.5*RTT) / RTT)
@@ -285,7 +284,7 @@ def get_tput_and_lat(fn):
             packet_bytes[sr] += bytes
 
         throughputs[sr] += bytes
-        flow_end[sr] = ts / 20.0  # TDF
+        flow_end[sr] = ts / TDF
         if bytes > 1000:
             latencies.append(latency)
             if circuit:
@@ -308,29 +307,122 @@ def get_tput_and_lat(fn):
         total_time = flow_end[sr] - flow_start[sr]
         tp[sr] = throughputs[sr] / total_time
         tp[sr] *= 8  # bytes to bits
-        tp[sr] /= 1000000000  # bits to gbits
+        tp[sr] /= 1e9  # bits to gbits
 
-        p[sr] = (packet_bytes[sr] / total_time) * 8 / 10**9
-        c[sr] = (circuit_bytes[sr] / total_time) * 8 / 10**9
+        p[sr] = (packet_bytes[sr] / total_time) * 8 / 1e9
+        c[sr] = (circuit_bytes[sr] / total_time) * 8 / 1e9
 
         n = 0
         for ts in circuit_starts[sr]:
             if ts >= flow_start[sr] and ts <= flow_end[sr]:
                 n += 1
-        print n, number_circuit_ups[sr]
-        max_bytes = n * RTT * (CIRCUIT_BW * 10**9 / 8.0)
+        max_bytes = n * RTT * (CIRCUIT_BW * 1e9 / 8.0)
         for i, r in sorted(bytes_in_rtt[sr].items()):
             b[sr][i] = (r / max_bytes) * 100
 
-    print
     print fn
-    print tp
-    print lat
-    print sorted(b.items())
-    print p
-    print c
     return tp, (lat, latc, latp), p, c, b, \
         sum(circuit_bytes.values()), sum(packet_bytes.values())
+
+
+def parse_validation_log(folder, fns, packet):
+    tp_out = {}
+    for fn in fns:
+        id_to_sr = {}
+        for l in open(fn.split('.txt')[0] + '.config.txt'):
+            l = l.split('-F')[1:]
+            for x in l:
+                id = int(x.strip().split()[0])
+                s = int(x.strip().split('-Hs=10.1.')[1].split('.')[0])
+                r = int(x.strip().split(',d=10.1.')[1].split('.')[0])
+                id_to_sr[id] = (s, r)
+
+        out_data = defaultdict(lambda: defaultdict(int))
+        circuit = False if 'no_circuit' in fn else True
+        for line in open(fn):
+            if line[0] == 'S' and (line[1] == ' ' or line[1] == '1'):
+                line = line[1:].strip()
+                id = int(line.split()[0])
+                ts_start = float(line.split()[1])
+                ts_end = float(line.split()[2])
+                curr_tp = float(line.split()[3]) * 1e6
+                curr_bytes = (curr_tp / 8.0) * (ts_end - ts_start)
+                out_data[id_to_sr[id]][ts_start] += curr_bytes
+        for sr in out_data:
+            out_data[sr] = sorted(out_data[sr].items())
+
+        fn_ts = fn.split('/')[-1].split('-verification')[0]
+        if circuit:
+            packet_log_fn = glob.glob(folder +
+                                      '/tmp/%s-verification-'
+                                      'circuit-*-click.txt'
+                                      % fn_ts)
+        else:
+            packet_log_fn = glob.glob(folder +
+                                      '/tmp/%s-verification-'
+                                      'no_circuit-*-click.txt'
+                                      % fn_ts)
+        if packet_log_fn:
+            out_data = defaultdict(list)
+            first_ts = -1
+            for msg in msg_from_file(packet_log_fn[0]):
+                (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
+                if t != 0:
+                    continue
+                bytes = unpack('!H', data[2:4])[0]
+                sender = ord(data[14])
+                recv = ord(data[18])
+                sr = (sender, recv)
+                for i in xrange(len(ts)):
+                    if ord(ts[i]) == 0:
+                        break
+                ts = (float(ts[:i]) / TDF) * 1000
+                if first_ts == -1:
+                    first_ts = ts
+                out_data[sr].append((ts - first_ts, bytes))
+
+        print 'done parsing ' + fn
+        tp = defaultdict(list)
+        for sr in out_data:
+            if packet_log_fn:
+                curr = 0
+                for i in xrange(0, 2000, bin_size):
+                    curr_tp = 0
+                    for j in xrange(curr, len(out_data[sr])):
+                        ts, bytes = out_data[sr][j]
+                        if ts >= i and ts < i+bin_size:
+                            curr_tp += bytes
+                        else:
+                            curr = j
+                            break
+                    tp[sr].append(curr_tp * (1000.0 / bin_size) * 8.0 / 1e9)
+            else:
+                for i in xrange(0, 2000, bin_size):
+                    curr = [b for ts, b in out_data[sr]
+                            if ts >= i/1000.0 and ts < (i+bin_size) / 1000.0]
+                    curr = sum(curr)
+                    tp[sr].append((curr*8.0 / (bin_size / 1000.0) / 1e9))
+        tp_out[fn] = copy.deepcopy(tp)
+    tp = defaultdict(list)
+    for sr in tp_out[fns[0]]:
+        for i in xrange(0, 2000, bin_size):
+            tp[sr].append(np.average([q[sr][i] for q in tp_out.values()]))
+    print [len(tp[k]) for k in tp.keys()]
+    x = [xrange(0, 2000, bin_size) for sr in tp.keys()]
+    y = tp.values()
+
+    means = []
+    stds = []
+    for data in y:
+        for i, d in enumerate(data):
+            if round(d) > 0:
+                break
+        means.append(np.mean(data[i:]))
+        stds.append(np.std(data[i:]))
+    print means
+    print stds
+    print np.mean(means)
+    print np.mean(stds)
 
 
 def parse_hdfs_logs(folder):
@@ -351,8 +443,6 @@ def parse_hdfs_logs(folder):
                     data.append((bytes / 1024. / 1024., duration))
 
     durations = sorted(zip(*data)[1])
-    # print durations
-    print np.percentile(durations, 50), np.percentile(durations, 99)
     return durations
 
 
