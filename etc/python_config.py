@@ -86,7 +86,7 @@ IMAGE_SKIP_TC = defaultdict(lambda: False, {
     'reHDFS_adu': True,
 })
 
-IMAGE_NUM_HOSTS = defaultdict(lambda: HOST_PER_RACK, {
+IMAGE_NUM_HOSTS = defaultdict(lambda: HOSTS_PER_RACK, {
     'HDFS': 1,
     'HDFS_adu': 1,
     'reHDFS': 1,
@@ -109,7 +109,7 @@ IMAGE_CMD = {
     
     'flowgrindd_adu': '"pipework --wait && pipework --wait -i eth2 && '
                       'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} '
-                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus),
+                      'flowgrindd -d -c {cpu}"',
     
     'HDFS': '"service ssh start && '
             'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
@@ -119,7 +119,8 @@ IMAGE_CMD = {
                 'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '
                 'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '
                 'service ssh start && '
-                'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
+                'pipework --wait && pipework --wait -i eth2 && '
+                'sleep infinity"',
 
     'HDFS_nn': '"service ssh start && '
                'pipework --wait && pipework --wait -i eth2 && '
@@ -154,7 +155,7 @@ def handle_to_machine(h):
 
 
 def get_phost_from_host(h):
-    return host if host in PHYSICAL_NODES else 'host%d' % h[1:2]
+    return h if h in PHYSICAL_NODES else 'host%d' % h[1:2]
 
 
 def get_phost_id(phost):

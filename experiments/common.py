@@ -1,8 +1,5 @@
-#!/usr/bin/python
-
 import time
 import threading
-import sys
 import os
 import tarfile
 import socket
@@ -11,12 +8,18 @@ import rpyc
 import numpy as np
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
-from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
+from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
-    PACKET_BW, FQDN
+    PACKET_BW, FQDN, DATA_NET, CONTROL_NET, DFSIOE, get_phost_from_host, \
+    get_phost_id, IMAGE_CPU, CPU_COUNT, CPU_SET, IMAGE_CMD, IMAGE_SETUP, \
+    DOCKER_RUN, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, DATA_INT_IF, \
+    IMAGE_SKIP_TC, TC, DATA_RATE, SWITCH_PING, GET_SWITCH_MAC, ARP_POISON, \
+    CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE, DOCKER_CLEAN, \
+    IMAGE_NUM_HOSTS, DOCKER_BUILD
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
+
 
 ##
 # Experiment commands
@@ -44,7 +47,7 @@ def initializeExperiment(adu=False, hadoop=False):
     print '--- done...'
 
     print '--- building etalon docker image...'
-    runWriteFile(DOCKER_BUILD, None):
+    runWriteFile(DOCKER_BUILD, None)
     print '--- done...'
 
     print '--- copying image to physical hosts...'
@@ -133,13 +136,13 @@ def launch_all_flowgrindd(adu, hadoop):
     map(lambda t: t.join(), ts)
     if not hadoop:
         for r in xrange(1, NUM_RACKS+1):
-           for h in xrange(1, HOSTS_PER_RACK+1):
-               ip = '10.2.%d.%d' % (r, h)
-               port = 5999
-               sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-               while sock.connect_ex((ip, port)):
-                   time.sleep(1)
-               sock.close()
+            for h in xrange(1, HOSTS_PER_RACK+1):
+                ip = '10.2.%d.%d' % (r, h)
+                port = 5999
+                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                while sock.connect_ex((ip, port)):
+                    time.sleep(1)
+                sock.close()
 
 
 ##
@@ -162,7 +165,7 @@ def gen_big_and_small_flows(seed=92611, rings=1):
                  (5, 6), (6, 7), (7, 8), (8, 1)]
     if rings == 2:
         big_nodes += [(1, 3), (2, 4), (3, 5), (4, 6),
-                      (5, 7), (6, 8), (7, 1), (8, 2),]
+                      (5, 7), (6, 8), (7, 1), (8, 2)]
     flows = []
     psize = 9000
     for s in xrange(1, NUM_RACKS+1):
@@ -241,10 +244,11 @@ def flowgrind(settings):
     fp.close()
     EXPERIMENTS.append(counters_fn)
 
+
 ##
 # DFSIOE
 ##
-def dfsioe(host, hadoop):
+def dfsioe(host, image):
     hb_host = FQDN % (int(host[1]), int(host[2]))
     fn = click_common.FN_FORMAT % ('dfsioe')
     print fn
@@ -252,8 +256,8 @@ def dfsioe(host, hadoop):
     time.sleep(60)
     print 'done sleeping...'
     print 'starting dfsioe...'
-    bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.run_host(DFSIOE,
-                                                                        int(host[2]))
+    bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.run_host(
+        DFSIOE, int(host[2]))
     if bench_out:
         print bench_out
 
@@ -262,10 +266,11 @@ def dfsioe(host, hadoop):
         fp.close()
     print 'done dfsioe...'
 
-    SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:/usr/local/hadoop/logs/* %s'
+    SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:' \
+        '/usr/local/hadoop/logs/* %s'
     tmp_dir = '/tmp/' + fn.split('.txt')[0]
     for rack in xrange(1, NUM_RACKS+1):
-        for host in xrange(1, HADOOP_HOSTS_PER_RACK+1):
+        for host in xrange(1, IMAGE_NUM_HOSTS[image]+1):
             hn = FQDN % (rack, host)
             log_dir = tmp_dir + '/h%d%d-logs' % (rack, host)
             runWriteFile('mkdir -p %s' % log_dir, None)
@@ -327,7 +332,7 @@ def runWriteFile(cmd, fn):
 # Docker
 ##
 def run_on_host(host, cmd, blocking=True):
-    func = RPYC_CONNECTIONS[get_phost_from_host(h)].run
+    func = RPYC_CONNECTIONS[get_phost_from_host(host)].run
     if blocking:
         return func(cmd)
     else:
@@ -340,11 +345,14 @@ def launch(phost, image, host_id):
     my_id = '%d%d' % (get_phost_id(phost), host_id)
     cpu_lim = IMAGE_CPU[image]
 
-    # bind to specific CPU
-    cpus = str((host_id % (CPU_COUNT-1)) + 1) \
-        if cpu_lim < 100 else CPU_SET
-
     my_cmd = '/bin/sh -c ' + IMAGE_CMD[IMAGE_SETUP[image]['h' + my_id]]
+    
+    # bind to specific CPU
+    cpus = CPU_SET
+    if cpu_lim < 100:
+        cpus = str((host_id % (CPU_COUNT-1)) + 1)
+        my_cmd = my_cmd.format(cpu=cpus)
+
     run_on_host(phost, DOCKER_RUN.format(image=DOCKER_IMAGE,
                                          id=my_id, FQDN=FQDN, cpu_set=cpus,
                                          cpu_limit=cpu_lim, cmd=my_cmd))
@@ -352,21 +360,23 @@ def launch(phost, image, host_id):
                                        net=DATA_NET, rack=get_phost_id(phost),
                                        id=host_id))
     if not IMAGE_SKIP_TC[image]:
-        run_on_host(phost, TC.format(int_if=DATA_INT_IF, id=my_id, rate=DATA_RATE))
+        run_on_host(phost, TC.format(int_if=DATA_INT_IF,
+                                     id=my_id, rate=DATA_RATE))
 
     run_on_host(my_id, SWITCH_PING)
     smac = run_on_host(my_id, GET_SWITCH_MAC)
 
     for i in xrange(1, NUM_RACKS+1):
-        if i == get_phost_id(phost)
+        if i == get_phost_id(phost):
             continue
         for j in xrange(1, HOSTS_PER_RACK+1):
             dst_id = '%d%d.%s' % (i, j, FQDN)
             run_on_host(my_id, ARP_POISON.format(id=dst_id, switch_mac=smac))
 
-    run_on_host(phost, PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
-                                       net=CONTROL_NET, rack=get_phost_id(phost),
-                                       id=host_id))
+    run_on_host(phost,
+                PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
+                                net=CONTROL_NET, rack=get_phost_id(phost),
+                                id=host_id))
     if not IMAGE_SKIP_TC[image]:
         run_on_host(phost, TC.format(int_if=CONTROL_INT_IF, id=my_id,
                                      rate=CONTROL_RATE))
