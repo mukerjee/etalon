@@ -2,9 +2,10 @@ import time
 import sys
 import os
 
+from collections import defaultdict
+
 NUM_RACKS = 8
 HOSTS_PER_RACK = 16
-HADOOP_HOSTS_PER_RACK = 1
 
 TDF = 20.0
 
@@ -47,6 +48,7 @@ CONTROL_SOCKET_PORT = 1239
 NODES_FILE = '../etc/handles'
 
 # host commands
+DOCKER_IMAGE = 'etalon'
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
@@ -61,17 +63,80 @@ DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
              '--ulimit nofile=262144:262144 ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
              '{image} {cmd}'
-DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
-DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
            '10.{net}.{rack}.{id}/16; '
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
-NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
 SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
 ARP_POISON = 'arp -s h{id} {switch_mac}'
+SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
+
+# image commands
+IMAGE_CPU = defaultdict(lambda: CPU_LIMIT, {
+    'HDFS': (CPU_COUNT - 1) * 100,
+    'reHDFS': (CPU_COUNT - 1) * 100,
+})
+
+IMAGE_SKIP_TC = defaultdict(lambda: False, {
+    'HDFS': True,
+    'HDFS_adu': True,
+    'reHDFS': True,
+    'reHDFS_adu': True,
+})
+
+IMAGE_NUM_HOSTS = defaultdict(lambda: HOST_PER_RACK, {
+    'HDFS': 1,
+    'HDFS_adu': 1,
+    'reHDFS': 1,
+    'reHDFS_adu': 1,
+})
+
+IMAGE_SETUP = {
+    'flowgrindd': defaultdict(lambda: 'flowgrindd'),
+    'flowgrindd_adu': defaultdict(lambda: 'flowgrindd_adu'),
+    'HDFS': defaultdict(lambda: 'HDFS', {'h11': 'HDFS_nn'}),
+    'HDFS_adu': defaultdict(lambda: 'HDFS_adu', {'h11': 'HDFS_nn_adu'}),
+    'reHDFS': defaultdict(lambda: 'reHDFS', {'h11': 'reHDFS_nn'}),
+    'reHDFS_adu': defaultdict(lambda: 'reHDFS_adu', {'h11': 'reHDFS_nn_adu'}),
+}
+
+IMAGE_CMD = {
+    'flowgrindd': '"pipework --wait && pipework --wait -i eth2 && '
+                  'LD_PRELOAD=libVT.so taskset -c {cpu} '
+                  'flowgrindd -d -c {cpu}"',
+    
+    'flowgrindd_adu': '"pipework --wait && pipework --wait -i eth2 && '
+                      'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} '
+                      'flowgrindd -d -c {cpu}"'.format(cpu=cpus),
+    
+    'HDFS': '"service ssh start && '
+            'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
+
+    'HDFS_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
+                'export LD_PRELOAD=libADU.so && '
+                'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '
+                'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '
+                'service ssh start && '
+                'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
+
+    'HDFS_nn': '"service ssh start && '
+               'pipework --wait && pipework --wait -i eth2 && '
+               '/usr/local/hadoop/bin/hdfs namenode -format -force && '
+               '/tmp/config/start_hadoop.sh && sleep infinity"',
+
+    'HDFS_nn_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
+                   'export LD_PRELOAD=libADU.so && '
+                   'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '
+                   'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '
+                   'service ssh start && '
+                   'pipework --wait && pipework --wait -i eth2 && '
+                   '/usr/local/hadoop/bin/hdfs namenode -format -force && '
+                   '/tmp/config/start_hadoop.sh && sleep infinity"',
+}
+
+
 
 # click
 CLICK_ADDR = 'localhost'
@@ -86,3 +151,11 @@ def handle_to_machine(h):
         if handle == h:
             return hostname
     return None
+
+
+def get_phost_from_host(h):
+    return host if host in PHYSICAL_NODES else 'host%d' % h[1:2]
+
+
+def get_phost_id(phost):
+    return int(phost.split('host')[-1])

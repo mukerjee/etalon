@@ -13,7 +13,7 @@ import click_common
 from subprocess import call, PIPE, STDOUT, Popen
 from globals import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
-    PACKET_BW, HADOOP_HOSTS_PER_RACK, FQDN
+    PACKET_BW, FQDN
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -321,3 +321,71 @@ def runWriteFile(cmd, fn):
         f = open(fn, 'w')
         f.write(out)
         f.close()
+
+
+##
+# Docker
+##
+def run_on_host(host, cmd, blocking=True):
+    func = RPYC_CONNECTIONS[get_phost_from_host(h)].run
+    if blocking:
+        return func(cmd)
+    else:
+        t = threading.Thread(target=func, args=(cmd,))
+        t.start()
+        return t
+        
+    
+def launch(phost, image, host_id):
+    my_id = '%d%d' % (get_phost_id(phost), host_id)
+    cpu_lim = IMAGE_CPU[image]
+
+    # bind to specific CPU
+    cpus = str((host_id % (CPU_COUNT-1)) + 1) \
+        if cpu_lim < 100 else CPU_SET
+
+    my_cmd = '/bin/sh -c ' + IMAGE_CMD[IMAGE_SETUP[image]['h' + my_id]]
+    run_on_host(phost, DOCKER_RUN.format(image=DOCKER_IMAGE,
+                                         id=my_id, FQDN=FQDN, cpu_set=cpus,
+                                         cpu_limit=cpu_lim, cmd=my_cmd))
+    run_on_host(phost, PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
+                                       net=DATA_NET, rack=get_phost_id(phost),
+                                       id=host_id))
+    if not IMAGE_SKIP_TC[image]:
+        run_on_host(phost, TC.format(int_if=DATA_INT_IF, id=my_id, rate=DATA_RATE))
+
+    run_on_host(my_id, SWITCH_PING)
+    smac = run_on_host(my_id, GET_SWITCH_MAC)
+
+    for i in xrange(1, NUM_RACKS+1):
+        if i == get_phost_id(phost)
+            continue
+        for j in xrange(1, HOSTS_PER_RACK+1):
+            dst_id = '%d%d.%s' % (i, j, FQDN)
+            run_on_host(my_id, ARP_POISON.format(id=dst_id, switch_mac=smac))
+
+    run_on_host(phost, PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
+                                       net=CONTROL_NET, rack=get_phost_id(phost),
+                                       id=host_id))
+    if not IMAGE_SKIP_TC[image]:
+        run_on_host(phost, TC.format(int_if=CONTROL_INT_IF, id=my_id,
+                                     rate=CONTROL_RATE))
+
+
+def launch_rack(phost, image):
+    run_on_host(phost, DOCKER_CLEAN)
+    ts = []
+    for i in xrange(1, IMAGE_NUM_HOSTS[image]+1):
+        ts.append(threading.Thread(target=launch,
+                                   args=(phost, image, i)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
+
+
+def launch_all_racks(image):
+    ts = []
+    for phost in PHYSICAL_NODES:
+        ts.append(threading.Thread(target=launch_rack,
+                                   args=(phost, image)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
