@@ -1,7 +1,6 @@
 #!/usr/bin/env PYTHONPATH=../etc/ python
 
 import socket
-import threading
 import rpyc
 
 from subprocess import check_output, CalledProcessError, Popen

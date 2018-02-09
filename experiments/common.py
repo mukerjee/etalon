@@ -15,16 +15,22 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     DOCKER_RUN, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, DATA_INT_IF, \
     IMAGE_SKIP_TC, TC, DATA_RATE, SWITCH_PING, GET_SWITCH_MAC, ARP_POISON, \
     CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE, DOCKER_CLEAN, \
-    IMAGE_NUM_HOSTS, DOCKER_BUILD
+    IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, get_host_from_rack_and_id, SCP, \
+    get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
+    HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
+    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
+CURRENT_CC = ''
 
 
 ##
 # Experiment commands
 ##
-def initializeExperiment(adu=False, hadoop=False):
+def initializeExperiment(image):
+    global IMAGE
+    IMAGE = image
     print '--- starting experiment...'
     print '--- clearing local arp...'
     call([os.path.expanduser('/etalon/cloudlab/arp_clear.sh')])
@@ -43,7 +49,7 @@ def initializeExperiment(adu=False, hadoop=False):
     print '--- done...'
 
     print '--- setting CC to reno...'
-    click_common.setCC('reno', adu, hadoop)
+    click_common.setCC('reno', image)
     print '--- done...'
 
     print '--- building etalon docker image...'
@@ -51,11 +57,11 @@ def initializeExperiment(adu=False, hadoop=False):
     print '--- done...'
 
     print '--- copying image to physical hosts...'
-
+    push_docker_image()
     print '--- done...'
 
     print '--- launching containers...'
-    launch_all_flowgrindd(adu, hadoop)
+    launch_all_racks(image)
     print '--- done...'
 
     click_common.initializeClickControl()
@@ -84,6 +90,16 @@ def finishExperiment():
 def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
+        if ':' in e:
+            host = e.split(':')[0]
+            fn = e.split(':')[1].split(' ')[0]
+            target = '/tmp/%s/' % (TIMESTAMP)
+            if len(e.split(' ')) > 1:
+                target += e.split(' ')[1]
+            if not os.path.exists(target):
+                os.mkdirs(target)
+            runWriteFile(SCP % (host, fn, target), None)
+            tar.add(target)
         for fn in glob.glob(e):
             tar.add(fn)
     tar.close()
@@ -108,82 +124,42 @@ def connect_all_rpyc_daemon():
     map(lambda x: PHYSICAL_NODES.remove(x), bad_hosts)
 
 
-def launch_flowgrindd(phost, adu, hadoop):
-    if hadoop:
-        if hadoop == 'Hadoop-SDRT':
-            if adu:
-                RPYC_CONNECTIONS[phost].root.hadoop_sdrt_adu()
-            else:
-                RPYC_CONNECTIONS[phost].root.hadoop_sdrt()
-        else:
-            if adu:
-                RPYC_CONNECTIONS[phost].root.hadoop_adu()
-            else:
-                RPYC_CONNECTIONS[phost].root.hadoop()
-    else:
-        if adu:
-            RPYC_CONNECTIONS[phost].root.flowgrindd_adu()
-        else:
-            RPYC_CONNECTIONS[phost].root.flowgrindd()
-
-
-def launch_all_flowgrindd(adu, hadoop):
-    ts = []
-    for phost in PHYSICAL_NODES[1:]:
-        ts.append(threading.Thread(target=launch_flowgrindd,
-                                   args=(phost, adu, hadoop)))
-        ts[-1].start()
-    map(lambda t: t.join(), ts)
-    if not hadoop:
-        for r in xrange(1, NUM_RACKS+1):
-            for h in xrange(1, HOSTS_PER_RACK+1):
-                ip = '10.2.%d.%d' % (r, h)
-                port = 5999
-                sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                while sock.connect_ex((ip, port)):
-                    time.sleep(1)
-                sock.close()
-
-
 ##
 # flowgrind
 ##
 def get_flowgrind_host(h):
-    if len(h) == 2:
-        return '10.%s.10.%s/10.%s.10.%s' % (DATA_NET, h[1],
-                                            CONTROL_NET, h[1])
-    else:
-        return '10.%s.%s.%s/10.%s.%s.%s' % (DATA_NET, h[1], h[2:],
-                                            CONTROL_NET, h[1], h[2:])
+    return '%s/%s' % (get_data_ip_from_host(h),
+                      get_control_ip_from_host(h))
 
 
 def gen_big_and_small_flows(seed=92611, rings=1):
     np.random.seed(seed)
     big_bw = 1/3.0 * CIRCUIT_BW / 8.0
     little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
-    big_nodes = [(1, 2), (2, 3), (3, 4), (4, 5),
-                 (5, 6), (6, 7), (7, 8), (8, 1)]
+    big_nodes = []
+    for i in xrange(1, NUM_RACKS+1):
+        big_nodes.append((i, (i % NUM_RACKS) + 1))
     if rings == 2:
-        big_nodes += [(1, 3), (2, 4), (3, 5), (4, 6),
-                      (5, 7), (6, 8), (7, 1), (8, 2)]
+        for i in xrange(1, NUM_RACKS+1):
+            big_nodes.append((i, ((i+1) % NUM_RACKS) + 1))
     flows = []
     psize = 9000
     for s in xrange(1, NUM_RACKS+1):
         for d in xrange(1, NUM_RACKS+1):
             t = 0.0
             while t < 2.0:
-                src = 'h%d%d' % (s, np.random.randint(1, HOSTS_PER_RACK+1))
-                dst = 'h%d%d' % (d, np.random.randint(1, HOSTS_PER_RACK+1))
+                src = get_host_from_rack_and_id(
+                    s, np.random.randint(1, HOSTS_PER_RACK+1))
+                dst = get_host_from_rack_and_id(
+                    d, np.random.randint(1, HOSTS_PER_RACK+1))
                 size = np.random.randint(10 * psize, 100 * psize)
                 if (s, d) in big_nodes:
                     size = np.random.randint(1000 * psize, 10000 * psize)
                 flows.append({'src': src, 'dst': dst, 'start': t,
-                              'size': size,
-                              'response_size': 60,
+                              'size': size, 'response_size': 60,
                               'single': True})
                 target_bw = big_bw if (s, d) in big_nodes else little_bw
                 t += size / target_bw
-    print len(flows)
     return flows
 
 
@@ -201,8 +177,8 @@ def flowgrind(settings):
                     d = int(f['dst'][1])
                     for i in xrange(1, HOSTS_PER_RACK+1):
                         fl = dict(f)
-                        fl['src'] = 'h%d%d' % (s, i)
-                        fl['dst'] = 'h%d%d' % (d, i)
+                        fl['src'] = get_host_from_rack_and_id(s, i)
+                        fl['dst'] = get_host_from_rack_and_id(d, i)
                         flows.append(fl)
                 else:
                     flows.append(f)
@@ -237,55 +213,39 @@ def flowgrind(settings):
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
     runWriteFile(cmd, fn)
-    counters_fn = click_common.FN_FORMAT % ('flowgrind.counters')
-    fp = open(counters_fn, 'w')
-    counter_data = click_common.getCounters()
-    fp.write(str(counter_data))
-    fp.close()
-    EXPERIMENTS.append(counters_fn)
+    save_counters(click_common.FN_FORMAT % ('flowgrind.counters'))
 
 
 ##
 # DFSIOE
 ##
 def dfsioe(host, image):
-    hb_host = FQDN % (int(host[1]), int(host[2]))
     fn = click_common.FN_FORMAT % ('dfsioe')
     print fn
-    print 'sleeping 60...'
-    time.sleep(60)
-    print 'done sleeping...'
     print 'starting dfsioe...'
-    bench_out = RPYC_CONNECTIONS['host%d' % int(host[1])].root.run_host(
-        DFSIOE, int(host[2]))
-    if bench_out:
-        print bench_out
-
-        fp = open(fn, 'w')
-        fp.write(bench_out)
-        fp.close()
+    run_on_host(host, DFSIOE)
     print 'done dfsioe...'
 
-    SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:' \
-        '/usr/local/hadoop/logs/* %s'
-    tmp_dir = '/tmp/' + fn.split('.txt')[0]
-    for rack in xrange(1, NUM_RACKS+1):
-        for host in xrange(1, IMAGE_NUM_HOSTS[image]+1):
-            hn = FQDN % (rack, host)
-            log_dir = tmp_dir + '/h%d%d-logs' % (rack, host)
-            runWriteFile('mkdir -p %s' % log_dir, None)
-            runWriteFile(SCP % (hn, log_dir), None)
+    for r in xrange(1, NUM_RACKS+1):
+        for h in xrange(1, IMAGE_NUM_HOSTS[image]+1):
+            log_host = get_host_from_rack_and_id(r, h)
+            EXPERIMENTS.append(log_host + ":/usr/local/hadoop/logs/* " +
+                               image + '/' + log_host + '-logs')
 
-    SCP_HB = 'scp -r -o StrictHostKeyChecking=no root@%s:~/HiBench/report %s'
-    runWriteFile(SCP_HB % (hb_host, tmp_dir), None)
-    EXPERIMENTS.append(tmp_dir + '/*')
+    EXPERIMENTS.append(host + ':~/HiBench/report/* ' + image)
 
-    counters_fn = click_common.FN_FORMAT % ('dfsioe.counters')
-    fp = open(counters_fn, 'w')
+    save_counters(click_common.FN_FORMAT % ('dfsioe.counters'))
+
+
+##
+# Byte Counters
+##
+def save_counters(fn):
+    fp = open(fn, 'w')
     counter_data = click_common.getCounters()
     fp.write(str(counter_data))
     fp.close()
-    EXPERIMENTS.append(counters_fn)
+    EXPERIMENTS.append(fn)
 
 
 ##
@@ -329,8 +289,44 @@ def runWriteFile(cmd, fn):
 
 
 ##
+# Congestion Control
+##
+def set_cc_host(phost, cc):
+    run_on_host(phost, SET_CC.format(cc=cc))
+
+
+def setCC(cc):
+    global CURRENT_CC
+    ts = []
+    for phost in PHYSICAL_NODES[1:]:
+        ts.append(threading.Thread(target=set_cc_host,
+                                   args=(phost, cc)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
+    if CURRENT_CC and cc != CURRENT_CC:
+        launch_all_racks(IMAGE)
+    CURRENT_CC = cc
+
+
+##
 # Docker
 ##
+def push_docker_image_to_host(phost):
+    runWriteFile(SCP_TO % (DOCKER_LOCAL_IMAGE_PATH,
+                           phost, DOCKER_REMOTE_IMAGE_PATH))
+    run_on_host(phost, DOCKER_LOAD)
+
+
+def push_docker_image():
+    runWriteFile(DOCKER_SAVE, None)
+    ts = []
+    for phost in PHYSICAL_NODES[1:]:
+        ts.append(threading.Thread(target=push_docker_image_to_host,
+                                   args=(phost)))
+        ts[-1].start()
+    map(lambda t: t.join(), ts)
+
+
 def run_on_host(host, cmd, blocking=True):
     func = RPYC_CONNECTIONS[get_phost_from_host(host)].run
     if blocking:
@@ -394,8 +390,16 @@ def launch_rack(phost, image):
 
 def launch_all_racks(image):
     ts = []
-    for phost in PHYSICAL_NODES:
+    for phost in PHYSICAL_NODES[1:]:
         ts.append(threading.Thread(target=launch_rack,
                                    args=(phost, image)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
+    for r in xrange(1, NUM_RACKS+1):
+        for h in xrange(1, HOSTS_PER_RACK+1):
+            ip = get_control_ip_from_host(get_host_from_rack_and_id(r, h))
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            port = FLOWGRIND_PORT if 'flowgrind' in image else HDFS_PORT
+            while sock.connect_ex((ip, port)):
+                time.sleep(1)
+            sock.close()

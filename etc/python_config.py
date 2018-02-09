@@ -19,6 +19,8 @@ CONTROL_INT_IF = 'eth2'
 CONTROL_NET = 2
 CONTROL_RATE = 10 / TDF  # Gbps
 
+PHOST_IP = 100
+
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
@@ -54,6 +56,10 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_BUILD = 'sudo docker build -t etalon -f ' \
                '/etalon/vhost/etalon.dockerfile /etalon/vhost/'
+DOCKER_LOCAL_IMAGE_PATH = '/etalon/vhost/etalon.img'
+DOCKER_SAVE = 'sudo docker save -o %s etalon' % DOCKER_LOCAL_IMAGE_PATH
+DOCKER_REMOTE_IMAGE_PATH = '/etalon/vhost/etalon.img'
+DOCKER_LOAD = 'sudo docker load -i %s' % DOCKER_REMOTE_IMAGE_PATH
 DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
              '/etalon/vhost/config/hosts:/etc/hosts:ro ' \
              '--mount=type=tmpfs,tmpfs-size=10G,destination=' \
@@ -72,6 +78,8 @@ ARP_POISON = 'arp -s h{id} {switch_mac}'
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
+SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
+SCP_TO = 'scp -r -o StrictHostKeyChecking=no %s root@%s:%s'
 
 # image commands
 IMAGE_CPU = defaultdict(lambda: CPU_LIMIT, {
@@ -137,7 +145,11 @@ IMAGE_CMD = {
                    '/tmp/config/start_hadoop.sh && sleep infinity"',
 }
 
+# flowgrind
+FLOWGRIND_PORT = 5999
 
+# hdfs
+HDFS_PORT = 50010  # datanode transfer port
 
 # click
 CLICK_ADDR = 'localhost'
@@ -160,3 +172,27 @@ def get_phost_from_host(h):
 
 def get_phost_id(phost):
     return int(phost.split('host')[-1])
+
+
+def get_host_from_rack_and_id(r, id):
+    return 'h%d%d' % (r, id)
+
+
+def get_rack_and_id_from_host(h):
+    if h in PHYSICAL_NODES:
+        return (PHOST_IP, get_phost_id(h))
+    else:
+        return int(h[1]), int(h[2])
+
+
+def get_ip_from_host(h, net):
+    r, s = get_rack_and_id_from_host(h)
+    return '10.%s.%s.%s' % (net, r, s)
+
+
+def get_data_ip_from_host(h):
+    return get_ip_from_host(h, DATA_NET)
+
+
+def get_control_ip_from_host(h):
+    return get_ip_from_host(h, CONTROL_NET)

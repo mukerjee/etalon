@@ -1,14 +1,12 @@
 import socket
 import time
-import threading
 from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
-    PHYSICAL_NODES, RPYC_CONNECTIONS, CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE
-import common
+    CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE
+from common import setCC
 
 CLICK_SOCKET = None
 CURRENT_CONFIG = {}
 FN_FORMAT = ''
-CURRENT_CC = ''
 
 
 ##
@@ -116,6 +114,7 @@ def setCircuitLinkDelay(delay):
         clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
                           'latency', delay)
 
+
 def setPacketLinkBandwidth(bw):
     for i in xrange(1, NUM_RACKS+1):
         clickWriteHandler('hybrid_switch/packet_up_link%d/lu' % (i),
@@ -126,26 +125,6 @@ def setPacketLinkBandwidth(bw):
 
 def setSolsticeThresh(thresh):
     clickWriteHandler('sol', 'setThresh', thresh)
-
-
-##
-# Congestion Control
-##
-def set_cc_host(phost, cc):
-    RPYC_CONNECTIONS[phost].root.set_cc(cc)
-
-
-def setCC(cc, traffic_source, hadoop):
-    global CURRENT_CC
-    ts = []
-    for phost in PHYSICAL_NODES[1:]:
-        ts.append(threading.Thread(target=set_cc_host,
-                                   args=(phost, cc)))
-        ts[-1].start()
-    map(lambda t: t.join(), ts)
-    if CURRENT_CC and cc != CURRENT_CC:
-        common.launch_all_flowgrindd(traffic_source == 'ADU', hadoop)
-    CURRENT_CC = cc
 
 
 ##
@@ -219,7 +198,7 @@ def setConfig(config):
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
-    setCC(c['cc'], c['traffic_source'], c['hadoop'])
+    setCC(c['cc'])
     setSolsticeThresh(c['thresh'])
     t = c['type']
     if t == 'normal':
