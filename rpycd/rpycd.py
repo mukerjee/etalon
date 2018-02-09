@@ -1,10 +1,10 @@
-#!/usr/bin/env PYTHONPATH=../etc/ python
+#!/usr/bin/env PYTHONPATH=/etalon/etc/ python
 
 import socket
 import rpyc
 
 from subprocess import check_output, CalledProcessError, Popen
-from python_config import RPYC_PORT
+from python_config import RPYC_PORT, SWITCH_CONTROL_IP
 
 DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
 SELF_ID = int(socket.gethostname().split('.')[0][-1])
@@ -12,7 +12,7 @@ SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
 class EtalonService(rpyc.Service):
     def on_connect(self, conn):
-        if conn._config['endpoints'][1][0] != '10.2.100.100':
+        if conn._config['endpoints'][1][0] != SWITCH_CONTROL_IP:
             raise AssertionError("rpyc connection not from switch")
         
     def call_background(self, cmd):

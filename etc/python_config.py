@@ -21,6 +21,8 @@ CONTROL_RATE = 10 / TDF  # Gbps
 
 PHOST_IP = 100
 
+SWITCH_CONTROL_IP = '10.2.100.100'
+
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
