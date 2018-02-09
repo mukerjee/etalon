@@ -1,5 +1,7 @@
-#!/usr/bin/env PYTHONPATH=../etc/ python
+#!/usr/bin/env python
 
+import sys
+sys.path.insert(0, '../etc')
 from python_config import *
 
 print 'define($DEVNAME %s)' % DATA_EXT_IF

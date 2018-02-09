@@ -1,5 +1,7 @@
-#!/usr/bin/env PYTHONPATH=../ python
+#!/usr/bin/env python
 
+import sys
+sys.path.insert(0, '..')
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 

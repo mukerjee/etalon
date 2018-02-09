@@ -1,6 +1,7 @@
-#!/usr/bin/env PYTHONPATH=../etc/ python
+#!/usr/bin/env python
 
 import sys
+sys.path.insert(0, '../etc')
 import os
 
 from python_config import *

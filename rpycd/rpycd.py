@@ -1,4 +1,4 @@
-#!/usr/bin/env PYTHONPATH=/etalon/etc/ python
+#!/usr/bin/env python
 
 import socket
 import rpyc
