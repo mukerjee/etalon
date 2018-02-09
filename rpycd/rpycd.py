@@ -4,6 +4,8 @@ import socket
 import rpyc
 
 from subprocess import check_output, CalledProcessError, Popen
+import sys
+sys.path.append('/etalon/etc')
 from python_config import RPYC_PORT, SWITCH_CONTROL_IP
 
 DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
