@@ -39,7 +39,7 @@ cd $HOME && \
 sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework > /usr/local/bin/pipework" && \
 sudo chmod +x /usr/local/bin/pipework && \
 
-sudo systemctl enable /etalon/cloudlab/rpyc_daemon.service && \
+sudo systemctl enable /etalon/rpycd/rpycd.service && \
 
 # PTP
 printf 'slaveOnly\t\t1\n[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf && \
