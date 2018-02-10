@@ -22,7 +22,7 @@ GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recurssive https:/
 cd / && \
 sudo ln -s ~/etalon && \
 
-(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/cloudlab/tune.sh") | crontab - && \
+(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - && \
 sudo rm /var/run/crond.reboot && \
 
 
@@ -133,7 +133,7 @@ sudo apt-get source procps && \
 sudo apt-get build-dep procps && \
 cd procps-3.3.10 && \
 sudo dpkg-buildpackage && \
-cp ./.libs/kill /sdrt/vhost/ && \
+cp ./.libs/kill /etalon/vhost/ && \
 
 # get extra space
 sudo mkdir /mnt/hdfs && \
