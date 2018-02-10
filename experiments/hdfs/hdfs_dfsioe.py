@@ -22,13 +22,13 @@ for c in CONFIGS:
         c['cc'] = 'reno'
     c['thresh'] = 8000
 
-for h in ['Hadoop', 'Hadoop-SDRT']:
+for h in ['HDFS', 'reHDFS']:
     for c in CONFIGS:
-        c['hadoop'] = h
+        c['hdfs'] = h
         print '--- running %s, %s, %s, %s' % (h, c['traffic_source'],
                                               c['queue_resize'], c['cc'])
         initializeExperiment(adu=(c['traffic_source'] == 'ADU'),
-                             hadoop=c['hadoop'])
+                             hdfs=c['hdfs'])
         setConfig(c)
         print '--- done initializing...'
         dfsioe('h21', h)

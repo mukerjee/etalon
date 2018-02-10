@@ -24,12 +24,12 @@ fn_keys = {
 }
 
 files = [
-    '/tmp/*QUEUE-False*-Hadoop-dfsioe',
-    '/tmp/*QUEUE-True-20000-reno*-Hadoop-dfsioe',
-    '/tmp/*QUEUE-True-20000-ocs*-Hadoop-dfsioe',
-    '/tmp/*QUEUE-False*-Hadoop-SDRT-dfsioe',
-    '/tmp/*QUEUE-True-20000-reno*-Hadoop-SDRT-dfsioe',
-    '/tmp/*QUEUE-True-20000-ocs*-Hadoop-SDRT-dfsioe',
+    '/tmp/*QUEUE-False*-HDFS-dfsioe',
+    '/tmp/*QUEUE-True-20000-reno*-HDFS-dfsioe',
+    '/tmp/*QUEUE-True-20000-ocs*-HDFS-dfsioe',
+    '/tmp/*QUEUE-False*-reHDFS-dfsioe',
+    '/tmp/*QUEUE-True-20000-reno*-reHDFS-dfsioe',
+    '/tmp/*QUEUE-True-20000-ocs*-reHDFS-dfsioe',
 ]
     
 files_short = [files[0], files[3]]
@@ -100,7 +100,7 @@ def graph_throughput(data):
 def bytes_graph():
     data = {}
     for fn in glob.glob(sys.argv[1] + '/*.counters.txt'):
-        key = 'reHDFS+' if 'SDRT' in fn else 'HDFS+'
+        key = 'reHDFS+' if 'reHDFS' in fn else 'HDFS+'
         key += [k for n, k in fn_keys.items() if n in fn][0]
         c, p, _ = eval(open(fn).read())
         c = sum([int(b.split('\n')[-1]) * bytes_units for b in c])

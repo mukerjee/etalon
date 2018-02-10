@@ -231,7 +231,7 @@ def dfsioe(host, image):
     for r in xrange(1, NUM_RACKS+1):
         for h in xrange(1, IMAGE_NUM_HOSTS[image]+1):
             log_host = get_host_from_rack_and_id(r, h)
-            EXPERIMENTS.append(log_host + ":/usr/local/hadoop/logs/* " +
+            EXPERIMENTS.append(log_host + ":/usr/local/hdfs/logs/* " +
                                image + '/' + log_host + '-logs')
 
     EXPERIMENTS.append(host + ':~/HiBench/report/* ' + image)

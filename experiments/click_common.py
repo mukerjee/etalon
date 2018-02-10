@@ -191,7 +191,7 @@ def setConfig(config):
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
                       'divert_acks': False, 'circuit_link_delay': 0.000600,
-                      'packet_link_bandwidth': 10 / 20.0, 'hadoop': False,
+                      'packet_link_bandwidth': 10 / 20.0, 'hdfs': False,
                       'thresh': 1000000}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
@@ -227,7 +227,7 @@ def setConfig(config):
                                                        c['cc'],
                                                        c['circuit_link_delay'],
                                                        c['packet_link_bandwidth'],
-                                                       c['hadoop'])
+                                                       c['hdfs'])
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')

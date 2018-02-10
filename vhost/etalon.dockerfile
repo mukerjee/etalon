@@ -45,7 +45,7 @@ WORKDIR /usr/local/bin
 ADD https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework /usr/local/bin/
 RUN chmod +x pipework
 
-# copy SDRT libADU and libVT
+# copy Etalon libADU and libVT
 COPY libADU.so /usr/lib/libADU.so
 COPY libVT.so /usr/lib/libVT.so
 
