@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source /sdrt/etc/script_config.sh
+source /etalon/etc/script_config.sh
 
 if ! hostname | grep -q switch
 then
