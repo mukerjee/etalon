@@ -1,8 +1,11 @@
 import socket
 import time
+import common
+
+import sys
+sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
     CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE
-from common import setCC
 
 CLICK_SOCKET = None
 CURRENT_CONFIG = {}
@@ -198,7 +201,7 @@ def setConfig(config):
     setEstimateTrafficSource(c['traffic_source'])
     setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
-    setCC(c['cc'])
+    common.setCC(c['cc'])
     setSolsticeThresh(c['thresh'])
     t = c['type']
     if t == 'normal':

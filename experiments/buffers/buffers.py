@@ -7,7 +7,7 @@ sys.path.insert(0, '/etalon/experiments')
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 
-initializeExperiment()
+initializeExperiment('flowgrindd')
 
 for config in buffer_common.CONFIGS:
     print '--- running test type %s...' % config['type']

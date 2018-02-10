@@ -8,6 +8,8 @@ import rpyc
 import numpy as np
 import click_common
 from subprocess import call, PIPE, STDOUT, Popen
+import sys
+sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
     PACKET_BW, FQDN, DATA_NET, CONTROL_NET, DFSIOE, get_phost_from_host, \
@@ -18,7 +20,7 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, get_host_from_rack_and_id, SCP, \
     get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
     HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
-    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD
+    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -33,7 +35,7 @@ def initializeExperiment(image):
     IMAGE = image
     print '--- starting experiment...'
     print '--- clearing local arp...'
-    call([os.path.expanduser('/etalon/cloudlab/arp_clear.sh')])
+    call([os.path.expanduser('/etalon/bin/arp_clear.sh')])
     print '--- done...'
 
     print '--- populating physical hosts...'
@@ -41,7 +43,7 @@ def initializeExperiment(image):
     del PHYSICAL_NODES[:]  # clear in place
     PHYSICAL_NODES.append('')
     for i in xrange(1, NUM_RACKS+1):
-        PHYSICAL_NODES.append('host%d' % i)
+        PHYSICAL_NODES.append(get_phost_from_id(i))
     print '--- done...'
 
     print '--- connecting to rpycd...'
@@ -49,7 +51,7 @@ def initializeExperiment(image):
     print '--- done...'
 
     print '--- setting CC to reno...'
-    click_common.setCC('reno', image)
+    setCC('reno')
     print '--- done...'
 
     print '--- building etalon docker image...'
@@ -251,7 +253,7 @@ def save_counters(fn):
 ##
 # Running shell commands
 ##
-def run(cmd):
+def run(cmd, fn):
     def preexec():  # don't forward signals
         os.setpgrp()
 
@@ -262,7 +264,8 @@ def run(cmd):
         line = p.stdout.readline()  # this will block
         if not line:
             break
-        # sys.stdout.write(line)
+        if not fn:
+            sys.stdout.write(line)
         out += line
     rc = p.poll()
     while rc is None:
@@ -278,7 +281,7 @@ def runWriteFile(cmd, fn):
     if fn:
         EXPERIMENTS.append(fn)
     try:
-        out = run(cmd)[1]
+        out = run(cmd, fn)[1]
     except Exception, e:
         print e
         out = str(e)
@@ -328,7 +331,7 @@ def push_docker_image():
 
 
 def run_on_host(host, cmd, blocking=True):
-    func = RPYC_CONNECTIONS[get_phost_from_host(host)].run
+    func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
     if blocking:
         return func(cmd)
     else:

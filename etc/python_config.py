@@ -176,6 +176,10 @@ def get_phost_id(phost):
     return int(phost.split('host')[-1])
 
 
+def get_phost_from_id(id):
+    return 'host%d' % (id)
+
+
 def get_host_from_rack_and_id(r, id):
     return 'h%d%d' % (r, id)
 
