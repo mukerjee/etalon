@@ -45,6 +45,6 @@ fi
 
 cd /etalon/reTCP/
 make
-sudo insmod reTCP.ko
+sudo insmod retcp.ko
 
 ulimit -n 4096
