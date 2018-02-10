@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import sys
-sys.path.insert(0, '../etc')
+sys.path.insert(0, '/etalon/etc')
 from python_config import *
 
 print 'define($DEVNAME %s)' % DATA_EXT_IF

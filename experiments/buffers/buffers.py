@@ -3,7 +3,7 @@
 import buffer_common
 
 import sys
-sys.path.insert(0, '..')
+sys.path.insert(0, '/etalon/experiments')
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 
