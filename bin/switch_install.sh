@@ -84,6 +84,7 @@ sudo make install && \
 cd $HOME && \
 curl -fsSL get.docker.com -o get-docker.sh && \
 sudo sh get-docker.sh && \
+rm $HOME/get-docker.sh && \
 
 # PTP
 printf '[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf && \
@@ -128,6 +129,7 @@ cd hadoop-2.9.0-src.tar.gz && \
 cp /etalon/reHDFS/* ./hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/ && \
 mvn package -Pdist,native -DskipTests -Dtar && \
 cp ./hadoop-dist/target/hadoop-2.9.0.tar.gz /etalon/vhost/ && \
+rm -rf $HOME/hadoop-2.9.0-src && \
 
 # Fix broken kill in 16.04
 cd $HOME && \
@@ -138,6 +140,8 @@ sudo apt-get build-dep -y procps && \
 cd procps-3.3.10 && \
 sudo dpkg-buildpackage && \
 cp ./.libs/kill /etalon/vhost/ && \
+sudo rm -rf $HOME/libprocps* && \
+sudo rm -rf $HOME/procps* && \
 
 # get extra space
 sudo mkdir /mnt/hdfs && \

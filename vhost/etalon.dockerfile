@@ -25,12 +25,11 @@ WORKDIR /tmp/
 ADD config/ssh ~/.ssh
 
 # install hadoop
-ENV HADOOP_VERSION 2.9.0
 WORKDIR /usr/local/
-COPY hadoop-$HADOOP_VERISON.tar.gz .
-RUN tar xfvz hadoop-$HADOOP_VERSION.tar.gz && \
-    mv hadoop-$HADOOP_VERSION hadoop && \
-    rm hadoop-$HADOOP_VERSION.tar.gz && \
+COPY hadoop-2.9.0.tar.gz .
+RUN tar xfvz hadoop-2.9.0.tar.gz && \
+    mv hadoop-2.9.0 hadoop && \
+    rm hadoop-2.9.0.tar.gz && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs && \
     mkdir -p /usr/local/hadoop/hadoop_data/hdfs-nn
 
