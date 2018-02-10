@@ -107,6 +107,7 @@ cd HiBench/ && \
 mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package && \
 cd ../ && \
 tar cfvz ./HiBench.tar.gz ./HiBench/ && \
+mv ./HiBench.tar.gz /etalon/vhost/ && \
 
 # protobuff
 cd $HOME && \
@@ -126,11 +127,14 @@ tar xfvz hadoop-2.9.0-src.tar.gz && \
 cd hadoop-2.9.0-src.tar.gz && \
 cp /etalon/reHDFS/* ./hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/ && \
 mvn package -Pdist,native -DskipTests -Dtar && \
+cp ./hadoop-dist/target/hadoop-2.9.0.tar.gz /etalon/vhost/ && \
 
 # Fix broken kill in 16.04
 cd $HOME && \
+sudo sed -i -e 's/# deb-src/deb-src/' /etc/apt/sources.list && \
+sudo apt-get update && \
 sudo apt-get source procps && \
-sudo apt-get build-dep procps && \
+sudo apt-get build-dep -y procps && \
 cd procps-3.3.10 && \
 sudo dpkg-buildpackage && \
 cp ./.libs/kill /etalon/vhost/ && \
