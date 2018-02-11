@@ -20,7 +20,7 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, get_host_from_rack_and_id, SCP, \
     get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
     HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
-    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id
+    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id, DID_BUILD_FN
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -55,12 +55,15 @@ def initializeExperiment(image):
     print '--- done...'
 
     print '--- building etalon docker image...'
-    runWriteFile(DOCKER_BUILD, None)
-    print '--- done...'
+    if not os.path.isfile(DID_BUILD_FN):
+        runWriteFile(DOCKER_BUILD, None)
+        print '--- done...'
 
-    print '--- copying image to physical hosts...'
-    push_docker_image()
-    print '--- done...'
+        print '--- copying image to physical hosts...'
+        push_docker_image()
+        print '--- done...'
+    else:
+        print '--- skipping (delete %s to force update)...' % (DID_BUILD_FN)
 
     print '--- launching containers...'
     launch_all_racks(image)
@@ -316,18 +319,23 @@ def setCC(cc):
 ##
 def push_docker_image_to_host(phost):
     runWriteFile(SCP_TO % (DOCKER_LOCAL_IMAGE_PATH,
-                           phost, DOCKER_REMOTE_IMAGE_PATH))
+                           phost, DOCKER_REMOTE_IMAGE_PATH), None)
     run_on_host(phost, DOCKER_LOAD)
 
 
 def push_docker_image():
+    print 'saving docker image...'
     runWriteFile(DOCKER_SAVE, None)
+    print 'done...'
+    print 'copying to physical hosts...'
     ts = []
     for phost in PHYSICAL_NODES[1:]:
         ts.append(threading.Thread(target=push_docker_image_to_host,
-                                   args=(phost)))
+                                   args=(phost,)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
+    runWriteFile('touch %s' % DID_BUILD_FN, None)
+    print 'done...'
 
 
 def run_on_host(host, cmd, blocking=True):
@@ -382,7 +390,10 @@ def launch(phost, image, host_id):
 
 
 def launch_rack(phost, image):
-    run_on_host(phost, DOCKER_CLEAN)
+    try:
+        run_on_host(phost, DOCKER_CLEAN)
+    except:
+        pass
     ts = []
     for i in xrange(1, IMAGE_NUM_HOSTS[image]+1):
         ts.append(threading.Thread(target=launch,

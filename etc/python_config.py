@@ -59,7 +59,8 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
 DOCKER_BUILD = 'sudo docker build -t etalon -f ' \
                '/etalon/vhost/etalon.dockerfile /etalon/vhost/'
 DOCKER_LOCAL_IMAGE_PATH = '/etalon/vhost/etalon.img'
-DOCKER_SAVE = 'sudo docker save -o %s etalon' % DOCKER_LOCAL_IMAGE_PATH
+DOCKER_SAVE = 'sudo docker save -o {img} etalon && sudo chown ' \
+              '`whoami` {img}'.format(img=DOCKER_LOCAL_IMAGE_PATH)
 DOCKER_REMOTE_IMAGE_PATH = '/etalon/vhost/etalon.img'
 DOCKER_LOAD = 'sudo docker load -i %s' % DOCKER_REMOTE_IMAGE_PATH
 DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
@@ -79,9 +80,11 @@ GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
 ARP_POISON = 'arp -s h{id} {switch_mac}'
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
+DID_BUILD_FN = '/tmp/docker_built'
+
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
 SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
-SCP_TO = 'scp -r -o StrictHostKeyChecking=no %s root@%s:%s'
+SCP_TO = 'scp -r -o StrictHostKeyChecking=no %s %s:%s'
 
 # image commands
 IMAGE_CPU = defaultdict(lambda: CPU_LIMIT, {
