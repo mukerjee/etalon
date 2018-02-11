@@ -416,7 +416,10 @@ def launch_all_racks(image):
     gen_hosts_file(HOSTS_FILE)
     ts = []
     for phost in PHYSICAL_NODES[1:]:
-        run_on_host(phost, REMOVE_HOSTS_FILE)
+        try:
+            run_on_host(phost, REMOVE_HOSTS_FILE)
+        except:
+            pass
         runWriteFile(SCP_TO % (HOSTS_FILE, phost, HOSTS_FILE), None)
         ts.append(threading.Thread(target=launch_rack,
                                    args=(phost, image)))
