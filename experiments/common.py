@@ -20,7 +20,8 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, get_host_from_rack_and_id, SCP, \
     get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
     HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
-    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id, DID_BUILD_FN
+    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id, DID_BUILD_FN, \
+    gen_hosts_file, HOSTS_FILE, IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -339,7 +340,15 @@ def push_docker_image():
 
 
 def run_on_host(host, cmd, blocking=True):
-    func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
+    if host in PHYSICAL_NODES:
+        func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
+    else:
+        if 'arp' in cmd or 'ping' in cmd:
+            func = lambda c: RPYC_CONNECTIONS[
+                get_phost_from_host(host)].root.ns_run(host, c)
+        else:
+            func = lambda c: RPYC_CONNECTIONS[
+                get_phost_from_host(host)].root.run_host(host, c)
     if blocking:
         return func(cmd)
     else:
@@ -353,16 +362,17 @@ def launch(phost, image, host_id):
     cpu_lim = IMAGE_CPU[image]
 
     my_cmd = '/bin/sh -c ' + IMAGE_CMD[IMAGE_SETUP[image]['h' + my_id]]
-    
+
     # bind to specific CPU
     cpus = CPU_SET
     if cpu_lim < 100:
         cpus = str((host_id % (CPU_COUNT-1)) + 1)
         my_cmd = my_cmd.format(cpu=cpus)
 
-    run_on_host(phost, DOCKER_RUN.format(image=DOCKER_IMAGE,
-                                         id=my_id, FQDN=FQDN, cpu_set=cpus,
-                                         cpu_limit=cpu_lim, cmd=my_cmd))
+    run_cmd = IMAGE_DOCKER_RUN[image]
+    run_on_host(phost, run_cmd.format(image=DOCKER_IMAGE, hosts_file=HOSTS_FILE,
+                                      id=my_id, FQDN=FQDN, cpu_set=cpus,
+                                      cpu_limit=cpu_lim, cmd=my_cmd))
     run_on_host(phost, PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
                                        net=DATA_NET, rack=get_phost_id(phost),
                                        id=host_id))
@@ -403,8 +413,11 @@ def launch_rack(phost, image):
 
 
 def launch_all_racks(image):
+    gen_hosts_file(HOSTS_FILE)
     ts = []
     for phost in PHYSICAL_NODES[1:]:
+        run_on_host(phost, REMOVE_HOSTS_FILE)
+        runWriteFile(SCP_TO % (HOSTS_FILE, phost, HOSTS_FILE), None)
         ts.append(threading.Thread(target=launch_rack,
                                    args=(phost, image)))
         ts[-1].start()

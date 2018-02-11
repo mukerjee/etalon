@@ -21,7 +21,8 @@ CONTROL_RATE = 10 / TDF  # Gbps
 
 PHOST_IP = 100
 
-SWITCH_CONTROL_IP = '10.2.100.100'
+SWITCH_CONTROL_IP = '10.%s.100.100' % CONTROL_NET
+SWITCH_DATA_IP = '10.%s.100.100' % DATA_NET
 
 CPU_COUNT = 16
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
@@ -35,7 +36,7 @@ PHYSICAL_NODES = []
 RPYC_PORT = 18861
 RPYC_CONNECTIONS = {}
 
-FQDN = 'h%d%d.etalon.local'
+FQDN = 'etalon.local'
 
 PACKET_BW = 10 * 10**9
 CIRCUIT_BW = 80 * 10**9
@@ -64,14 +65,18 @@ DOCKER_SAVE = 'sudo docker save -o {img} etalon && sudo chown ' \
 DOCKER_REMOTE_IMAGE_PATH = '/etalon/vhost/etalon.img'
 DOCKER_LOAD = 'sudo docker load -i %s' % DOCKER_REMOTE_IMAGE_PATH
 DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
-             '/etalon/vhost/config/hosts:/etc/hosts:ro ' \
-             '--mount=type=tmpfs,tmpfs-size=10G,destination=' \
-             '/usr/local/hadoop/hadoop_data/hdfs ' \
-             '--mount=type=tmpfs,tmpfs-size=128M,destination=' \
-             '/usr/local/hadoop/hadoop_data/hdfs-nn ' \
-             '--ulimit nofile=262144:262144 ' \
+             '{hosts_file}:/etc/hosts:ro ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
              '{image} {cmd}'
+DOCKER_RUN_HDFS = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
+                  '{hosts_file}:/etc/hosts:ro ' \
+                  '--mount=type=tmpfs,tmpfs-size=10G,destination=' \
+                  '/usr/local/hadoop/hadoop_data/hdfs ' \
+                  '--mount=type=tmpfs,tmpfs-size=128M,destination=' \
+                  '/usr/local/hadoop/hadoop_data/hdfs-nn ' \
+                  '--ulimit nofile=262144:262144 ' \
+                  '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
+                  '{image} {cmd}'
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
            '10.{net}.{rack}.{id}/16; '
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
@@ -81,6 +86,8 @@ ARP_POISON = 'arp -s h{id} {switch_mac}'
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
 DID_BUILD_FN = '/tmp/docker_built'
+HOSTS_FILE = '/tmp/hosts'
+REMOVE_HOSTS_FILE = 'sudo rm %s' % (HOSTS_FILE)
 
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
 SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
@@ -114,6 +121,13 @@ IMAGE_SETUP = {
     'reHDFS': defaultdict(lambda: 'reHDFS', {'h11': 'reHDFS_nn'}),
     'reHDFS_adu': defaultdict(lambda: 'reHDFS_adu', {'h11': 'reHDFS_nn_adu'}),
 }
+
+IMAGE_DOCKER_RUN = defaultdict(lambda: DOCKER_RUN, {
+    'HDFS': DOCKER_RUN_HDFS,
+    'HDFS_adu': DOCKER_RUN_HDFS,
+    'reHDFS': DOCKER_RUN_HDFS,
+    'reHDFS_adu': DOCKER_RUN_HDFS,
+})
 
 IMAGE_CMD = {
     'flowgrindd': '"pipework --wait && pipework --wait -i eth2 && '
@@ -172,7 +186,11 @@ def handle_to_machine(h):
 
 
 def get_phost_from_host(h):
-    return h if h in PHYSICAL_NODES else 'host%d' % h[1:2]
+    if h in PHYSICAL_NODES:
+        return h
+    if h[0] == 'h':
+        return 'host%s' % h[1:2]
+    return 'host%s' % h[0]
 
 
 def get_phost_id(phost):
@@ -205,3 +223,14 @@ def get_data_ip_from_host(h):
 
 def get_control_ip_from_host(h):
     return get_ip_from_host(h, CONTROL_NET)
+
+
+def gen_hosts_file(fn):
+    fp = open(fn, 'w')
+    fp.write('127.0.0.1\tlocalhost\n')
+    fp.write('%s\tswitch\n' % (SWITCH_DATA_IP))
+    for r in xrange(1, NUM_RACKS+1):
+        for id in xrange(1, HOSTS_PER_RACK+1):
+            fp.write('10.{net}.{rack}.{id}\th{rack}{id}.{fqdn}\n'.format(
+                     net=DATA_NET, rack=r, id=id, fqdn=FQDN))
+    fp.close()
