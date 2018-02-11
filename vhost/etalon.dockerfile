@@ -5,6 +5,11 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 RUN apt-get update && apt-get install -y \
                               openssh-server \
                               openjdk-8-jdk \
+			      libcurl4-gnutls-dev \
+			      libxmlrpc-core-c3-dev \
+			      libpcap-dev \
+			      libgsl-dev \
+			      uuid-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
