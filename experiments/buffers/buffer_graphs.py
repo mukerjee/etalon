@@ -19,8 +19,8 @@ types = ['static', 'resize', 'reTCP', 'reTCP+resize']
 files = {
     'static': '/tmp/*-strobe-*-False-*-reno-*click.txt',
     'resize': '/tmp/*-QUEUE-True-*-reno-*click.txt',
-    'reTCP': '/tmp/*-QUEUE-False-*-ocs-*click.txt',
-    'reTCP+resize': '/tmp/*-QUEUE-True-*-ocs-*click.txt',
+    'reTCP': '/tmp/*-QUEUE-False-*-retcp-*click.txt',
+    'reTCP+resize': '/tmp/*-QUEUE-True-*-retcp-*click.txt',
 }
 
 key_fn = {

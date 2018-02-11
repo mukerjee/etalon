@@ -8,7 +8,7 @@ from click_common import setConfig
 CONFIGS = [
     {'type': 'normal', 'traffic_source': 'QUEUE'},
     {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 20000},
-    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 20000, 'cc': 'ocs'},
+    {'type': 'resize', 'traffic_source': 'QUEUE', 'in_advance': 20000, 'cc': 'retcp'},
 ]
 
 for c in CONFIGS:

@@ -17,19 +17,19 @@ types = ['HDFS+static', 'HDFS+resize', 'HDFS+reTCP', 'reHDFS+static',
 fn_keys = {
     'normal-16-QUEUE-False': 'static',
     'normal-16-QUEUE-True-20000-reno': 'resize',
-    'normal-16-QUEUE-True-20000-ocs': 'reTCP',
+    'normal-16-QUEUE-True-20000-retcp': 'reTCP',
     'normal-16-ADU-False': 'adu',
     'normal-16-ADU-True-20000-reno': 'adu+resize',
-    'normal-16-ADU-True-20000-ocs': 'adu+reTCP',
+    'normal-16-ADU-True-20000-retcp': 'adu+reTCP',
 }
 
 files = [
     '/tmp/*QUEUE-False*-HDFS-dfsioe',
     '/tmp/*QUEUE-True-20000-reno*-HDFS-dfsioe',
-    '/tmp/*QUEUE-True-20000-ocs*-HDFS-dfsioe',
+    '/tmp/*QUEUE-True-20000-retcp*-HDFS-dfsioe',
     '/tmp/*QUEUE-False*-reHDFS-dfsioe',
     '/tmp/*QUEUE-True-20000-reno*-reHDFS-dfsioe',
-    '/tmp/*QUEUE-True-20000-ocs*-reHDFS-dfsioe',
+    '/tmp/*QUEUE-True-20000-retcp*-reHDFS-dfsioe',
 ]
     
 files_short = [files[0], files[3]]
