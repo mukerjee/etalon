@@ -231,6 +231,7 @@ def get_seq_data(fn):
         unzipped = zip(*chunks)
         results[f] = [np.average(q) for q in unzipped]
         print 'bad windows', bad_windows
+    results = {k: v for k, v in results.items() if v}
     unzipped = zip(*results.values())
     results = [np.average(q) for q in unzipped]
     return results, (out_start, out_end, out_next_start, out_next_end,
