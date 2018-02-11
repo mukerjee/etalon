@@ -23,7 +23,8 @@ sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192
 sudo sysctl -w net.ipv4.tcp_congestion_control=reno
 
-printf "$s\t$s\n" "127.0.0.1" "localhost" | sudo tee /etc/hosts
+printf "%s\t%s\n" "127.0.0.1" "localhost" | sudo tee /etc/hosts
+printf "%s\t%s\n" $SWITCH_DATA_IP "switch" | sudo tee -a /etc/hosts
 
 for i in `seq 1 $NUM_RACKS`
 do
