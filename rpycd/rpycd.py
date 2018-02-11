@@ -28,8 +28,7 @@ class EtalonService(rpyc.Service):
             if check_rc:
                 raise e
 
-    def exposed_run_host(self, my_cmd, host_id):
-        my_id = '%d%d' % (SELF_ID, host_id)
+    def exposed_run_host(self, my_id, my_cmd):
         return self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
 
     def exposed_run(self, my_cmd):
