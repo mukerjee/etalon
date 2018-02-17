@@ -87,7 +87,7 @@ SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
 DID_BUILD_FN = '/tmp/docker_built'
 HOSTS_FILE = '/tmp/hosts'
-REMOVE_HOSTS_FILE = 'sudo rm %s' % (HOSTS_FILE)
+REMOVE_HOSTS_FILE = 'sudo rm -rf %s' % (HOSTS_FILE)
 
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
 SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
