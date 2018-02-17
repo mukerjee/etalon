@@ -209,7 +209,7 @@ def get_rack_and_id_from_host(h):
     if h in PHYSICAL_NODES:
         return (PHOST_IP, get_phost_id(h))
     else:
-        return int(h[1]), int(h[2])
+        return int(h[1]), int(h[2:])
 
 
 def get_ip_from_host(h, net):
