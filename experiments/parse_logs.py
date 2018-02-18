@@ -352,15 +352,15 @@ def parse_validation_log(folder, fns, packet):
         for sr in out_data:
             out_data[sr] = sorted(out_data[sr].items())
 
-        fn_ts = fn.split('/')[-1].split('-verification')[0]
+        fn_ts = fn.split('/')[-1].split('-validation')[0]
         if circuit:
             packet_log_fn = glob.glob(folder +
-                                      '/tmp/%s-verification-'
+                                      '/tmp/%s-validation-'
                                       'circuit-*-click.txt'
                                       % fn_ts)
         else:
             packet_log_fn = glob.glob(folder +
-                                      '/tmp/%s-verification-'
+                                      '/tmp/%s-validation-'
                                       'no_circuit-*-click.txt'
                                       % fn_ts)
         if packet_log_fn:

@@ -13,9 +13,9 @@ if __name__ == '__main__':
         print 'first arg must be dir'
         sys.exit(-1)
     parse_validation_log(sys.argv[1], glob.glob(sys.argv[1] +
-                                                '/*-verification-no_circuit-*-'
+                                                '/*-validation-no_circuit-*-'
                                                 'flowgrind.txt'), True)
     
     parse_validation_log(sys.argv[1], glob.glob(sys.argv[1] +
-                                                '/*-verification-circuit-*-'
+                                                '/*-validation-circuit-*-'
                                                 'flowgrind.txt'), False)
