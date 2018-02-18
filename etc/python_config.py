@@ -87,7 +87,7 @@ SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 
 DID_BUILD_FN = '/tmp/docker_built'
 HOSTS_FILE = '/tmp/hosts'
-REMOVE_HOSTS_FILE = 'sudo rm %s' % (HOSTS_FILE)
+REMOVE_HOSTS_FILE = 'sudo rm -rf %s' % (HOSTS_FILE)
 
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
 SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
@@ -209,7 +209,7 @@ def get_rack_and_id_from_host(h):
     if h in PHYSICAL_NODES:
         return (PHOST_IP, get_phost_id(h))
     else:
-        return int(h[1]), int(h[2])
+        return int(h[1]), int(h[2:])
 
 
 def get_ip_from_host(h, net):

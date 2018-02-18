@@ -5,7 +5,7 @@ sys.path.insert(0, '/etalon/experiments')
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 
-initializeExperiment()
+initializeExperiment('flowgrindd')
 
 configs = [{'type': 'no_circuit'}, {'type': 'circuit'}]
 

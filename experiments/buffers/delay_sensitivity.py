@@ -19,7 +19,7 @@ CONFIGS = [
 link_delays = [1e-4, 2e-4, 3e-4, 4e-4, 6e-4, 8e-4, 12e-4, 16e-4, 24e-4]
 sched = ['strobe']
 
-initializeExperiment()
+initializeExperiment('flowgrindd')
 
 for t in sched:
     for d in link_delays:
