@@ -12,14 +12,11 @@ adu_common.CONFIGS.append({'packet_log': False,
                            'traffic_source': 'ADU',
                            'fixed_schedule': '2 39600 7/0/1/2/3/4/5/6 400 -1/-1/-1/-1/-1/-1/-1/-1'})
 
-adu_common.CONFIGS.append({'packet_log': False,
-                           'type': 'fixed',
-                           'traffic_source': 'ADU',
-                           'buffer_size': 128,
-                           'fixed_schedule': '2 39600 7/0/1/2/3/4/5/6 400 -1/-1/-1/-1/-1/-1/-1/-1'})
-
 for config in adu_common.CONFIGS:
-    initializeExperiment(adu=(config['traffic_source'] == 'ADU'))
+    if config['traffic_source'] == 'ADU':
+        initializeExperiment('flowgrindd_adu')
+    else:
+        initializeExperiment('flowgrindd')
 
     print '--- running test type %s...' % config
     setConfig(config)
