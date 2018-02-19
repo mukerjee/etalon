@@ -140,7 +140,7 @@ def get_flowgrind_host(h):
 
 def gen_big_and_small_flows(seed=92611, rings=1):
     np.random.seed(seed)
-    big_bw = 1/3.0 * CIRCUIT_BW / 8.0
+    big_bw = 1/3.0 * CIRCUIT_BW / 8.0 / rings
     little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
     big_nodes = []
     for i in xrange(1, NUM_RACKS+1):
