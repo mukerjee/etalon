@@ -440,7 +440,7 @@ def parse_hdfs_logs(folder):
                 bytes = int(line.split('bytes: ')[1].split()[0][:-1])
                 if bytes > 1024 * 1024 * 99:
                     duration = (float(line.split(
-                        "duration: ")[1].split()[0]) * 1e-6) / TDF
+                        "duration(ns): ")[1].split()[0]) * 1e-6) / TDF
                     data.append((bytes / 1024. / 1024., duration))
 
     durations = sorted(zip(*data)[1])
@@ -456,5 +456,6 @@ def parse_hdfs_throughput(folder):
             if 'Number of files' in line:
                 num_files = int(line.split('files: ')[1])
             if 'Throughput mb/sec:' in line:
+                # divide by number of replicas
                 return (float(line.split('mb/sec:')[1]) *
-                        num_files * 8 / 1024.0) * TDF
+                        num_files * 8 / 1024.0) * TDF / 2.0
