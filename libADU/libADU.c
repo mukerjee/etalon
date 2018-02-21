@@ -16,7 +16,7 @@
 #include <unistd.h>
 
 #define LOCAL_CTRL_DEVNAME "enp8s0d1"
-#define SWITCH_CTRL_IP "10.2.10.9"
+#define SWITCH_CTRL_IP "10.2.100.100"
 #define SWITCH_CTRL_PORT "8123"
 
 #define EXIT_FAILED -1
@@ -102,7 +102,7 @@ static void open_ctrl_socket() {
 void send_adu_info(int fd, int true_size) {
   struct stat statbuf;
   fstat(fd, &statbuf);
-  if (!S_ISSOCK(statbuf.st_mode) || true_size < 1500)
+  if (!S_ISSOCK(statbuf.st_mode))
     return;
 
   if (fd == ctrl_sock)

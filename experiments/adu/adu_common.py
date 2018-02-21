@@ -9,7 +9,6 @@ CONFIGS = [
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 1.0},
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 2.0},
     {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 4.0},
-    {'type': 'no_circuit', 'traffic_source': 'QUEUE', 'buffer_size': 128, 'packet_link_bandwidth': 4.5},
 ]
 
 for c in CONFIGS:

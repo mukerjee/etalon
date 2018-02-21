@@ -27,8 +27,10 @@ for h in ['HDFS', 'reHDFS']:
         c['hdfs'] = h
         print '--- running %s, %s, %s, %s' % (h, c['traffic_source'],
                                               c['queue_resize'], c['cc'])
-        initializeExperiment(adu=(c['traffic_source'] == 'ADU'),
-                             hdfs=c['hdfs'])
+        if c['traffic_source'] == 'ADU':
+            initializeExperiment(h + "_adu")
+        else:
+            initializeExperiment(h)
         setConfig(c)
         print '--- done initializing...'
         dfsioe('h21', h)

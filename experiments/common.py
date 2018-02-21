@@ -21,7 +21,9 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
     HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
     DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id, DID_BUILD_FN, \
-    gen_hosts_file, HOSTS_FILE, IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE
+    gen_hosts_file, HOSTS_FILE, IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, \
+    gen_slaves_file, SLAVES_FILE, get_hostname_from_rack_and_id, \
+    get_rack_and_id_from_host
 
 THREADS = []
 THREAD_LOCK = threading.Lock()
@@ -57,6 +59,7 @@ def initializeExperiment(image):
 
     print '--- building etalon docker image...'
     if not os.path.isfile(DID_BUILD_FN):
+        gen_slaves_file(SLAVES_FILE)
         runWriteFile(DOCKER_BUILD, None)
         print '--- done...'
 
@@ -93,19 +96,17 @@ def finishExperiment():
     print TIMESTAMP
 
 
+def getFilesForLater(host, fn, target):
+    target_dir = '/'.join(target.split('/')[:-1])
+    if not os.path.exists(target_dir):
+        os.makedirs(target_dir)
+    runWriteFile(SCP % (host, fn, target), None)
+    EXPERIMENTS.append(target)
+
+
 def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
-        if ':' in e:
-            host = e.split(':')[0]
-            fn = e.split(':')[1].split(' ')[0]
-            target = '/tmp/%s/' % (TIMESTAMP)
-            if len(e.split(' ')) > 1:
-                target += e.split(' ')[1]
-            if not os.path.exists(target):
-                os.mkdirs(target)
-            runWriteFile(SCP % (host, fn, target), None)
-            tar.add(target)
         for fn in glob.glob(e):
             tar.add(fn)
     tar.close()
@@ -140,7 +141,7 @@ def get_flowgrind_host(h):
 
 def gen_big_and_small_flows(seed=92611, rings=1):
     np.random.seed(seed)
-    big_bw = 1/3.0 * CIRCUIT_BW / 8.0
+    big_bw = 1/3.0 * CIRCUIT_BW / 8.0 / rings
     little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
     big_nodes = []
     for i in xrange(1, NUM_RACKS+1):
@@ -228,17 +229,25 @@ def flowgrind(settings):
 def dfsioe(host, image):
     fn = click_common.FN_FORMAT % ('dfsioe')
     print fn
+    time.sleep(10)
     print 'starting dfsioe...'
-    run_on_host(host, DFSIOE)
+    try:
+        run_on_host(host, DFSIOE)
+    except:
+        pass
     print 'done dfsioe...'
 
+    tmp_dir = '/tmp/' + fn.split('.txt')[0]
     for r in xrange(1, NUM_RACKS+1):
         for h in xrange(1, IMAGE_NUM_HOSTS[image]+1):
+            log_hostname = get_hostname_from_rack_and_id(r, h)
             log_host = get_host_from_rack_and_id(r, h)
-            EXPERIMENTS.append(log_host + ":/usr/local/hdfs/logs/* " +
-                               image + '/' + log_host + '-logs')
+            getFilesForLater(log_hostname, "/usr/local/hadoop/logs/*",
+                             tmp_dir + '/' + log_host + '-logs/')
 
-    EXPERIMENTS.append(host + ':~/HiBench/report/* ' + image)
+    r, h = get_rack_and_id_from_host(host)
+    log_hostname = get_hostname_from_rack_and_id(r, h)
+    getFilesForLater(log_hostname, '~/HiBench/report', tmp_dir)
 
     save_counters(click_common.FN_FORMAT % ('dfsioe.counters'))
 
@@ -347,6 +356,8 @@ def run_on_host(host, cmd, blocking=True):
             func = lambda c: RPYC_CONNECTIONS[
                 get_phost_from_host(host)].root.ns_run(host, c)
         else:
+            if host[0] == 'h':
+                host = host[1:]
             func = lambda c: RPYC_CONNECTIONS[
                 get_phost_from_host(host)].root.run_host(host, c)
     if blocking:
@@ -400,10 +411,6 @@ def launch(phost, image, host_id):
 
 
 def launch_rack(phost, image):
-    try:
-        run_on_host(phost, DOCKER_CLEAN)
-    except:
-        pass
     ts = []
     for i in xrange(1, IMAGE_NUM_HOSTS[image]+1):
         ts.append(threading.Thread(target=launch,
@@ -420,13 +427,19 @@ def launch_all_racks(image):
             run_on_host(phost, REMOVE_HOSTS_FILE)
         except:
             pass
+        try:
+            run_on_host(phost, DOCKER_CLEAN)
+        except:
+            pass
+    for phost in PHYSICAL_NODES[1:]:
         runWriteFile(SCP_TO % (HOSTS_FILE, phost, HOSTS_FILE), None)
         ts.append(threading.Thread(target=launch_rack,
                                    args=(phost, image)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
+    num_hosts = IMAGE_NUM_HOSTS[image]
     for r in xrange(1, NUM_RACKS+1):
-        for h in xrange(1, HOSTS_PER_RACK+1):
+        for h in xrange(1, num_hosts+1):
             ip = get_control_ip_from_host(get_host_from_rack_and_id(r, h))
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             port = FLOWGRIND_PORT if 'flowgrind' in image else HDFS_PORT

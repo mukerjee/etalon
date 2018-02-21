@@ -33,4 +33,8 @@
     <name>dfs.namenode.datanode.registration.ip-hostname-check</name>
     <value>false</value>
 </property>
+<property>
+    <name>dfs.block.replicator.classname</name>
+    <value>org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault</value>
+</property>
 </configuration>

@@ -32,20 +32,6 @@ import java.util.*;
  */
 @InterfaceAudience.Private
 public class BlockPlacementPolicyRDCN extends BlockPlacementPolicyDefault {
-  private HashMap<String, String> RDCNRackMap = new HashMap<String, String>();
-
-  @Override
-  public void initialize(Configuration conf,  FSClusterStats stats,
-			 NetworkTopology clusterMap,
-			 Host2NodesMap host2datanodeMap) {
-    super.initialize(conf, stats, clusterMap, host2datanodeMap);
-
-    int numOfRacks = clusterMap.getNumOfRacks();
-    for(int i = 0; i < numOfRacks; i++) {
-      this.RDCNRackMap.put(String.format("~/rack%02d", i + 1),
-			   String.format("/rack%02d", ((i + 1) % numOfRacks)) + 1);
-    }
-  }
 
   @Override
   protected DatanodeStorageInfo chooseRandom(int numOfReplicas,
@@ -57,8 +43,10 @@ public class BlockPlacementPolicyRDCN extends BlockPlacementPolicyDefault {
 					     boolean avoidStaleNodes,
 					     EnumMap<StorageType, Integer> storageTypes)
     throws NotEnoughReplicasException {
-      if (RDCNRackMap.containsKey(scope)) {
-	  scope = RDCNRackMap.get(scope);
+      int numOfRacks = clusterMap.getNumOfRacks();
+      if (scope.contains("~/rack")) {
+	  int i = Integer.parseInt(scope.split("~/rack")[1]);
+	  scope = String.format("/rack%02d", (i % numOfRacks) + 1);
       }
       return super.chooseRandom(numOfReplicas, scope, excludedNodes, blocksize,
 				maxNodesPerRack, results, avoidStaleNodes,

@@ -106,8 +106,10 @@ cd $HOME && \
 git clone https://github.com/intel-hadoop/HiBench.git && \
 cd HiBench/ && \
 mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package && \
+rm -rf .git common docker docs flinkbench gearpumpbench hadoopbench sparkbench stormbench travis && \
 cd ../ && \
 tar cfvz ./HiBench.tar.gz ./HiBench/ && \
+rm -rf ./HiBench && \
 mv ./HiBench.tar.gz /etalon/vhost/ && \
 
 # protobuff
