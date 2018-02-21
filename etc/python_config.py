@@ -88,6 +88,7 @@ SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 DID_BUILD_FN = '/tmp/docker_built'
 HOSTS_FILE = '/tmp/hosts'
 REMOVE_HOSTS_FILE = 'sudo rm -rf %s' % (HOSTS_FILE)
+SLAVES_FILE = '/etalon/vhost/config/hadoop_config/slaves'
 
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
 SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
@@ -143,8 +144,7 @@ IMAGE_CMD = {
 
     'HDFS_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
                 'export LD_PRELOAD=libADU.so && '
-                'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '
-                'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '
+                'echo LD_PRELOAD=libADU.so >> /root/.ssh/environment && '
                 'service ssh start && '
                 'pipework --wait && pipework --wait -i eth2 && '
                 'sleep infinity"',
@@ -152,16 +152,64 @@ IMAGE_CMD = {
     'HDFS_nn': '"service ssh start && '
                'pipework --wait && pipework --wait -i eth2 && '
                '/usr/local/hadoop/bin/hdfs namenode -format -force && '
-               '/tmp/config/start_hadoop.sh && sleep infinity"',
+               '/usr/local/hadoop/sbin/start-dfs.sh && '
+               '/usr/local/hadoop/sbin/start-yarn.sh && '
+               '/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh start historyserver && '
+               'sleep infinity"',
 
     'HDFS_nn_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
                    'export LD_PRELOAD=libADU.so && '
-                   'echo PermitUserEnvironment yes >> /etc/ssh/sshd_config && '
-                   'echo LD_PRELOAD=libADU.so > /root/.ssh/environment && '
+                   'echo LD_PRELOAD=libADU.so >> /root/.ssh/environment && '
                    'service ssh start && '
                    'pipework --wait && pipework --wait -i eth2 && '
                    '/usr/local/hadoop/bin/hdfs namenode -format -force && '
-                   '/tmp/config/start_hadoop.sh && sleep infinity"',
+                   '/usr/local/hadoop/sbin/start-dfs.sh && '
+                   '/usr/local/hadoop/sbin/start-yarn.sh && '
+                   '/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh start '
+                   'historyserver && '
+                   'sleep infinity"',
+
+    'reHDFS': '"service ssh start && '
+              'sed -i s/org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault/'
+              'org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyRDCN/ '
+              '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
+              'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
+
+    'reHDFS_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
+                  'export LD_PRELOAD=libADU.so && '
+                  'echo LD_PRELOAD=libADU.so >> /root/.ssh/environment && '
+                  'service ssh start && '
+                  'sed -i s/org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault/'
+                  'org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyRDCN/ '
+                  '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
+                  'pipework --wait && pipework --wait -i eth2 && '
+                  'sleep infinity"',
+
+    'reHDFS_nn': '"service ssh start && '
+                 'sed -i s/org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault/'
+                 'org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyRDCN/ '
+                 '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
+                 'pipework --wait && pipework --wait -i eth2 && '
+                 '/usr/local/hadoop/bin/hdfs namenode -format -force && '
+                 '/usr/local/hadoop/sbin/start-dfs.sh && '
+                 '/usr/local/hadoop/sbin/start-yarn.sh && '
+                 '/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh start historyserver && '
+                 'sleep infinity"',
+
+    'reHDFS_nn_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
+                     'export LD_PRELOAD=libADU.so && '
+                     'echo LD_PRELOAD=libADU.so >> /root/.ssh/environment && '
+                     'service ssh start && '
+                     'sed -i s/org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyDefault/'
+                     'org.apache.hadoop.hdfs.server.blockmanagement.BlockPlacementPolicyRDCN/ '
+                     '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
+                     'pipework --wait && pipework --wait -i eth2 && '
+                     '/usr/local/hadoop/bin/hdfs namenode -format -force && '
+                     '/usr/local/hadoop/sbin/start-dfs.sh && '
+                     '/usr/local/hadoop/sbin/start-yarn.sh && '
+                     '/usr/local/hadoop/sbin/mr-jobhistory-daemon.sh start '
+                     'historyserver && '
+                     'sleep infinity"',
 }
 
 # flowgrind
@@ -205,6 +253,10 @@ def get_host_from_rack_and_id(r, id):
     return 'h%d%d' % (r, id)
 
 
+def get_hostname_from_rack_and_id(r, id):
+    return 'h%d%d.%s' % (r, id, FQDN)
+
+
 def get_rack_and_id_from_host(h):
     if h in PHYSICAL_NODES:
         return (PHOST_IP, get_phost_id(h))
@@ -229,8 +281,20 @@ def gen_hosts_file(fn):
     fp = open(fn, 'w')
     fp.write('127.0.0.1\tlocalhost\n')
     fp.write('%s\tswitch\n' % (SWITCH_DATA_IP))
+    fp.write('10.{net}.{rack}.{id}\tnn.{fqdn}\th{rack}{id}.{fqdn}\n'.format(
+        net=DATA_NET, rack=1, id=1, fqdn=FQDN))
     for r in xrange(1, NUM_RACKS+1):
         for id in xrange(1, HOSTS_PER_RACK+1):
+            if r == 1 and id == 1:
+                continue
             fp.write('10.{net}.{rack}.{id}\th{rack}{id}.{fqdn}\n'.format(
                      net=DATA_NET, rack=r, id=id, fqdn=FQDN))
     fp.close()
+
+
+def gen_slaves_file(fn):
+    fp = open(fn, 'w')
+    num_hosts = IMAGE_NUM_HOSTS['HDFS']
+    for r in xrange(1, NUM_RACKS+1):
+        for id in xrange(1, num_hosts+1):
+            fp.write('h{r}{id}.{fqdn}\n'.format(r=r, id=id, fqdn=FQDN))
