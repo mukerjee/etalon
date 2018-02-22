@@ -55,20 +55,6 @@ sudo mkdir /mnt/hdfs &&
 sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
 sudo chown `whoami` /mnt/hdfs &&
 
-# install updated kernel
-sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list &&
-sudo apt-get update &&
-sudo apt-get -y build-dep linux-image-$(uname -r) &&
-sudo apt-get install linux-cloud-tools-common linux-tools-common &&
-
-cd /mnt/hdfs &&
-git clone git://kernel.ubuntu.com/ubuntu/ubuntu-xenial.git &&
-cd ubuntu-xenial &&
-git apply /etalon/reTCP/kernel-patch.patch &&
-fakeroot debian/rules clean &&
-MAKEFLAGS="-j 16" fakeroot debian/rules binary-headers binary-generic binary-perarch &&
-sudo dpkg -i ../*.deb &&
-
 # move docker dir
 sudo service docker stop &&
 sudo mv /var/lib/docker /mnt/hdfs/ &&
