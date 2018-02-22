@@ -146,6 +146,7 @@ sudo rm -rf $HOME/libprocps* &&
 sudo rm -rf $HOME/procps* &&
 
 # get extra space
+cd $HOME &&
 sudo mkdir /mnt/hdfs &&
 sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
 sudo chown `whoami` /mnt/hdfs &&
