@@ -86,8 +86,8 @@ static void open_ctrl_socket() {
       }
 
       if (connect(ctrl_sock, p->ai_addr, p->ai_addrlen) == -1)  {
-	int (*next_close)(int);
-	get_next_fn((void**)&next_close, "close");
+        int (*next_close)(int);
+        get_next_fn((void**)&next_close, "close");
         next_close(ctrl_sock);
         perror("Could not connect to socket");
         continue;
