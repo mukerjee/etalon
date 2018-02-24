@@ -64,8 +64,8 @@ WORKDIR /root/
 COPY HiBench.tar.gz /root/
 RUN tar xfvz HiBench.tar.gz && \
     rm HiBench.tar.gz
-COPY config/*.conf /root/HiBench/conf/
-COPY config/dfsioe.conf /root/HiBench/conf/workloads/micro
+COPY config/hibench/*.conf /root/HiBench/conf/
+COPY config/hibench/dfsioe.conf /root/HiBench/conf/workloads/micro
 
 # Install pipework
 WORKDIR /usr/local/bin
