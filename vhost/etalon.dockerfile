@@ -30,6 +30,7 @@ ENV JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 \
 # passwordless ssh setup
 WORKDIR /tmp/
 ADD config/ssh/* /root/.ssh/
+RUN chmod 600 /root/.ssh/id_rsa
 
 # env vars for hadoop over SSH
 RUN echo PermitUserEnvironment yes >> /etc/ssh/sshd_config; \
