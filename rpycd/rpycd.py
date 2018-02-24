@@ -3,7 +3,7 @@
 import socket
 import rpyc
 
-from subprocess import check_output, CalledProcessError, Popen
+from subprocess import check_output, CalledProcessError
 import sys
 sys.path.insert(0, '/etalon/etc')
 from python_config import RPYC_PORT, SWITCH_CONTROL_IP
@@ -15,13 +15,11 @@ SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
 
 class EtalonService(rpyc.Service):
+    # drops all connections that aren't from the switch
     def on_connect(self):
         if self._conn._config['endpoints'][1][0] != SWITCH_CONTROL_IP:
             raise AssertionError("rpyc connection not from switch")
         
-    def call_background(self, cmd):
-        return Popen(cmd, shell=True)
-
     def call(self, cmd, check_rc=True):
         print cmd
         try:
@@ -30,13 +28,16 @@ class EtalonService(rpyc.Service):
             if check_rc:
                 raise e
 
+    # run on a container
     def exposed_run_host(self, my_id, my_cmd):
         return self.call(DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
 
+    # run on the physical host but in a container's namespace
     def exposed_ns_run(self, my_id, my_cmd):
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         return self.call(NS_RUN.format(pid=my_pid, cmd=my_cmd))
 
+    # run on a physical host
     def exposed_run(self, my_cmd):
         return self.call(cmd=my_cmd)
 
