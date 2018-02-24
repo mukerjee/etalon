@@ -75,6 +75,7 @@ cp /usr/local/sbin/flowgrindd /etalon/vhost/ &&
 # libVT
 cd /etalon/libVT &&
 sudo make install &&
+sudo cp ./libVT.so /etalon/vhost/ &&
 
 # libADU
 cd /etalon/libADU &&
