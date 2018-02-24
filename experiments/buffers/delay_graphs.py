@@ -49,7 +49,7 @@ def get_data():
         buffer_data = dict(p.map(get_data_from_file,
                                  glob.glob(sys.argv[1] + files['static'] % d)))
         p.close()
-        buffer_data = sorted(buffer_data.values())
+        buffer_data = zip(*sorted(buffer_data.items()))[1]
         fn = glob.glob(sys.argv[1] + files['resize'] % d)[-1]
         print fn
         _, lat, _, circ_util, _, _, _ = parse_packet_log(fn)
