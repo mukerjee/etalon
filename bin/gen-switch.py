@@ -4,7 +4,7 @@ import sys
 sys.path.insert(0, '/etalon/etc')
 from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
     CIRCUIT_BW_BY_TDF, PACKET_BW_BY_TDF, PACKET_LATENCY, CIRCUIT_LATENCY, \
-    RECONFIG_DELAY, TDF, CONTROL_SOCKET_PORT
+    RECONFIG_DELAY, TDF, CLICK_PORT
 
 
 print 'define($DEVNAME %s)' % DATA_EXT_IF
@@ -73,7 +73,7 @@ for i in xrange(1, NUM_RACKS+1):
 print ')'
 print
 
-print 'ControlSocket("TCP", %d)' % (CONTROL_SOCKET_PORT)
+print 'ControlSocket("TCP", %d)' % (CLICK_PORT)
 print
 
 # the three control elements (see the paper)
