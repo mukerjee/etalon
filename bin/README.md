@@ -33,5 +33,5 @@ Various runables:
 - ```tune.sh```: run at startup on all physical nodes (as installed into crontab
   by ```switch_install.sh``` and ```node_install.shh```) to set IP addresses of
   machines, do some tuning, and generate a proper /etc/hosts. Assumes hosts have
-  hostnames "host1", "host2", etc. and that the switch has hostname "switch"
+  hostnames "host1", "host2", etc. and that the switch has hostname "switch".
   
