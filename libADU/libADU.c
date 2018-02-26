@@ -14,10 +14,7 @@
 #include <net/if.h>
 #include <sys/stat.h>
 #include <unistd.h>
-
-#define LOCAL_CTRL_DEVNAME "enp8s0d1"
-#define SWITCH_CTRL_IP "10.2.100.100"
-#define SWITCH_CTRL_PORT "8123"
+#include "../etc/c_config.h"
 
 #define EXIT_FAILED -1
 
