@@ -1,5 +1,4 @@
 # experiments
-=============
 
 Framework for running experiments using Etalon, as well as some example
 experiments and graphing scripts from our paper:
