@@ -23,9 +23,9 @@ end-to-end challenges on RDCNs in submission. We recommend emailing us
 
 Etalon emulates a datacenter by running multiple virtual hosts ("vhosts"; Docker
 containers) on different physical machines. Physical machines represent
-datacenter "racks" in Etalon. vhosts on the same physical machine connect to a
-virtualized switch (macvlan via docker), using ```tc``` to limit vhost link
-bandwidth (similar to a host to ToR link in a real datacenter).
+datacenter "racks" in Etalon. vhosts on the same physical machine connect to the
+physical NIC using a virtualized switch (macvlan via docker), using ```tc``` to
+limit vhost link bandwidth (similar to a host to ToR link in a real datacenter).
 
 A separate physical machine emulates the reconfigurable switch in Etalon. It
 does this using a software switch (Click). Within the software switch, we
