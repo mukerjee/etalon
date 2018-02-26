@@ -75,16 +75,16 @@ Initial Setup
 6. Log into each node (after doing step 4, you can use the handles to log in,
 e.g., go to ```etalon/bin``` and type ```./s host1```, ```./s switch```, etc.):
 
-  - On the switch machine, run etalon/bin/switch_install.sh (either clone the
+   - On the switch machine, run etalon/bin/switch_install.sh (either clone the
     repo, or if on cloudlab, just run
     ```/local/etalon-master/bin/switch_install.sh```).
 
-  - On the other machines, run etalon/bin/node_install.sh (either clone the
+   - On the other machines, run etalon/bin/node_install.sh (either clone the
      repo, or if on cloudlab, just run
      ```/local/etalon-master/bin/node_install.sh```).
 
-    - This may take about a half an hour (or longer) depending on internet
-      connectivity.
+     - This may take about a half an hour (or longer) depending on internet
+       connectivity.
 
 7. The machines will reboot after the previous step is done. At this point there
   should be no need to log into the individual nodes, only the switch.
