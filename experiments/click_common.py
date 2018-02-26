@@ -12,9 +12,6 @@ CURRENT_CONFIG = {}
 FN_FORMAT = ''
 
 
-##
-# Running click commands
-##
 def initializeClickControl():
     global CLICK_SOCKET
     print '--- connecting to click socket...'
