@@ -4,7 +4,8 @@ import sys
 sys.path.insert(0, '/etalon/etc')
 from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
     CIRCUIT_BW_BY_TDF, PACKET_BW_BY_TDF, PACKET_LATENCY, CIRCUIT_LATENCY, \
-    RECONFIG_DELAY, TDF, CLICK_PORT
+    RECONFIG_DELAY, TDF, CLICK_PORT, get_data_ip_from_host, \
+    get_phost_from_id, get_host_from_rack_and_id
 
 
 print 'define($DEVNAME %s)' % DATA_EXT_IF
@@ -15,10 +16,10 @@ print
 k = 0
 ip_def = 'define('
 for i in xrange(1, NUM_RACKS+1):
-    ip_def += '$IP%d 10.%d.10.%d, ' % (i, DATA_NET, i)
+    ip_def += '$IP%d %s, ' % (i, get_data_ip_from_host(get_phost_from_id(i)))
     for j in xrange(1, HOSTS_PER_RACK+1):
         ip_str = '$IP%d%d' % (i, j)
-        ip = '10.%d.%d.%d' % (DATA_NET, i, j)
+        ip = get_data_ip_from_host(get_host_from_rack_and_id(i, j))
         ip_def += '%s %s, ' % (ip_str, ip)
         k += 1
         if k == 4:
