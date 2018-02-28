@@ -286,7 +286,7 @@ def get_hostname_from_rack_and_id(r, id):
 
 # host3 --> (100, 3); h37 --> (3, 7); h315 --> (3, 15)
 def get_rack_and_id_from_host(h):
-    if h in PHYSICAL_NODES:
+    if 'host' in h:
         return (PHOST_IP, get_phost_id(h))
     else:
         return int(h[1]), int(h[2:])
