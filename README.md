@@ -67,12 +67,15 @@ Initial Setup
 
 4. Update the host information in etalon/etc/handles on your local machine.
 
-5. If not using the pre-made Etalon profile on Cloudlab, log into each node and
+5. Enable ssh agent forwarding on your local machine (e.g., run ```ssh-add``` on
+  your local machine).
+
+6. If not using the pre-made Etalon profile on Cloudlab, log into each node and
   install the reTCP kernel using ```etalon/bin/kernel_install.sh``` (The
   cloudlab profile has this already installed on the nodes). This script assumes
   there is an etalon repo in your home directory.
 
-6. Log into each node (after doing step 4, you can use the handles to log in,
+7. Log into each node (after doing step 4, you can use the handles to log in,
 e.g., go to ```etalon/bin``` and type ```./s host1```, ```./s switch```, etc.):
 
    - On the switch machine, run etalon/bin/switch_install.sh (either clone the
@@ -86,7 +89,7 @@ e.g., go to ```etalon/bin``` and type ```./s host1```, ```./s switch```, etc.):
      - This may take about a half an hour (or longer) depending on internet
        connectivity.
 
-7. The machines will reboot after the previous step is done. At this point there
+8. The machines will reboot after the previous step is done. At this point there
   should be no need to log into the individual nodes, only the switch.
 
 
