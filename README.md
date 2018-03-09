@@ -60,10 +60,10 @@ Initial Setup
 2. Create an experiment on a testbed (e.g., use the “Etalon” profile on CloudLab
   to launch an experiment).
 
-3. Nicely ask the network administrator to set your network to MTU 9126, turn on
-  Ethernet flow control. (For CloudLab Apt machines, ask to enable Ethernet. Ask
-  if other ethernet experiments are running on the same switch. If so, ask to be
-  in your own VLAN.)
+3. Nicely ask the network administrator to set your network to MTU 9126 and
+   turn on Ethernet flow control. (For CloudLab Apt machines, ask to enable
+   Ethernet. Ask if other ethernet experiments are running on the same switch.
+   If so, ask to be in your own VLAN.)
 
 4. Update the host information in etalon/etc/handles on your local machine.
 
@@ -108,8 +108,8 @@ The experiment file script will build a docker image (on the software switch
 machine), push the image to all of the "rack" machines, launch a "rack" of
 vhosts, run the experiment (e.g., running 16 flows for 40 seconds), and then
 collect the results (e.g., logs), and tar them. These logs can be processed by
-graphing scripts which we provide (see the next section, "Graphing the
-Results").
+graphing scripts which we provide (see [Graphing the
+Results](#graphing-the-results) below).
 
 See ```experiments/buffers/buffers.py``` and
 ```experiments/buffers/buffer_common.py``` for an example of an experiment file
@@ -133,7 +133,7 @@ scripts will be run on the local machine, not on the software switch machine.
 
 To graph results:
 
-1. Copy the results tar file to your local machine. the file ```sxp.py``` in
+1. Copy the results tar file to your local machine. The file ```sxp.py``` in
 ```etalon/bin``` can simplify this. Assuming your ```etalon/etc/handles``` file
 is setup correctly, ```sxp.py``` will try to ```scp``` a results file from the
 folders ```experiments/buffers/```, ```experiments/adu```, or
