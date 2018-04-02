@@ -94,7 +94,7 @@ def graph_small_durs(data):
     options = get_default_plot_options(x, y)
     options.x.limits = [0, 100]
     options.output_fn = 'graphs/mice_fct_cdf.pdf'
-    options.x.label.xlabel = 'Flow completion time (ms)'
+    options.x.label.xlabel = 'Flow-completion time (ms)'
     plot(x, y, options)
 
 
@@ -106,7 +106,7 @@ def graph_big_durs(data):
 
     options = get_default_plot_options(x, y)
     options.output_fn = 'graphs/elephant_fct_cdf.pdf'
-    options.x.label.xlabel = 'Flow completion time (ms)'
+    options.x.label.xlabel = 'Flow-completion time (ms)'
     plot(x, y, options)
 
 
