@@ -13,10 +13,17 @@ Various runables:
   ```click_startup.sh```).
 
 - ```kernel_install.sh```: installs the updated kernel needed by reTCP. Doesn't
-  need to be run if using the Etalon experiment profile on CloudLab.
+  need to be run if using the Etalon experiment profile on CloudLab. Assumes
+  that the etalon repository is in your home directory.
 
 - ```node_install.sh```: installs everything the non-switch physical machines
   need to run Etalon.
+
+- ```profile_etalon-ccanel.py```: A CloudLab profile that creates an Etalon
+  cluster.
+
+- ```profile_etalon-ccanel-bootstrap.py```: A simple CloudLab profile for
+  creating a disk image for use with the ```profile_etalon-ccanel.py``` profile.
 
 - ```s```: a wrapper around ssh that allows handle use (e.g., ```./s host1```
   will log into host1 if set in ```../etc/handles```.
@@ -31,7 +38,18 @@ Various runables:
   copying it to the local machine.
 
 - ```tune.sh```: run at startup on all physical nodes (as installed into crontab
-  by ```switch_install.sh``` and ```node_install.shh```) to set IP addresses of
+  by ```switch_install.sh``` and ```node_install.sh```) to set IP addresses of
   machines, do some tuning, and generate a proper /etc/hosts. Assumes hosts have
   hostnames "host1", "host2", etc. and that the switch has hostname "switch".
-  
+
+## Instructions for creating a new Etalon disk image on CloudLab:
+
+1. Launch a dummy CloudLab cluster using the
+   ```profile_etalon-ccanel-bootstrap.py``` profile. This will launch a simple
+   one-node cluster. We will use this node as the basis for the new disk image.
+
+2. Log in to the node, clone the etalon repository into the home directory, and
+   run the script: ```~/etalon/bin/kernel_install.sh```. This will install the
+   reTCP kernel patch and reboot the machine.
+
+3. Use the CloudLab web interface to create a new disk image based on this node.
