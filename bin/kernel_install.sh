@@ -16,7 +16,6 @@ mkdir $HOME/mnt &&
 sudo mount /dev/sda4 $HOME/mnt
 sudo chown -R `whoami`:dna-PG0 $HOME/mnt
 sudo chown -R `whoami`:dna-PG0 $HOME/.config
-git clone git@github.com:mukerjee/etalon $HOME/etalon
 
 # Apply the kernel patch, and compile.
 git clone git://kernel.ubuntu.com/ubuntu/ubuntu-xenial.git $HOME/mnt/ubuntu-xenial &&
