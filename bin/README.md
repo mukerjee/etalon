@@ -14,7 +14,7 @@ Various runables:
 
 - ```kernel_install.sh```: installs the updated kernel needed by reTCP. Doesn't
   need to be run if using the Etalon experiment profile on CloudLab. Assumes
-  that the etalon repository is in your home directory.
+  that the Etalon repository is in your home directory.
 
 - ```node_install.sh```: installs everything the non-switch physical machines
   need to run Etalon.
@@ -34,8 +34,8 @@ Various runables:
 - ```sxp.py```: a wrapper around scp that should be run on the local machine
   that takes in a timestamp (e.g., ```./sxp.py 1519494787```) and looks on the
   software switch machine (as set in ```../etc/handles```) for an experiment (in
-  /etalon/experiments/\[buffers, adu, hdfs\]) result file with that timestamp,
-  copying it to the local machine.
+  ```/etalon/experiments/\[buffers, adu, hdfs\]```) result file with that
+  timestamp, copying it to the local machine.
 
 - ```tune.sh```: run at startup on all physical nodes (as installed into crontab
   by ```switch_install.sh``` and ```node_install.sh```) to set IP addresses of
@@ -48,7 +48,7 @@ Various runables:
    ```profile_etalon-ccanel-bootstrap.py``` profile. This will launch a simple
    one-node cluster. We will use this node as the basis for the new disk image.
 
-2. Log in to the node, clone the etalon repository into the home directory, and
+2. Log in to the node, clone the Etalon repository into the home directory, and
    run the script: ```~/etalon/bin/kernel_install.sh```. This will install the
    reTCP kernel patch and reboot the machine.
 
