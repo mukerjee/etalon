@@ -4,7 +4,7 @@ import geni.rspec.pg as pg
 import geni.rspec.igext as igext
 
 SWITCH_DISK_IMAGE = "urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops//UBUNTU16-64-STD"
-NODE_DISK_IMAGE = "urn:publicid:IDN+apt.emulab.net+image+dna-PG0:Etalon"
+NODE_DISK_IMAGE = "urn:publicid:IDN+apt.cloudlab.us+image+dna-PG0:Etalon"
 
 pc = portal.Context()
 rspec = pg.Request()
