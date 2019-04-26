@@ -1,38 +1,39 @@
+""" A CloudLab profile that creates an Etalon cluster. """
 
 import geni.portal as portal
 import geni.rspec.pg as pg
 import geni.rspec.igext as igext
 
 SWITCH_DISK_IMAGE = "urn:publicid:IDN+utah.cloudlab.us+image+emulab-ops//UBUNTU16-64-STD"
-NODE_DISK_IMAGE = "urn:publicid:IDN+apt.cloudlab.us+image+dna-PG0:Etalon"
+NODE_DISK_IMAGE = "urn:publicid:IDN+apt.cloudlab.us+image+dna-PG0:etalon"
 
 pc = portal.Context()
 rspec = pg.Request()
 
 pc.defineParameter(
-    "node_type",
-    ("Hardware spec of nodes <br> Refer to manuals at "
-     "<a href=\"http://docs.aptlab.net/hardware.html#%28part._apt-cluster%29\">APT</a> for more "
-     "details."),
-    portal.ParameterType.NODETYPE,
-    "r320",
+    name="node_type",
+    description=("Hardware spec of nodes.<br> Refer to manuals at "
+                 "<a href=\"http://docs.aptlab.net/hardware.html#%28part._apt-cluster%29\">APT</a> "
+                 "for more details."),
+    typ=portal.ParameterType.NODETYPE,
+    defaultValue="r320",
     legalValues=[("r320", "APT r320"), ("c6220", "APT c6220")],
     advanced=False,
     groupId=None)
 pc.defineParameter(
-    "num_nodes",
-    ("Number of hosts (not including OCS) to use.<br> Check cluster availability "
-     "<a href=\"https://www.cloudlab.us/cluster-graphs.php\">here</a>."),
-    portal.ParameterType.INTEGER,
-    8,
+    name="num_nodes",
+    description=("Number of hosts (not including OCS) to use.<br> Check cluster availability "
+                 "<a href=\"https://www.cloudlab.us/cluster-graphs.php\">here</a>."),
+    typ=portal.ParameterType.INTEGER,
+    defaultValue=8,
     legalValues=[],
     advanced=False,
     groupId=None)
 pc.defineParameter(
-    "switch",
-    "Preferred Mellanox switch",
-    portal.ParameterType.STRING,
-    "mellanox3",
+    name="switch",
+    description="Preferred Mellanox switch",
+    typ=portal.ParameterType.STRING,
+    defaultValue="mellanox3",
     legalValues=[("mellanox1", "Switch 1"),
                  ("mellanox2", "Switch 2"), ("mellanox3", "Switch 3"),
                  ("mellanox4", "Switch 4"), ("mellanox5", "Switch 5"),
@@ -42,40 +43,39 @@ pc.defineParameter(
     groupId=None)
 
 params = pc.bindParameters()
-
 if params.num_nodes < 1:
     pc.reportError(portal.ParameterError("You must choose a minimum of 1 node "))
-
 pc.verifyParameters()
 
+lan = pg.LAN("lan")
 nodes = []
-lan = pg.LAN("lan-1")
 
-nodes.append(pg.RawPC("switch"))
-iface = nodes[-1].addInterface("if-switch", pg.IPv4Address("10.2.100.100", "255.255.255.0"))
-nodes[-1].hardware_type = params.node_type
-nodes[-1].disk_image = SWITCH_DISK_IMAGE
-nodes[-1].Desire(params.switch, 1.0)
-nodes[-1].addService(
-    pg.Install("https://github.com/mukerjee/etalon/archive/master.tar.gz", "/local/"))
-# nodes[-1].addService(pg.Execute("/bin/bash","/local/etalon-master/cloudlab/switch_install.sh"))
+switch_node = pg.RawPC("switch")
+iface = switch_node.addInterface("if-switch", pg.IPv4Address("10.2.100.100", "255.255.255.0"))
 lan.addInterface(iface)
-rspec.addResource(nodes[-1])
+
+switch_node.hardware_type = params.node_type
+switch_node.disk_image = SWITCH_DISK_IMAGE
+switch_node.Desire(params.switch, 1.0)
+switch_node.addService(
+    pg.Install("https://github.com/ccanel/etalon/archive/master.tar.gz", "/local/"))
+switch_node.addService(pg.Execute("/bin/bash", "/local/etalon-master/bin/switch_install.sh"))
+nodes.append(switch_node)
+rspec.addResource(switch_node)
 
 for i in range(1, params.num_nodes + 1):
-    nodes.append(pg.RawPC("host%s" % i))
-    iface = nodes[i].addInterface("if-host%s" % i,
-                                  pg.IPv4Address("10.2.100.%d" % i,
-                                                 "255.255.255.0"))
-    nodes[i].hardware_type = params.node_type
-    nodes[i].disk_image = NODE_DISK_IMAGE
-    nodes[i].Desire(params.switch, 1.0)
-    nodes[i].addService(
-        pg.Install("https://github.com/mukerjee/etalon/archive/master.tar.gz", "/local/"))
-    # nodes[i].addService(pg.Execute("/bin/bash","/local/etalon-master/cloudlab/node_install.sh"))
+    node = pg.RawPC("host%s" % i)
+    iface = node.addInterface("if-host%s" % i, pg.IPv4Address("10.2.100.%d" % i, "255.255.255.0"))
     lan.addInterface(iface)
-    rspec.addResource(nodes[i])
 
+    node.hardware_type = params.node_type
+    node.disk_image = NODE_DISK_IMAGE
+    node.Desire(params.switch, 1.0)
+    node.addService(
+        pg.Install("https://github.com/ccanel/etalon/archive/master.tar.gz", "/local/"))
+    node.addService(pg.Execute("/bin/bash", "/local/etalon-master/bin/node_install.sh"))
+    nodes.append(node)
+    rspec.addResource(node)
 rspec.addResource(lan)
 
 instructions = ("Use this profile to instantiate a set of nodes on the APT cluster, all bound to "
