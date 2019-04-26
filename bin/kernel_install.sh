@@ -13,9 +13,9 @@ sudo apt install linux-cloud-tools-common linux-tools-common kernel-wedge &&
 # kernel (the root device does not have sufficient space).
 sudo mkfs.ext4 /dev/sda4 &&
 mkdir $HOME/mnt &&
-sudo mount /dev/sda4 $HOME/mnt
-sudo chown -R `whoami`:dna-PG0 $HOME/mnt
-sudo chown -R `whoami`:dna-PG0 $HOME/.config
+sudo mount /dev/sda4 $HOME/mnt &&
+sudo chown -R `whoami`:dna-PG0 $HOME/mnt &&
+sudo chown -R `whoami`:dna-PG0 $HOME/.config &&
 
 # Apply the kernel patch, and compile.
 git clone git://kernel.ubuntu.com/ubuntu/ubuntu-xenial.git $HOME/mnt/ubuntu-xenial &&
@@ -23,7 +23,10 @@ cd $HOME/mnt/ubuntu-xenial &&
 git apply $HOME/etalon/reTCP/kernel-patch.patch &&
 fakeroot debian/rules clean &&
 MAKEFLAGS="-j 16" fakeroot debian/rules binary-headers binary-generic binary-perarch &&
-sudo dpkg -i ../*.deb &&
-rm -rf ubuntu-xenial &&
+sudo dpkg -i $HOME/mnt/*.deb &&
+
+# Clean up.
+cd $HOME &&
+rm -rf $HOME/mnt/ubuntu-xenial &&
 
 sudo reboot
