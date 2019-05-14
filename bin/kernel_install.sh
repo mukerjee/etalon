@@ -19,7 +19,9 @@ sudo apt -y build-dep linux-image-$(uname -r)
 sudo apt install linux-cloud-tools-common linux-tools-common kernel-wedge
 
 if [ $MODE == "--local" ]; then
-    sudo chown -R `whoami`:`whoami` $HOME/.config
+    if [ -d $HOME/.config ]; then
+        sudo chown -R `whoami`:`whoami` $HOME/.config
+    fi
 else
     # We are running on CloudLab.
     sudo chown -R `whoami`:dna-PG0 $HOME/.config
