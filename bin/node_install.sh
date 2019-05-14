@@ -1,5 +1,12 @@
 #!/bin/bash
+#
+# The first argument is the mode. "--local" implies a local cluster. Empty
+# implies CloudLab.
 
+set -o errexit
+
+MODE=$1
+echo "MODE: $MODE"
 OFED_VERSION=4.1-1.0.2.0
 
 sudo apt-get update && sudo apt-get install -y \
@@ -50,15 +57,17 @@ sudo systemctl daemon-reload &&
 sudo systemctl enable phc2sys.service &&
 sudo systemctl disable ntp.service &&
 
-# get extra space
-sudo mkdir /mnt/hdfs &&
-sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
-sudo chown `whoami` /mnt/hdfs &&
+if [ $MODE != "--local" ]; then
+    # get extra space
+    sudo mkdir /mnt/hdfs &&
+    sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
+    sudo chown `whoami` /mnt/hdfs &&
 
-# move docker dir
-sudo service docker stop &&
-sudo mv /var/lib/docker /mnt/hdfs/ &&
-sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
-sudo service docker start &&
+    # move docker dir
+    sudo service docker stop &&
+    sudo mv /var/lib/docker /mnt/hdfs/ &&
+    sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
+    sudo service docker start &&
+fi
 
 sudo reboot
