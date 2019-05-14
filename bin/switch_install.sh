@@ -1,5 +1,12 @@
 #!/bin/bash
+#
+# The first argument is the mode. "--local" implies a local cluster. Empty
+# implies CloudLab.
 
+set -o errexit
+
+MODE=$1
+echo "MODE: $MODE"
 OFED_VERSION=4.1-1.0.2.0
 DPDK_VERSION=16.11_2.3
 
@@ -125,14 +132,14 @@ sudo make install &&
 sudo ldconfig &&
 
 # Hadoop 2.9
-cd $HOME &&
-wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz &&
-tar xfvz hadoop-2.9.0-src.tar.gz &&
-cd hadoop-2.9.0-src &&
-cp /etalon/reHDFS/* ./hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/ &&
-mvn package -Pdist,native -DskipTests -Dtar &&
-cp ./hadoop-dist/target/hadoop-2.9.0.tar.gz /etalon/vhost/ &&
-rm -rf $HOME/hadoop-2.9.0-src &&
+# cd $HOME &&
+# wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz &&
+# tar xfvz hadoop-2.9.0-src.tar.gz &&
+# cd hadoop-2.9.0-src &&
+# cp /etalon/reHDFS/* ./hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/ &&
+# mvn package -Pdist,native -DskipTests -Dtar &&
+# cp ./hadoop-dist/target/hadoop-2.9.0.tar.gz /etalon/vhost/ &&
+# rm -rf $HOME/hadoop-2.9.0-src &&
 
 # Fix broken kill in 16.04
 cd $HOME &&
@@ -146,16 +153,18 @@ cp ./.libs/kill /etalon/vhost/ &&
 sudo rm -rf $HOME/libprocps* &&
 sudo rm -rf $HOME/procps* &&
 
-# get extra space
-cd $HOME &&
-sudo mkdir /mnt/hdfs &&
-sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
-sudo chown `whoami` /mnt/hdfs &&
+if [ $MODE != "--local" ]; then
+    # get extra space
+    cd $HOME &&
+    sudo mkdir /mnt/hdfs &&
+    sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
+    sudo chown `whoami` /mnt/hdfs &&
 
-# move docker dir
-sudo service docker stop &&
-sudo mv /var/lib/docker /mnt/hdfs/ &&
-sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
-sudo service docker start &&
+    # move docker dir
+    sudo service docker stop &&
+    sudo mv /var/lib/docker /mnt/hdfs/ &&
+    sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
+    sudo service docker start &&
+fi
 
 sudo reboot
