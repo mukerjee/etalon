@@ -16,9 +16,9 @@ sudo apt-get update && sudo apt-get install -y \
 
 sudo pip install rpyc &&
 
-# get Etalon
-cd $HOME &&
-GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/mukerjee/etalon.git &&
+# get Etalon - Assume we downloaded it manually.
+# cd $HOME &&
+# GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
 
 cd / &&
 sudo ln -s ~/etalon &&
@@ -27,12 +27,12 @@ sudo ln -s ~/etalon &&
 sudo rm /var/run/crond.reboot &&
 
 
-# Mellanox OFED
+# Mellanox OFED - Assume that this has been installed manually for now.
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
-cd $HOME &&
-wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
-tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
-sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force &&
+# cd $HOME &&
+# wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
+# tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
+# sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force &&
 sudo connectx_port_config -c eth,eth &&
 sudo /etc/init.d/openibd restart &&
 
@@ -68,6 +68,7 @@ if [ $MODE != "--local" ]; then
     sudo mv /var/lib/docker /mnt/hdfs/ &&
     sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
     sudo service docker start &&
-fi
+fi &&
 
-sudo reboot
+echo "done"
+# sudo reboot

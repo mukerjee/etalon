@@ -24,7 +24,7 @@ sudo pip install numpy &&
 
 # get Etalon
 cd $HOME &&
-GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/mukerjee/etalon.git &&
+GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
 
 cd / &&
 sudo ln -s ~/etalon &&
@@ -131,7 +131,7 @@ make check &&
 sudo make install &&
 sudo ldconfig &&
 
-# Hadoop 2.9
+# Hadoop 2.9 - We do not need this for now.
 # cd $HOME &&
 # wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz &&
 # tar xfvz hadoop-2.9.0-src.tar.gz &&
@@ -165,6 +165,7 @@ if [ $MODE != "--local" ]; then
     sudo mv /var/lib/docker /mnt/hdfs/ &&
     sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
     sudo service docker start &&
-fi
+fi &&
 
+echo "done"
 sudo reboot
