@@ -168,4 +168,4 @@ if [ $MODE != "--local" ]; then
 fi &&
 
 echo "done"
-sudo reboot
+# sudo reboot
