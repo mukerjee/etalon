@@ -165,7 +165,7 @@ if [ $MODE != "--local" ]; then
     sudo mv /var/lib/docker /mnt/hdfs/ &&
     sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
     sudo service docker start &&
-fi &&
+fi
 
 echo "done"
 sudo reboot
