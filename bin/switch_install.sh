@@ -22,23 +22,23 @@ sudo apt-get update && sudo apt-get install -y \
 sudo pip install rpyc &&
 sudo pip install numpy &&
 
-# get Etalon
-cd $HOME &&
-GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
+# get Etalon - Assume we downloaded it manually.
+# cd $HOME &&
+# GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
 
 cd / &&
-sudo ln -s ~/etalon &&
+sudo ln -sf ~/etalon &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - &&
 sudo rm /var/run/crond.reboot &&
 
 
-# Mellanox OFED
+# Mellanox OFED - Assume that this has been installed manually for now.
 # http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
-cd $HOME &&
-wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
-tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
-sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force --dpdk &&
+# cd $HOME &&
+# wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
+# tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
+# sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force --dpdk &&
 
 # Mellanox DPDK
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf

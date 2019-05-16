@@ -21,7 +21,7 @@ sudo pip install rpyc &&
 # GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
 
 cd / &&
-sudo ln -s ~/etalon &&
+sudo ln -sf ~/etalon &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh") | crontab - &&
 sudo rm /var/run/crond.reboot &&
