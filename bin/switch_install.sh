@@ -45,7 +45,7 @@ sudo rm -f /var/run/crond.reboot &&
 cd $HOME &&
 sudo connectx_port_config -c eth,eth &&
 echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf &&
-sudo /etc/init.d/openibd restart &&
+# sudo /etc/init.d/openibd restart &&
 wget http://www.mellanox.com/downloads/Drivers/MLNX_DPDK_$DPDK_VERSION.tar.gz &&
 tar xfz ./MLNX_DPDK_$DPDK_VERSION.tar.gz &&
 cd ./MLNX_DPDK_$DPDK_VERSION &&
