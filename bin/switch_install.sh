@@ -55,6 +55,7 @@ make install T=x86_64-native-linuxapp-gcc &&
 # http://dpdk.org/doc/guides-16.04/linux_gsg/sys_reqs.html
 sudo sed -i -r 's/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 default_hugepagesz=1G hugepagesz=1G hugepages=4\"/' /etc/default/grub &&
 sudo update-grub &&
+sudo umount /mnt
 sudo mkdir /mnt/huge_1GB &&
 echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab &&
 
