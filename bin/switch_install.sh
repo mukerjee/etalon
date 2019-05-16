@@ -28,6 +28,8 @@ sudo pip install numpy &&
 
 cd / &&
 sudo ln -sf ~/etalon &&
+cd /etalon &&
+git submodule update --init
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - &&
 sudo rm -f /var/run/crond.reboot &&
