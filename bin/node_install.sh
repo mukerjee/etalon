@@ -34,7 +34,7 @@ sudo rm /var/run/crond.reboot &&
 # tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
 # sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force &&
 sudo connectx_port_config -c eth,eth &&
-sudo /etc/init.d/openibd restart &&
+# sudo /etc/init.d/openibd restart &&
 
 # get docker
 cd $HOME &&
