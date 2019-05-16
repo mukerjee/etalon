@@ -30,7 +30,7 @@ cd / &&
 sudo ln -sf ~/etalon &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - &&
-sudo rm /var/run/crond.reboot &&
+sudo rm -f /var/run/crond.reboot &&
 
 
 # Mellanox OFED - Assume that this has been installed manually for now.
