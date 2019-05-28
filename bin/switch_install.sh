@@ -7,20 +7,21 @@ set -o errexit
 
 MODE=$1
 echo "MODE: $MODE"
-OFED_VERSION=4.1-1.0.2.0
-DPDK_VERSION=16.11_2.3
+# OFED_VERSION=4.1-1.0.2.0
+DPDK_VERSION=18.11.1
 
-sudo apt-get update && sudo apt-get install -y \
-                            git \
-                            python-pip \
-                            linuxptp \
-			    libcurl4-gnutls-dev \
-			    libxmlrpc-core-c3-dev \
-			    maven \
-			    openjdk-8-jdk \
-			    cmake &&
-sudo pip install rpyc &&
-sudo pip install numpy &&
+sudo apt update &&
+sudo apt install -y \
+     cmake \
+     git \
+     libcurl4-gnutls-dev \
+     libxmlrpc-core-c3-dev \
+     libnuma-dev \
+     linuxptp \
+     maven \
+     openjdk-8-jdk \
+     python-pip &&
+sudo pip install numpy rpyc &&
 
 # get Etalon - Assume we downloaded it manually.
 # cd $HOME &&
