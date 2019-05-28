@@ -9,6 +9,11 @@ MODE=$1
 echo "MODE: $MODE"
 OFED_VERSION=4.1-1.0.2.0
 
+if [ ! -d ~/etalon ]; then
+    echo "Error: Etalon repo not located at \"~/etalon\"!"
+    exit 1
+fi
+
 sudo apt-get update && sudo apt-get install -y \
                             git \
                             python-pip \
