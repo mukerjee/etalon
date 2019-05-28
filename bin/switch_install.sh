@@ -45,6 +45,7 @@ sudo rm -f /var/run/crond.reboot &&
 
 # Mellanox DPDK
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
+echo "Installing Mellanox DPDK..." &&
 cd $HOME &&
 sudo connectx_port_config -c eth,eth &&
 echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf &&
@@ -57,6 +58,7 @@ make -j `nproc` install T=x86_64-native-linuxapp-gcc &&
 
 # Huge pages
 # http://dpdk.org/doc/guides-16.04/linux_gsg/sys_reqs.html
+echo "Setting up huge pages..." &&
 sudo sed -i -r 's/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 default_hugepagesz=1G hugepagesz=1G hugepages=4\"/' /etc/default/grub &&
 sudo update-grub &&
 sudo umount /mnt &&
@@ -65,6 +67,7 @@ sudo mkdir /mnt/huge_1GB &&
 echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab &&
 
 # RTE_SDK location
+echo "Setting RTE_SDK location..." &&
 echo "" >> $HOME/.bashrc &&
 echo "export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION" >> $HOME/.bashrc &&
 echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" >> $HOME/.bashrc &&
@@ -72,12 +75,14 @@ export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION &&
 export RTE_TARGET=x86_64-native-linuxapp-gcc &&
 
 # make Click
+echo "Installing Click..." &&
 cd /etalon/click-etalon &&
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk &&
 make -j `nproc` &&
 sudo make -j `nproc` install &&
 
 # make flowgrind
+echo "Installing flowgrind..." &&
 cd /etalon/flowgrind-etalon &&
 autoreconf -i &&
 ./configure &&
@@ -86,21 +91,25 @@ sudo make -j `nproc` install &&
 cp /usr/local/sbin/flowgrindd /etalon/vhost/ &&
 
 # libVT
+echo "Installing libVT..." &&
 cd /etalon/libVT &&
 sudo make -j `nproc` install &&
 sudo cp ./libVT.so /etalon/vhost/ &&
 
 # libADU - Ignoring for now.
+# echo "Installing libADU..." &&
 # cd /etalon/libADU &&
 # sudo make -j `nproc` install &&
 
 # get docker
+echo "Installing docker..." &&
 cd $HOME &&
-curl -fsSL get.docker.com -o get-docker.sh &&
+curl -fsSL https://get.docker.com -o get-docker.sh &&
 sudo sh get-docker.sh &&
 rm $HOME/get-docker.sh &&
 
 # PTP
+echo "Setting up PTP..." &&
 printf '[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf &&
 sudo sed -i '/(PTP) service/a Requires=network.target\nAfter=network.target' /lib/systemd/system/ptp4l.service &&
 sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service &&
@@ -110,34 +119,38 @@ sudo systemctl enable phc2sys.service &&
 sudo systemctl disable ntp.service &&
 
 # vhost SSH
+echo "Setting up SSH..." &&
 cp /etalon/vhost/config/ssh/id_rsa $HOME/.ssh/ &&
 cp /etalon/vhost/config/ssh/id_rsa.pub $HOME/.ssh/ &&
 chmod 600 $HOME/.ssh/id_rsa &&
 chmod 600 $HOME/.ssh/id_rsa.pub &&
 
-# HiBench
-cd $HOME &&
-git clone https://github.com/intel-hadoop/HiBench.git &&
-cd HiBench/ &&
-mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package &&
-rm -rf .git common docker docs flinkbench gearpumpbench hadoopbench sparkbench stormbench travis &&
-cd ../ &&
-tar cfvz ./HiBench.tar.gz ./HiBench/ &&
-rm -rf ./HiBench &&
-mv ./HiBench.tar.gz /etalon/vhost/ &&
+# HiBench - Ignoring for now.
+# echo "Installing HiBench..." &&
+# cd $HOME &&
+# git clone https://github.com/intel-hadoop/HiBench.git &&
+# cd HiBench/ &&
+# mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package &&
+# rm -rf .git common docker docs flinkbench gearpumpbench hadoopbench sparkbench stormbench travis &&
+# cd ../ &&
+# tar cfvz ./HiBench.tar.gz ./HiBench/ &&
+# rm -rf ./HiBench &&
+# mv ./HiBench.tar.gz /etalon/vhost/ &&
 
-# protobuff
-cd $HOME && \
-wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz &&
-tar zxvf protobuf-2.5.0.tar.gz &&
-cd protobuf-2.5.0 &&
-./configure &&
-make -j `nproc` &&
-make -j `nproc` check &&
-sudo make -j `nproc` install &&
-sudo ldconfig &&
+# protobuff - Ignoring for now.
+# echo "Installing protobuf..." &&
+# cd $HOME && \
+# wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz &&
+# tar zxvf protobuf-2.5.0.tar.gz &&
+# cd protobuf-2.5.0 &&
+# ./configure &&
+# make -j `nproc` &&
+# make -j `nproc` check &&
+# sudo make -j `nproc` install &&
+# sudo ldconfig &&
 
-# Hadoop 2.9 - We do not need this for now.
+# Hadoop 2.9 - Ignoring for now.
+# echo "Installing Hadoop..." &&
 # cd $HOME &&
 # wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz &&
 # tar xfvz hadoop-2.9.0-src.tar.gz &&
@@ -147,31 +160,34 @@ sudo ldconfig &&
 # cp ./hadoop-dist/target/hadoop-2.9.0.tar.gz /etalon/vhost/ &&
 # rm -rf $HOME/hadoop-2.9.0-src &&
 
-# Fix broken kill in 16.04
-cd $HOME &&
-sudo sed -i -e 's/# deb-src/deb-src/' /etc/apt/sources.list &&
-sudo apt update &&
-sudo apt source procps &&
-sudo apt build-dep -y procps &&
-cd procps-3.3.10 &&
-sudo dpkg-buildpackage &&
-cp ./.libs/kill /etalon/vhost/ &&
-sudo rm -rf $HOME/libprocps* &&
-sudo rm -rf $HOME/procps* &&
+# Fix broken kill in 16.04 - Ignoring for now (we are using 18.04).
+# echo "Fixing broken kill..." &&
+# cd $HOME &&
+# sudo sed -i -e 's/# deb-src/deb-src/' /etc/apt/sources.list &&
+# sudo apt update &&
+# sudo apt source procps &&
+# sudo apt build-dep -y procps &&
+# cd procps-3.3.10 &&
+# sudo dpkg-buildpackage &&
+# cp ./.libs/kill /etalon/vhost/ &&
+# sudo rm -rf $HOME/libprocps* &&
+# sudo rm -rf $HOME/procps* &&
 
 if [ $MODE != "--local" ]; then
-    # get extra space
-    cd $HOME &&
-    sudo mkdir /mnt/hdfs &&
-    sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
-    sudo chown `whoami` /mnt/hdfs &&
+    # get extra space - Ignoring for now.
+    # echo "Getting extra space..." &&
+    # cd $HOME &&
+    # sudo mkdir /mnt/hdfs &&
+    # sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
+    # sudo chown `whoami` /mnt/hdfs &&
 
     # move docker dir
+    echo "Moving docker dir..." &&
     sudo service docker stop &&
     sudo mv /var/lib/docker /mnt/hdfs/ &&
     sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
     sudo service docker start
 fi &&
 
-echo "done"
+echo "Done"
 # sudo reboot
