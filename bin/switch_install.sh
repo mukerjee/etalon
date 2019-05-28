@@ -75,9 +75,9 @@ echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab &
 # RTE_SDK location
 echo "Setting RTE_SDK location..." &&
 echo "" >> $HOME/.bashrc &&
-echo "export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION" >> $HOME/.bashrc &&
+echo "export RTE_SDK=$HOME/dpdk-stable-$DPDK_VERSION" >> $HOME/.bashrc &&
 echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" >> $HOME/.bashrc &&
-export RTE_SDK=$HOME/MLNX_DPDK_$DPDK_VERSION &&
+export RTE_SDK=$HOME/dpdk-stable-$DPDK_VERSION &&
 export RTE_TARGET=x86_64-native-linuxapp-gcc &&
 
 # make Click
