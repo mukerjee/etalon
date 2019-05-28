@@ -72,25 +72,25 @@ export RTE_TARGET=x86_64-native-linuxapp-gcc &&
 # make Click
 cd /etalon/click-etalon &&
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk &&
-make -j &&
-sudo make install &&
+make -j `nproc` &&
+sudo make -j `nproc` install &&
 
 # make flowgrind
 cd /etalon/flowgrind-etalon &&
 autoreconf -i &&
 ./configure &&
-make &&
-sudo make install &&
+make -j `nproc` &&
+sudo make -j `nproc` install &&
 cp /usr/local/sbin/flowgrindd /etalon/vhost/ &&
 
 # libVT
 cd /etalon/libVT &&
-sudo make install &&
+sudo make -j `nproc` install &&
 sudo cp ./libVT.so /etalon/vhost/ &&
 
-# libADU
-cd /etalon/libADU &&
-sudo make install &&
+# libADU - Ignoring for now.
+# cd /etalon/libADU &&
+# sudo make -j `nproc` install &&
 
 # get docker
 cd $HOME &&
@@ -130,9 +130,9 @@ wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.
 tar zxvf protobuf-2.5.0.tar.gz &&
 cd protobuf-2.5.0 &&
 ./configure &&
-make &&
-make check &&
-sudo make install &&
+make -j `nproc` &&
+make -j `nproc` check &&
+sudo make -j `nproc` install &&
 sudo ldconfig &&
 
 # Hadoop 2.9 - We do not need this for now.
