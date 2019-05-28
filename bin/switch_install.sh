@@ -20,7 +20,7 @@ if mount | grep "/mnt "; then
     sudo umount /mnt
 elif mount | grep "/mnt/huge_1GB "; then
     sudo umount /mnt/huge_1GB
-fi &&
+fi
 
 sudo apt update
 sudo apt install -y \
@@ -40,7 +40,7 @@ sudo pip install numpy rpyc &&
 
 sudo ln -sf $HOME/etalon /etalon &&
 cd /etalon &&
-git submodule update --init
+git submodule update --init &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - &&
 sudo rm -f /var/run/crond.reboot &&
