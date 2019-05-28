@@ -14,11 +14,11 @@ if [ ! -d ~/etalon ]; then
     exit 1
 fi
 
-sudo apt-get update && sudo apt-get install -y \
-                            git \
-                            python-pip \
-                            linuxptp &&
-
+sudo apt update
+sudo apt install -y \
+     git \
+     linuxptp \
+     python-pip &&
 sudo pip install rpyc &&
 
 # get Etalon - Assume we downloaded it manually.
@@ -43,7 +43,7 @@ sudo connectx_port_config -c eth,eth &&
 
 # get docker
 cd $HOME &&
-curl -fsSL get.docker.com -o get-docker.sh &&
+curl -fsSL https://get.docker.com -o get-docker.sh &&
 sudo sh get-docker.sh &&
 
 # get pipework
