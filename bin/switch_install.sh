@@ -113,11 +113,6 @@ cd /etalon/libVT &&
 sudo make -j `nproc` install &&
 sudo cp ./libVT.so /etalon/vhost/ &&
 
-# libADU - Ignoring for now.
-# echo "Installing libADU..." &&
-# cd /etalon/libADU &&
-# sudo make -j `nproc` install &&
-
 # Docker.
 echo "Installing docker..." &&
 cd &&
@@ -142,62 +137,7 @@ cp /etalon/vhost/config/ssh/id_rsa.pub $HOME/.ssh/ &&
 chmod 600 $HOME/.ssh/id_rsa &&
 chmod 600 $HOME/.ssh/id_rsa.pub &&
 
-# HiBench - Ignoring for now.
-# echo "Installing HiBench..." &&
-# cd &&
-# git clone https://github.com/intel-hadoop/HiBench.git &&
-# cd HiBench/ &&
-# mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package &&
-# rm -rf .git common docker docs flinkbench gearpumpbench hadoopbench sparkbench stormbench travis &&
-# cd ../ &&
-# tar cfvz ./HiBench.tar.gz ./HiBench/ &&
-# rm -rf ./HiBench &&
-# mv ./HiBench.tar.gz /etalon/vhost/ &&
-
-# protobuff - Ignoring for now.
-# echo "Installing protobuf..." &&
-# cd &&
-# wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz &&
-# tar zxvf protobuf-2.5.0.tar.gz &&
-# cd protobuf-2.5.0 &&
-# ./configure &&
-# make -j `nproc` &&
-# make -j `nproc` check &&
-# sudo make -j `nproc` install &&
-# sudo ldconfig &&
-
-# Hadoop 2.9 - Ignoring for now.
-# echo "Installing Hadoop..." &&
-# cd &&
-# wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz &&
-# tar xfvz hadoop-2.9.0-src.tar.gz &&
-# cd hadoop-2.9.0-src &&
-# cp /etalon/reHDFS/* ./hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/blockmanagement/ &&
-# mvn package -Pdist,native -DskipTests -Dtar &&
-# cp ./hadoop-dist/target/hadoop-2.9.0.tar.gz /etalon/vhost/ &&
-# rm -rf $HOME/hadoop-2.9.0-src &&
-
-# Fix broken kill in 16.04 - Ignoring for now (we are using 18.04).
-# echo "Fixing broken kill..." &&
-# cd &&
-# sudo sed -i -e 's/# deb-src/deb-src/' /etc/apt/sources.list &&
-# sudo apt update &&
-# sudo apt source procps &&
-# sudo apt build-dep -y procps &&
-# cd procps-3.3.10 &&
-# sudo dpkg-buildpackage &&
-# cp ./.libs/kill /etalon/vhost/ &&
-# sudo rm -rf $HOME/libprocps* &&
-# sudo rm -rf $HOME/procps* &&
-
 if [ $MODE != "--local" ]; then
-    # Get extra space - Ignoring for now.
-    # echo "Getting extra space..." &&
-    # cd &&
-    # sudo mkdir /mnt/hdfs &&
-    # sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
-    # sudo chown `whoami` /mnt/hdfs &&
-
     # Move docker dir.
     echo "Moving docker dir..." &&
     sudo service docker stop &&
