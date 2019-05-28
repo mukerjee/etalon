@@ -74,13 +74,14 @@ echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d
 # sudo /etc/init.d/openibd restart &&
 wget http://fast.dpdk.org/rel/dpdk-$DPDK_VERSION.tar.xz &&
 tar xf dpdk-$DPDK_VERSION.tar.xz &&
-rm -fv dpdk-$DPDK_VERSION.tar.xz &&
+rm -fv dpdk-$DPDK_VERSION.tar.xz &&  # Keep the untarred files as a record.
 cd ./dpdk-stable-$DPDK_VERSION &&
 make -j `nproc` install T=x86_64-native-linuxapp-gcc &&
 
 # Huge pages
-# http://dpdk.org/doc/guides-16.04/linux_gsg/sys_reqs.html
+# http://dpdk.org/doc/guides/linux_gsg/sys_reqs.html
 echo "Setting up huge pages..." &&
+# Configure huge pages to be allocated on boot.
 sudo sed -i -r 's/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 default_hugepagesz=1G hugepagesz=1G hugepages=4\"/' /etc/default/grub &&
 sudo update-grub &&
 if mount | grep "/mnt"; then
