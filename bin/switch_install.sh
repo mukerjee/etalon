@@ -61,6 +61,9 @@ wget -qO - http://www.mellanox.com/downloads/ofed/RPM-GPG-KEY-Mellanox | sudo ap
 # Install.
 sudo apt update &&
 sudo apt install -y mlnx-ofed-all mlnx-ofed-dpdk &&
+sudo connectx_port_config -c eth,eth &&
+echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf &&
+sudo /etc/init.d/openibd restart &&
 # Clean up, but keep the ISO as a record.
 sudo rm -fv /etc/apt/sources.list.d/mlnx_ofed.list &&
 sudo umount /mnt &&
@@ -69,9 +72,6 @@ sudo umount /mnt &&
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
 echo "Installing Mellanox DPDK..." &&
 cd &&
-sudo connectx_port_config -c eth,eth &&
-echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf &&
-# sudo /etc/init.d/openibd restart &&
 wget http://fast.dpdk.org/rel/dpdk-$DPDK_VERSION.tar.xz &&
 tar xf dpdk-$DPDK_VERSION.tar.xz &&
 rm -fv dpdk-$DPDK_VERSION.tar.xz &&  # Keep the untarred files as a record.
