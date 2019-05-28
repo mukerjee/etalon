@@ -29,8 +29,8 @@ sudo apt install -y \
      git \
      lib32z1-dev \
      libcurl4-gnutls-dev \
-     libxmlrpc-core-c3-dev \
      libnuma-dev \
+     libxmlrpc-core-c3-dev \
      linuxptp \
      maven \
      openjdk-8-jdk \
