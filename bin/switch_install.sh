@@ -161,7 +161,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub &&
 
 # protobuff - Ignoring for now.
 # echo "Installing protobuf..." &&
-# cd && \
+# cd &&
 # wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz &&
 # tar zxvf protobuf-2.5.0.tar.gz &&
 # cd protobuf-2.5.0 &&
