@@ -7,7 +7,8 @@ set -o errexit
 
 MODE=$1
 echo "MODE: $MODE"
-OFED_VERSION=4.1-1.0.2.0
+UBUNTU_VERSION=18.04
+OFED_VERSION=4.6-1.0.1.1
 
 if [ ! -d ~/etalon ]; then
     echo "Error: Etalon repo not located at \"~/etalon\"!"
