@@ -38,10 +38,6 @@ sudo apt install -y \
      uuid-dev &&
 sudo pip install numpy rpyc &&
 
-# get Etalon - Assume we downloaded it manually.
-# cd &&
-# GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
-
 cd / &&
 sudo ln -sf ~/etalon &&
 cd /etalon &&

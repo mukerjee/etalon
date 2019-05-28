@@ -22,10 +22,6 @@ sudo apt install -y \
      python-pip &&
 sudo pip install rpyc &&
 
-# get Etalon - Assume we downloaded it manually.
-# cd $HOME &&
-# GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
-
 cd / &&
 sudo ln -sf ~/etalon &&
 
