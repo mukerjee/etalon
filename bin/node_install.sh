@@ -49,7 +49,7 @@ sudo chmod +x /usr/local/bin/pipework &&
 sudo systemctl enable /etalon/rpycd/rpycd.service &&
 
 # PTP
-printf 'slaveOnly\t\t1\n[enp8s0d1]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf &&
+printf 'slaveOnly\t\t1\n[enp68s0]\n' | sudo tee -a /etc/linuxptp/ptp4l.conf &&
 sudo sed -i '/(PTP) service/a Requires=network.target\nAfter=network.target' /lib/systemd/system/ptp4l.service &&
 sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service &&
 sudo sed -i 's/-w -s eth0/-a -r/' /lib/systemd/system/phc2sys.service &&
