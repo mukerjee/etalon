@@ -148,9 +148,9 @@ sudo ldconfig &&
 # Fix broken kill in 16.04
 cd $HOME &&
 sudo sed -i -e 's/# deb-src/deb-src/' /etc/apt/sources.list &&
-sudo apt-get update &&
-sudo apt-get source procps &&
-sudo apt-get build-dep -y procps &&
+sudo apt update &&
+sudo apt source procps &&
+sudo apt build-dep -y procps &&
 cd procps-3.3.10 &&
 sudo dpkg-buildpackage &&
 cp ./.libs/kill /etalon/vhost/ &&
