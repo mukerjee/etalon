@@ -8,19 +8,22 @@ set -o errexit
 MODE=$1
 echo "MODE: $MODE"
 # OFED_VERSION=4.1-1.0.2.0
-DPDK_VERSION=18.11.1
+DPDK_VERSION=17.08.2
 
-sudo apt update &&
+sudo apt update
 sudo apt install -y \
+     autoconf \
      cmake \
      git \
+     lib32z1-dev \
      libcurl4-gnutls-dev \
      libxmlrpc-core-c3-dev \
      libnuma-dev \
      linuxptp \
      maven \
      openjdk-8-jdk \
-     python-pip &&
+     python-pip \
+     uuid-dev &&
 sudo pip install numpy rpyc &&
 
 # get Etalon - Assume we downloaded it manually.
