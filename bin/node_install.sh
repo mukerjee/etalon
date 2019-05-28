@@ -75,5 +75,5 @@ if [ $MODE != "--local" ]; then
     sudo service docker start
 fi &&
 
-echo "done"
+echo "Done"
 # sudo reboot
