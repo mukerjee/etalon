@@ -114,9 +114,8 @@ sudo cp ./libVT.so /etalon/vhost/ &&
 
 # Docker.
 echo "Installing docker..." &&
-cd &&
-curl -fsSL https://get.docker.com -o get-docker.sh &&
-sudo sh get-docker.sh &&
+curl -fsSL https://get.docker.com -o $HOME/get-docker.sh &&
+sudo sh $HOME/get-docker.sh &&
 rm -fv $HOME/get-docker.sh &&
 
 # PTP.
