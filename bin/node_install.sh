@@ -32,14 +32,22 @@ sudo ln -sf ~/etalon &&
 sudo rm -f /var/run/crond.reboot &&
 
 
-# Mellanox OFED - Assume that this has been installed manually for now.
-# http://www.mellanox.com/related-docs/prod_software/Mellanox_OFED_Linux_User_Manual_v4.0.pdf
-# cd $HOME &&
-# wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
-# tar xfz ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64.tgz &&
-# sudo ./MLNX_OFED_LINUX-$OFED_VERSION-ubuntu16.04-x86_64/mlnxofedinstall --force &&
+# Mellanox OFED
+# https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
+cd &&
+# Set up repo
+wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu$UBUNTU_VERSION-x86_64.iso &&
+sudo mount -o ro,loop MLNX_OFED_LINUX-$OFED_VERSION-ubuntu$UBUNTU_VERSION-x86_64.iso /mnt &&
+echo "deb file:/mnt/DEBS /" | sudo tee /etc/apt/sources.list.d/mlnx_ofed.list &&
+wget -qO - http://www.mellanox.com/downloads/ofed/RPM-GPG-KEY-Mellanox | sudo apt-key add - &&
+# Install
+sudo apt update &&
+sudo apt install -y mlnx-ofed-all mlnx-ofed-dpdk &&
 sudo connectx_port_config -c eth,eth &&
-# sudo /etc/init.d/openibd restart &&
+sudo /etc/init.d/openibd restart &&
+# Clean up, but keep the ISO as a record.
+sudo rm -fv /etc/apt/sources.list.d/mlnx_ofed.list &&
+sudo umount /mnt &&
 
 # get docker
 cd $HOME &&
