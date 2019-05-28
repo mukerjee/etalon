@@ -49,10 +49,11 @@ cd $HOME &&
 sudo connectx_port_config -c eth,eth &&
 echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf &&
 # sudo /etc/init.d/openibd restart &&
-wget http://www.mellanox.com/downloads/Drivers/MLNX_DPDK_$DPDK_VERSION.tar.gz &&
-tar xfz ./MLNX_DPDK_$DPDK_VERSION.tar.gz &&
-cd ./MLNX_DPDK_$DPDK_VERSION &&
-make install T=x86_64-native-linuxapp-gcc &&
+wget http://fast.dpdk.org/rel/dpdk-$DPDK_VERSION.tar.xz &&
+tar xf dpdk-$DPDK_VERSION.tar.xz &&
+rm -fv dpdk-$DPDK_VERSION.tar.xz &&
+cd ./dpdk-stable-$DPDK_VERSION &&
+make -j `nproc` install T=x86_64-native-linuxapp-gcc &&
 
 # Huge pages
 # http://dpdk.org/doc/guides-16.04/linux_gsg/sys_reqs.html
