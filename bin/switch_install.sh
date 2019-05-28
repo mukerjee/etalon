@@ -11,6 +11,17 @@ UBUNTU_VERSION=18.04
 OFED_VERSION=4.6-1.0.1.1
 DPDK_VERSION=17.08.2
 
+if [ ! -d ~/etalon ]; then
+    echo "Error: Etalon repo not located at \"~/etalon\"!"
+    exit 1
+fi
+# If /mnt or /mnt/huge_1GB are mounted, then unmount them.
+if mount | grep "/mnt "; then
+    sudo umount /mnt
+elif mount | grep "/mnt/huge_1GB "; then
+    sudo umount /mnt/huge_1GB
+fi &&
+
 sudo apt update
 sudo apt install -y \
      autoconf \
