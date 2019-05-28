@@ -38,12 +38,12 @@ sudo apt install -y \
      uuid-dev &&
 sudo pip install numpy rpyc &&
 
-sudo ln -sf $HOME/etalon /etalon &&
+sudo ln -sfv $HOME/etalon /etalon &&
 cd /etalon &&
 git submodule update --init &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - &&
-sudo rm -f /var/run/crond.reboot &&
+sudo rm -fv /var/run/crond.reboot &&
 
 # Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
@@ -117,7 +117,7 @@ echo "Installing docker..." &&
 cd &&
 curl -fsSL https://get.docker.com -o get-docker.sh &&
 sudo sh get-docker.sh &&
-rm $HOME/get-docker.sh &&
+rm -fv $HOME/get-docker.sh &&
 
 # PTP.
 echo "Setting up PTP..." &&
@@ -141,7 +141,7 @@ if [ $MODE != "--local" ]; then
     echo "Moving docker dir..." &&
     sudo service docker stop &&
     sudo mv /var/lib/docker /mnt/hdfs/ &&
-    sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
+    sudo ln -sfv /mnt/hdfs/docker /var/lib/docker &&
     sudo service docker start
 fi &&
 

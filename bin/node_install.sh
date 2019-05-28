@@ -22,10 +22,10 @@ sudo apt install -y \
      python-pip &&
 sudo pip install rpyc &&
 
-sudo ln -sf $HOME/etalon /etalon &&
+sudo ln -sfv $HOME/etalon /etalon &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh") | crontab - &&
-sudo rm -f /var/run/crond.reboot &&
+sudo rm -fv /var/run/crond.reboot &&
 
 # Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
@@ -69,7 +69,7 @@ if [ $MODE != "--local" ]; then
     # Move docker dir.
     sudo service docker stop &&
     sudo mv /var/lib/docker /mnt/hdfs/ &&
-    sudo ln -s /mnt/hdfs/docker /var/lib/docker &&
+    sudo ln -sfv /mnt/hdfs/docker /var/lib/docker &&
     sudo service docker start
 fi &&
 
