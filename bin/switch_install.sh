@@ -84,10 +84,6 @@ echo "Setting up huge pages..." &&
 # Configure huge pages to be allocated on boot.
 sudo sed -i -r 's/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 default_hugepagesz=1G hugepagesz=1G hugepages=4\"/' /etc/default/grub &&
 sudo update-grub &&
-if mount | grep "/mnt"; then
-    # If /mnt is mounted, then unmount it.
-    sudo umount /mnt
-fi &&
 sudo rm -rf /mnt/huge_1GB &&
 sudo mkdir /mnt/huge_1GB &&
 echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab &&
