@@ -39,7 +39,7 @@ sudo apt install -y \
 sudo pip install numpy rpyc &&
 
 # get Etalon - Assume we downloaded it manually.
-# cd $HOME &&
+# cd &&
 # GIT_SSH_COMMAND="ssh -o StrictHostKeyChecking=no" git clone --recursive https://github.com/ccanel/etalon.git &&
 
 cd / &&
@@ -61,7 +61,7 @@ sudo rm -f /var/run/crond.reboot &&
 # Mellanox DPDK
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
 echo "Installing Mellanox DPDK..." &&
-cd $HOME &&
+cd &&
 sudo connectx_port_config -c eth,eth &&
 echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf &&
 # sudo /etc/init.d/openibd restart &&
@@ -121,7 +121,7 @@ sudo cp ./libVT.so /etalon/vhost/ &&
 
 # get docker
 echo "Installing docker..." &&
-cd $HOME &&
+cd &&
 curl -fsSL https://get.docker.com -o get-docker.sh &&
 sudo sh get-docker.sh &&
 rm $HOME/get-docker.sh &&
@@ -145,7 +145,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub &&
 
 # HiBench - Ignoring for now.
 # echo "Installing HiBench..." &&
-# cd $HOME &&
+# cd &&
 # git clone https://github.com/intel-hadoop/HiBench.git &&
 # cd HiBench/ &&
 # mvn -Phadoopbench -Dspark=2.1 -Dscala=2.11 clean package &&
@@ -157,7 +157,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub &&
 
 # protobuff - Ignoring for now.
 # echo "Installing protobuf..." &&
-# cd $HOME && \
+# cd && \
 # wget https://github.com/google/protobuf/releases/download/v2.5.0/protobuf-2.5.0.tar.gz &&
 # tar zxvf protobuf-2.5.0.tar.gz &&
 # cd protobuf-2.5.0 &&
@@ -169,7 +169,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub &&
 
 # Hadoop 2.9 - Ignoring for now.
 # echo "Installing Hadoop..." &&
-# cd $HOME &&
+# cd &&
 # wget http://apache.mirrors.pair.com/hadoop/common/hadoop-2.9.0/hadoop-2.9.0-src.tar.gz &&
 # tar xfvz hadoop-2.9.0-src.tar.gz &&
 # cd hadoop-2.9.0-src &&
@@ -180,7 +180,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub &&
 
 # Fix broken kill in 16.04 - Ignoring for now (we are using 18.04).
 # echo "Fixing broken kill..." &&
-# cd $HOME &&
+# cd &&
 # sudo sed -i -e 's/# deb-src/deb-src/' /etc/apt/sources.list &&
 # sudo apt update &&
 # sudo apt source procps &&
@@ -194,7 +194,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub &&
 if [ $MODE != "--local" ]; then
     # get extra space - Ignoring for now.
     # echo "Getting extra space..." &&
-    # cd $HOME &&
+    # cd &&
     # sudo mkdir /mnt/hdfs &&
     # sudo /usr/local/etc/emulab/mkextrafs.pl -f /mnt/hdfs &&
     # sudo chown `whoami` /mnt/hdfs &&
