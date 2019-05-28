@@ -10,8 +10,8 @@ echo "MODE: $MODE"
 UBUNTU_VERSION=18.04
 OFED_VERSION=4.6-1.0.1.1
 
-if [ ! -d ~/etalon ]; then
-    echo "Error: Etalon repo not located at \"~/etalon\"!"
+if [ ! -d $HOME/etalon ]; then
+    echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
 
@@ -22,8 +22,7 @@ sudo apt install -y \
      python-pip &&
 sudo pip install rpyc &&
 
-cd / &&
-sudo ln -sf ~/etalon &&
+sudo ln -sf $HOME/etalon /etalon &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh") | crontab - &&
 sudo rm -f /var/run/crond.reboot &&
@@ -46,12 +45,12 @@ sudo rm -fv /etc/apt/sources.list.d/mlnx_ofed.list &&
 sudo umount /mnt &&
 
 # Docker.
-cd $HOME &&
+cd &&
 curl -fsSL https://get.docker.com -o get-docker.sh &&
 sudo sh get-docker.sh &&
 
 # Pipework.
-cd $HOME &&
+cd &&
 sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework > /usr/local/bin/pipework" &&
 sudo chmod +x /usr/local/bin/pipework &&
 
