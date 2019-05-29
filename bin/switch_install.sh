@@ -38,6 +38,7 @@ sudo apt install -y \
      uuid-dev &&
 sudo pip install numpy rpyc &&
 
+sudo rm -rfv /etalon &&
 sudo ln -sfv $HOME/etalon /etalon &&
 cd /etalon &&
 git submodule update --init &&

@@ -22,6 +22,7 @@ sudo apt install -y \
      python-pip &&
 sudo pip install rpyc &&
 
+sudo rm -rfv /etalon
 sudo ln -sfv $HOME/etalon /etalon &&
 
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh") | crontab - &&
