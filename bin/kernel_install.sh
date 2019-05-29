@@ -8,9 +8,10 @@ set -o errexit
 MODE=$1
 echo "MODE: $MODE"
 BUILD_DIR=$HOME
+UBUNTU_VERSION="bionic"
 
 sudo apt update
-sudo apt install -y git tmux htop emacs fakeroot
+sudo apt install -y git tmux htop emacs fakeroot libssl-dev libelf-dev
 
 # Install updated kernel.
 sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list
@@ -35,16 +36,16 @@ else
 fi
 
 # Apply the kernel patch, and compile.
-git clone git://kernel.ubuntu.com/ubuntu/ubuntu-xenial.git $BUILD_DIR/ubuntu-xenial
-cd $BUILD_DIR/ubuntu-xenial
+git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $BUILD_DIR/ubuntu-$UBUNTU_VERSION
+cd $BUILD_DIR/ubuntu-$UBUNTU_VERSION
 git apply $BUILD_DIR/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 MAKEFLAGS="-j 16" fakeroot debian/rules binary-headers binary-generic binary-perarch
 sudo dpkg -i $BUILD_DIR/*.deb
 
 # Clean up.
-cd $HOME
-rm -rf $BUILD_DIR/ubuntu-xenial
+cd
+rm -rf $BUILD_DIR/ubuntu-$UBUNTU_VERSION
 
 echo "done"
 # sudo reboot
