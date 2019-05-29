@@ -29,7 +29,7 @@ SWITCH_CONTROL_IP = '10.%s.%s.100' % (CONTROL_NET, PHOST_IP)
 SWITCH_DATA_IP = '10.%s.%s.100' % (DATA_NET, PHOST_IP)
 
 # cpu settings
-CPU_COUNT = 16  # vcores per physical host
+CPU_COUNT = 40  # vcores per physical host
 CPU_SET = "1-%d" % (CPU_COUNT-1)  # Leave lcore 0 for IRQ
 CPU_LIMIT = int((CPU_COUNT-1) * 100 / TDF)  # 75
 
@@ -259,9 +259,10 @@ def handle_to_machine(h):
 def get_phost_from_host(h):
     if h in PHYSICAL_NODES:
         return h
-    if h[0] == 'h':
+    elif h[0] == 'h':
         return 'host%s' % h[1:2]
-    return 'host%s' % h[0]
+    else:
+        return 'host%s' % h[0]
 
 
 # host3 --> 3
