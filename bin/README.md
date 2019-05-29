@@ -44,6 +44,8 @@ Various runables:
 
 ## Instructions for creating a new Etalon disk image on CloudLab:
 
+***Note: These instructions are untested.***
+
 1. Launch a dummy CloudLab cluster using the
    ```profile_etalon-ccanel-bootstrap.py``` profile. This will launch a simple
    one-node cluster. We will use this node as the basis for the new disk image.
