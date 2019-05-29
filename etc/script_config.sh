@@ -6,7 +6,7 @@ export HOSTS_PER_RACK=16
 # networks
 export DATA_IF=enp8s0
 export DATA_NET=1
-export CONTROL_IF=enp8s0d1
+export CONTROL_IF=eno4
 export CONTROL_NET=2
 
 # switch

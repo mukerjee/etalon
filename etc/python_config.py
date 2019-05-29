@@ -4,20 +4,20 @@ import os
 
 from collections import defaultdict
 
-NUM_RACKS = 8
+NUM_RACKS = 3
 HOSTS_PER_RACK = 16
 
 TDF = 20.0
 
 # data network
-DATA_EXT_IF = 'enp8s0'
-DATA_INT_IF = 'eth1'
+DATA_EXT_IF = 'enp68s0'  # As seen by physical nodes.
+DATA_INT_IF = 'eth1'  # As seen by containers.
 DATA_NET = 1
 DATA_RATE = 10 / TDF  # Gbps
 
 # control network
-CONTROL_EXT_IF = 'enp8s0d1'
-CONTROL_INT_IF = 'eth2'
+CONTROL_EXT_IF = 'eno4'  # As seen by physical nodes.
+CONTROL_INT_IF = 'eth2'  # As seen by containers.
 CONTROL_NET = 2
 CONTROL_RATE = 10 / TDF  # Gbps
 
@@ -156,11 +156,11 @@ IMAGE_CMD = {
     'flowgrindd': '"pipework --wait && pipework --wait -i eth2 && '
                   'LD_PRELOAD=libVT.so taskset -c {cpu} '
                   'flowgrindd -d -c {cpu}"',
-    
+
     'flowgrindd_adu': '"pipework --wait && pipework --wait -i eth2 && '
                       'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} '
                       'flowgrindd -d -c {cpu}"',
-    
+
     'HDFS': '"service ssh start && '
             'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
 

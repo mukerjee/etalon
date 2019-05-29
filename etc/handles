@@ -1,9 +1,3 @@
-host1 #apt105.apt.emulab.net
-host2 #apt098.apt.emulab.net
-host3 #apt100.apt.emulab.net
-host4 #apt104.apt.emulab.net
-host5 #apt097.apt.emulab.net
-host6 #apt102.apt.emulab.net
-host7 #apt094.apt.emulab.net
-host8 #apt111.apt.emulab.net
-switch #apt093.apt.emulab.net
+host1 node2.maas
+host2 node3.maas
+host3 node4.maas
