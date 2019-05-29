@@ -40,7 +40,7 @@ git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $BUILD_DIR/u
 cd $BUILD_DIR/ubuntu-$UBUNTU_VERSION
 git apply $BUILD_DIR/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
-MAKEFLAGS="-j 16" fakeroot debian/rules binary-headers binary-generic binary-perarch
+MAKEFLAGS="-j `nproc`" fakeroot debian/rules binary-headers binary-generic binary-perarch
 sudo dpkg -i $BUILD_DIR/*.deb
 
 # Clean up.
