@@ -14,6 +14,13 @@ if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
+if [ $MODE == "--local" ]; then
+    if [ -d $HOME/.config ]; then
+        sudo chown -R `whoami`:`whoami` $HOME/.config
+    fi
+else
+    sudo chown -R `whoami`:dna-PG0 $HOME/.config
+fi
 
 sudo apt update
 sudo apt install -y \
