@@ -50,5 +50,5 @@ sudo dpkg -i $BUILD_DIR/*.deb
 cd
 rm -rf $BUILD_DIR/ubuntu-$UBUNTU_VERSION
 
-echo "done"
+echo "Done"
 # sudo reboot
