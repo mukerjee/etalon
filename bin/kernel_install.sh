@@ -40,7 +40,10 @@ git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $BUILD_DIR/u
 cd $BUILD_DIR/ubuntu-$UBUNTU_VERSION
 git apply $BUILD_DIR/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
-MAKEFLAGS="-j `nproc`" fakeroot debian/rules binary-headers binary-generic binary-perarch
+# For some unknown reason, this command fails with a return code of 2 but does
+# not print any error messages. Strangley, running it again solves the problem.
+MAKEFLAGS="-j `nproc`" fakeroot debian/rules binary-headers binary-generic binary-perarch || \
+    MAKEFLAGS="-j `nproc`" fakeroot debian/rules binary-headers binary-generic binary-perarch
 sudo dpkg -i $BUILD_DIR/*.deb
 
 # Clean up.
