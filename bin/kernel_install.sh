@@ -11,7 +11,8 @@ BUILD_DIR=$HOME
 UBUNTU_VERSION="bionic"
 
 sudo apt update
-sudo apt install -y git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev
+sudo apt install -y git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev \
+     flex
 
 # Install updated kernel.
 sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list
