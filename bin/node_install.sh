@@ -27,7 +27,7 @@ sudo apt install -y \
      git \
      linuxptp \
      python-pip &&
-sudo pip install rpyc &&
+sudo -H pip install rpyc &&
 
 sudo rm -rfv /etalon
 sudo ln -sfv $HOME/etalon /etalon &&

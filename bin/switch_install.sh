@@ -43,7 +43,7 @@ sudo apt install -y \
      openjdk-8-jdk \
      python-pip \
      uuid-dev &&
-sudo pip install numpy rpyc &&
+sudo -H pip install numpy rpyc &&
 
 sudo rm -rfv /etalon &&
 sudo ln -sfv $HOME/etalon /etalon &&
