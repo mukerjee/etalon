@@ -1,36 +1,31 @@
 #!/bin/bash
 #
-# The first argument is the mode. "--local" implies a local cluster. Empty
-# implies CloudLab.
+# Install the Etalon reTCP kernel patch.
+#
+# The first argument is the mode. "--cl" CloudLab.
 
 set -o errexit
 
 MODE=$1
 echo "MODE: $MODE"
 BUILD_DIR=$HOME
-UBUNTU_VERSION="bionic"
+# UBUNTU_VERSION="bionic"
+VER="linux-image-`uname -r`"
+SRC_DIR="linux-signed-`echo $VER | cut -d"-" -f3`"
 
-sudo apt update
-sudo apt install -y git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev \
-     flex bison python libiberty-dev libdw-dev elfutils systemtap-sdt-dev \
-     libunwind-dev libaudit-dev liblzma-dev libnuma-dev
-
-# During the linux compile, perf needs this.
-export PYTHON=`which python`
-
-# Install updated kernel.
-sudo sed -i '/^# deb-src /s/^#//' /etc/apt/sources.list
-sudo apt update
-sudo apt -y build-dep linux-image-$(uname -r)
-sudo apt install linux-cloud-tools-common linux-tools-common kernel-wedge
-
-if [ $MODE == "--local" ]; then
-    if [ -d $HOME/.config ]; then
+if [ ! -d $HOME/etalon ]; then
+    echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
+    exit 1
+fi
+if [ -d $HOME/.config ]; then
+    if [ $MODE == "--cl" ]; then
+        sudo chown -R `whoami`:dna-PG0 $HOME/.config
+    else
         sudo chown -R `whoami`:`whoami` $HOME/.config
     fi
-else
-    # We are running on CloudLab.
-    sudo chown -R `whoami`:dna-PG0 $HOME/.config
+fi
+
+if [ $MODE == "--cl" ]; then
     # Mount a disk on which to build the kernel (the root device does not have
     # sufficient space).
     sudo mkfs.ext4 /dev/sda4
@@ -40,17 +35,31 @@ else
     BUILD_DIR=$BUILD_DIR/mnt
 fi
 
-# Apply the kernel patch, and compile.
-git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $BUILD_DIR/ubuntu-$UBUNTU_VERSION
-cd $BUILD_DIR/ubuntu-$UBUNTU_VERSION
-git apply $BUILD_DIR/etalon/reTCP/kernel-patch.patch
-fakeroot debian/rules clean
-MAKEFLAGS="-j `nproc`" fakeroot debian/rules binary-headers binary-generic binary-perarch
-sudo dpkg --force-all -i $BUILD_DIR/*.deb
+# Prepare the build directory.
+rm -rf $BUILD_DIR/build
+mkdir $BUILD_DIR/build
+BUILD_DIR=$BUILD_DIR/build
+cd $BUILD_DIR
 
-# Clean up.
-cd
-rm -rf $BUILD_DIR/ubuntu-$UBUNTU_VERSION
+# Install dependencies and download sources.
+sudo sed -i "/^# deb-src /s/^# //" /etc/apt/sources.list
+sudo apt update
+sudo apt -y build-dep $VER
+sudo apt install -y \
+     git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev flex bison \
+     python libiberty-dev libdw-dev elfutils systemtap-sdt-dev libunwind-dev \
+     libaudit-dev liblzma-dev libnuma-dev linux-cloud-tools-common \
+     linux-tools-common kernel-wedge
+apt source $VER
+# git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $BUILD_DIR/ubuntu-$UBUNTU_VERSION
+
+cd $SRD_DIR
+git apply $HOME/etalon/reTCP/kernel-patch.patch
+fakeroot debian/rules clean
+# Perf needs $PYTHON to be set.
+MAKEFLAGS="-j `nproc`" PYTHON=`which python` fakeroot debian/rules binary-headers binary-generic binary-perarch
+# make bindev -package
+sudo dpkg --force-all -i $BUILD_DIR/*.deb
 
 echo "Done"
 # sudo reboot
