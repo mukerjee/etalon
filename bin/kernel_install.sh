@@ -46,7 +46,7 @@ cd $BUILD_DIR/ubuntu-$UBUNTU_VERSION
 git apply $BUILD_DIR/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 MAKEFLAGS="-j `nproc`" fakeroot debian/rules binary-headers binary-generic binary-perarch
-sudo dpkg --force-all -i $BUILD_DIR/*.deb  # --auto-deconfigure
+sudo dpkg --force-all -i $BUILD_DIR/*.deb
 
 # Clean up.
 cd
