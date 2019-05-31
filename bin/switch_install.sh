@@ -134,7 +134,10 @@ sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service &&
 sudo sed -i 's/-w -s eth0/-c enp68s0 -s CLOCK_REALTIME -w/' /lib/systemd/system/phc2sys.service &&
 sudo systemctl daemon-reload &&
 sudo systemctl enable phc2sys.service &&
-sudo systemctl disable ntp.service &&
+HAVE_NTP_SERVICE=`sudo systemctl list-unit-files | grep ntp`
+if [ -n $HAVE_NTP_SERVICE ]; then
+    sudo systemctl disable ntp.service &&
+fi
 
 # vhost SSH.
 echo "Setting up SSH..." &&
