@@ -70,8 +70,8 @@ sudo systemctl daemon-reload &&
 sudo systemctl enable phc2sys.service &&
 if systemctl list-unit-files | grep ntp.service; then
     # Only disable if it exists.
-    sudo systemctl disable ntp.service &&
-fi
+    sudo systemctl disable ntp.service
+fi &&
 
 echo "Done"
 # sudo reboot
