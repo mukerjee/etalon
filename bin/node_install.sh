@@ -29,7 +29,7 @@ sudo -H pip install rpyc &&
 sudo rm -rfv /etalon
 sudo ln -sfv $HOME/etalon /etalon &&
 
-(crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh $NEW_HOSTNAME") | crontab - &&
+(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh $NEW_HOSTNAME") | crontab - &&
 sudo rm -fv /var/run/crond.reboot &&
 
 # Mellanox OFED.
