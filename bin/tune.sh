@@ -13,8 +13,8 @@ fi
 # Change the hostname.
 OLD_HOSTNAME=`hostname`
 sudo hostname $NEW_HOSTNAME
-sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
-sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
+sudo sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
+sudo sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
 
 # Set IPs.
 # sudo ifconfig $DATA_IF 10.$DATA_NET.100.`echo ${h:4}`/16 mtu 9000
