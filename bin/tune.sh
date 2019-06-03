@@ -35,12 +35,12 @@ else
 fi
 
 # NIC tuning. Data interface.
-sudo ethtool -C $DATA_IF tx-usecs 0
-sudo ethtool -L $DATA_IF rx 1
+sudo ethtool -C $DATA_IF tx-usecs 0 | true
+sudo ethtool -L $DATA_IF rx 1 | true
 sudo service irqbalance stop
 sudo /usr/sbin/set_irq_affinity.sh $DATA_IF
 # Control interface.
-sudo ethtool -C $CONTROL_IF tx-usecs 0 rx-usecs 0 adaptive-rx off
+sudo ethtool -C $CONTROL_IF tx-usecs 0 rx-usecs 0 adaptive-rx off | true
 sudo service irqbalance stop
 sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 
