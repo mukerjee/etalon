@@ -2,11 +2,13 @@
 #
 # First argument is the hostname.
 
+set -o errexit
+
 source /etalon/etc/script_config.sh
 
 NEW_HOSTNAME=$1
 if [ -z $NEW_HOSTNAME ]; then
-    echo "Error: Must provide hostname!"
+    echo "Error: Must provide a hostname!"
     exit 1
 fi
 
@@ -23,7 +25,7 @@ fi
 # Set IPs.
 # sudo ifconfig $DATA_IF 10.$DATA_NET.100.`echo ${h:4}`/16 mtu 9000
 # sudo ifconfig $CONTROL_IF 10.$CONTROL_NET.100.`echo ${h:4}`/16
-if $NEW_HOSTNAME | grep -q switch; then
+if echo `$NEW_HOSTNAME` | grep -q switch; then
     sudo ip addr add $SWITCH_DATA_IP/16 dev $DATA_IF
     sudo ip addr add $SWITCH_CONTROL_IP/16 dev $CONTROL_IF
 else
@@ -59,7 +61,7 @@ for i in `seq 1 $NUM_RACKS`; do
         printf "%s\t%s\n" "10.$DATA_NET.$i.$j" "h$i$j.$FQDN" | sudo tee -a /etc/hosts
     done
 done
-if $NEW_HOSTNAME | grep -q switch; then
+if echo `$NEW_HOSTNAME` | grep -q switch; then
     # If this is the switch, then communicate with everyone over the control
     # network instead of the data network.
     sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./g" /etc/hosts
