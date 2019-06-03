@@ -1,45 +1,26 @@
 #!/bin/bash
 #
 # Install the Etalon reTCP kernel patch.
-#
-# The first argument is the mode. "--cl" CloudLab.
 
 set -o errexit
 
-MODE=$1
-echo "MODE: $MODE"
-BUILD_DIR=$HOME
-# UBUNTU_VERSION="bionic"
-VER="linux-image-`uname -r`"
-SRC_DIR="linux-signed-`echo $VER | cut -d"-" -f3`"
+UBUNTU_VERSION="bionic"
+BUILD_DIR=$HOME/build
+SRC_DIR=$BUILD_DIR/ubuntu-$UBUNTU_VERSION
+# VER="linux-image-`uname -r`"
+# SRC_DIR="linux-signed-`echo $VER | cut -d"-" -f3`"
 
 if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
 if [ -d $HOME/.config ]; then
-    if [ $MODE == "--cl" ]; then
-        sudo chown -R `whoami`:dna-PG0 $HOME/.config
-    else
-        sudo chown -R `whoami`:`whoami` $HOME/.config
-    fi
-fi
-
-if [ $MODE == "--cl" ]; then
-    # Mount a disk on which to build the kernel (the root device does not have
-    # sufficient space).
-    sudo mkfs.ext4 /dev/sda4
-    mkdir $BUILD_DIR/mnt
-    sudo mount /dev/sda4 $BUILD_DIR/mnt
-    sudo chown -R `whoami`:dna-PG0 $BUILD_DIR/mnt
-    BUILD_DIR=$BUILD_DIR/mnt
+    sudo chown -R `whoami`:`whoami` $HOME/.config
 fi
 
 # Prepare the build directory.
-rm -rf $BUILD_DIR/build
-mkdir $BUILD_DIR/build
-BUILD_DIR=$BUILD_DIR/build
-cd $BUILD_DIR
+rm -rf $BUILD_DIR
+mkdir $BUILD_DIR
 
 # Install dependencies and download sources.
 sudo sed -i "/^# deb-src /s/^# //" /etc/apt/sources.list
@@ -50,10 +31,9 @@ sudo apt install -y \
      python libiberty-dev libdw-dev elfutils systemtap-sdt-dev libunwind-dev \
      libaudit-dev liblzma-dev libnuma-dev linux-cloud-tools-common \
      linux-tools-common kernel-wedge
-apt source $VER
-# git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $BUILD_DIR/ubuntu-$UBUNTU_VERSION
+git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $SRC_DIR
 
-cd $SRD_DIR
+cd $SRC_DIR
 git apply $HOME/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 # Perf needs $PYTHON to be set.

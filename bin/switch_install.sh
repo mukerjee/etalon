@@ -1,12 +1,9 @@
 #!/bin/bash
 #
-# The first argument is the mode. "--local" implies a local cluster. Empty
-# implies CloudLab.
+# Set up an Etalon switch machine.
 
 set -o errexit
 
-MODE=$1
-echo "MODE: $MODE"
 UBUNTU_VERSION=18.04
 OFED_VERSION=4.6-1.0.1.1
 DPDK_VERSION=17.08.2
@@ -15,11 +12,7 @@ if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
-if [ $MODE == "--local" ]; then
-    if [ -d $HOME/.config ]; then
-        sudo chown -R `whoami`:`whoami` $HOME/.config
-    fi
-else
+if [ -d $HOME/.config ]; then
     sudo chown -R `whoami`:dna-PG0 $HOME/.config
 fi
 # If /mnt or /mnt/huge_1GB are mounted, then unmount them.
@@ -50,8 +43,8 @@ sudo ln -sfv $HOME/etalon /etalon &&
 cd /etalon &&
 git submodule update --init &&
 
-# (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | crontab - &&
-# sudo rm -fv /var/run/crond.reboot &&
+(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh switch") | crontab - &&
+sudo rm -fv /var/run/crond.reboot &&
 
 # Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
@@ -145,15 +138,6 @@ cp /etalon/vhost/config/ssh/id_rsa $HOME/.ssh/ &&
 cp /etalon/vhost/config/ssh/id_rsa.pub $HOME/.ssh/ &&
 chmod 600 $HOME/.ssh/id_rsa &&
 chmod 600 $HOME/.ssh/id_rsa.pub &&
-
-if [ $MODE != "--local" ]; then
-    # Move docker dir.
-    echo "Moving docker dir..." &&
-    sudo service docker stop &&
-    sudo mv /var/lib/docker /mnt/hdfs/ &&
-    sudo ln -sfv /mnt/hdfs/docker /var/lib/docker &&
-    sudo service docker start
-fi &&
 
 echo "Done"
 # sudo reboot

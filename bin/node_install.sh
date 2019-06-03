@@ -1,12 +1,13 @@
 #!/bin/bash
 #
-# The first argument is the mode. "--local" implies a local cluster. Empty
-# implies CloudLab.
+# Set up an Etalon node machine.
+#
+# The first argument is the new hostname for this machine.
 
 set -o errexit
 
-MODE=$1
-echo "MODE: $MODE"
+$NEW_HOSTANME=$1
+echo "NEW_HOSTNAME: $NEW_HOSTNAME"
 UBUNTU_VERSION=18.04
 OFED_VERSION=4.6-1.0.1.1
 
@@ -14,12 +15,8 @@ if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
-if [ $MODE == "--local" ]; then
-    if [ -d $HOME/.config ]; then
-        sudo chown -R `whoami`:`whoami` $HOME/.config
-    fi
-else
-    sudo chown -R `whoami`:dna-PG0 $HOME/.config
+if [ -d $HOME/.config ]; then
+    sudo chown -R `whoami`:`whoami` $HOME/.config
 fi
 
 sudo apt update
@@ -32,8 +29,8 @@ sudo -H pip install rpyc &&
 sudo rm -rfv /etalon
 sudo ln -sfv $HOME/etalon /etalon &&
 
-# (crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh") | crontab - &&
-# sudo rm -fv /var/run/crond.reboot &&
+(crontab -l 2>/dev/null; echo "@reboot sleep 60 && $HOME/etalon/bin/tune.sh $NEW_HOSTNAME") | crontab - &&
+sudo rm -fv /var/run/crond.reboot &&
 
 # Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
@@ -72,14 +69,6 @@ sudo sed -i 's/-w -s eth0/-a -r/' /lib/systemd/system/phc2sys.service &&
 sudo systemctl daemon-reload &&
 sudo systemctl enable phc2sys.service &&
 sudo systemctl disable ntp.service &&
-
-if [ $MODE != "--local" ]; then
-    # Move docker dir.
-    sudo service docker stop &&
-    sudo mv /var/lib/docker /mnt/hdfs/ &&
-    sudo ln -sfv /mnt/hdfs/docker /var/lib/docker &&
-    sudo service docker start
-fi &&
 
 echo "Done"
 # sudo reboot
