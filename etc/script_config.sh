@@ -4,7 +4,7 @@ export NUM_RACKS=3
 export HOSTS_PER_RACK=16
 
 # networks
-export DATA_IF=enp8s0
+export DATA_IF=enp68s0
 export DATA_NET=1
 export CONTROL_IF=eno4
 export CONTROL_NET=2
