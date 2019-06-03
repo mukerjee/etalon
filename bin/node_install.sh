@@ -68,7 +68,10 @@ sudo sed -i 's/ -i eth0//' /lib/systemd/system/ptp4l.service &&
 sudo sed -i 's/-w -s eth0/-a -r/' /lib/systemd/system/phc2sys.service &&
 sudo systemctl daemon-reload &&
 sudo systemctl enable phc2sys.service &&
-sudo systemctl disable ntp.service &&
+if systemctl list-unit-files | grep ntp.service; then
+    # Only disable if it exists.
+    sudo systemctl disable ntp.service &&
+fi
 
 echo "Done"
 # sudo reboot
