@@ -1,3 +1,4 @@
+
 import time
 import sys
 import os
@@ -60,7 +61,6 @@ RECONFIG_DELAY = 20
 # where are handles defined
 NODES_FILE = '../etc/handles'
 
-
 # flowgrind
 FLOWGRIND_PORT = 5999
 
@@ -78,7 +78,7 @@ DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
                '2> /dev/null; ' \
                'sudo docker ps -aq | xargs sudo docker rm 2> /dev/null'
 DOCKER_BUILD = 'sudo docker build -t %s -f ' \
-               '/etalon/vhost/etalon.dockerfile /etalon/vhost/' % DOCKER_IMAGE
+'/etalon/vhost/etalon.dockerfile /etalon/vhost/' % DOCKER_IMAGE
 DOCKER_LOCAL_IMAGE_PATH = '/etalon/vhost/etalon.img'
 DOCKER_SAVE = 'sudo docker save -o {img} etalon && sudo chown ' \
               '`whoami` {img}'.format(img=DOCKER_LOCAL_IMAGE_PATH)
