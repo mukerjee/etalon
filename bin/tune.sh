@@ -15,17 +15,21 @@ OLD_HOSTNAME=`hostname`
 sudo hostname $NEW_HOSTNAME
 sudo sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
 sudo sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
+if ! [ `hostname` == $NEW_HOSTNAME ]; then
+    echo "Error: Problem setting hostname to $NEW_HOSTNAME"
+    exit 1
+fi
 
 # Set IPs.
 # sudo ifconfig $DATA_IF 10.$DATA_NET.100.`echo ${h:4}`/16 mtu 9000
 # sudo ifconfig $CONTROL_IF 10.$CONTROL_NET.100.`echo ${h:4}`/16
-if hostname | grep -q switch; then
-    sudo ip addr add $SWITCH_DATA_IP/24 dev $DATA_IF
-    sudo ip addr add $SWITCH_CONTROL_IP/24 dev $CONTROL_IF
+if $NEW_HOSTNAME | grep -q switch; then
+    sudo ip addr add $SWITCH_DATA_IP/16 dev $DATA_IF
+    sudo ip addr add $SWITCH_CONTROL_IP/16 dev $CONTROL_IF
 else
-    H=`hostname | cut -d'.' -f1`
-    sudo ip addr add 10.$DATA_NET.100.`echo ${H:4}`/24 dev $DATA_IF
-    sudo ip addr add 10.$CONTROL_NET.100.`echo ${H:4}`/24 dev $CONTROL_IF
+    HOST_NUM=`echo ${NEW_HOSTNAME:4}`
+    sudo ip addr add 10.$DATA_NET.100.$HOST_NUM/16 dev $DATA_IF
+    sudo ip addr add 10.$CONTROL_NET.100.$HOST_NUM/16 dev $CONTROL_IF
 fi
 
 # NIC tuning. Data interface.
@@ -55,7 +59,7 @@ for i in `seq 1 $NUM_RACKS`; do
         printf "%s\t%s\n" "10.$DATA_NET.$i.$j" "h$i$j.$FQDN" | sudo tee -a /etc/hosts
     done
 done
-if hostname | grep -q switch; then
+if $NEW_HOSTNAME | grep -q switch; then
     # If this is the switch, then communicate with everyone over the control
     # network instead of the data network.
     sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./g" /etc/hosts
