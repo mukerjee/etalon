@@ -3,7 +3,7 @@
 	url = https://github.com/mukerjee/libVT
 [submodule "click-etalon"]
 	path = click-etalon
-	url = https://github.com/mukerjee/click-etalon
+	url = https://github.com/ccanel/click-etalon
 [submodule "flowgrind-etalon"]
 	path = flowgrind-etalon
 	url = https://github.com/mukerjee/flowgrind-etalon
