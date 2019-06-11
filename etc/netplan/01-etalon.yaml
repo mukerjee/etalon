@@ -1,0 +1,9 @@
+network:
+    version: 2
+    ethernets:
+        eno4:
+            addresses:
+            - CONTROL_IP/16
+        enp68s0:
+            addresses:
+            - DATA_IP/16

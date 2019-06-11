@@ -6,12 +6,13 @@ set -o errexit
 
 DPDK_VERSION=17.08.2
 
+# Validate.
 if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
 
-source $HOME/etalon/bin/common_install.sh
+source $HOME/etalon/bin/common_install.sh "switch"
 
 sudo apt update
 sudo apt install -y \

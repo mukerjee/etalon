@@ -6,34 +6,6 @@ set -o errexit
 
 source /etalon/etc/script_config.sh
 
-NEW_HOSTNAME=$1
-if [ -z $NEW_HOSTNAME ]; then
-    echo "Error: Must provide a hostname!"
-    exit 1
-fi
-
-# Change the hostname.
-OLD_HOSTNAME=`hostname`
-sudo hostname $NEW_HOSTNAME
-sudo sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hostname
-sudo sed -i "s/$OLD_HOSTNAME/$NEW_HOSTNAME/g" /etc/hosts
-if ! [ `hostname` == $NEW_HOSTNAME ]; then
-    echo "Error: Problem setting hostname to $NEW_HOSTNAME"
-    exit 1
-fi
-
-# Set IPs.
-# sudo ifconfig $DATA_IF 10.$DATA_NET.100.`echo ${h:4}`/16 mtu 9000
-# sudo ifconfig $CONTROL_IF 10.$CONTROL_NET.100.`echo ${h:4}`/16
-if echo $NEW_HOSTNAME | grep -q switch; then
-    sudo ip addr add $SWITCH_DATA_IP/16 dev $DATA_IF
-    sudo ip addr add $SWITCH_CONTROL_IP/16 dev $CONTROL_IF
-else
-    HOST_NUM=`echo ${NEW_HOSTNAME:4}`
-    sudo ip addr add 10.$DATA_NET.100.$HOST_NUM/16 dev $DATA_IF
-    sudo ip addr add 10.$CONTROL_NET.100.$HOST_NUM/16 dev $CONTROL_IF
-fi
-
 # NIC tuning. Data interface.
 sudo ethtool -C $DATA_IF tx-usecs 0 | true
 sudo ethtool -L $DATA_IF rx 1 | true
@@ -47,25 +19,6 @@ sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 # Kernel tuning.
 sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192
 sudo sysctl -w net.ipv4.tcp_congestion_control=reno
-
-# Make our own /etc/hosts.
-printf "%s\t%s\n" "127.0.0.1" "localhost" | sudo tee /etc/hosts
-printf "%s\t%s\n" $SWITCH_DATA_IP "switch" | sudo tee -a /etc/hosts
-# Add all the physical hosts to /etc/hosts.
-for i in `seq 1 $NUM_RACKS`; do
-    printf "%s\t%s\n" "10.$DATA_NET.100.$i" "host$i" | sudo tee -a /etc/hosts
-done
-# Add all the emulated hosts to /etc/hosts.
-for i in `seq 1 $NUM_RACKS`; do
-    for j in `seq 1 $HOSTS_PER_RACK`; do
-        printf "%s\t%s\n" "10.$DATA_NET.$i.$j" "h$i$j.$FQDN" | sudo tee -a /etc/hosts
-    done
-done
-if echo $NEW_HOSTNAME | grep -q switch; then
-    # If this is the switch, then communicate with everyone over the control
-    # network instead of the data network.
-    sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./g" /etc/hosts
-fi
 
 # build reTCP - Disable for now.
 # cd /etalon/reTCP/
