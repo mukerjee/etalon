@@ -83,4 +83,4 @@ chmod 600 $HOME/.ssh/id_rsa
 chmod 600 $HOME/.ssh/id_rsa.pub
 
 echo "Done"
-# sudo reboot
+sudo reboot

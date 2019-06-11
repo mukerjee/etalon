@@ -17,4 +17,4 @@ sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pi
 sudo chmod +x /usr/local/bin/pipework
 
 echo "Done"
-# sudo reboot
+sudo reboot
