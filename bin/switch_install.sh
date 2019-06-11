@@ -67,13 +67,13 @@ autoreconf -i
 ./configure
 make -j `nproc`
 sudo make -j `nproc` install
-cp /usr/local/sbin/flowgrindd /etalon/vhost/
+cp -v /usr/local/sbin/flowgrindd /etalon/vhost/
 
 # libVT.
 echo "Installing libVT..."
 cd /etalon/libVT
 sudo make -j `nproc` install
-sudo cp ./libVT.so /etalon/vhost/
+sudo cp -v ./libVT.so /etalon/vhost/
 
 echo "Done"
 sudo reboot
