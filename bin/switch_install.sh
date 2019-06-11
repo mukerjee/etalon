@@ -18,12 +18,12 @@ sudo apt install -y \
      autoconf \
      cmake \
      lib32z1-dev \
-     libcurl4-gnutls-dev \
+     libcurl4-gnutls-dev \  # Flowgrind
      libnuma-dev \
-     libxmlrpc-core-c3-dev \
+     libxmlrpc-core-c3-dev \  # Flowgrind
      maven \
      openjdk-8-jdk \
-     uuid-dev
+     uuid-dev  #Flowgrind
 
 cd /etalon
 git submodule update --init
