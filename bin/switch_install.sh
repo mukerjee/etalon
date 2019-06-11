@@ -50,8 +50,8 @@ echo "Setting RTE_SDK location..."
 echo "" >> $HOME/.bashrc
 echo "export RTE_SDK=/usr/share/dpdk" >> $HOME/.bashrc
 echo "export RTE_TARGET=x86_64-default-linuxapp-gcc" >> $HOME/.bashrc
-RTE_SDK=/usr/share/dpdk
-RTE_TARGET=x86_64-default-linuxapp-gcc
+export RTE_SDK=/usr/share/dpdk
+export RTE_TARGET=x86_64-default-linuxapp-gcc
 
 # Click.
 echo "Installing Click..."
