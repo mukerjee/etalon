@@ -11,7 +11,7 @@ if [ ! -d $HOME/etalon ]; then
     exit 1
 fi
 
-source $HOME/etalon/bincommon_install.sh
+source $HOME/etalon/bin/common_install.sh
 
 # If /mnt or /mnt/huge_1GB are mounted, then unmount them.
 if mount | grep "/mnt "; then
@@ -64,7 +64,7 @@ make -j `nproc`
 sudo make -j `nproc` install
 
 # Flowgrind.
-echo "Installing flowgrind..."
+echo "Installing Flowgrind..."
 cd /etalon/flowgrind-etalon
 autoreconf -i
 ./configure

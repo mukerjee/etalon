@@ -27,7 +27,7 @@ cd
 wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu$UBUNTU_VERSION-x86_64.iso
 sudo mount -o ro,loop MLNX_OFED_LINUX-$OFED_VERSION-ubuntu$UBUNTU_VERSION-x86_64.iso /mnt
 # Install.
-sudo /mnt/mlnofedinstall --kernel-only --force
+sudo /mnt/mlnxofedinstall --kernel-only --force
 sudo connectx_port_config -c eth,eth
 echo 'options mlx4_core log_num_mgm_entry_size=-7' | sudo tee -a /etc/modprobe.d/mlx4.conf
 sudo /etc/init.d/openibd restart

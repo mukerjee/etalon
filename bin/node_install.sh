@@ -9,7 +9,7 @@ if [ ! -d $HOME/etalon ]; then
     exit 1
 fi
 
-source $HOME/etalon/bincommon_install.sh
+source $HOME/etalon/bin/common_install.sh
 
 # Pipework.
 cd
