@@ -13,13 +13,6 @@ fi
 
 source $HOME/etalon/bin/common_install.sh
 
-# If /mnt or /mnt/huge_1GB are mounted, then unmount them.
-if mount | grep "/mnt "; then
-    sudo umount /mnt
-elif mount | grep "/mnt/huge_1GB "; then
-    sudo umount /mnt/huge_1GB
-fi
-
 sudo apt update
 sudo apt install -y \
      autoconf \
@@ -38,10 +31,13 @@ git submodule update --init
 # Mellanox DPDK.
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
 echo "Installing Mellanox DPDK..."
-sudo apt install dpdk dpdk-dev
+sudo apt install -y dpdk dpdk-dev
 
 # Huge pages. http://dpdk.org/doc/guides/linux_gsg/sys_reqs.html
 echo "Setting up huge pages..."
+if mount | grep "/mnt/huge_1GB "; then
+    sudo umount /mnt/huge_1GB
+fi
 # Configure huge pages to be allocated on boot.
 sudo sed -i -r 's/GRUB_CMDLINE_LINUX=\"(.*)\"/GRUB_CMDLINE_LINUX=\"\1 default_hugepagesz=1G hugepagesz=1G hugepages=4\"/' /etc/default/grub
 sudo update-grub
@@ -53,8 +49,9 @@ echo 'nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0' | sudo tee -a /etc/fstab
 echo "Setting RTE_SDK location..."
 echo "" >> $HOME/.bashrc
 echo "export RTE_SDK=/usr/share/dpdk" >> $HOME/.bashrc
-echo "export RTE_TARGET=x86_64-native-linuxapp-gcc" >> $HOME/.bashrc
-source $HOME/.bashrc
+echo "export RTE_TARGET=x86_64-default-linuxapp-gcc" >> $HOME/.bashrc
+RTE_SDK=/usr/share/dpdk
+RTE_TARGET=x86_64-default-linuxapp-gcc
 
 # Click.
 echo "Installing Click..."

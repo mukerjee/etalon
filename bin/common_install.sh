@@ -22,9 +22,13 @@ sudo systemctl enable /etalon/rpycd/rpycd.service
 # Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
 echo "Installing MLNX OFED..."
-cd
+
 # Download and mount ISO.
+cd
 wget http://www.mellanox.com/downloads/ofed/MLNX_OFED-$OFED_VERSION/MLNX_OFED_LINUX-$OFED_VERSION-ubuntu$UBUNTU_VERSION-x86_64.iso
+if mount | grep "/mnt "; then
+    sudo umount /mnt
+fi
 sudo mount -o ro,loop MLNX_OFED_LINUX-$OFED_VERSION-ubuntu$UBUNTU_VERSION-x86_64.iso /mnt
 # Install.
 sudo /mnt/mlnxofedinstall --kernel-only --force
