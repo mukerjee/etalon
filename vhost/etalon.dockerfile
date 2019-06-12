@@ -77,7 +77,7 @@ RUN chmod +x pipework
 COPY libVT.so /usr/lib/libVT.so
 
 # install fixed kill
-COPY kill /bin/kill
+# COPY kill /bin/kill
 
 # copy custom flowgrind
 COPY flowgrindd /usr/local/sbin/flowgrindd
