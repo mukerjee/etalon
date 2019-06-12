@@ -114,3 +114,8 @@ sudo systemctl enable phc2sys.service
 if systemctl list-unit-files | grep ntp.service; then
     sudo systemctl disable ntp.service
 fi
+
+# build reTCP
+cd /etalon/reTCP/
+make -j `nproc`
+sudo insmod retcp.ko

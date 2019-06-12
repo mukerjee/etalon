@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# First argument is the hostname.
+# Perform network tuning.
 
 set -o errexit
 
@@ -19,10 +19,5 @@ sudo /usr/sbin/set_irq_affinity.sh $CONTROL_IF
 # Kernel tuning.
 sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192
 sudo sysctl -w net.ipv4.tcp_congestion_control=reno
-
-# build reTCP - Disable for now.
-# cd /etalon/reTCP/
-# make -j `nproc`
-# sudo insmod retcp.ko
 
 ulimit -n 4096
