@@ -59,6 +59,9 @@ echo "Installing Click..."
 cd /etalon/click-etalon
 ./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
 make -j `nproc`
+# "make install" needs gzcat.
+WHICH_ZCAT=`which zcat`
+sudo ln -sfv $WHICH_ZCAT `dirname $WHICH_ZCAT`/gzcat
 sudo make -j `nproc` install
 
 # Flowgrind.
