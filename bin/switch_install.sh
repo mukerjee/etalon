@@ -79,5 +79,12 @@ cd /etalon/libVT
 sudo make -j `nproc` install
 sudo cp -v ./libVT.so /etalon/vhost/
 
+# vhost SSH.
+echo "Setting up SSH..."
+cp /etalon/vhost/config/ssh/id_rsa $HOME/.ssh/
+cp /etalon/vhost/config/ssh/id_rsa.pub $HOME/.ssh/
+chmod 600 $HOME/.ssh/id_rsa
+chmod 600 $HOME/.ssh/id_rsa.pub
+
 echo "Done"
 sudo reboot
