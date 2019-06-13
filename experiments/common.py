@@ -124,7 +124,7 @@ def connect_all_rpyc_daemon():
     for phost in PHYSICAL_NODES[1:]:
         try:
             if phost not in RPYC_CONNECTIONS:
-                RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT)
+                RPYC_CONNECTIONS[phost] = rpyc.connect(phost, RPYC_PORT, config={"allow_all_attrs": True})
         except:
             print 'could not connect to ' + phost
             bad_hosts.append(phost)
