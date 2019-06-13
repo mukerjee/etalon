@@ -16,10 +16,10 @@ SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
 class EtalonService(rpyc.Service):
     # drops all connections that aren't from the switch
-    def on_connect(self):
-        if self._conn._config['endpoints'][1][0] != SWITCH_CONTROL_IP:
+    def on_connect(self, conn):
+        if conn._config['endpoints'][1][0] != SWITCH_CONTROL_IP:
             raise AssertionError("rpyc connection not from switch")
-        
+
     def call(self, cmd, check_rc=True):
         print cmd
         try:
