@@ -101,7 +101,7 @@ sudo /etc/init.d/openibd restart
 sudo umount /mnt
 
 # Install Docker.
-echo "Installing docker..."
+echo "Installing Docker..."
 curl -fsSL https://get.docker.com -o $HOME/get-docker.sh
 sudo sh $HOME/get-docker.sh
 rm -fv $HOME/get-docker.sh

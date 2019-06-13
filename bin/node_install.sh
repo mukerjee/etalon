@@ -25,6 +25,7 @@ echo "Starting rpyc daemon..."
 sudo systemctl enable /etalon/rpycd/rpycd.service
 
 # Pipework.
+echo "Installing Pipework..."
 cd
 sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework > /usr/local/bin/pipework"
 sudo chmod +x /usr/local/bin/pipework
