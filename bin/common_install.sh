@@ -81,7 +81,6 @@ fi
 sudo apt update
 sudo apt install -y git linuxptp python-pip
 sudo -H pip install numpy rpyc
-sudo systemctl enable /etalon/rpycd/rpycd.service
 
 # Install Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction

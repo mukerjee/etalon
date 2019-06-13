@@ -20,6 +20,10 @@ fi
 
 source $HOME/etalon/bin/common_install.sh $NEW_HOSTNAME
 
+# Start the rpyc daemon.
+echo "Starting rpyc daemon..."
+sudo systemctl enable /etalon/rpycd/rpycd.service
+
 # Pipework.
 cd
 sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pipework > /usr/local/bin/pipework"
