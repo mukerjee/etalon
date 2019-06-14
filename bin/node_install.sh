@@ -31,7 +31,7 @@ sudo bash -c "curl https://raw.githubusercontent.com/jpetazzo/pipework/master/pi
 sudo chmod +x /usr/local/bin/pipework
 
 # Give SSH access to the switch.
-cat /etalon/vhost/config/ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+cat /etalon/vhost/config/ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 
 echo "Done"
 sudo reboot

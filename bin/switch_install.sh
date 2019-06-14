@@ -71,13 +71,15 @@ autoreconf -i
 ./configure
 make -j `nproc`
 sudo make -j `nproc` install
-cp -v /usr/local/sbin/flowgrindd /etalon/vhost/
+# Copy to the dir in which the docker build will run.
+cp -fv `which flowgrindd` /etalon/vhost/
 
 # libVT.
 echo "Installing libVT..."
 cd /etalon/libVT
 sudo make -j `nproc` install
-sudo cp -v ./libVT.so /etalon/vhost/
+# Copy to the dir in which the docker build will run.
+cp -fv libVT.so /etalon/vhost/
 
 # Set up SSH keys.
 echo "Setting up SSH..."
