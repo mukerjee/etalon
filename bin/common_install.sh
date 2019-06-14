@@ -48,9 +48,9 @@ else
     NEW_CONTROL_IP=10.$CONTROL_NET.100.$HOST_NUM
     NEW_DATA_IP=10.$DATA_NET.100.$HOST_NUM
 fi
-sudo cp /etalon/etc/netplan/01-etalon.yaml /etc/netplan/01-etalon.yaml
-sudo sed -i "s/CONTROL_IP/$NEW_CONTROL_IP/g" /etc/netplan/01-etalon.yaml
-sudo sed -i "s/DATA_IP/$NEW_DATA_IP/g" /etc/netplan/01-etalon.yaml
+sudo cp /etalon/etc/netplan/99-etalon.yaml /etc/netplan/99-etalon.yaml
+sudo sed -i "s/CONTROL_IP/$NEW_CONTROL_IP/g" /etc/netplan/99-etalon.yaml
+sudo sed -i "s/DATA_IP/$NEW_DATA_IP/g" /etc/netplan/99-etalon.yaml
 sudo netplan apply
 
 # Make our own /etc/hosts.
