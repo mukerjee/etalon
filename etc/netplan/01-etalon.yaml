@@ -3,7 +3,8 @@ network:
     ethernets:
         eno4:
             addresses:
-            - CONTROL_IP/16
+                - CONTROL_IP/16
         enp68s0:
             addresses:
-            - DATA_IP/16
+                - DATA_IP/16
+            mtu: 9000
