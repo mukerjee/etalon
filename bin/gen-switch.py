@@ -362,7 +362,10 @@ print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
     '-> GetIPAddress(16)'
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 
-# only diverts ACKs if set to 1, used in validation
+# Only diverts ACKs if set to 1 (meaning that packets should be sent our port
+# 1). Used in validation. Normally, acks are passed through to port 0 (set by
+# the "0" parameter). When connecting elements together, since we do not specify
+# a port to connect to the next element, by default port 0 is used.
 print '   -> divert_acks :: Switch(0)'
 
 print '   -> st :: SetTimestamp(FIRST true)'
@@ -374,7 +377,9 @@ print '   -> hsl :: HSLog($NUM_RACKS) -> ecem :: ECEMark($NUM_RACKS) -> ' \
     'arp -> out'
 print
 
-# Used in validation
+# Used in validation. Port 1 is connected to a different path. Packets normally
+# go out port 0. Setting the element's "switch" handler to 1 forwards packets
+# out port 1 instead.
 print 'divert_acks[1] ' \
     '-> acks :: IPClassifier(tcp ack and len < 100, -)[1] -> st'
 print 'acks -> arp'
