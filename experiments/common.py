@@ -376,9 +376,8 @@ def launch(phost, image, host_id):
 
     # bind to specific CPU
     cpus = CPU_SET
-    if cpu_lim < 100:
-        cpus = str((host_id % (CPU_COUNT-1)) + 1)
-        my_cmd = my_cmd.format(cpu=cpus)
+    cpus = str((host_id % (CPU_COUNT-1)) + 1)
+    my_cmd = my_cmd.format(cpu=cpus)
 
     run_cmd = IMAGE_DOCKER_RUN[image]
     run_on_host(phost, run_cmd.format(image=DOCKER_IMAGE, hosts_file=HOSTS_FILE,
