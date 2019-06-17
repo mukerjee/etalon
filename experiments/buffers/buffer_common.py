@@ -12,14 +12,14 @@ CONFIGS = [
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 20000},
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 24000},
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 28000},
-    {'type': 'strobe', 'buffer_size':  16, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance':  4000, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance':  8000, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 12000, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 16000, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 20000, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 24000, 'cc': 'retcp'},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 28000, 'cc': 'retcp'},
+    # {'type': 'strobe', 'buffer_size':  16, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance':  4000, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance':  8000, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance': 12000, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance': 16000, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance': 20000, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance': 24000, 'cc': 'retcp'},
+    # {'type': 'resize', 'buffer_size':  16, 'in_advance': 28000, 'cc': 'retcp'},
 ]
 
 for c in CONFIGS:
