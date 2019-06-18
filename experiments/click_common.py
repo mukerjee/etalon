@@ -5,7 +5,7 @@ import common
 import sys
 sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
-    CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE
+    CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE, DEFAULT_CIRCUIT_CONFIG
 
 CLICK_SOCKET = None
 CURRENT_CONFIG = {}
@@ -166,13 +166,8 @@ def setStrobeSchedule(reconfig_delay=20):
     time.sleep(0.1)
 
 
-def setCircuitSchedule():
+def setCircuitSchedule(configuration):
     disableSolstice()
-    #    src hosts:  1/2/3
-    #    dst hosts:  2/1/3
-    #     src idxs:  0/1/2
-    #     dst idxs:  1/0/2
-    configuration = '1/0/2'
     schedule = '1 %d %s' % (20 * TDF * 10 * 10, configuration)
     clickWriteHandler('runner', 'setSchedule', schedule)
     time.sleep(0.1)
@@ -212,7 +207,7 @@ def setConfig(config):
     if t == 'short_reconfig':
         setStrobeSchedule(reconfig_delay=10)
     if t == 'circuit':
-        setCircuitSchedule()
+        setCircuitSchedule(DEFAULT_CIRCUIT_CONFIG)
     if t == 'fixed':
         setFixedSchedule(c['fixed_schedule'])
     divertACKs(c['divert_acks'])

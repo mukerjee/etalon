@@ -72,6 +72,13 @@ CLICK_ADDR = 'localhost'
 CLICK_PORT = 1239
 CLICK_BUFFER_SIZE = 1024
 
+# Default circuit schedule. Used when config type == "circuit".
+#             src hosts:  1/2/3
+#             dst hosts:  2/1/3
+#              src idxs:  0/1/2
+#              dst idxs:  1/0/2
+DEFAULT_CIRCUIT_CONFIG = '1/0/2'
+
 # commands for building / running vhosts
 DOCKER_IMAGE = 'etalon'
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
