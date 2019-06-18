@@ -25,7 +25,7 @@ mkdir $BUILD_DIR
 # Install dependencies and download sources.
 sudo sed -i "/^# deb-src /s/^# //" /etc/apt/sources.list
 sudo apt update
-sudo apt -y build-dep $VER
+sudo apt -y build-dep linux-image-`uname -r`
 sudo apt install -y \
      git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev flex bison \
      python libiberty-dev libdw-dev elfutils systemtap-sdt-dev libunwind-dev \
