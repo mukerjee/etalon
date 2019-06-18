@@ -20,8 +20,10 @@ for config in configs:
     print '--- done...'
 
     settings = {'flows': []}
+    # A ring: 1->2, 2->3, 3->1. Mimics DEFAULT_CIRCUIT_CONFIG.
     settings['flows'].append({'src': 'r1', 'dst': 'r2'})
-    settings['flows'].append({'src': 'r2', 'dst': 'r1'})
+    settings['flows'].append({'src': 'r2', 'dst': 'r3'})
+    settings['flows'].append({'src': 'r3', 'dst': 'r1'})
     flowgrind(settings)
 
 finishExperiment()
