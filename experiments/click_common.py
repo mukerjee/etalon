@@ -166,11 +166,13 @@ def setStrobeSchedule(reconfig_delay=20):
     time.sleep(0.1)
 
 
-# connect rack 1 --> rack 2
 def setCircuitSchedule():
     disableSolstice()
-    configuration = ''
-    configuration += '1/0/3/2/5/4/7/6'
+    #    src hosts:  1/2/3
+    #    dst hosts:  2/1/3
+    #     src idxs:  0/1/2
+    #     dst idxs:  1/0/2
+    configuration = '1/0/2'
     schedule = '1 %d %s' % (20 * TDF * 10 * 10, configuration)
     clickWriteHandler('runner', 'setSchedule', schedule)
     time.sleep(0.1)
