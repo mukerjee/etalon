@@ -16,7 +16,7 @@ fi
 
 # Prepare the build directory.
 rm -rf $BUILD_DIR
-mkdir $BUILD_DIR
+mkdir -pv $BUILD_DIR
 
 # Install dependencies and download sources.
 sudo sed -i "/^# deb-src /s/^# //" /etc/apt/sources.list
@@ -29,6 +29,7 @@ sudo apt install -y \
      linux-tools-common kernel-wedge
 git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $SRC_DIR
 
+# Apply the patch, compile and install.
 cd $SRC_DIR
 git apply $HOME/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
