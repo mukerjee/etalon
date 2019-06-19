@@ -56,6 +56,7 @@ static struct tcp_congestion_ops retcp __read_mostly = {
   .in_ack_event = retcp_in_ack,
   .ssthresh     = tcp_reno_ssthresh,
   .cong_avoid   = retcp_cong_avoid,
+  .undo_cwnd    = tcp_reno_undo_cwnd,
 };
 
 static int __init retcp_register(void)
