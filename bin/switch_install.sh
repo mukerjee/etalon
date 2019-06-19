@@ -4,8 +4,6 @@
 
 set -o errexit
 
-DPDK_VERSION=17.08.2
-
 # Validate.
 if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"

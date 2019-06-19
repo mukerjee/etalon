@@ -8,6 +8,7 @@ UBUNTU_VERSION="bionic"
 BUILD_DIR=$HOME/build
 SRC_DIR=$BUILD_DIR/ubuntu-$UBUNTU_VERSION
 
+# Validate.
 if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
