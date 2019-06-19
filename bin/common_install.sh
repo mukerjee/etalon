@@ -118,10 +118,10 @@ if systemctl list-unit-files | grep ntp.service; then
     sudo systemctl disable ntp.service
 fi
 
-# build reTCP - Ignore for now because the kernel patch does not work yet.
-# cd /etalon/reTCP/
-# make -j `nproc`
-# sudo insmod retcp.ko
-# TODO: Copy to /lib/modules/`uname -r`.
-# TODO: Use modprobe instead of insmod.
-# TODO: Load module automatically on boot.
+# Install reTCP.
+cd /etalon/reTCP/
+make -j `nproc`
+sudo cp -fv retcp.ko /lib/modules/`uname -r`
+sudo depmod
+sudo modprobe retcp
+echo "retcp" | sudo tee -a /etc/modules
