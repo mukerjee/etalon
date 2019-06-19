@@ -88,5 +88,9 @@ cp -fv /etalon/vhost/config/ssh/id_rsa.pub $HOME/.ssh/
 chmod 600 $HOME/.ssh/id_rsa
 chmod 600 $HOME/.ssh/id_rsa.pub
 
+# Do this last because afterwards apt complains and prevents packages from being
+# installed.
+source $HOME/etalon/bin/kernel_install.sh
+
 echo "Done"
 sudo reboot

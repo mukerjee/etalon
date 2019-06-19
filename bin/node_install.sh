@@ -33,5 +33,9 @@ sudo chmod +x /usr/local/bin/pipework
 # Give SSH access to the switch.
 cat /etalon/vhost/config/ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 
+# Do this last because afterwards apt complains and prevents packages from being
+# installed.
+source $HOME/etalon/bin/kernel_install.sh
+
 echo "Done"
 sudo reboot

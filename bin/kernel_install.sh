@@ -12,9 +12,6 @@ if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
-if [ -d $HOME/.config ]; then
-    sudo chown -R `whoami`:`whoami` $HOME/.config
-fi
 
 # Prepare the build directory.
 rm -rf $BUILD_DIR
@@ -36,8 +33,4 @@ git apply $HOME/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 # Perf needs $PYTHON to be set.
 MAKEFLAGS="-j `nproc`" PYTHON=`which python` fakeroot debian/rules binary-headers binary-generic binary-perarch
-# make bindev -package
 sudo dpkg --force-all -i $BUILD_DIR/*.deb
-
-echo "Done"
-# sudo reboot
