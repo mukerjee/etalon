@@ -7,8 +7,6 @@ set -o errexit
 UBUNTU_VERSION="bionic"
 BUILD_DIR=$HOME/build
 SRC_DIR=$BUILD_DIR/ubuntu-$UBUNTU_VERSION
-# VER="linux-image-`uname -r`"
-# SRC_DIR="linux-signed-`echo $VER | cut -d"-" -f3`"
 
 if [ ! -d $HOME/etalon ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
