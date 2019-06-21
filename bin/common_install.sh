@@ -72,11 +72,6 @@ if echo $NEW_HOSTNAME | grep -q switch; then
     sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./g" /etc/hosts
 fi
 
-# Fix permissions of ~/.config.
-if [ -d $HOME/.config ]; then
-    sudo chown -R `whoami`:`whoami` $HOME/.config
-fi
-
 # Install dependencies.
 sudo apt update
 sudo apt install -y git linuxptp python-pip

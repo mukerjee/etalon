@@ -90,5 +90,11 @@ chmod 600 $HOME/.ssh/id_rsa.pub
 # installed.
 source $HOME/etalon/bin/kernel_install.sh
 
+# Fix permissions of ~/.config. Do this last because something else is setting
+# the owner to "root".
+if [ -d $HOME/.config ]; then
+    sudo chown -R `whoami`:`whoami` $HOME/.config
+fi
+
 echo "Done"
 sudo reboot
