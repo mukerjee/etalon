@@ -32,7 +32,8 @@ def clickReadHandler(element, handler):
     message = "READ %s.%s\n" % (element, handler)
     print message.strip()
     CLICK_SOCKET.send(message)
-    data = CLICK_SOCKET.recv(CLICK_BUFFER_SIZE).strip()
+    # The return value is three lines. The last line is the actual value.
+    data = int(CLICK_SOCKET.recv(CLICK_BUFFER_SIZE).strip().split("\n")[-1])
     print data
     return data
 
