@@ -390,7 +390,7 @@ def launch(phost, image, host_id):
                                      id=my_id, rate=DATA_RATE))
 
     run_on_host(my_id, SWITCH_PING)
-    smac = run_on_host(my_id, GET_SWITCH_MAC)
+    smac = run_on_host(my_id, GET_SWITCH_MAC).strip()
 
     for i in xrange(1, NUM_RACKS+1):
         if i == get_phost_id(phost):
