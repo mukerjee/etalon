@@ -105,7 +105,7 @@ DOCKER_RUN_HDFS = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
                   '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
                   '{image} {cmd}'
 PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
-           '10.{net}.{rack}.{id}/16; '
+           '10.{net}.{rack}.{id}/16'
 TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
 SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
