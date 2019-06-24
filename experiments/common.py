@@ -25,7 +25,6 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     gen_slaves_file, SLAVES_FILE, get_hostname_from_rack_and_id, \
     get_rack_and_id_from_host
 
-THREADS = []
 THREAD_LOCK = threading.Lock()
 CURRENT_CC = ''
 
