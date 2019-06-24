@@ -148,7 +148,7 @@ def disableCircuit():
     time.sleep(0.1)
 
 
-def setStrobeSchedule(reconfig_delay=20):
+def setStrobeSchedule(reconfig_delay):
     disableSolstice()
     schedule = '%d ' % ((NUM_RACKS-1)*2)
     for i in xrange(NUM_RACKS-1):
@@ -204,7 +204,7 @@ def setConfig(config):
     if t == 'no_circuit':
         disableCircuit()
     if t == 'strobe':
-        setStrobeSchedule()
+        setStrobeSchedule(reconfig_delay=20)
     if t == 'short_reconfig':
         setStrobeSchedule(reconfig_delay=10)
     if t == 'circuit':
