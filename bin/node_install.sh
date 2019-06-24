@@ -20,6 +20,9 @@ fi
 
 source $HOME/etalon/bin/common_install.sh $NEW_HOSTNAME
 
+sudo apt update
+sudo apt install -y arping
+
 # Start the rpyc daemon.
 echo "Starting rpyc daemon..."
 sudo systemctl enable /etalon/rpycd/rpycd.service
