@@ -26,6 +26,9 @@ class EtalonService(rpyc.Service):
             return check_output(cmd, shell=True)
         except CalledProcessError as e:
             if check_rc:
+                with open("/tmp/rpycd.log", "a+") as erf:
+                    erf.write("Error\nreturncode: {}\noutput: {}".format(
+                        e.returncode, e.output))
                 raise e
 
     # run on a container
