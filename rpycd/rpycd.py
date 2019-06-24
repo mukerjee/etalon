@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import datetime
 import socket
 import rpyc
 
@@ -15,20 +16,26 @@ SELF_ID = int(socket.gethostname().split('.')[0][-1])
 
 
 class EtalonService(rpyc.Service):
+
+    def log(self, msg):
+        with open("/tmp/rpycd.log", "a+") as erf:
+            self.log.write("{}: {}".format(
+                datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg))
+
     # drops all connections that aren't from the switch
     def on_connect(self, conn):
         if conn._config['endpoints'][1][0] != SWITCH_CONTROL_IP:
             raise AssertionError("rpyc connection not from switch")
 
     def call(self, cmd, check_rc=True):
-        print cmd
         try:
-            return check_output(cmd, shell=True)
+            output = check_output(cmd, shell=True)
+            self.log("cmd: {} , output:\n{}".format(cmd, output))
+            return output
         except CalledProcessError as e:
             if check_rc:
-                with open("/tmp/rpycd.log", "a+") as erf:
-                    erf.write("Error\nreturncode: {}\noutput: {}".format(
-                        e.returncode, e.output))
+                self.log("cmd: {} , output: Error\nreturncode: {}\noutput:\n{}".format(
+                    cmd, e.returncode, e.output))
                 raise e
 
     # run on a container
