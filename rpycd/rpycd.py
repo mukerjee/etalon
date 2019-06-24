@@ -19,7 +19,7 @@ class EtalonService(rpyc.Service):
 
     def log(self, msg):
         with open("/tmp/rpycd.log", "a+") as erf:
-            self.log.write("{}: {}".format(
+            erf.write("{}: {}".format(
                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg))
 
     # drops all connections that aren't from the switch
