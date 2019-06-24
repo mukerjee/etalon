@@ -53,3 +53,4 @@ nfqueue_test
 
 # VIM swap files
 *.swp
+*.swo
