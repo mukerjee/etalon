@@ -50,3 +50,6 @@ nfqueue_test
 
 # make cache
 .cache.mk
+
+# VIM swap files
+*.swp
