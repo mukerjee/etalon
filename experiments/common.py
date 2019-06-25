@@ -434,9 +434,9 @@ def launch_all_racks(image, blocking=True):
     for phost in PHYSICAL_NODES[1:]:
         runWriteFile(SCP_TO % (HOSTS_FILE, phost, HOSTS_FILE), None)
         if blocking:
-            launch_rack(phost, image)
+            launch_rack(phost, image, blocking)
         else:
-            ts.append(threading.Thread(target=launch_rack, args=(phost, image)))
+            ts.append(threading.Thread(target=launch_rack, args=(phost, image, blocking)))
             ts[-1].start()
     map(lambda t: t.join(), ts)
 
