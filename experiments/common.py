@@ -347,7 +347,7 @@ def push_docker_image():
     print 'done...'
 
 
-def run_on_host(host, cmd, blocking=True):
+def run_on_host(host, cmd):
     if host in PHYSICAL_NODES:
         func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
     else:
@@ -359,14 +359,9 @@ def run_on_host(host, cmd, blocking=True):
                 host = host[1:]
             func = lambda c: RPYC_CONNECTIONS[
                 get_phost_from_host(host)].root.run_host(host, c)
-    if blocking:
-        return func(cmd)
-    else:
-        t = threading.Thread(target=func, args=(cmd,))
-        t.start()
-        return t
-        
-    
+    return func(cmd)
+
+
 def launch(phost, image, host_id):
     my_id = '%d%d' % (get_phost_id(phost), host_id)
     cpu_lim = IMAGE_CPU[image]
