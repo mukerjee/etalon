@@ -408,18 +408,19 @@ def launch(phost, image, host_id):
                                      rate=CONTROL_RATE))
 
 
-def launch_rack(phost, image):
+def launch_rack(phost, image, blocking=True):
     ts = []
     for i in xrange(1, IMAGE_NUM_HOSTS[image]+1):
-        ts.append(threading.Thread(target=launch,
-                                   args=(phost, image, i)))
-        ts[-1].start()
+        if blocking:
+            launch(phost, image, i)
+        else:
+            ts.append(threading.Thread(target=launch, args=(phost, image, i)))
+            ts[-1].start()
     map(lambda t: t.join(), ts)
 
 
-def launch_all_racks(image):
+def launch_all_racks(image, blocking=True):
     gen_hosts_file(HOSTS_FILE)
-    ts = []
     for phost in PHYSICAL_NODES[1:]:
         try:
             run_on_host(phost, REMOVE_HOSTS_FILE)
@@ -429,12 +430,17 @@ def launch_all_racks(image):
             run_on_host(phost, DOCKER_CLEAN)
         except:
             pass
+
+    ts = []
     for phost in PHYSICAL_NODES[1:]:
         runWriteFile(SCP_TO % (HOSTS_FILE, phost, HOSTS_FILE), None)
-        ts.append(threading.Thread(target=launch_rack,
-                                   args=(phost, image)))
-        ts[-1].start()
+        if blocking:
+            launch_rack(phost, image)
+        else:
+            ts.append(threading.Thread(target=launch_rack, args=(phost, image)))
+            ts[-1].start()
     map(lambda t: t.join(), ts)
+
     num_hosts = IMAGE_NUM_HOSTS[image]
     for r in xrange(1, NUM_RACKS+1):
         for h in xrange(1, num_hosts+1):
