@@ -69,7 +69,7 @@ def initializeExperiment(image):
         print '--- skipping (delete %s to force update)...' % (DID_BUILD_FN)
 
     print '--- launching containers...'
-    launch_all_racks(image)
+    launch_all_racks(image, blocking=False)
     print '--- done...'
 
     click_common.initializeClickControl()
@@ -322,7 +322,7 @@ def setCC(cc):
         ts[-1].start()
     map(lambda t: t.join(), ts)
     if CURRENT_CC and cc != CURRENT_CC:
-        launch_all_racks(IMAGE)
+        launch_all_racks(IMAGE, blocking=False)
     CURRENT_CC = cc
 
 
