@@ -20,7 +20,7 @@ class EtalonService(rpyc.Service):
 
     def log(self, msg):
         with open("/tmp/rpycd.log", "a+") as erf:
-            erf.write("{}: {}".format(
+            erf.write("{}: {}\n".format(
                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg))
 
     # drops all connections that aren't from the switch
@@ -47,12 +47,12 @@ class EtalonService(rpyc.Service):
     # then attempt "my_cmd" every "interval_s" seconds until it suceeds, or until "timeout_s"
     # seconds have elapsed.
     def exposed_ns_run(self, my_id, my_cmd, timeout_s=0, interval_s=0):
-        assert timeout_s >= 0, "\"timeout_s\" must >= 0, but is: {}".format(timeout_s)
-        assert interval_s >= 0, "\"interval_s\" must >= 0, but is: {}".format(interval_s)
+        assert timeout_s >= 0, "\"timeout_s\" must be >= 0, but is: {}".format(timeout_s)
+        assert interval_s >= 0, "\"interval_s\" must be >= 0, but is: {}".format(interval_s)
 
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         full_cmd = NS_RUN.format(pid=my_pid, cmd=my_cmd)
-        start_s = time.time() * 1000
+        start_s = time.time()
         current_s = start_s
         end_s = start_s + timeout_s
         once = False
@@ -63,15 +63,16 @@ class EtalonService(rpyc.Service):
             try:
                 return self.call(full_cmd)
             except CalledProcessError:
-                self.log("Will try \"{}\" again".format(cmd))
+                self.log("Will try \"{}\" again in {} second(s).".format(full_cmd, interval_s))
             count += 1
             if current_s + interval_s > end_s:
                 # If there is at least one interval remaining, then sleep for interval_s seconds.
                 time.sleep(interval_s)
-            current_s = time.time() * 1000
+            current_s = time.time()
         raise RuntimeError(
-            "Command \"{}\" did not complete successfully after {} attempts in {} seconds!".format(
-                cmd, count))
+            ("Command \"{}\" on host \"{}\" did not complete successfully after {} attempt(s) in "
+             "{} seconds!").format(
+                my_cmd, my_id, count, timeout_s))
 
     # run on a physical host
     def exposed_run(self, cmd):
