@@ -266,6 +266,7 @@ def save_counters(fn):
 # Running shell commands
 ##
 def run(cmd, fn):
+    print("host: local , cmd: {}".format(cmd))
     def preexec():  # don't forward signals
         os.setpgrp()
 
