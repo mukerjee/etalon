@@ -48,13 +48,9 @@ class EtalonService(rpyc.Service):
         my_pid = self.call(DOCKER_GET_PID.format(id=my_id)).split()[0].strip()
         return self.call(NS_RUN.format(pid=my_pid, cmd=my_cmd))
 
-    # run on a physical host
-    def exposed_run(self, my_cmd):
-        return self.call(cmd=my_cmd)
-
     # Attempt "cmd" every "interval_s" seconds until it suceeds, or until "timeout_s" seconds have
     # elapsed.
-    def exposed_try_run(self, cmd, timeout_s=300, interval_s=1):
+    def exposed_try_ns_run(self, my_id, cmd, timeout_s=300, interval_s=1):
         start_s = time.time() * 1000
         current_s = start_s
         count = 0
@@ -64,7 +60,7 @@ class EtalonService(rpyc.Service):
             if not once:
                 once = True
             try:
-                return self.call(cmd, check_rc=True)
+                return self.exposed_ns_run(my_id, cmd)
             except:
                 self.log("Trying \"{}\" again...".format(cmd))
             if current_s + interval_s > start_s + timeout_s:
@@ -74,6 +70,10 @@ class EtalonService(rpyc.Service):
         raise RuntimeError(
             "Command \"{}\" did not complete correctly after {} attempts in {} seconds!".format(
                 cmd, count))
+
+    # run on a physical host
+    def exposed_run(self, my_cmd):
+        return self.call(cmd=my_cmd)
 
 
 if __name__ == '__main__':
