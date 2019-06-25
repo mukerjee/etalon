@@ -160,26 +160,26 @@ IMAGE_DOCKER_RUN = defaultdict(lambda: DOCKER_RUN, {
 })
 
 IMAGE_CMD = {
-    'flowgrindd': '"pipework --wait && pipework --wait -i eth2 && '
+    'flowgrindd': '"pipework --wait -i eth1 && pipework --wait -i eth2 && '
                   'LD_PRELOAD=libVT.so taskset -c {cpu} '
                   'flowgrindd -d -c {cpu}"',
 
-    'flowgrindd_adu': '"pipework --wait && pipework --wait -i eth2 && '
+    'flowgrindd_adu': '"pipework --wait -i eth1 && pipework --wait -i eth2 && '
                       'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} '
                       'flowgrindd -d -c {cpu}"',
 
     'HDFS': '"service ssh start && '
-            'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
+            'pipework --wait -i eth1 && pipework --wait -i eth2 && sleep infinity"',
 
     'HDFS_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
                 'export LD_PRELOAD=libADU.so && '
                 'echo LD_PRELOAD=libADU.so >> /root/.ssh/environment && '
                 'service ssh start && '
-                'pipework --wait && pipework --wait -i eth2 && '
+                'pipework --wait -i eth1 && pipework --wait -i eth2 && '
                 'sleep infinity"',
 
     'HDFS_nn': '"service ssh start && '
-               'pipework --wait && pipework --wait -i eth2 && '
+               'pipework --wait -i eth1 && pipework --wait -i eth2 && '
                '/usr/local/hadoop/bin/hdfs namenode -format -force && '
                '/usr/local/hadoop/sbin/start-dfs.sh && '
                '/usr/local/hadoop/sbin/start-yarn.sh && '
@@ -191,7 +191,7 @@ IMAGE_CMD = {
                    'export LD_PRELOAD=libADU.so && '
                    'echo LD_PRELOAD=libADU.so >> /root/.ssh/environment && '
                    'service ssh start && '
-                   'pipework --wait && pipework --wait -i eth2 && '
+                   'pipework --wait -i eth1 && pipework --wait -i eth2 && '
                    '/usr/local/hadoop/bin/hdfs namenode -format -force && '
                    '/usr/local/hadoop/sbin/start-dfs.sh && '
                    '/usr/local/hadoop/sbin/start-yarn.sh && '
@@ -205,7 +205,7 @@ IMAGE_CMD = {
               'org.apache.hadoop.hdfs.server.blockmanagement.'
               'BlockPlacementPolicyRDCN/ '
               '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
-              'pipework --wait && pipework --wait -i eth2 && sleep infinity"',
+              'pipework --wait -i eth1 && pipework --wait -i eth2 && sleep infinity"',
 
     'reHDFS_adu': '"echo export LD_PRELOAD=libADU.so >> /root/.bashrc && '
                   'export LD_PRELOAD=libADU.so && '
@@ -216,7 +216,7 @@ IMAGE_CMD = {
                   'org.apache.hadoop.hdfs.server.blockmanagement.'
                   'BlockPlacementPolicyRDCN/ '
                   '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
-                  'pipework --wait && pipework --wait -i eth2 && '
+                  'pipework --wait -i eth1 && pipework --wait -i eth2 && '
                   'sleep infinity"',
 
     'reHDFS_nn': '"service ssh start && '
@@ -225,7 +225,7 @@ IMAGE_CMD = {
                  'org.apache.hadoop.hdfs.server.blockmanagement.'
                  'BlockPlacementPolicyRDCN/ '
                  '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
-                 'pipework --wait && pipework --wait -i eth2 && '
+                 'pipework --wait -i eth1 && pipework --wait -i eth2 && '
                  '/usr/local/hadoop/bin/hdfs namenode -format -force && '
                  '/usr/local/hadoop/sbin/start-dfs.sh && '
                  '/usr/local/hadoop/sbin/start-yarn.sh && '
@@ -242,7 +242,7 @@ IMAGE_CMD = {
                      'org.apache.hadoop.hdfs.server.blockmanagement.'
                      'BlockPlacementPolicyRDCN/ '
                      '/usr/local/hadoop/etc/hadoop/hdfs-site.xml &&'
-                     'pipework --wait && pipework --wait -i eth2 && '
+                     'pipework --wait -i eth1 && pipework --wait -i eth2 && '
                      '/usr/local/hadoop/bin/hdfs namenode -format -force && '
                      '/usr/local/hadoop/sbin/start-dfs.sh && '
                      '/usr/local/hadoop/sbin/start-yarn.sh && '

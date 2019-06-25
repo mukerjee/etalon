@@ -25,6 +25,6 @@ COPY libVT.so /usr/lib/libVT.so
 # copy custom flowgrind
 COPY flowgrindd /usr/local/sbin/flowgrindd
 
-CMD pipework --wait && \
+CMD pipework --wait -i eth1 && \
     pipework --wait -i eth2 && \
     sleep infinity
