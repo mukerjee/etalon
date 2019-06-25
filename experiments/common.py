@@ -348,14 +348,14 @@ def push_docker_image():
     print 'done...'
 
 
-def run_on_host(host, cmd):
+def run_on_host(host, cmd, timeout_s=0):
     print("host: {} , cmd: {}".format(host, cmd))
     if host in PHYSICAL_NODES:
         func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
     else:
         if 'arp' in cmd or 'ping' in cmd:
             func = lambda c: RPYC_CONNECTIONS[
-                get_phost_from_host(host)].root.ns_run(host, c)
+                get_phost_from_host(host)].root.ns_run(host, c, timeout_s, interval_s=1)
         else:
             if host[0] == 'h':
                 host = host[1:]
@@ -386,7 +386,7 @@ def launch(phost, image, host_id):
         run_on_host(phost, TC.format(int_if=DATA_INT_IF,
                                      id=my_id, rate=DATA_RATE))
 
-    run_on_host(my_id, SWITCH_PING)
+    run_on_host(my_id, SWITCH_PING, timeout_s=300)
     smac = run_on_host(my_id, GET_SWITCH_MAC).strip()
 
     for i in xrange(1, NUM_RACKS+1):
