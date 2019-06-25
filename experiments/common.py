@@ -348,6 +348,7 @@ def push_docker_image():
 
 
 def run_on_host(host, cmd):
+    print("host: {} , cmd: {}".format(host, cmd))
     if host in PHYSICAL_NODES:
         func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
     else:
