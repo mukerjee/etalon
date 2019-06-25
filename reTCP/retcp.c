@@ -35,18 +35,24 @@ static void retcp_in_ack(struct sock *sk, u32 flags)
 
 static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 {
+  printk("retcp_cong_avoid: enter");
   struct retcp *ca = inet_csk_ca(sk);
+  printk("retcp_cong_avoid: 0");
   struct tcp_sock *tp = tcp_sk(sk);
+  printk("retcp_cong_avoid: 1");
   tcp_reno_cong_avoid(sk, ack, acked);
+  printk("retcp_cong_avoid: 2");
 
   if (ca->have_circuit && !ca->jumped) {
     tp->snd_cwnd *= jump_up;
     ca->jumped = 1;
   }
+  printk("retcp_cong_avoid: 3");
   if (!ca->have_circuit && ca->jumped) {
     tp->snd_cwnd /= jump_down;
     ca->jumped = 0;
   }
+  printk("retcp_cong_avoid: exit");
 }
 
 static struct tcp_congestion_ops retcp __read_mostly = {
