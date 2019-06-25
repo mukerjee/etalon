@@ -21,7 +21,7 @@ fi
 source $HOME/etalon/bin/common_install.sh $NEW_HOSTNAME
 
 sudo apt update
-sudo apt install -y arping
+sudo apt install -y iputils-arping
 
 # Start the rpyc daemon.
 echo "Starting rpyc daemon..."
