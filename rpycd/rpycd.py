@@ -71,7 +71,7 @@ class EtalonService(rpyc.Service):
                 time.sleep(interval_s)
             current_s = time.time()
         msg = ("Command \"{}\" on host \"{}\" did not complete successfully after {} attempt(s) in "
-               "{} seconds!").format(my_cmd, my_id, count, timeout_s))
+               "{} seconds!").format(my_cmd, my_id, count, timeout_s)
         self.log(msg)
         raise RuntimeException(msg)
 
