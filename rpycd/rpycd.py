@@ -3,10 +3,12 @@
 import datetime
 import socket
 import time
-import rpyc
-
 from subprocess import check_output, CalledProcessError
 import sys
+
+import rpyc
+from rpyc.utils.server import ThreadedServer
+
 sys.path.insert(0, '/etalon/etc')
 from python_config import RPYC_PORT, SWITCH_CONTROL_IP
 
@@ -33,11 +35,11 @@ class EtalonService(rpyc.Service):
             output = check_output(cmd, shell=True)
             self.log("cmd: {} , output:\n{}".format(cmd, output))
             return output
-        except CalledProcessError as e:
+        except CalledProcessError as exp:
             if check_rc:
                 self.log("cmd: {} , output: Error\nreturncode: {}\noutput:\n{}".format(
-                    cmd, e.returncode, e.output))
-                raise e
+                    cmd, exp.returncode, exp.output))
+                raise exp
 
     # run on a container
     def exposed_run_host(self, my_id, my_cmd):
@@ -81,6 +83,5 @@ class EtalonService(rpyc.Service):
 
 
 if __name__ == '__main__':
-    from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(EtalonService, port=RPYC_PORT, protocol_config={"allow_all_attrs": True})
-    t.start()
+    ThreadedServer(
+        EtalonService, port=RPYC_PORT, protocol_config={"allow_all_attrs": True}).start()
