@@ -76,6 +76,7 @@ def setQueueResize(b):
 
 
 def getCounters():
+    print "--- getting Click counters..."
     circuit_bytes = []
     packet_up_bytes = []
     packet_down_bytes = []
@@ -89,10 +90,12 @@ def getCounters():
         packet_down_bytes.append(
             clickReadHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
                              'total_bytes'))
+    print "--- done..."
     return (circuit_bytes, packet_up_bytes, packet_down_bytes)
 
 
 def clearCounters():
+    print("--- clearing Click counters...")
     for i in xrange(1, NUM_RACKS+1):
         for j in xrange(1, NUM_RACKS+1):
             clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
@@ -104,6 +107,7 @@ def clearCounters():
         clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
                           'clear', "")
     clickWriteHandler('traffic_matrix', 'clear', "")
+    print("--- done...")
 
 
 def divertACKs(divert):
