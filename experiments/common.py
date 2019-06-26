@@ -388,7 +388,7 @@ def launch(phost, image, host_id):
         run_on_host(phost, TC.format(int_if=DATA_INT_IF,
                                      id=my_id, rate=DATA_RATE))
 
-    run_on_host(my_id, SWITCH_PING, timeout_s=300)
+    run_on_host(my_id, SWITCH_PING, timeout_s=600)
     smac = run_on_host(my_id, GET_SWITCH_MAC).strip()
 
     for i in xrange(1, NUM_RACKS+1):
