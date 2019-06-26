@@ -67,7 +67,7 @@ class EtalonService(rpyc.Service):
             except CalledProcessError:
                 count += 1
                 self.log(("Will try command \"{}\" on host \"{}\" again (attempt #{}) in {} "
-                          "second(s).").format(my_cmd, my_id, count, interval_s))
+                          "second(s).").format(my_cmd, my_id, count + 1, interval_s))
             if current_s + interval_s > end_s:
                 # If there is at least one interval remaining, then sleep for interval_s seconds.
                 time.sleep(interval_s)
