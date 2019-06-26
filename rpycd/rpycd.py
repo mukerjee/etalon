@@ -75,7 +75,7 @@ class EtalonService(rpyc.Service):
         msg = ("Command \"{}\" on host \"{}\" did not complete successfully after {} attempt(s) in "
                "{} seconds!").format(my_cmd, my_id, count, timeout_s)
         self.log(msg)
-        raise RuntimeException(msg)
+        raise RuntimeError(msg)
 
     # run on a physical host
     def exposed_run(self, cmd):
