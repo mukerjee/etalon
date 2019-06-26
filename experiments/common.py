@@ -1,14 +1,17 @@
-import time
-import threading
-import os
-import tarfile
-import socket
+
 import glob
-import rpyc
-import numpy as np
-import click_common
+import os
+import socket
 from subprocess import call, PIPE, STDOUT, Popen
 import sys
+import tarfile
+import threading
+import time
+
+import numpy as np
+import rpyc
+
+import click_common
 sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
