@@ -35,7 +35,6 @@ static void retcp_in_ack(struct sock *sk, u32 flags)
 
 static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 {
-  printk(KERN_DEBUG "Using reTCP; enter");
   struct retcp *ca = inet_csk_ca(sk);
   struct tcp_sock *tp = tcp_sk(sk);
   tcp_reno_cong_avoid(sk, ack, acked);
@@ -48,7 +47,6 @@ static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
     tp->snd_cwnd /= jump_down;
     ca->jumped = 0;
   }
-  printk(KERN_DEBUG "reTCP exit");
 }
 
 static struct tcp_congestion_ops retcp __read_mostly = {
