@@ -63,16 +63,17 @@ class EtalonService(rpyc.Service):
             try:
                 return self.call(full_cmd)
             except CalledProcessError:
-                self.log("Will try \"{}\" again in {} second(s).".format(full_cmd, interval_s))
-            count += 1
+                count += 1
+                self.log(("Will try command \"{}\" on host \"{}\" again (attempt #{}) in {} "
+                          "second(s).").format(my_cmd, my_id, count, interval_s))
             if current_s + interval_s > end_s:
                 # If there is at least one interval remaining, then sleep for interval_s seconds.
                 time.sleep(interval_s)
             current_s = time.time()
-        raise RuntimeError(
-            ("Command \"{}\" on host \"{}\" did not complete successfully after {} attempt(s) in "
-             "{} seconds!").format(
-                my_cmd, my_id, count, timeout_s))
+        msg = ("Command \"{}\" on host \"{}\" did not complete successfully after {} attempt(s) in "
+               "{} seconds!").format(my_cmd, my_id, count, timeout_s))
+        self.log(msg)
+        raise RuntimeException(msg)
 
     # run on a physical host
     def exposed_run(self, cmd):
