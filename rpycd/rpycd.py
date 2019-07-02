@@ -33,7 +33,9 @@ class EtalonService(rpyc.Service):
     def call(self, cmd, check_rc=True):
         try:
             output = check_output(cmd, shell=True)
-            self.log("cmd: {} , output:\n{}".format(cmd, output))
+            # For prettiness, only print a newline if there was some output.
+            output_msg = "\n{}".format(output.strip()) if output != "" else ""
+            self.log("cmd: {} , output:{}".format(cmd, output_msg))
             return output
         except CalledProcessError as exp:
             if check_rc:
