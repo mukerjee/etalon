@@ -85,7 +85,7 @@ print 'runner :: RunSchedule($NUM_RACKS, RESIZE false)'
 print
 
 # entry and exit points
-print 'in :: FromDPDKDevice(0)'
+print 'in :: FromDPDKDevice(0, MTU 9000)'
 print 'out :: ToDPDKDevice(0)'
 print
 
@@ -97,7 +97,7 @@ print
 
 # defining input classifiers (i.e., packets from vhost h13 (rack 1, host 3) go
 # to switch input port 1, packets from h24 go to switch input port 2, etc.)
-print 'elementclass in_classfy {'
+print 'elementclass in_classify {'
 print '  input[0] -> IPClassifier('
 for i in xrange(1, NUM_RACKS+1):
     rack_str = '    src host $IP%d or ' % (i)
@@ -359,7 +359,10 @@ print
 # Main Connections
 ##################
 print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
-    '-> GetIPAddress(16)'
+    '-> GetIPAddress(IP dst)'
+# The second pattern matches all packets, i.e., any packets that do not match
+# the first pattern. Packets that match the second pattern are forwarded out
+# port 1, which is connected to the downstream elements.
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 
 # Only diverts ACKs if set to 1 (meaning that packets should be sent our port
@@ -368,13 +371,19 @@ print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 # a port to connect to the next element, by default port 0 is used.
 print '   -> divert_acks :: Switch(0)'
 
+# Set the time at which the packet hits this element.
 print '   -> st :: SetTimestamp(FIRST true)'
-print '   -> in_classfy%s' % (str(list(xrange(NUM_RACKS))))
+# Split the packet stream based on rack.
+print '   -> in_classify%s' % (str(list(xrange(NUM_RACKS))))
+# The hybrid switch itself.
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
 
-# Packet logging and ECEMarking (for reTCP)
-print '   -> hsl :: HSLog($NUM_RACKS) -> ecem :: ECEMark($NUM_RACKS) -> ' \
-    'arp -> out'
+# Packet logging
+print '   -> hsl :: HSLog($NUM_RACKS)'
+# ECE marking (for reTCP)
+print '   -> ecem :: ECEMark($NUM_RACKS)'
+print '   -> arp '
+print '   -> out'
 print
 
 # Used in validation. Port 1 is connected to a different path. Packets normally
@@ -390,7 +399,7 @@ print 'arp_c[1] -> [1]arp'
 print 'arp_c[2] -> arp_r -> out'
 print
 
-# ping responder
+# ping responder. pc[0] is ICMP echo packets.
 print 'pc -> ICMPPingResponder -> arp'
 ######################
 # End Main Connections
