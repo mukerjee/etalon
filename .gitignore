@@ -54,3 +54,7 @@ nfqueue_test
 # VIM swap files
 *.swp
 *.swo
+
+# Emacs temporary files
+*~
+\#*\#
