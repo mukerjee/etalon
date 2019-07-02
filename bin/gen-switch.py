@@ -358,8 +358,10 @@ print
 ##################
 # Main Connections
 ##################
-print 'in -> arp_c -> MarkIPHeader(14) -> StripToNetworkHeader ' \
-    '-> GetIPAddress(IP dst)'
+print 'in -> arp_c'
+print '   -> MarkIPHeader(14)'
+print '   -> StripToNetworkHeader '
+print '   -> GetIPAddress(IP dst)'
 # The second pattern matches all packets, i.e., any packets that do not match
 # the first pattern. Packets that match the second pattern are forwarded out
 # port 1, which is connected to the downstream elements.
@@ -378,9 +380,11 @@ print '   -> in_classify%s' % (str(list(xrange(NUM_RACKS))))
 # The hybrid switch itself.
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
 
-# Packet logging
+# Packet logging. The name is required so that RunSchedule can call its
+# handlers.
 print '   -> hsl :: HSLog($NUM_RACKS)'
-# ECE marking (for reTCP)
+# ECE marking (for reTCP). The name is required so that RunSchedule can call
+# its handler.
 print '   -> ecem :: ECEMark($NUM_RACKS)'
 print '   -> arp '
 print '   -> out'
