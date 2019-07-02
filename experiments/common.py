@@ -393,6 +393,10 @@ def launch(phost, image, host_id):
     run_on_host(my_id, SWITCH_PING, timeout_s=600)
     smac = run_on_host(my_id, GET_SWITCH_MAC).strip()
 
+    # ARP poison. Set the MAC address of all the other emulated hosts to the MAC
+    # of the switch. This will cause all traffic sent to the other emulated
+    # hosts to be sent to the switch instead, where it will be processed by the
+    # hybrid router.
     for i in xrange(1, NUM_RACKS+1):
         if i == get_phost_id(phost):
             continue
