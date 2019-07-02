@@ -6,7 +6,7 @@ import os
 from collections import defaultdict
 
 NUM_RACKS = 3
-HOSTS_PER_RACK = 16
+HOSTS_PER_RACK = 1
 
 TDF = 20.0
 
