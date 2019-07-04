@@ -16,10 +16,10 @@ sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
     PACKET_BW, FQDN, DATA_NET, CONTROL_NET, DFSIOE, get_phost_from_host, \
-    get_phost_id, IMAGE_CPU, CPU_COUNT, CPU_SET, IMAGE_CMD, IMAGE_SETUP, \
-    DOCKER_RUN, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, DATA_INT_IF, \
-    IMAGE_SKIP_TC, TC, DATA_RATE, SWITCH_PING, GET_SWITCH_MAC, ARP_POISON, \
-    CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE, DOCKER_CLEAN, \
+    get_phost_id, IMAGE_CPU, CPU_COUNT, CPU_SET, DEFAULT_REQUEST_SIZE, \
+    IMAGE_CMD, IMAGE_SETUP, DOCKER_RUN, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, \
+    DATA_INT_IF, IMAGE_SKIP_TC, TC, DATA_RATE, SWITCH_PING, GET_SWITCH_MAC, \
+    ARP_POISON, CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE, DOCKER_CLEAN, \
     IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, get_host_from_rack_and_id, SCP, \
     get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
     HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
@@ -199,7 +199,7 @@ def flowgrind(settings):
         if 'start' not in f:
             f['start'] = 0
         if 'size' not in f:
-            f['size'] = 8948
+            f['size'] = DEFAULT_REQUEST_SIZE
         cmd += '-F %d ' % (i)
         if 'fg_report_interval' in settings:
             cmd += '-i %f ' % (settings['fg_report_interval'])

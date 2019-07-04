@@ -79,6 +79,9 @@ CLICK_BUFFER_SIZE = 1024
 #              dst idxs:  1/2/0
 DEFAULT_CIRCUIT_CONFIG = '1/2/0'
 
+# The default packet size for flowgrind, in bytes.
+DEFAULT_REQUEST_SIZE = 8948
+
 # commands for building / running vhosts
 DOCKER_IMAGE = 'etalon'
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
