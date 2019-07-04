@@ -74,7 +74,7 @@ fi
 
 # Install dependencies.
 sudo apt update
-sudo apt install -y git linuxptp python-pip libnl-3-dev libnl-route-3-dev
+sudo apt install -y git linuxptp python-pip
 sudo -H pip install numpy rpyc
 
 # Install Mellanox OFED.
