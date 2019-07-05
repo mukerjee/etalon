@@ -215,6 +215,7 @@ def flowgrind(settings):
     cmd += '-I '
     fg_config = click_common.FN_FORMAT % ('flowgrind.config')
     fp = open(fg_config, 'w')
+    print("flowgrind cmd: {}".format(cmd))
     fp.write(cmd)
     fp.close()
     cmd = 'flowgrind --configure %s' % fg_config
