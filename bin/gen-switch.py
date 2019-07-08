@@ -89,9 +89,9 @@ print 'in :: FromDPDKDevice(0, MTU 9000)'
 print 'out :: ToDPDKDevice(0)'
 print
 
-# arp
+# arp. Pattern 0 (port 0) is IP packets. Pattern 1 (port 1) is ARP replies. Pattern 2 (port 2) is ARP requests.
 print 'arp_c :: Classifier(12/0800, 12/0806 20/0002, 12/0806 20/0001)'
-print 'arp :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)'
+print 'arp_q :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)'
 print 'arp_r :: ARPResponder($DEVNAME)'
 print
 
@@ -119,7 +119,7 @@ print
 
 # defining out classifiers (i.e., packets to vhost h13 (rack 1, host 3) go
 # to switch output port 1, packets to h24 go to switch output port 2, etc.)
-print 'elementclass out_classfy {'
+print 'elementclass out_classify {'
 print '  input[0] -> IPClassifier('
 for i in xrange(1, NUM_RACKS+1):
     rack_str = '    dst host $IP%d or ' % (i)
@@ -165,10 +165,10 @@ print
 print 'elementclass packet_switch {'
 
 # out classifier definition (used to put packets into right VOQ)
-out_classfy = '  '
+out_classify = '  '
 for i in xrange(1, NUM_RACKS+1):
-    out_classfy += 'c%d, ' % i
-print out_classfy[:-2] + ' :: out_classfy'
+    out_classify += 'c%d, ' % i
+print out_classify[:-2] + ' :: out_classify'
 print
 
 # VOQ definitions
@@ -241,10 +241,10 @@ print
 print 'hybrid_switch :: {'
 
 # out classifier definition (used to put packets into right VOQ)
-out_classfy = '  '
+out_classify = '  '
 for i in xrange(1, NUM_RACKS+1):
-    out_classfy += 'c%d, ' % i
-print out_classfy[:-2] + ' :: out_classfy'
+    out_classify += 'c%d, ' % i
+print out_classify[:-2] + ' :: out_classify'
 print
 
 # VOQ definitions
@@ -343,7 +343,7 @@ print
 # wiring dropped packet switch packets to loss queues in respective VOQ.
 print '  // dropped PS packets -> loss queues'
 for i in xrange(1, NUM_RACKS+1):
-    output = '  ps[%d] -> out_classfy => ' % (i-1 + NUM_RACKS)
+    output = '  ps[%d] -> out_classify => ' % (i-1 + NUM_RACKS)
     for j in xrange(1, NUM_RACKS+1):
         output += '[1]q%d%d, ' % (i, j)
     output = output[:-2]
@@ -365,7 +365,7 @@ print '   -> GetIPAddress(IP dst)'
 # The second pattern matches all packets, i.e., any packets that do not match
 # the first pattern. Packets that match the second pattern are forwarded out
 # port 1, which is connected to the downstream elements.
-print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
+print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1] '
 
 # Only diverts ACKs if set to 1 (meaning that packets should be sent our port
 # 1). Used in validation. Normally, acks are passed through to port 0 (set by
@@ -374,7 +374,7 @@ print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1]'
 print '   -> divert_acks :: Switch(0)'
 
 # Set the time at which the packet hits this element.
-print '   -> st :: SetTimestamp(FIRST true)'
+print '   -> st :: SetTimestamp(FIRST true) '
 # Split the packet stream based on rack.
 print '   -> in_classify%s' % (str(list(xrange(NUM_RACKS))))
 # The hybrid switch itself.
@@ -386,7 +386,7 @@ print '   -> hsl :: HSLog($NUM_RACKS)'
 # ECE marking (for reTCP). The name is required so that RunSchedule can call
 # its handler.
 print '   -> ecem :: ECEMark($NUM_RACKS)'
-print '   -> arp '
+print '   -> arp_q '
 print '   -> out'
 print
 
@@ -395,16 +395,17 @@ print
 # out port 1 instead.
 print 'divert_acks[1] ' \
     '-> acks :: IPClassifier(tcp ack and len < 100, -)[1] -> st'
-print 'acks -> arp'
+print 'acks -> arp_q'
 print
 
-# arp
-print 'arp_c[1] -> [1]arp'
+# Connect ARP replies to the ARPQuerier.
+print 'arp_c[1] -> [1]arp_q'
+# Connect ARP requests to the ARPResponder.
 print 'arp_c[2] -> arp_r -> out'
 print
 
 # ping responder. pc[0] is ICMP echo packets.
-print 'pc -> ICMPPingResponder -> arp'
+print 'pc -> ICMPPingResponder -> arp_q'
 ######################
 # End Main Connections
 ######################
