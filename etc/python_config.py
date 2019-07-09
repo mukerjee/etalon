@@ -97,6 +97,7 @@ DOCKER_LOAD = 'sudo docker load -i %s' % DOCKER_REMOTE_IMAGE_PATH
 DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
              '{hosts_file}:/etc/hosts:ro ' \
              '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
+             '--sysctl net.core.somaxconn=2048 --sysctl net.ipv4.tcp_max_syn_backlog=2048 '\
              '{image} {cmd}'
 DOCKER_RUN_HDFS = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
                   '{hosts_file}:/etc/hosts:ro ' \
