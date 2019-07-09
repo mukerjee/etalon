@@ -6,4 +6,4 @@
 	url = https://github.com/ccanel/click-etalon
 [submodule "flowgrind-etalon"]
 	path = flowgrind-etalon
-	url = https://github.com/mukerjee/flowgrind-etalon
+	url = https://github.com/ccanel/flowgrind-etalon
