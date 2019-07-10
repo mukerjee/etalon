@@ -12,6 +12,19 @@ fi
 
 source $HOME/etalon/bin/common_install.sh "switch"
 
+# Add entries to the FORWARD iptable to enable Linux IP forwarding for the
+# emulated hosts. This is not required. but is useful for debugging. This allows
+# us to disable the Etalon hybrid switch without breaking connectivity between
+# the emulated hosts. Otherwise, to send traffic between the emulated hosts
+# without using the Etalon hybrid switch, we would need to modify the emulated
+# hosts' ARP tables to remove the poison records that divert traffic destined
+# for other emulated hosts to the switch machine.
+for i in `seq 1 $NUM_RACKS`; do
+    for j in `seq 1 $HOSTS_PER_RACK`; do
+        sudo iptables -I FORWARD -s 10.$DATA_NET.$j.$j -j ACCEPT
+    done
+done
+
 sudo apt update
 sudo apt install -y \
      autoconf \
