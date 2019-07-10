@@ -327,7 +327,7 @@ def parse_packet_log(fn):
         sum(circuit_bytes.values()), sum(packet_bytes.values())
 
 
-def parse_validation_log(folder, fns, packet):
+def parse_validation_log(folder, fns):
     # Map of filename to (map of pair (src rack, dst rack) to throughput in Gb/s).
     tp_out = {}
     for fn in fns:

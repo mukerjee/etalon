@@ -14,8 +14,8 @@ if __name__ == '__main__':
         sys.exit(-1)
     parse_validation_log(sys.argv[1], glob.glob(sys.argv[1] +
                                                 '/*-validation-no_circuit-*-'
-                                                'flowgrind.txt'), True)
+                                                'flowgrind.txt'))
     
     parse_validation_log(sys.argv[1], glob.glob(sys.argv[1] +
                                                 '/*-validation-circuit-*-'
-                                                'flowgrind.txt'), False)
+                                                'flowgrind.txt'))
