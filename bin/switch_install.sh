@@ -30,6 +30,7 @@ sudo iptables-save | while read x; do
     echo $x | sudo tee -a /etc/iptables/rules.v4;
 done
 
+# Install dependencies.
 sudo apt update
 sudo apt install -y \
      autoconf \
