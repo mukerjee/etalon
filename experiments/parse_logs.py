@@ -329,6 +329,7 @@ def parse_packet_log(fn):
 def parse_validation_log(folder, fns, packet):
     tp_out = {}
     for fn in fns:
+        # Map of flow ID to pair (src rack, dst rack).
         id_to_sr = {}
         for l in open(fn.split('.txt')[0] + '.config.txt'):
             l = l.split('-F')[1:]
@@ -338,6 +339,8 @@ def parse_validation_log(folder, fns, packet):
                 r = int(x.strip().split(',d=10.1.')[1].split('.')[0])
                 id_to_sr[id] = (s, r)
 
+        # Map of pair (src rack, dst rack) to list of pairs (timestamp, bytes since last
+        # timestamp).
         out_data = defaultdict(lambda: defaultdict(int))
         circuit = False if 'no_circuit' in fn else True
         for line in open(fn):
@@ -383,6 +386,7 @@ def parse_validation_log(folder, fns, packet):
                 out_data[sr].append((ts - first_ts, bytes))
 
         print 'done parsing ' + fn
+        # Map of pair (src rack, dst rack) to throughput in Gb/s.
         tp = defaultdict(list)
         for sr in out_data:
             if packet_log_fn:
@@ -399,6 +403,8 @@ def parse_validation_log(folder, fns, packet):
                     tp[sr].append(curr_tp * (1000.0 / bin_size) * 8.0 / 1e9)
             else:
                 for i in xrange(0, 2000, bin_size):
+                    # Find all the logs (i.e., numbers of bytes during some window) for
+                    # the current bin, and then sum them up.
                     curr = [b for ts, b in out_data[sr]
                             if ts >= i/1000.0 and ts < (i+bin_size) / 1000.0]
                     curr = sum(curr)
