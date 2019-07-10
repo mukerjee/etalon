@@ -104,7 +104,7 @@ chmod 600 $HOME/.ssh/id_rsa.pub
 
 # Do this last because afterwards apt complains and prevents packages from being
 # installed.
-source $HOME/etalon/bin/kernel_install.sh
+source /etalon/bin/kernel_install.sh
 
 # Fix permissions of ~/.config. Do this last because something else is setting
 # the owner to "root".
