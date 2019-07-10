@@ -38,7 +38,7 @@ cat /etalon/vhost/config/ssh/id_rsa.pub >> $HOME/.ssh/authorized_keys
 
 # Do this last because afterwards apt complains and prevents packages from being
 # installed.
-# source $HOME/etalon/bin/kernel_install.sh
+source $HOME/etalon/bin/kernel_install.sh
 
 # Fix permissions of ~/.config. Do this last because something else is setting
 # the owner to "root".
