@@ -29,6 +29,8 @@ sudo mkdir -pv /etc/iptables
 sudo iptables-save | while read x; do
     echo $x | sudo tee -a /etc/iptables/rules.v4;
 done
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
 
 # Install dependencies.
 sudo apt update
