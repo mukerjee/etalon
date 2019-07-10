@@ -121,7 +121,6 @@ def tarExperiment():
 # rpyc_daemon
 ##
 def connect_all_rpyc_daemon():
-    bad_hosts = []
     for phost in PHYSICAL_NODES[1:]:
         try:
             if phost not in RPYC_CONNECTIONS:
@@ -129,9 +128,7 @@ def connect_all_rpyc_daemon():
                         phost, RPYC_PORT,
                         config={"allow_all_attrs": True, "sync_request_timeout": 1000})
         except:
-            print 'could not connect to ' + phost
-            bad_hosts.append(phost)
-    map(lambda x: PHYSICAL_NODES.remove(x), bad_hosts)
+            raise RuntimeError('could not connect to ' + phost)
 
 
 ##
