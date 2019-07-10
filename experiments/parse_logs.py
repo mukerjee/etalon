@@ -12,6 +12,7 @@ percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
 TDF = 20.0
+# 1/1000 seconds.
 bin_size = 1
 
 
@@ -327,6 +328,7 @@ def parse_packet_log(fn):
 
 
 def parse_validation_log(folder, fns, packet):
+    # Map of filename to (map of pair (src rack, dst rack) to throughput in Gb/s).
     tp_out = {}
     for fn in fns:
         # Map of flow ID to pair (src rack, dst rack).
@@ -412,6 +414,7 @@ def parse_validation_log(folder, fns, packet):
                     curr = [b for ts, b in out_data[sr]
                             if ts >= i/1000.0 and ts < (i+bin_size) / 1000.0]
                     curr = sum(curr)
+                    # bytes / ms -> bits / ms -> bits / s -> Gb/s
                     tp[sr].append((curr*8.0 / (bin_size / 1000.0) / 1e9))
         tp_out[fn] = copy.deepcopy(tp)
     tp = defaultdict(list)
