@@ -367,6 +367,7 @@ def parse_validation_log(folder, fns, packet):
                                       'no_circuit-*-click.txt'
                                       % fn_ts)
         if packet_log_fn:
+            print("found packet log")
             out_data = defaultdict(list)
             first_ts = -1
             for msg in msg_from_file(packet_log_fn[0]):
@@ -384,6 +385,9 @@ def parse_validation_log(folder, fns, packet):
                 if first_ts == -1:
                     first_ts = ts
                 out_data[sr].append((ts - first_ts, bytes))
+        else:
+            print("did not find packet log")
+
 
         print 'done parsing ' + fn
         # Map of pair (src rack, dst rack) to throughput in Gb/s.
