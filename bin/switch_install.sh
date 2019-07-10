@@ -12,6 +12,22 @@ fi
 
 source $HOME/etalon/bin/common_install.sh "switch"
 
+sudo apt update
+sudo apt install -y \
+     autoconf \
+     cmake \
+     iptables-persistent \
+     lib32z1-dev \
+     libcurl4-gnutls-dev \
+     libnuma-dev \
+     libxmlrpc-core-c3-dev \
+     maven \
+     openjdk-8-jdk \
+     uuid-dev
+
+cd /etalon
+git submodule update --init
+
 # Add entries to the FORWARD iptable to enable Linux IP forwarding for the
 # emulated hosts. This is not required. but is useful for debugging. This allows
 # us to disable the Etalon hybrid switch without breaking connectivity between
@@ -24,21 +40,7 @@ for i in `seq 1 $NUM_RACKS`; do
         sudo iptables -I FORWARD -s 10.$DATA_NET.$j.$j -j ACCEPT
     done
 done
-
-sudo apt update
-sudo apt install -y \
-     autoconf \
-     cmake \
-     lib32z1-dev \
-     libcurl4-gnutls-dev \
-     libnuma-dev \
-     libxmlrpc-core-c3-dev \
-     maven \
-     openjdk-8-jdk \
-     uuid-dev
-
-cd /etalon
-git submodule update --init
+sudo iptables-save > /etc/iptables/rules.v4
 
 # Mellanox DPDK.
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
