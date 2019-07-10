@@ -192,27 +192,10 @@ def flowgrind(settings):
                         flows.append(fl)
                 else:
                     flows.append(f)
-    cmd = '-n %s ' % len(flows)
+    cmd = '-I -Ts=2 -Ys=0 -Gs=q:C:%d -Q -i 2 -n %s ' % (DEFAULT_REQUEST_SIZE, len(flows))
     for i, f in enumerate(flows):
-        if 'time' not in f:
-            f['time'] = 2.0
-        if 'start' not in f:
-            f['start'] = 0
-        if 'size' not in f:
-            f['size'] = DEFAULT_REQUEST_SIZE
-        cmd += '-F %d ' % (i)
-        if 'fg_report_interval' in settings:
-            cmd += '-i %f ' % (settings['fg_report_interval'])
-        else:
-            cmd += '-Q -i 2 '
-        cmd += '-Hs=%s,d=%s -Ts=%f -Ys=%f -Gs=q:C:%d ' % \
-            (get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']),
-             f['time'], f['start'], f['size'])
-        if 'response_size' in f:
-            cmd += '-Gs=p:C:%d ' % f['response_size']
-        if 'single' in f:
-            cmd += '-Z 1 '
-    cmd += '-I '
+        cmd += '-F %d -Hs=%s,d=%s ' % \
+               (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']))
     fg_config = click_common.FN_FORMAT % ('flowgrind.config')
     fp = open(fg_config, 'w')
     print("flowgrind cmd: {}".format(cmd))
