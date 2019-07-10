@@ -40,7 +40,8 @@ for i in `seq 1 $NUM_RACKS`; do
         sudo iptables -I FORWARD -s 10.$DATA_NET.$j.$j -j ACCEPT
     done
 done
-sudo iptables-save > /etc/iptables/rules.v4
+sudo mkdir -p /etc/iptables
+echo `sudo iptables-save` | sudo tee /etc/iptables/rules.v4
 
 # Mellanox DPDK.
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
