@@ -329,7 +329,8 @@ def parse_packet_log(fn):
 
 def parse_validation_log(folder, fns):
     # This is based on my observation of how this function is used.
-    assert len(fns) == 1
+    num_fns = len(fns)
+    assert num_fns == 1, "Expected 1 filename, but found: {}".format(num_fns)
     fn = fns[0]
     print("parsing: {}".format(fn))
 
