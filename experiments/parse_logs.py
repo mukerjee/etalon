@@ -13,7 +13,7 @@ RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
 TDF = 20.0
 # 1/1000 seconds.
-bin_size = 1
+bin_size = 100
 
 
 def parse_flowgrind_config(fn):
@@ -328,115 +328,136 @@ def parse_packet_log(fn):
 
 
 def parse_validation_log(folder, fns):
-    # Map of filename to (map of pair (src rack, dst rack) to throughput in Gb/s).
-    tp_out = {}
-    for fn in fns:
-        # Map of flow ID to pair (src rack, dst rack).
-        id_to_sr = {}
-        for l in open(fn.split('.txt')[0] + '.config.txt'):
-            l = l.split('-F')[1:]
-            for x in l:
-                id = int(x.strip().split()[0])
-                s = int(x.strip().split('-Hs=10.1.')[1].split('.')[0])
-                r = int(x.strip().split(',d=10.1.')[1].split('.')[0])
-                id_to_sr[id] = (s, r)
+    # This is based on my observation of how this function is used.
+    assert len(fns) == 1
+    fn = fns[0]
+    print("parsing: {}".format(fn))
 
-        # Map of pair (src rack, dst rack) to list of pairs (timestamp, bytes since last
-        # timestamp).
-        out_data = defaultdict(lambda: defaultdict(int))
-        circuit = False if 'no_circuit' in fn else True
-        for line in open(fn):
-            if line[0] == 'S' and (line[1] == ' ' or line[1] == '1'):
-                line = line[1:].strip()
-                id = int(line.split()[0])
-                ts_start = float(line.split()[1])
-                ts_end = float(line.split()[2])
-                curr_tp = float(line.split()[3]) * 1e6
-                curr_bytes = (curr_tp / 8.0) * (ts_end - ts_start)
-                out_data[id_to_sr[id]][ts_start] += curr_bytes
-        for sr in out_data:
-            out_data[sr] = sorted(out_data[sr].items())
+    # Map of flow ID to pair (src rack, dst rack).
+    id_to_sr = {}
+    for l in open(fn.split('.txt')[0] + '.config.txt'):
+        l = l.split('-F')[1:]
+        for x in l:
+            id = int(x.strip().split()[0])
+            s = int(x.strip().split('-Hs=10.1.')[1].split('.')[0])
+            r = int(x.strip().split(',d=10.1.')[1].split('.')[0])
+            id_to_sr[id] = (s, r)
 
-        fn_ts = fn.split('/')[-1].split('-validation')[0]
-        if circuit:
-            packet_log_fn = glob.glob(folder +
-                                      '/tmp/%s-validation-'
-                                      'circuit-*-click.txt'
-                                      % fn_ts)
-        else:
-            packet_log_fn = glob.glob(folder +
-                                      '/tmp/%s-validation-'
-                                      'no_circuit-*-click.txt'
-                                      % fn_ts)
-        if packet_log_fn:
-            print("found packet log")
-            out_data = defaultdict(list)
-            first_ts = -1
-            for msg in msg_from_file(packet_log_fn[0]):
-                (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
-                if t != 0:
-                    continue
-                bytes = unpack('!H', data[2:4])[0]
-                sender = ord(data[14])
-                recv = ord(data[18])
-                sr = (sender, recv)
-                for i in xrange(len(ts)):
-                    if ord(ts[i]) == 0:
-                        break
-                ts = (float(ts[:i]) / TDF) * 1000
-                if first_ts == -1:
-                    first_ts = ts
-                out_data[sr].append((ts - first_ts, bytes))
-        else:
-            print("did not find packet log")
+    # Map of pair (src rack, dst rack) to list of pairs (timestamp, bytes since last
+    # timestamp).
+    out_data = defaultdict(lambda: defaultdict(int))
+    circuit = 'no_circuit' not in fn
+    for line in open(fn):
+        if line[0] == 'S' and (line[1] == ' ' or line[1] == '1'):
+            line = line[1:].strip()
+            id = int(line.split()[0])
+            ts_start = float(line.split()[1])
+            ts_end = float(line.split()[2])
+            curr_tp = float(line.split()[3]) * 1e6
+            curr_bytes = (curr_tp / 8.) * (ts_end - ts_start)
+            out_data[id_to_sr[id]][ts_start] += curr_bytes
+    for sr in out_data:
+        out_data[sr] = sorted(out_data[sr].items())
 
+    # Attempt to parse the packet log.
+    # fn_ts = fn.split('/')[-1].split('-validation')[0]
+    # if circuit:
+    #     packet_log_fn = glob.glob(
+    #         folder + '/tmp/%s-validation-circuit-*-click.txt' % fn_ts)
+    # else:
+    #     packet_log_fn = glob.glob(
+    #         folder + '/tmp/%s-validation-no_circuit-*-click.txt' % fn_ts)
+    # if packet_log_fn:
+    #     print("found packet log")
+    #     out_data = defaultdict(list)
+    #     first_ts = -1
+    #     for msg in msg_from_file(packet_log_fn[0]):
+    #         (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
+    #         if t != 0:
+    #             continue
+    #         bytes = unpack('!H', data[2:4])[0]
+    #         sender = ord(data[14])
+    #         recv = ord(data[18])
+    #         sr = (sender, recv)
+    #         for i in xrange(len(ts)):
+    #             if ord(ts[i]) == 0:
+    #                 break
+    #         ts = (float(ts[:i]) / TDF) * 1000
+    #         if first_ts == -1:
+    #             first_ts = ts
+    #         out_data[sr].append((ts - first_ts, bytes))
+    # else:
+    #     print("did not find packet log")
 
-        print 'done parsing ' + fn
-        # Map of pair (src rack, dst rack) to throughput in Gb/s.
-        tp = defaultdict(list)
-        for sr in out_data:
-            if packet_log_fn:
-                curr = 0
-                for i in xrange(0, 2000, bin_size):
-                    curr_tp = 0
-                    for j in xrange(curr, len(out_data[sr])):
-                        ts, bytes = out_data[sr][j]
-                        if ts >= i and ts < i+bin_size:
-                            curr_tp += bytes
-                        else:
-                            curr = j
-                            break
-                    tp[sr].append(curr_tp * (1000.0 / bin_size) * 8.0 / 1e9)
-            else:
-                for i in xrange(0, 2000, bin_size):
-                    # Find all the logs (i.e., numbers of bytes during some window) for
-                    # the current bin, and then sum them up.
-                    curr = [b for ts, b in out_data[sr]
-                            if ts >= i/1000.0 and ts < (i+bin_size) / 1000.0]
-                    curr = sum(curr)
-                    # bytes / ms -> bits / ms -> bits / s -> Gb/s
-                    tp[sr].append((curr*8.0 / (bin_size / 1000.0) / 1e9))
-        tp_out[fn] = copy.deepcopy(tp)
+    print("done parsing: ".format(fn))
+    # Map of pair (src rack, dst rack) to list of throughputs in Gb/s. Each
+    # throughput corresponds to the throughput during one bin.
     tp = defaultdict(list)
-    for sr in tp_out[fns[0]]:
-        for i in xrange(0, 2000, bin_size):
-            tp[sr].append(np.average([q[sr][i] for q in tp_out.values()]))
-    print [len(tp[k]) for k in tp.keys()]
-    x = [xrange(0, 2000, bin_size) for sr in tp.keys()]
-    y = tp.values()
+    for sr in out_data:
+        # if packet_log_fn:
+        #     curr = 0
+        #     for i in xrange(0, 2000, bin_size):
+        #         curr_tp = 0
+        #         for j in xrange(curr, len(out_data[sr])):
+        #             ts, bytes = out_data[sr][j]
+        #             if ts >= i and ts < i+bin_size:
+        #                 curr_tp += bytes
+        #             else:
+        #                 curr = j
+        #                 break
+        #         tp[sr].append(curr_tp * (1000. / bin_size) * 8. / 1e9)
+        # else:
 
-    means = []
-    stds = []
-    for data in y:
+        # 2000 is the length of the validation experiment: 2 seconds.
+        for i in xrange(0, 2000, bin_size):
+            # Find all the logs (i.e., numbers of bytes during some window) for
+            # the current bin...
+            curr = [b for ts, b in out_data[sr]
+                    if i / 1000. <= ts < (i + bin_size) / 1000.]
+            # ...and sum them up to calculate the total number of bytes sent in this
+            # bin (e.g., if the bin size is 1, then this is the total amount of bytes
+            # logged in 1 ms.
+            bpms = sum(curr)
+            # bytes / ms -> bits / ms -> bits / s -> Gb/s
+            gbps = bpms * 8. / (bin_size / 1000.) / 1e9
+            tp[sr].append(gbps)
+            # print("{} <= {} < {} - curr: {}".format(
+            #     i / 1000., ts, (i + bin_size) / 1000., gbps))
+
+    # for k, v in tp.items():
+    #     print("{}: {}--{}".format(k, len(v), v))
+
+    # tp_avg = defaultdict(list)
+    # for sr in tp:
+    #     for i in xrange(0, 2000, bin_size):
+    #         print("[tp[sr][i]]: {}".format([tp[sr][i]]))
+    #         tp_avg[sr].append(np.average([tp[sr][i]]))
+    # print("tp_avg: {}".format(tp_avg))
+
+    means = {}
+    stdevs = {}
+    for sr, data in tp.items():
+        # Jump over data from before the flow started?
         for i, d in enumerate(data):
+            # print(d)
             if round(d) > 0:
+                # print("break")
                 break
-        means.append(np.mean(data[i:]))
-        stds.append(np.std(data[i:]))
-    print means
-    print stds
-    print np.mean(means)
-    print np.mean(stds)
+        # print("i: {}".format(i))
+        means[sr] = np.mean(data[i:])
+        stdevs[sr] = np.std(data[i:])
+
+    print("Num logs:")
+    for sr, v in tp.items():
+        print("\t Flow {}: {}".format(sr, len(v)))
+    print("Means:")
+    for sr, mean in means.items():
+        print("\tFlow {}: {} Gb/s".format(sr, mean))
+    print("Standard deviations:")
+    for sr, stdev in stdevs.items():
+        print("\tFlow {}: {} Gb/s".format(sr, stdev))
+    print("Mean of means: {} Gb/s".format(np.mean(means.values())))
+    print("Mean of standard deviations: {} Gb/s".format(np.mean(stdevs.values())))
 
 
 def parse_hdfs_logs(folder):
