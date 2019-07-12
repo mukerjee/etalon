@@ -11,7 +11,7 @@ from collections import defaultdict
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
-TDF = 20.0
+TDF = 20.
 # 1/1000 seconds.
 bin_size = 100
 
@@ -32,7 +32,7 @@ def parse_flowgrind_config(fn):
             flows[id].append(rack)
             if l.split(":")[0][-1] == 'S':
                 time = float(l.split('duration = ')[1].split('/')[0]) * 1000000
-                tp = float(l.split('through = ')[1].split('/')[0]) / 1000.0
+                tp = float(l.split('through = ')[1].split('/')[0]) / 1000.
             else:
                 flows[id].append(time)
                 flows[id].append(tp)
@@ -86,7 +86,7 @@ def get_seq_data(fn):
         for i in xrange(len(ts)):
             if ord(ts[i]) == 0:
                 break
-        ts = float(ts[:i]) / 20.0
+        ts = float(ts[:i]) / 20.
 
         if t == 1 or t == 2:  # starting or closing
             sr = (src, dst)
@@ -318,7 +318,7 @@ def parse_packet_log(fn):
         for ts in circuit_starts[sr]:
             if ts >= flow_start[sr] and ts <= flow_end[sr]:
                 n += 1
-        max_bytes = n * RTT * (CIRCUIT_BW * 1e9 / 8.0)
+        max_bytes = n * RTT * (CIRCUIT_BW * 1e9 / 8.)
         for i, r in sorted(bytes_in_rtt[sr].items()):
             b[sr][i] = (r / max_bytes) * 100
 
@@ -492,4 +492,4 @@ def parse_hdfs_throughput(folder):
             if 'Throughput mb/sec:' in line:
                 # divide by number of replicas
                 return (float(line.split('mb/sec:')[1]) *
-                        num_files * 8 / 1024.0) * TDF / 2.0
+                        num_files * 8 / 1024.) * TDF / 2.
