@@ -13,7 +13,7 @@ RTT = 0.001200
 CIRCUIT_BW = 4  # without TDF
 TDF = 20.
 # 1/1000 seconds.
-bin_size = 100
+bin_size = 1
 
 
 def parse_flowgrind_config(fn):
