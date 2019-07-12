@@ -189,7 +189,7 @@ def flowgrind(settings):
                         flows.append(fl)
                 else:
                     flows.append(f)
-    cmd = '-I -Ts=2 -Ys=0 -Gs=q:C:%d -n %s ' % (DEFAULT_REQUEST_SIZE, len(flows))
+    cmd = '-I -Ts=2 -Ys=0 -Gs=q:C:%d -i 0.001 -n %s ' % (DEFAULT_REQUEST_SIZE, len(flows))
     for i, f in enumerate(flows):
         cmd += '-F %d -Hs=%s,d=%s ' % \
                (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']))
