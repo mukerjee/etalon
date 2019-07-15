@@ -131,23 +131,23 @@ if __name__ == '__main__':
         sys.exit(-1)
     db = shelve.open(sys.argv[1] + '/buffer_shelve.db')
 
-    type = 'static'
-    db[type] = get_data(type)
-    graph_lat(db[type]['keys'], db[type]['lat'][50], type)
-    graph_circuit_util(db[type]['circ_util'], type)
+    typ = 'static'
+    db[typ] = get_data(typ)
+    graph_lat(db[typ]['keys'], db[typ]['lat'][50], typ)
+    graph_circuit_util(db[typ]['circ_util'], typ)
 
-    type = 'resize'
-    db[type] = get_data(type)
-    graph_lat([0] + db[type]['keys'],
-              [db['static']['lat'][50][2]] + db[type]['lat'][50], type)
-    graph_circuit_util([db['static']['circ_util'][2]] + db[type]['circ_util'],
-                       type)
+    typ = 'resize'
+    db[typ] = get_data(typ)
+    graph_lat([0] + db[typ]['keys'],
+              [db['static']['lat'][50][2]] + db[typ]['lat'][50], typ)
+    graph_circuit_util([db['static']['circ_util'][2]] + db[typ]['circ_util'],
+                       typ)
 
-    type = 'reTCP'
-    db[type] = get_data(type)
+    typ = 'reTCP'
+    db[typ] = get_data(typ)
 
-    type = 'reTCP+resize'
-    db[type] = get_data(type)
+    typ = 'reTCP+resize'
+    db[typ] = get_data(typ)
 
     utils = [db[t]['circ_util'] for t in types]
     lat50 = [db[t]['lat'][50] for t in types]
