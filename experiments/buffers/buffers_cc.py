@@ -29,6 +29,6 @@ for cc in CCS:
         setConfig(config)
         print '--- done...'
 
-        flowgrind(settings={"flows": [{'src': 'r1', 'dst': 'r2'}]})
+        flowgrind(settings={'flows': [{'src': 'r1', 'dst': 'r2'}]})
 
 finishExperiment()
