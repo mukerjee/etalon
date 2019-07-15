@@ -72,6 +72,13 @@ if echo $NEW_HOSTNAME | grep -q switch; then
     sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./g" /etc/hosts
 fi
 
+# To find the list of installable TCP congestion control modules, get the list
+# of IPv4 kernel modules, find the actual module files, find the TCP modules,
+# remove "tcp_probe" because it does not work, and drop the ".ko" extension.
+for CC in `ls /lib/modules/$(uname -r)/kernel/net/ipv4 | grep ko | grep tcp | grep -v "tcp_probe" | cut -d"." -f1`; do
+    sudo modprobe $CC;
+done
+
 # Install dependencies.
 sudo apt update
 sudo apt install -y git linuxptp python-pip
