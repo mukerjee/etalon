@@ -113,8 +113,7 @@ def tarExperiment():
     tar.close()
 
     for e in EXPERIMENTS:
-        if 'tmp' not in e:
-            os.remove(e)
+        os.remove(e)
 
 
 ##
