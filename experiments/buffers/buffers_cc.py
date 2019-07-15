@@ -18,7 +18,7 @@ initializeExperiment('flowgrindd')
 for cc in CCS:
     for config in buffer_common.CONFIGS:
         if 'cc' in config:
-            # Skip the reTCP experiments since they will be run anyway when
+            # Skip the reTCP experiments because they will be run anyway when
             # cc == 'retcp'.
             continue
         config['cc'] = cc
