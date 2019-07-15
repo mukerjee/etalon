@@ -109,7 +109,14 @@ def tarExperiment():
     tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
     for e in EXPERIMENTS:
         for fn in glob.glob(e):
-            tar.add(fn)
+            # For files in the /tmp directory (i.e., packet logs), place them at
+            # the top directory of the archive (i.e., where the rest of the
+            # files will be.
+            if fn.startswith("/tmp/"):
+                arcname = fn[5:]
+            else:
+                arcname = fn
+            tar.add(fn, arcname=arcname)
     tar.close()
 
     for e in EXPERIMENTS:
