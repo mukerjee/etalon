@@ -154,18 +154,27 @@ def disableCircuit():
 
 def setStrobeSchedule(reconfig_delay):
     disableSolstice()
-    schedule = '%d ' % ((NUM_RACKS-1)*2)
+    # Configuration that turns off all the circuit links. Remove trailing '/'.
+    off_config = ('-1/' * NUM_RACKS)[:-1]
+    # Day len, day config, night len, off config
+    config_s = '%d %s %d %s '
+    night_len = reconfig_delay * TDF
+    # night_len * duty_cycle
+    day_len = night_len * 9
+    # The first element is the number of configurations. There are NUM_RACKS - 1
+    # configurations because there does not need to be a configuration where the
+    # racks connect to themselves. Each configuration actually contains both a
+    # day and a night.
+    schedule = '%d ' % ((NUM_RACKS - 1) * 2)
     for i in xrange(NUM_RACKS-1):
-        configstr = '%d %s %d %s '
-        night_len = reconfig_delay * TDF
-        off_config = ('-1/' * NUM_RACKS)[:-1]
-        duration = night_len * 9  # night_len * duty_cycle
-        configuration = ''
+        day_config = ''
         for j in xrange(NUM_RACKS):
-            configuration += '%d/' % ((i + 1 + j) % NUM_RACKS)
-        configuration = configuration[:-1]
-        schedule += (configstr % (duration, configuration, night_len,
-                                  off_config))
+            day_config += '%d/' % ((i + 1 + j) % NUM_RACKS)
+        # Remove trailing '/'.
+        day_config = day_config[:-1]
+        schedule += config_s % (day_len, day_config, night_len, off_config)
+
+    # Remove trailing space.
     schedule = schedule[:-1]
     clickWriteHandler('runner', 'setSchedule', schedule)
     time.sleep(0.1)
