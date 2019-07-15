@@ -17,7 +17,7 @@ for cc in CCS:
             # Skip the reTCP experiments since they will be run anyway when
             # cc == 'retcp'.
             continue
-        config['cc'] == cc
+        config['cc'] = cc
 
         print '--- running test type %s...' % config['type']
         print '--- using CC mode %s...' % config['cc']
