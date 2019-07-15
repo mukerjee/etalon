@@ -7,7 +7,11 @@ sys.path.insert(0, '/etalon/experiments')
 from common import initializeExperiment, finishExperiment, flowgrind
 from click_common import setConfig
 
-CCS = ['reno', 'retcp']
+# All available CC modules. Found by:
+#     sudo sysctl net.ipv4.tcp_available_congestion_control
+CCS = ['reno', 'cubic', 'retcp', 'dctcp', 'bbr', 'bic', 'cdg', 'highspeed',
+       'htcp', 'hybla', 'illinois', 'lp', 'nv', 'scalable', 'vegas', 'veno',
+       'westwood', 'yeah']
 
 initializeExperiment('flowgrindd')
 
