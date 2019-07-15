@@ -17,10 +17,10 @@ SR = (1, 2)
 types = ['static', 'resize', 'reTCP', 'reTCP+resize']
 
 files = {
-    'static': '/tmp/*-strobe-*-False-*-reno-*click.txt',
-    'resize': '/tmp/*-QUEUE-True-*-reno-*click.txt',
-    'reTCP': '/tmp/*-QUEUE-False-*-retcp-*click.txt',
-    'reTCP+resize': '/tmp/*-QUEUE-True-*-retcp-*click.txt',
+    'static': '/*-strobe-*-False-*-reno-*click.txt',
+    'resize': '/*-QUEUE-True-*-reno-*click.txt',
+    'reTCP': '/*-QUEUE-False-*-retcp-*click.txt',
+    'reTCP+resize': '/*-QUEUE-True-*-retcp-*click.txt',
 }
 
 key_fn = {

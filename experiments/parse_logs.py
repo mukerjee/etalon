@@ -364,10 +364,10 @@ def parse_validation_log(folder, fns):
     # fn_ts = fn.split('/')[-1].split('-validation')[0]
     # if circuit:
     #     packet_log_fn = glob.glob(
-    #         folder + '/tmp/%s-validation-circuit-*-click.txt' % fn_ts)
+    #         folder + '/%s-validation-circuit-*-click.txt' % fn_ts)
     # else:
     #     packet_log_fn = glob.glob(
-    #         folder + '/tmp/%s-validation-no_circuit-*-click.txt' % fn_ts)
+    #         folder + '/%s-validation-no_circuit-*-click.txt' % fn_ts)
     # if packet_log_fn:
     #     print("found packet log")
     #     out_data = defaultdict(list)

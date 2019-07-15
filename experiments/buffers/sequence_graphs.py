@@ -16,8 +16,8 @@ from parse_logs import get_seq_data
 types = ['static', 'resize']
 
 files = {
-    'static': '/tmp/*-strobe-*-False-*-reno-*click.txt',
-    'resize': '/tmp/*-QUEUE-True-*-reno-*click.txt',
+    'static': '/*-strobe-*-False-*-reno-*click.txt',
+    'resize': '/*-QUEUE-True-*-reno-*click.txt',
 }
 
 key_fn = {
