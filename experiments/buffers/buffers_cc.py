@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-import buffer_common
-
+import copy
 import sys
 sys.path.insert(0, '/etalon/experiments')
-from common import initializeExperiment, finishExperiment, flowgrind
+
+import buffer_common
 from click_common import setConfig
+from common import initializeExperiment, finishExperiment, flowgrind
 
 # All available CC modules. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
@@ -17,16 +18,20 @@ initializeExperiment('flowgrindd')
 
 for cc in CCS:
     for config in buffer_common.CONFIGS:
-        if 'cc' in config:
+        # Make a copy so that the if-statement below does not trigger after the
+        # first CC mode.
+        config_c = copy.deepcopy(config)
+
+        if 'cc' in config_c:
             # Skip the reTCP experiments because they will be run anyway when
             # cc == 'retcp'.
             continue
-        config['cc'] = cc
 
-        print '--- running test type %s...' % config['type']
-        print '--- using CC mode %s...' % config['cc']
-        print '--- setting switch buffer size to %d...' % config['buffer_size']
-        setConfig(config)
+        config_c['cc'] = cc
+        print '--- running test type %s...' % config_c['type']
+        print '--- using CC mode %s...' % config_c['cc']
+        print '--- setting switch buffer size to %d...' % config_c['buffer_size']
+        setConfig(config_c)
         print '--- done...'
 
         flowgrind(settings={'flows': [{'src': 'r1', 'dst': 'r2'}]})
