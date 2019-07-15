@@ -16,8 +16,13 @@ CCS = ['reno', 'cubic', 'retcp', 'dctcp', 'bbr', 'bic', 'cdg', 'highspeed',
 
 initializeExperiment('flowgrindd')
 
+# Total number of experiments.
+TOT = len(CCS) * len(buffer_common.CONFIGS)
+CNT = 0
 for cc in CCS:
     for config in buffer_common.CONFIGS:
+        CNT += 1
+
         # Make a copy so that the if-statement below does not trigger after the
         # first CC mode.
         config_c = copy.deepcopy(config)
@@ -33,7 +38,7 @@ for cc in CCS:
         print '--- setting switch buffer size to %d...' % config_c['buffer_size']
         setConfig(config_c)
         print '--- done...'
-
+        print '--- experiment %d of %d' % (CNT, TOT)
         flowgrind(settings={'flows': [{'src': 'r1', 'dst': 'r2'}]})
 
 finishExperiment()
