@@ -14,16 +14,16 @@ from parse_logs import parse_packet_log
 
 SR = (1, 2)
 
-types = ['static', 'resize', 'reTCP', 'reTCP+resize']
+TYPES = ['static', 'resize', 'reTCP', 'reTCP+resize']
 
-files = {
+FILES = {
     'static': '/*-strobe-*-False-*-reno-*click.txt',
     'resize': '/*-QUEUE-True-*-reno-*click.txt',
     'reTCP': '/*-QUEUE-False-*-retcp-*click.txt',
     'reTCP+resize': '/*-QUEUE-True-*-retcp-*click.txt',
 }
 
-key_fn = {
+KEY_FN = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / 20.0,
     'reTCP': lambda fn: 0,
@@ -31,7 +31,7 @@ key_fn = {
 }
 
 
-def get_data(name):
+def get_data(name, files=FILES, key_fn=KEY_FN):
     if name in db:
         return db[name]
     else:
@@ -149,9 +149,9 @@ if __name__ == '__main__':
     typ = 'reTCP+resize'
     db[typ] = get_data(typ)
 
-    utils = [db[t]['circ_util'] for t in types]
-    lat50 = [db[t]['lat'][50] for t in types]
-    lat99 = [db[t]['lat'][99] for t in types]
+    utils = [db[t]['circ_util'] for t in TYPES]
+    lat50 = [db[t]['lat'][50] for t in TYPES]
+    lat99 = [db[t]['lat'][99] for t in TYPES]
     graph_util_vs_latency(utils, lat50, '50')
     graph_util_vs_latency(utils, lat99, '99')
 
