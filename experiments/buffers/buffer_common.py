@@ -23,6 +23,9 @@ CONFIGS = [
 ]
 
 for c in CONFIGS:
+    # Enable Click's HSLog packet log. This already be enabled by default.
+    c['packet_log'] = True
+
     if c['type'] == 'resize':
         c['type'] = 'strobe'
         c['queue_resize'] = True
