@@ -219,13 +219,13 @@ def get_seq_data(fn):
                     last = i
             if not out:
                 bad_windows += 1
-                out = [(0, 0), (4200, 0)]
+                out = [(0, 0), (1200, 0)]
             wraparound = False
             for ts, seq in out:
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if not wraparound:
-                chunks.append(np.interp(xrange(4200),
+                chunks.append(np.interp(xrange(1200),
                                         zip(*out)[0],
                                         zip(*out)[1]))
         print len(chunks)

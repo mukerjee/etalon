@@ -27,7 +27,7 @@ key_fn = {
 
 units = 1000.0  # Kilo-sequence number
 num_hosts = 16.0
-time_length = 4200
+time_length = 1200
 
 
 class FileReader(object):
@@ -100,11 +100,11 @@ def plot_seq(data, fn):
 
     if 'resize' in fn:
         options.inset.show = True
-        options.inset.options.zoom_level = 3
+        options.inset.options.zoom_level = 1.7
         options.inset.options.corners = [2, 3]
         options.inset.options.marker.options.color = 'black'
-        options.inset.options.x.limits = [2600, 2830]
-        options.inset.options.y.limits = [220, 430]
+        options.inset.options.x.limits = [620, 800]
+        options.inset.options.y.limits = [70, 270]
 
     plot(x, y, options)
 
