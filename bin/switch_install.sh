@@ -29,8 +29,10 @@ sudo mkdir -pv /etc/iptables
 sudo iptables-save | while read x; do
     echo $x | sudo tee -a /etc/iptables/rules.v4;
 done
-echo iptables-persistent iptables-persistent/autosave_v4 boolean true | sudo debconf-set-selections
-echo iptables-persistent iptables-persistent/autosave_v6 boolean true | sudo debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v4 boolean true | \
+    sudo debconf-set-selections
+echo iptables-persistent iptables-persistent/autosave_v6 boolean true | \
+    sudo debconf-set-selections
 
 # Install dependencies.
 sudo apt update
@@ -90,7 +92,8 @@ export RTE_TARGET=x86_64-default-linuxapp-gcc
 # Click.
 echo "Installing Click..."
 cd /etalon/click-etalon
-./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu --enable-nanotimestamp --enable-dpdk
+./configure --enable-user-multithread --disable-linuxmodule --enable-intel-cpu \
+    --enable-nanotimestamp --enable-dpdk
 make -j `nproc`
 # "make install" needs gzcat.
 WHICH_ZCAT=`which zcat`

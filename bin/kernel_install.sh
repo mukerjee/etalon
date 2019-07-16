@@ -23,10 +23,10 @@ sudo sed -i "/^# deb-src /s/^# //" /etc/apt/sources.list
 sudo apt update
 sudo apt -y build-dep linux-image-`uname -r`
 sudo apt install -y \
-     git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev flex bison \
-     python libiberty-dev libdw-dev elfutils systemtap-sdt-dev libunwind-dev \
-     libaudit-dev liblzma-dev libnuma-dev linux-cloud-tools-common \
-     linux-tools-common kernel-wedge
+    git fakeroot libssl-dev libelf-dev libudev-dev libpci-dev flex bison \
+    python libiberty-dev libdw-dev elfutils systemtap-sdt-dev libunwind-dev \
+    libaudit-dev liblzma-dev libnuma-dev linux-cloud-tools-common \
+    linux-tools-common kernel-wedge
 git clone git://kernel.ubuntu.com/ubuntu/ubuntu-$UBUNTU_VERSION.git $SRC_DIR
 
 # Apply the patch, compile and install.
@@ -34,5 +34,6 @@ cd $SRC_DIR
 git apply $HOME/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 # Perf needs $PYTHON to be set.
-MAKEFLAGS="-j `nproc`" PYTHON=`which python` fakeroot debian/rules binary-headers binary-generic binary-perarch
+MAKEFLAGS="-j `nproc`" PYTHON=`which python` fakeroot debian/rules \
+    binary-headers binary-generic binary-perarch
 sudo dpkg --force-all -i $BUILD_DIR/*.deb
