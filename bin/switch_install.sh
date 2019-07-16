@@ -62,7 +62,9 @@ echo "tmpfs /tmp tmpfs defaults,noatime,nosuid,nodev,noexec,mode=1777,size=100G 
 sudo mkfs.ext4 /dev/sdc
 UUID=`sudo blkid | grep sdc | cut -d" " -f2 | sed "s/\"//g"`
 mkdir -pv $HOME/1tb
-echo "$UUID $HOME/1tb ext4 defaults 0 0" | sudo tee -a /etc/fstab
+echo "$UUID $HOME/1tb ext4 defaults 0 2" | sudo tee -a /etc/fstab
+sudo mount -a
+sudo chown -R `whoami`:`whoami` $HOME/1tb
 
 # Mellanox DPDK.
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
