@@ -120,7 +120,14 @@ def tarExperiment():
     tar.close()
 
     for e in EXPERIMENTS:
-        os.remove(e)
+        try:
+            os.remove(e)
+        except OSError:
+            # This typically occurs when trying to remove a file not owned by
+            # the current user, e.g., Click packet logs stored in /tmp. Make
+            # sure to remove packet logs manually if this fails.
+            print(("Warning: Unable to remove file: {}\n  Please remove the "
+                   "above file manually!").format(e))
 
 
 ##
