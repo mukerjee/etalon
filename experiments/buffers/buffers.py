@@ -1,22 +1,30 @@
 #!/usr/bin/env python
 
-import buffer_common
-
 import sys
 sys.path.insert(0, '/etalon/experiments')
-from common import initializeExperiment, finishExperiment, flowgrind
-from click_common import setConfig
 
-initializeExperiment('flowgrindd')
+import buffer_common
+import click_common
+import common
 
-for config in buffer_common.CONFIGS:
-    print '--- running test type %s...' % config['type']
-    print '--- setting switch buffer size to %d...' % config['buffer_size']
-    setConfig(config)
-    print '--- done...'
 
-    settings = {'flows': []}
-    settings['flows'].append({'src': 'r1', 'dst': 'r2'})
-    flowgrind(settings)
+def main():
+    common.initializeExperiment('flowgrindd')
 
-finishExperiment()
+    # Total number of experiments.
+    cnfs = buffer_common.CONFIGS
+    tot = len(cnfs)
+    for cnt, cnf in enumerate(cnfs):
+        print('--- running test type {}...'.format(cnf['type']))
+        print('--- setting switch buffer size to {}...'.format(
+            cnf['buffer_size']))
+        click_common.setConfig(cnf)
+        print('--- done...')
+        print("--- experiment {} of {}".format(cnt + 1, tot))
+        common.flowgrind(settings={"flows": [{"src": "r1", "dst": "r2"}]})
+
+    common.finishExperiment()
+
+
+if __name__ == "__main__":
+    main()
