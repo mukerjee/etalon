@@ -33,7 +33,8 @@ def main():
             cnf_c["cc"] = ccm
             print("--- running test type {}...".format(cnf_c["type"]))
             print("--- using CC mode {}...".format(cnf_c["cc"]))
-            print("--- setting switch buffer size to {}...".format(cnf_c["buffer_size"]))
+            print("--- setting switch buffer size to {}...".format(
+                cnf_c["buffer_size"]))
             click_common.setConfig(cnf_c)
             print("--- done...")
             print("--- experiment {} of {}".format(cnt, tot))
