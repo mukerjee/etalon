@@ -49,6 +49,19 @@ sudo apt install -y \
 cd /etalon
 git submodule update --init
 
+# Mount volumes.
+#
+# NOTE: These two volumes only apply to the machine "node5.maas" in the CMU CMCL
+#       machine room (GHC 8126).
+#
+# Mount a 100 GB tmpfs on /tmp.
+echo "tmpfs /tmp tmpfs defaults,noatime,nosuid,nodev,noexec,mode=1777,size=100G 0 0" | sudo tee -a /etc/fstab
+# Mount a 1 TB scratch disk on $HOME/1tb
+sudo mkfs.ext4 /dev/sdc
+UUID=`sudo blkid | grep sdc | cut -d" " -f2 | sed "s/\"//g"`
+mkdir -pv $HOME/1tb
+echo "$UUID $HOME/1tb ext4 defaults 0 0" | sudo tee -a /etc/fstab
+
 # Mellanox DPDK.
 # http://www.mellanox.com/related-docs/prod_software/MLNX_DPDK_Quick_Start_Guide_v16.11_2.3.pdf
 echo "Installing Mellanox DPDK..."
