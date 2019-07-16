@@ -123,7 +123,7 @@ def plot_seq(data, fn):
 
     plot(x, y, options)
 
-    
+
 if __name__ == '__main__':
     if not os.path.isdir(sys.argv[1]):
         print 'first arg must be dir'
