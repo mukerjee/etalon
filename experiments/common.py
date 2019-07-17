@@ -1,4 +1,5 @@
 
+import datetime
 import glob
 import os
 import socket
@@ -29,14 +30,15 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     get_rack_and_id_from_host
 
 CURRENT_CC = ''
-
+START_TIME = None
 
 ##
 # Experiment commands
 ##
 def initializeExperiment(image):
-    global IMAGE
+    global IMAGE, START_TIME
     IMAGE = image
+    START_TIME = datetime.datetime.now()
     print '--- starting experiment...'
     print '--- clearing local arp...'
     call([os.path.expanduser('/etalon/bin/arp_clear.sh')])
@@ -94,6 +96,9 @@ def finishExperiment():
     tarExperiment()
     print '--- done...'
     print '--- experiment finished'
+    if START_TIME is not None:
+        print '--- exprtiment took {}'.format(
+            datetime.datetime.now() - START_TIME)
     print TIMESTAMP
 
 
