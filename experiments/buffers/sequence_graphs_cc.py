@@ -5,7 +5,6 @@ import os
 from os import path
 import shelve
 import sys
-import sys
 # For python_config.
 PROGDIR = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
