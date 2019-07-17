@@ -146,7 +146,9 @@ if __name__ == '__main__':
 
     db['resize'] = get_data(db, 'resize')
     resize_data = copy.copy(db['resize'])
+    # Use the same circuit windows as the 'static' experiment.
     resize_data['lines'] = db['static']['lines']
+    # Use the data for 0 us from the 'static' experiment.
     resize_data['keys'] = [0] + db['resize']['keys']
     resize_data['data'] = [db['static']['data'][2]] + db['resize']['data']
     plot_seq(resize_data, 'resize')
