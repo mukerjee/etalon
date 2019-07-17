@@ -17,11 +17,13 @@ from simpleplotlib import plot
 
 from parse_logs import get_seq_data
 
+# Maps experiment to filename.
 files = {
     'static': '/*-strobe-*-False-*-reno-*click.txt',
     'resize': '/*-QUEUE-True-*-reno-*click.txt',
 }
 
+# Maps experiment to a function that convert a filename to an integer key.
 key_fn = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / 20.0,
