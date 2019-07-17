@@ -24,6 +24,8 @@ def main():
     # Total number of experiments.
     tot = len(CCMS) * len(cnfs)
     cnt = 0
+    # CCMS are the outside loop to minimize how frequently we change the CC
+    # mode, since doing so requires restarting the cluster.
     for ccm in CCMS:
         for cnf in cnfs:
             cnt += 1
