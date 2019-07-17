@@ -1,19 +1,21 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.insert(0, '..')
-import os
-import copy
-import shelve
-import glob
-
-from multiprocessing import Pool
 from collections import defaultdict
+import copy
+import glob
+from multiprocessing import Pool
+import os
+from os import path
+import shelve
+import sys
+# For parse_logs.
+PROGDIR = path.dirname(path.realpath(__file__))
+sys.path.insert(0, path.join(PROGDIR, '..'))
+
 from dotmap import DotMap
 from simpleplotlib import plot
-from parse_logs import get_seq_data
 
-types = ['static', 'resize']
+from parse_logs import get_seq_data
 
 files = {
     'static': '/*-strobe-*-False-*-reno-*click.txt',
