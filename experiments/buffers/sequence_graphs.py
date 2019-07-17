@@ -44,7 +44,7 @@ class FileReader(object):
         return int(round(float(key))), get_seq_data(fn)
 
 
-def get_data(name):
+def get_data(db, name):
     if name in db:
         return db[name]
     else:
@@ -141,10 +141,10 @@ if __name__ == '__main__':
         print 'first arg must be dir'
         sys.exit(-1)
     db = shelve.open(sys.argv[1] + '/seq_shelve.db')
-    db['static'] = get_data('static')
+    db['static'] = get_data(db, 'static')
     plot_seq(db['static'], 'static')
 
-    db['resize'] = get_data('resize')
+    db['resize'] = get_data(db, 'resize')
     resize_data = copy.copy(db['resize'])
     resize_data['lines'] = db['static']['lines']
     resize_data['keys'] = [0] + db['resize']['keys']
