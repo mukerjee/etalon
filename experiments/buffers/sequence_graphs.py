@@ -8,8 +8,9 @@ import os
 from os import path
 import shelve
 import sys
-# For parse_logs.
+# Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
+# For parse_logs.
 sys.path.insert(0, path.join(PROGDIR, '..'))
 
 from dotmap import DotMap

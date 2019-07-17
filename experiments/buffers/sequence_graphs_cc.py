@@ -5,8 +5,9 @@ import os
 from os import path
 import shelve
 import sys
-# For python_config.
+# Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
+# For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
 
 import python_config

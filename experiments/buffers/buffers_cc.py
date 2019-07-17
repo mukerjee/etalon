@@ -3,6 +3,7 @@
 import copy
 from os import path
 import sys
+# Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
 # For click_common and common.
 sys.path.insert(0, path.join(PROGDIR, ".."))
