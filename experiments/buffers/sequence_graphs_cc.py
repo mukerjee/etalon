@@ -43,13 +43,13 @@ def main():
         key = "resize-{}".format(ccm)
         db[key] = sequence_graphs.get_data(db, key)
         ccm_data = copy.deepcopy(db[key])
+        db.close()
         # Use the same circuit windows for all graphs.
         ccm_data['lines'] = dbs['lines']
         # Use the data for 0 us from the 'static' experiment.
         ccm_data['keys'] = [0] + db[key]['keys']
         ccm_data['data'] = [dbs['data'][2]] + db[key]['data']
         sequence_graphs.plot_seq(ccm_data, key)
-        db.close()
 
 
 if __name__ == "__main__":
