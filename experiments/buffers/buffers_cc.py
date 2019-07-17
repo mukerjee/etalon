@@ -1,18 +1,18 @@
 #!/usr/bin/env python
 
 import copy
+from os import path
 import sys
-sys.path.insert(0, "/etalon/experiments")
+PROGDIR = path.dirname(path.realpath(__file__))
+# For click_common and common.
+sys.path.insert(0, path.join(PROGDIR, ".."))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
 
 import buffer_common
 import click_common
 import common
-
-# All available CC modules. Found by:
-#     sudo sysctl net.ipv4.tcp_available_congestion_control
-CCMS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
-        "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
-        "westwood", "yeah"]
+import python_config
 
 
 def main():
@@ -22,7 +22,7 @@ def main():
     # cc == "retcp".
     cnfs = [cnf for cnf in buffer_common.CONFIGS if "cc" not in cnf]
     # Total number of experiments.
-    tot = len(CCMS) * len(cnfs)
+    tot = len(python_config.CCMS) * len(cnfs)
     cnt = 0
     # CCMS are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
