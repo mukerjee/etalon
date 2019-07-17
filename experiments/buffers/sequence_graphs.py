@@ -100,7 +100,7 @@ def plot_seq(data, fn):
     options.legend.options.fontsize = 14
     options.legend.options.ncol = 2
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
-    options.output_fn = 'graphs/seq_%s.pdf' % fn
+    options.output_fn = path.join(PROGDIR, 'graphs', 'seq_%s.pdf' % fn)
     options.x.label.xlabel = 'Time (us)'
     options.y.label.ylabel = 'Expected seq. num. (K)'
     options.x.label.fontsize = options.y.label.fontsize = 16
