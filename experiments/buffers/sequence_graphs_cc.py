@@ -37,7 +37,8 @@ def main():
     # Create a graph for each CC mode.
     for ccm in python_config.CCMS:
         # Use a new database for each CC mode to avoid storing everything in
-        # memory as once.
+        # memory as once. This also enables the program to be killed and
+        # restarted partway through without losing progress.
         db = shelve.open(path.join(sys.argv[1], 'seq_{}_shelve.db'.format(ccm)))
         key = "resize-{}".format(ccm)
         db[key] = sequence_graphs.get_data(db, key)
