@@ -121,6 +121,13 @@ def plot_seq(data, fn):
         options.inset.options.x.limits = [620, 800]
         options.inset.options.y.limits = [70, 270]
 
+    # Hack.
+    legend = options.legend.options.labels
+    iss = [0, 1, 2, 3, 4, 5, 8, 11, 15, 16]
+    options.legend.options.labels  = [a for i, a in enumerate(legend) if i in iss]
+    x = [a for i, a in enumerate(x) if i in iss]
+    y = [a for i, a in enumerate(y) if i in iss]
+
     plot(x, y, options)
 
 
