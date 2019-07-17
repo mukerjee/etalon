@@ -26,8 +26,8 @@ def plot_seq_cc(static_db, key_fmt, ccm):
     # Use the same circuit windows for all graphs.
     ccm_data["lines"] = static_db["lines"]
     # Use the data for 0 us from the "static" experiment.
-    ccm_data["keys"] = [0] + db[key]["keys"]
-    ccm_data["data"] = [static_db["data"][2]] + db[key]["data"]
+    ccm_data["keys"] = [0] + ccm_data["keys"]
+    ccm_data["data"] = [static_db["data"][2]] + ccm_data["data"]
     sequence_graphs.plot_seq(ccm_data, key)
 
 
