@@ -50,13 +50,13 @@ def get_data(db, name):
         return db[name]
     else:
         # data["raw_data"] = A list of pairs, where each pair corresponds to an
-        #   experiment file.
+        #     experiment file.
         # data["raw_data"][i] = A pair of (key value, results).
         # data["raw_data"][i][1] = A pair of (list, n-tuple).
         # data["raw_data"][i][1][0] = A list of expected sequence number over
-        #   time.
+        #     time.
         # data["raw_data"][i][1][1] = An n-tuple of the times of circuit up/down
-        #   events.
+        #     events.
         # data["raw_data"][i][1][1][0] = The time at which the first day began.
 
         data = defaultdict(dict)
