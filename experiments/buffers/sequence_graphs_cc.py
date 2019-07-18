@@ -39,11 +39,11 @@ def main():
     # Create entries for each CC mode. Keys are of the form "resize-<CC mode>".
     fmt = "resize-{}"
     for ccm in python_config.CCMS:
-        sequence_graphs.files[fmt.format(ccm)] = \
+        sequence_graphs.FILES[fmt.format(ccm)] = \
             "/*-QUEUE-True-*-{}-*click.txt".format(ccm)
     for ccm in python_config.CCMS:
-        sequence_graphs.key_fn[fmt.format(ccm)] = \
-            sequence_graphs.key_fn["resize"]
+        sequence_graphs.KEY_FN[fmt.format(ccm)] = \
+            sequence_graphs.KEY_FN["resize"]
 
     # Parse the static data to figure out the 0 us case. Copy the results and
     # store the database file.

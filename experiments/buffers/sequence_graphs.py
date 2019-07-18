@@ -19,20 +19,20 @@ from simpleplotlib import plot
 from parse_logs import get_seq_data
 
 # Maps experiment to filename.
-files = {
+FILES = {
     'static': '/*-strobe-*-False-*-reno-*click.txt',
     'resize': '/*-QUEUE-True-*-reno-*click.txt',
 }
 
 # Maps experiment to a function that convert a filename to an integer key.
-key_fn = {
+KEY_FN = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / 20.0,
 }
 
-units = 1000.0  # Kilo-sequence number
-num_hosts = 16.0
-time_length = 1200
+UNITS = 1000.0  # Kilo-sequence number
+NUM_HOSTS = 16.0
+TIME_LENGTH = 1200
 
 
 class FileReader(object):
@@ -40,7 +40,7 @@ class FileReader(object):
         self.name = name
 
     def __call__(self, fn):
-        key = key_fn[self.name](fn.split('/')[-1])
+        key = KEY_FN[self.name](fn.split('/')[-1])
         print fn, key
         return int(round(float(key))), get_seq_data(fn)
 
@@ -62,11 +62,11 @@ def get_data(db, name):
         data = defaultdict(dict)
         p = Pool()
         data['raw_data'] = dict(p.map(FileReader(name),
-                                      glob.glob(sys.argv[1] + files[name])))
+                                      glob.glob(sys.argv[1] + FILES[name])))
         data['raw_data'] = sorted(data['raw_data'].items())
         data['keys'] = list(zip(*data['raw_data'])[0]) + ['Optimal']
         data['lines'] = data['raw_data'][0][1][1]
-        data['data'] = [map(lambda x: x / units, f) for f in
+        data['data'] = [map(lambda x: x / UNITS, f) for f in
                         zip(*zip(*data['raw_data'])[1])[0]]
 
         c_start, c_end, nc_start, nc_end, \
@@ -89,7 +89,7 @@ def get_data(db, name):
 
 
 def plot_seq(data, fn):
-    x = [xrange(time_length) for i in xrange(len(data['keys']))]
+    x = [xrange(TIME_LENGTH) for i in xrange(len(data['keys']))]
     y = data['data']
 
     options = DotMap()
