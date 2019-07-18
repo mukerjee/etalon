@@ -14,23 +14,6 @@ import python_config
 import sequence_graphs
 
 
-def plot_seq_cc(static_db, key_fmt, ccm):
-    # Use a new database for each CC mode to avoid storing everything in memory
-    # at once. This also enables the program to be killed and restarted partway
-    # through without losing progress.
-    db = shelve.open(path.join(sys.argv[1], "seq_{}_shelve.db".format(ccm)))
-    key = key_fmt.format(ccm)
-    db[key] = sequence_graphs.get_data(db, key)
-    ccm_data = copy.deepcopy(db[key])
-    db.close()
-    # Use the same circuit windows for all graphs.
-    ccm_data["lines"] = static_db["lines"]
-    # Use the data for 0 us from the "static" experiment.
-    ccm_data["keys"] = [0] + ccm_data["keys"]
-    ccm_data["data"] = [static_db["data"][2]] + ccm_data["data"]
-    sequence_graphs.plot_seq(ccm_data, key)
-
-
 def main():
     if not os.path.isdir(sys.argv[1]):
         print("first arg must be dir")
@@ -54,7 +37,20 @@ def main():
 
     # Create a graph for each CC mode.
     for ccm in python_config.CCMS:
-        plot_seq_cc(dbs, fmt, ccm)
+        # Use a new database for each CC mode to avoid storing everything in
+        # memory at once. This also enables the program to be killed and
+        # restarted partway through without losing progress.
+        db = shelve.open(path.join(sys.argv[1], "seq_{}_shelve.db".format(ccm)))
+        key = fmt.format(ccm)
+        db[key] = sequence_graphs.get_data(db, key)
+        ccm_data = copy.deepcopy(db[key])
+        db.close()
+        # Use the same circuit windows for all graphs.
+        ccm_data["lines"] = dbs["lines"]
+        # Use the data for 0 us from the "static" experiment.
+        ccm_data["keys"] = [0] + ccm_data["keys"]
+        ccm_data["data"] = [dbs["data"][2]] + ccm_data["data"]
+        sequence_graphs.plot_seq(ccm_data, key)
 
 
 if __name__ == "__main__":
