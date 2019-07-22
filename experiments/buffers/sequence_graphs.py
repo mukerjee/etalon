@@ -63,6 +63,9 @@ def get_data(db, name):
         p = Pool()
         data['raw_data'] = dict(p.map(FileReader(name),
                                       glob.glob(sys.argv[1] + FILES[name])))
+        # Clean up p.
+        p.close()
+        p.join()
         data['raw_data'] = sorted(data['raw_data'].items())
         data['keys'] = list(zip(*data['raw_data'])[0]) + ['Optimal']
         data['lines'] = data['raw_data'][0][1][1]
