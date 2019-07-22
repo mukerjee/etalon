@@ -34,7 +34,6 @@ def main():
     db["static"] = sequence_graphs.get_data(db, "static")
     dbs = copy.deepcopy(db["static"])
     db.close()
-    del db
 
     # Create a graph for each CC mode.
     for ccm in python_config.CCMS:
@@ -46,14 +45,12 @@ def main():
         db[key] = sequence_graphs.get_data(db, key)
         ccm_data = copy.deepcopy(db[key])
         db.close()
-        del db
         # Use the same circuit windows for all graphs.
         ccm_data["lines"] = dbs["lines"]
         # Use the data for 0 us from the "static" experiment.
         ccm_data["keys"] = [0] + ccm_data["keys"]
         ccm_data["data"] = [dbs["data"][2]] + ccm_data["data"]
         sequence_graphs.plot_seq(ccm_data, key)
-        del ccm_data
 
 
 if __name__ == "__main__":
