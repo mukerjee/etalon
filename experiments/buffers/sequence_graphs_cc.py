@@ -30,7 +30,7 @@ def main():
 
     # Parse the static data to figure out the 0 us case. Copy the results and
     # store the database file.
-    db = shelve.open(path.join(sys.argv[1], "seq_shelve.db"))
+    db = shelve.open(path.join(sys.argv[1], "seq_static_shelve.db"))
     db["static"] = sequence_graphs.get_data(db, "static")
     dbs = copy.deepcopy(db["static"])
     db.close()
