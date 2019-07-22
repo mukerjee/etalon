@@ -72,21 +72,45 @@ def get_data(db, name):
         data['data'] = [map(lambda x: x / UNITS, f) for f in
                         zip(*zip(*data['raw_data'])[1])[0]]
 
-        c_start, c_end, nc_start, nc_end, \
-            nnc_start, nnc_end = [int(round(q)) for q in data['lines']]
-        packet_rate = 10*10**9 / 8.0 / units * 1e-06 / num_hosts
-        circuit_rate = 80*10**9 / 8.0 / units * 1e-06 / num_hosts
-        optimal = [packet_rate * i for i in xrange(c_start)]
-        optimal += [circuit_rate * i + optimal[-1]
-                    for i in xrange(c_end - c_start)]
-        optimal += [packet_rate * i + optimal[-1]
-                    for i in xrange(nc_start - c_end)]
-        optimal += [circuit_rate * i + optimal[-1]
-                    for i in xrange(nc_end - nc_start)]
-        optimal += [packet_rate * i + optimal[-1]
-                    for i in xrange(nnc_start - nc_end)]
-        optimal += [circuit_rate * i + optimal[-1]
-                    for i in xrange(time_length - nnc_start)]
+        # Compute optimal sequence numbers. Recall that sequence numbers are in
+        # terms of bytes.
+        print("Computing optimal...")
+        # Billions of total b/s -> total B/s -> total KB/s -> total KB/us
+        #     -> per-host KB/us
+        factor =  10**9 / 8. / UNITS / 10**6 / NUM_HOSTS
+        pr_KBpus = 10 * factor
+        cr_KBpus = 80 * factor
+        # Circuit start and end times, of the form:
+        #     [<start>, <end>, <start>, <end>, ...]
+        bounds = [int(round(q)) for q in data['lines']]
+        assert len(bounds) % 2 == 0
+        # Each entry is the optimal sequence number at that microsecond. The
+        # optimal sequence number is the maximum amount of data that could have
+        # been sent at a certain time.
+        optimal= []
+        print("bounds: {}".format(bounds))
+        for state in xrange(0, len(bounds), 2):
+            # Circuit night.
+            if state == 0:
+                # 0 to first day start.
+                optimal = [pr_KBpus * us for us in xrange(bounds[state])]
+            else:
+                # Previous day end to current day start.
+                optimal += [
+                    optimal[-1] + pr_KBpus * us
+                    for us in xrange(1, bounds[state] - bounds[state - 1] + 1)]
+            # Current day start to current day end.
+            optimal += [
+                optimal[-1] + cr_KBpus * us
+                for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
+
+        # Verify that optimal contains the correct number of elements and that
+        # no two adjacent elements are equal.
+        assert len(optimal) == TIME_LENGTH
+        for i in xrange(len(optimal) - 1):
+            assert optimal[i] != optimal[i + 1], \
+                "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
+
         data['data'].append(optimal)
         return dict(data)
 
