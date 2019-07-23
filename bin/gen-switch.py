@@ -262,6 +262,9 @@ print '      input[0] -> q :: LockQueue(CAPACITY $SMALL_BUFFER_SIZE)'
 # lq fills up with packets that were dropped in the packet switch.
 # lq packets have priority over q packets.
 print '      input[1] -> lq :: Queue(CAPACITY 5)  // loss queue'
+# lq and q connect to input ports 0 and 1, respectively. When trying to pull a
+# packet, PrioSched checks its input ports starting from port 0, so packets from
+# port 0 (lq) will always be pulled before packets from port 1 (q).
 print '      lq, q => PrioSched -> output'
 print ' }'
 print
