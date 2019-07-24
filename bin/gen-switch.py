@@ -1,7 +1,12 @@
 #!/usr/bin/env python
 
+from os import path
 import sys
-sys.path.insert(0, '/etalon/etc')
+# Directory containing this program.
+PROGDIR = path.dirname(path.realpath(__file__))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, '..', 'etc'))
+
 from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
     CIRCUIT_BW_BY_TDF, PACKET_BW_BY_TDF, PACKET_LATENCY, CIRCUIT_LATENCY, \
     RECONFIG_DELAY, TDF, CLICK_PORT, get_data_ip_from_host, \
