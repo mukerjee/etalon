@@ -13,6 +13,9 @@ from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
     get_phost_from_id, get_host_from_rack_and_id
 
 
+print
+print '// For more information, see etalon/bin/gen-switch.py.'
+print
 print 'define($DEVNAME %s)' % DATA_EXT_IF
 print 'define($NUM_RACKS %s)' % NUM_RACKS
 print
@@ -354,8 +357,7 @@ for i in xrange(1, NUM_RACKS+1):
     print output
 print
 
-# wiring dropped packet switch packets to loss queues in respective VOQ.
-print '  // dropped PS packets -> loss queues'
+# Wiring dropped packet switch packets to loss queues in respective VOQ.
 for i in xrange(1, NUM_RACKS+1):
     output = '  ps[%d] -> out_classify => ' % (i-1 + NUM_RACKS)
     for j in xrange(1, NUM_RACKS+1):
