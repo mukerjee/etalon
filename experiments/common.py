@@ -114,8 +114,11 @@ def getFilesForLater(host, fn, target):
     EXPERIMENTS.append(target)
 
 
-def tarExperiment():
-    tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), "w:gz")
+def tarExperiment(compress=False):
+    mode = "w"
+    if compress:
+        mode += ":gz"
+    tar = tarfile.open("%s-%s.tar.gz" % (TIMESTAMP, SCRIPT), mode)
     for e in EXPERIMENTS:
         for fn in glob.glob(e):
             # For files in the /tmp directory (i.e., packet logs), place them at
