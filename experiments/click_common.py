@@ -54,8 +54,8 @@ def disableLog():
 
 
 def setQueueSize(size):
-    for i in xrange(1, NUM_RACKS+1):
-        for j in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
+        for j in xrange(1, NUM_RACKS + 1):
             clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
                               'capacity', size)
 
@@ -81,7 +81,7 @@ def getCounters():
     circuit_bytes = []
     packet_up_bytes = []
     packet_down_bytes = []
-    for i in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
         circuit_bytes.append(
             clickReadHandler('hybrid_switch/circuit_link%d/lu' % (i),
                              'total_bytes'))
@@ -97,8 +97,8 @@ def getCounters():
 
 def clearCounters():
     print("--- clearing Click counters...")
-    for i in xrange(1, NUM_RACKS+1):
-        for j in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
+        for j in xrange(1, NUM_RACKS + 1):
             clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
                               'clear', "")
         clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
@@ -116,13 +116,13 @@ def divertACKs(divert):
 
 
 def setCircuitLinkDelay(delay):
-    for i in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
         clickWriteHandler('hybrid_switch/circuit_link%d/lu' % (i),
                           'latency', delay)
 
 
 def setPacketLinkBandwidth(bw):
-    for i in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
         clickWriteHandler('hybrid_switch/packet_up_link%d/lu' % (i),
                           'bandwidth', '%.1fGbps' % bw)
         clickWriteHandler('hybrid_switch/ps/packet_link%d/lu' % (i),
@@ -167,7 +167,7 @@ def setStrobeSchedule(reconfig_delay):
     # racks connect to themselves. Each configuration actually contains both a
     # day and a night.
     schedule = '%d ' % ((NUM_RACKS - 1) * 2)
-    for i in xrange(NUM_RACKS-1):
+    for i in xrange(NUM_RACKS - 1):
         day_config = ''
         for j in xrange(NUM_RACKS):
             day_config += '%d/' % ((i + 1 + j) % NUM_RACKS)
@@ -263,6 +263,7 @@ def setConfig(config):
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
     setPacketLinkBandwidth(c['packet_link_bandwidth'])
+
     FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
                                                        c['buffer_size'],
                                                        c['traffic_source'],

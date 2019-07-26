@@ -48,7 +48,7 @@ def initializeExperiment(image):
 
     del PHYSICAL_NODES[:]  # clear in place
     PHYSICAL_NODES.append('')
-    for i in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
         PHYSICAL_NODES.append(get_phost_from_id(i))
     print '--- done...'
 
@@ -162,21 +162,21 @@ def gen_big_and_small_flows(seed=92611, rings=1):
     big_bw = 1 / 3.0 * CIRCUIT_BW_Gbps / 8. / rings
     little_bw = 1 / 3.0 * PACKET_BW_Gbps / 8. / NUM_RACKS
     big_nodes = []
-    for i in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
         big_nodes.append((i, (i % NUM_RACKS) + 1))
     if rings == 2:
-        for i in xrange(1, NUM_RACKS+1):
-            big_nodes.append((i, ((i+1) % NUM_RACKS) + 1))
+        for i in xrange(1, NUM_RACKS + 1):
+            big_nodes.append((i, ((i + 1) % NUM_RACKS) + 1))
     flows = []
     psize = 9000
-    for s in xrange(1, NUM_RACKS+1):
-        for d in xrange(1, NUM_RACKS+1):
+    for s in xrange(1, NUM_RACKS + 1):
+        for d in xrange(1, NUM_RACKS + 1):
             t = 0.0
             while t < 2.0:
                 src = get_host_from_rack_and_id(
-                    s, np.random.randint(1, HOSTS_PER_RACK+1))
+                    s, np.random.randint(1, HOSTS_PER_RACK + 1))
                 dst = get_host_from_rack_and_id(
-                    d, np.random.randint(1, HOSTS_PER_RACK+1))
+                    d, np.random.randint(1, HOSTS_PER_RACK + 1))
                 size = np.random.randint(10 * psize, 100 * psize)
                 if (s, d) in big_nodes:
                     size = np.random.randint(1000 * psize, 10000 * psize)
@@ -200,7 +200,7 @@ def flowgrind(settings):
                 if f['src'][0] == 'r' and f['dst'][0] == 'r':
                     s = int(f['src'][1])
                     d = int(f['dst'][1])
-                    for i in xrange(1, HOSTS_PER_RACK+1):
+                    for i in xrange(1, HOSTS_PER_RACK + 1):
                         fl = dict(f)
                         fl['src'] = get_host_from_rack_and_id(s, i)
                         fl['dst'] = get_host_from_rack_and_id(d, i)
@@ -240,8 +240,8 @@ def dfsioe(host, image):
     print 'done dfsioe...'
 
     tmp_dir = '/tmp/' + fn.split('.txt')[0]
-    for r in xrange(1, NUM_RACKS+1):
-        for h in xrange(1, IMAGE_NUM_HOSTS[image]+1):
+    for r in xrange(1, NUM_RACKS + 1):
+        for h in xrange(1, IMAGE_NUM_HOSTS[image] + 1):
             log_hostname = get_hostname_from_rack_and_id(r, h)
             log_host = get_host_from_rack_and_id(r, h)
             getFilesForLater(log_hostname, "/usr/local/hadoop/logs/*",
@@ -375,7 +375,7 @@ def launch(phost, image, host_id):
 
     # bind to specific CPU
     cpus = CPU_SET
-    cpus = str((host_id % (CPU_COUNT-1)) + 1)
+    cpus = str((host_id % (CPU_COUNT - 1)) + 1)
     my_cmd = my_cmd.format(cpu=cpus)
 
     run_cmd = IMAGE_DOCKER_RUN[image]
@@ -396,10 +396,10 @@ def launch(phost, image, host_id):
     # of the switch. This will cause all traffic sent to the other emulated
     # hosts to be sent to the switch instead, where it will be processed by the
     # hybrid router.
-    for i in xrange(1, NUM_RACKS+1):
+    for i in xrange(1, NUM_RACKS + 1):
         if i == get_phost_id(phost):
             continue
-        for j in xrange(1, HOSTS_PER_RACK+1):
+        for j in xrange(1, HOSTS_PER_RACK + 1):
             dst_id = '%d%d.%s' % (i, j, FQDN)
             run_on_host(my_id, ARP_POISON.format(id=dst_id, switch_mac=smac))
 
@@ -414,7 +414,7 @@ def launch(phost, image, host_id):
 
 def launch_rack(phost, image, blocking=True):
     ts = []
-    for i in xrange(1, IMAGE_NUM_HOSTS[image]+1):
+    for i in xrange(1, IMAGE_NUM_HOSTS[image] + 1):
         if blocking:
             launch(phost, image, i)
         else:
@@ -446,8 +446,8 @@ def launch_all_racks(image, blocking=True):
     map(lambda t: t.join(), ts)
 
     num_hosts = IMAGE_NUM_HOSTS[image]
-    for r in xrange(1, NUM_RACKS+1):
-        for h in xrange(1, num_hosts+1):
+    for r in xrange(1, NUM_RACKS + 1):
+        for h in xrange(1, num_hosts + 1):
             ip = get_control_ip_from_host(get_host_from_rack_and_id(r, h))
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             port = FLOWGRIND_PORT if 'flowgrind' in image else HDFS_PORT
