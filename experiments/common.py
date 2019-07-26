@@ -2,9 +2,14 @@
 import datetime
 import glob
 import os
+from os import path
 import socket
 from subprocess import call, PIPE, STDOUT, Popen
 import sys
+# Directory containing this program.
+PROGDIR = path.dirname(path.realpath(__file__))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
 import tarfile
 import threading
 import time
@@ -13,15 +18,14 @@ import numpy as np
 import rpyc
 
 import click_common
-sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW_Gbps, \
     PACKET_BW_Gbps, FQDN, DATA_NET, CONTROL_NET, DFSIOE, get_phost_from_host, \
     get_phost_id, IMAGE_CPU, CPU_COUNT, CPU_SET, DEFAULT_REQUEST_SIZE, \
-    IMAGE_CMD, IMAGE_SETUP, DOCKER_RUN, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, \
-    DATA_INT_IF, IMAGE_SKIP_TC, TC, DATA_RATE_Gbps_TDF, SWITCH_PING, \
-    GET_SWITCH_MAC, ARP_POISON, CONTROL_EXT_IF, CONTROL_INT_IF, \
-    CONTROL_RATE_Gbps_TDF, DOCKER_CLEAN, IMAGE_NUM_HOSTS, DOCKER_BUILD, \
+    IMAGE_CMD, IMAGE_SETUP, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, DATA_INT_IF, \
+    IMAGE_SKIP_TC, TC, DATA_RATE_Gbps_TDF, SWITCH_PING, GET_SWITCH_MAC, \
+    ARP_POISON, CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE_Gbps_TDF, \
+    DOCKER_CLEAN, IMAGE_NUM_HOSTS, DOCKER_BUILD, \
     SET_CC, get_host_from_rack_and_id, SCP, get_data_ip_from_host, \
     get_control_ip_from_host, FLOWGRIND_PORT, HDFS_PORT, DOCKER_SAVE, SCP_TO, \
     DOCKER_LOCAL_IMAGE_PATH, DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, \
@@ -143,8 +147,8 @@ def connect_all_rpyc_daemon():
         try:
             if phost not in RPYC_CONNECTIONS:
                 RPYC_CONNECTIONS[phost] = rpyc.connect(
-                        phost, RPYC_PORT,
-                        config={"allow_all_attrs": True, "sync_request_timeout": 1000})
+                    phost, RPYC_PORT,
+                    config={"allow_all_attrs": True, "sync_request_timeout": 1000})
         except:
             raise RuntimeError('could not connect to ' + phost)
 

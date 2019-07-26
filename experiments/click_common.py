@@ -1,12 +1,17 @@
-import socket
-import time
-import common
 
+from os import path
+import socket
 import sys
-sys.path.insert(0, '/etalon/etc')
+# Directory containing this program.
+PROGDIR = path.dirname(path.realpath(__file__))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
+import time
+
+import common
 from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
     CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE, DEFAULT_CIRCUIT_CONFIG, \
-    CIRCUIT_LATENCY_s_TDF, RECONFIG_DELAY_us
+    CIRCUIT_LATENCY_s_TDF, RECONFIG_DELAY_us, PACKET_BW_Gbps_TDF
 
 CLICK_SOCKET = None
 CURRENT_CONFIG = {}

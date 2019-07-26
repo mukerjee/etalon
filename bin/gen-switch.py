@@ -7,7 +7,7 @@ PROGDIR = path.dirname(path.realpath(__file__))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, '..', 'etc'))
 
-from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
+from python_config import DATA_EXT_IF, NUM_RACKS, HOSTS_PER_RACK, \
     CIRCUIT_BW_Gbps_TDF, PACKET_BW_Gbps_TDF, CIRCUIT_LATENCY_s_TDF, \
     PACKET_LATENCY_s_TDF, RECONFIG_DELAY_us, TDF, CLICK_PORT, \
     get_data_ip_from_host, get_phost_from_id, get_host_from_rack_and_id
@@ -97,7 +97,8 @@ print 'in :: FromDPDKDevice(0, MTU 9000)'
 print 'out :: ToDPDKDevice(0)'
 print
 
-# arp. Pattern 0 (port 0) is IP packets. Pattern 1 (port 1) is ARP replies. Pattern 2 (port 2) is ARP requests.
+# arp. Pattern 0 (port 0) is IP packets. Pattern 1 (port 1) is ARP replies.
+# Pattern 2 (port 2) is ARP requests.
 print 'arp_c :: Classifier(12/0800, 12/0806 20/0002, 12/0806 20/0001)'
 print 'arp_q :: ARPQuerier($DEVNAME:ip, $DEVNAME:eth)'
 print 'arp_r :: ARPResponder($DEVNAME)'
