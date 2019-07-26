@@ -8,7 +8,7 @@ PROGDIR = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(PROGDIR, '..', 'etc'))
 
 from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
-    CIRCUIT_BW_Gbps, PACKET_BW_Gbps, CIRCUIT_LATENCY_s_TDF, \
+    CIRCUIT_BW_Gbps_TDF, PACKET_BW_Gbps_TDF, CIRCUIT_LATENCY_s_TDF, \
     PACKET_LATENCY_s_TDF, RECONFIG_DELAY_us, TDF, CLICK_PORT, \
     get_data_ip_from_host, get_phost_from_id, get_host_from_rack_and_id
 
@@ -40,8 +40,8 @@ print ip_def
 print
 
 # all other params (set in ../etc/python_config.py)
-print 'define ($CIRCUIT_BW_Gbps %.1fGbps, $PACKET_BW_Gbps %.1fGbps)' % (
-    CIRCUIT_BW_Gbps, PACKET_BW_Gbps)
+print 'define ($CIRCUIT_BW_Gbps_TDF %.1fGbps, $PACKET_BW_Gbps_TDF %.1fGbps)' % (
+    CIRCUIT_BW_Gbps_TDF, PACKET_BW_Gbps_TDF)
 print
 
 print 'define ($PACKET_LATENCY_s_TDF %s)' % PACKET_LATENCY_s_TDF
@@ -87,7 +87,7 @@ print
 
 # the three control elements (see the paper)
 print 'traffic_matrix :: EstimateTraffic($NUM_RACKS, SOURCE QUEUE)'
-print 'sol :: Solstice($NUM_RACKS, $CIRCUIT_BW_Gbps, $PACKET_BW_Gbps, ' \
+print 'sol :: Solstice($NUM_RACKS, $CIRCUIT_BW_Gbps_TDF, $PACKET_BW_Gbps_TDF, ' \
     '$RECONFIG_DELAY_us, $TDF)'
 print 'runner :: RunSchedule($NUM_RACKS, RESIZE false)'
 print
@@ -151,7 +151,7 @@ print
 print 'elementclass packet_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => RoundRobinSched'
-print '    -> lu :: LinkUnqueue($PACKET_LATENCY_s_TDF, $PACKET_BW_Gbps)'
+print '    -> lu :: LinkUnqueue($PACKET_LATENCY_s_TDF, $PACKET_BW_Gbps_TDF)'
 print '    -> output'
 print '}'
 print
@@ -160,7 +160,7 @@ print
 print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => ps :: SimplePullSwitch(-1)'
-print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY_s_TDF, $CIRCUIT_BW_Gbps)'
+print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY_s_TDF, $CIRCUIT_BW_Gbps_TDF)'
 print '    -> StoreData(1, 1) -> SetIPChecksum'  # did packet go over circuit?
 print '    -> output'
 print '}'
