@@ -62,10 +62,15 @@ def get_data(db, name):
         #     events.
         # data["raw_data"][i][1][1][0] = The time at which the first day began.
 
+        ptn = sys.argv[1] + FILES[name]
+        fns = glob.glob(ptn)
+        print("Found files for pattern: {}".format(ptn))
+        for fn in fns:
+            print("    {}".format(fn))
+
         data = defaultdict(dict)
         p = Pool()
-        data['raw_data'] = dict(p.map(FileReader(name),
-                                      glob.glob(sys.argv[1] + FILES[name])))
+        data['raw_data'] = dict(p.map(FileReader(name), fns))
         # Clean up p.
         p.close()
         p.join()
