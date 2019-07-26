@@ -43,7 +43,7 @@ CONFIGS = [
 
 
 for c in CONFIGS:
-    # Enable Click's HSLog packet log. This already be enabled by default.
+    # Enable Click's HSLog packet log. This should already be enabled by default.
     c['packet_log'] = True
 
     if c['type'] == 'resize':
