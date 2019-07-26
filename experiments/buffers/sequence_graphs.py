@@ -12,11 +12,14 @@ import sys
 PROGDIR = path.dirname(path.realpath(__file__))
 # For parse_logs.
 sys.path.insert(0, path.join(PROGDIR, '..'))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, '..', '..', 'etc'))
 
 from dotmap import DotMap
 from simpleplotlib import plot
 
 from parse_logs import get_seq_data
+from python_config import TDF, CIRCUIT_BW_Gbps, PACKET_BW_Gbps
 
 # Maps experiment to filename.
 FILES = {
@@ -27,12 +30,12 @@ FILES = {
 # Maps experiment to a function that convert a filename to an integer key.
 KEY_FN = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
-    'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / 20.0,
+    'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / TDF,
 }
 
 UNITS = 1000.0  # Kilo-sequence number
 NUM_HOSTS = 16.0
-TIME_LENGTH = 1200
+DURATION = 1200
 
 
 class FileReader(object):
@@ -77,9 +80,9 @@ def get_data(db, name):
         print("Computing optimal...")
         # Billions of total b/s -> total B/s -> total KB/s -> total KB/us
         #     -> per-host KB/us
-        factor =  10**9 / 8. / UNITS / 10**6 / NUM_HOSTS
-        pr_KBpus = 10 * factor
-        cr_KBpus = 80 * factor
+        factor = 10**9 / 8. / UNITS / 10**6 / NUM_HOSTS
+        pr_KBpus = PACKET_BW_Gbps * factor
+        cr_KBpus = CIRCUIT_BW_Gbps * factor
         # Circuit start and end times, of the form:
         #     [<start>, <end>, <start>, <end>, ...]
         bounds = [int(round(q)) for q in data['lines']]
@@ -87,7 +90,7 @@ def get_data(db, name):
         # Each entry is the optimal sequence number at that microsecond. The
         # optimal sequence number is the maximum amount of data that could have
         # been sent at a certain time.
-        optimal= []
+        optimal = []
         print("bounds: {}".format(bounds))
         for state in xrange(0, len(bounds), 2):
             # Circuit night.
@@ -106,7 +109,7 @@ def get_data(db, name):
 
         # Verify that optimal contains the correct number of elements and that
         # no two adjacent elements are equal.
-        assert len(optimal) == TIME_LENGTH
+        assert len(optimal) == DURATION
         for i in xrange(len(optimal) - 1):
             assert optimal[i] != optimal[i + 1], \
                 "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
@@ -116,7 +119,7 @@ def get_data(db, name):
 
 
 def plot_seq(data, fn):
-    x = [xrange(TIME_LENGTH) for i in xrange(len(data['keys']))]
+    x = [xrange(DURATION) for i in xrange(len(data['keys']))]
     y = data['data']
 
     options = DotMap()

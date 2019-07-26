@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
+from collections import defaultdict
 import copy
 import glob
-import socket
 import numpy as np
+from os import path
+import socket
 from struct import unpack
-from collections import defaultdict
 import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
@@ -16,6 +17,7 @@ from python_config import CIRCUIT_BW_Gbps_TDF, TDF
 
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = 0.001200
+DURATION = 1200
 # 1/1000 seconds.
 bin_size = 1
 
@@ -90,7 +92,7 @@ def get_seq_data(fn):
         for i in xrange(len(ts)):
             if ord(ts[i]) == 0:
                 break
-        ts = float(ts[:i]) / 20.
+        ts = float(ts[:i]) / TDF
 
         if t == 1 or t == 2:  # starting or closing
             sr = (src, dst)
@@ -223,13 +225,13 @@ def get_seq_data(fn):
                     last = i
             if not out:
                 bad_windows += 1
-                out = [(0, 0), (1200, 0)]
+                out = [(0, 0), (DURATION, 0)]
             wraparound = False
             for ts, seq in out:
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if not wraparound:
-                chunks.append(np.interp(xrange(1200),
+                chunks.append(np.interp(xrange(DURATION),
                                         zip(*out)[0],
                                         zip(*out)[1]))
         print len(chunks)
