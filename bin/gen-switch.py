@@ -8,9 +8,9 @@ PROGDIR = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(PROGDIR, '..', 'etc'))
 
 from python_config import DATA_EXT_IF, NUM_RACKS, DATA_NET, HOSTS_PER_RACK, \
-    CIRCUIT_BW_BY_TDF, PACKET_BW_BY_TDF, PACKET_LATENCY, CIRCUIT_LATENCY, \
-    RECONFIG_DELAY, TDF, CLICK_PORT, get_data_ip_from_host, \
-    get_phost_from_id, get_host_from_rack_and_id
+    CIRCUIT_BW_Gbps, PACKET_BW_Gbps, CIRCUIT_LATENCY_s_TDF, \
+    PACKET_LATENCY_s_TDF, RECONFIG_DELAY_us, TDF, CLICK_PORT, \
+    get_data_ip_from_host, get_phost_from_id, get_host_from_rack_and_id
 
 
 print
@@ -40,17 +40,17 @@ print ip_def
 print
 
 # all other params (set in ../etc/python_config.py)
-print 'define ($CIRCUIT_BW %.1fGbps, $PACKET_BW %.1fGbps)' % (
-    CIRCUIT_BW_BY_TDF, PACKET_BW_BY_TDF)
+print 'define ($CIRCUIT_BW_Gbps %.1fGbps, $PACKET_BW_Gbps %.1fGbps)' % (
+    CIRCUIT_BW_Gbps, PACKET_BW_Gbps)
 print
 
-print 'define ($PACKET_LATENCY %s)' % PACKET_LATENCY
-print 'define ($CIRCUIT_LATENCY %s)' % CIRCUIT_LATENCY
+print 'define ($PACKET_LATENCY_s_TDF %s)' % PACKET_LATENCY_s_TDF
+print 'define ($CIRCUIT_LATENCY_s_TDF %s)' % CIRCUIT_LATENCY_s_TDF
 print 'define ($BIG_BUFFER_SIZE %s, $SMALL_BUFFER_SIZE %s)' % (
     128, 16)
 print
 
-print 'define ($RECONFIG_DELAY %d)' % RECONFIG_DELAY
+print 'define ($RECONFIG_DELAY_us %d)' % RECONFIG_DELAY_us
 print 'define ($TDF %d)' % (int(TDF))
 print
 
@@ -87,8 +87,8 @@ print
 
 # the three control elements (see the paper)
 print 'traffic_matrix :: EstimateTraffic($NUM_RACKS, SOURCE QUEUE)'
-print 'sol :: Solstice($NUM_RACKS, $CIRCUIT_BW, $PACKET_BW, ' \
-    '$RECONFIG_DELAY, $TDF)'
+print 'sol :: Solstice($NUM_RACKS, $CIRCUIT_BW_Gbps, $PACKET_BW_Gbps, ' \
+    '$RECONFIG_DELAY_us, $TDF)'
 print 'runner :: RunSchedule($NUM_RACKS, RESIZE false)'
 print
 
@@ -151,7 +151,7 @@ print
 print 'elementclass packet_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => RoundRobinSched'
-print '    -> lu :: LinkUnqueue($PACKET_LATENCY, $PACKET_BW)'
+print '    -> lu :: LinkUnqueue($PACKET_LATENCY_s_TDF, $PACKET_BW_Gbps)'
 print '    -> output'
 print '}'
 print
@@ -160,7 +160,7 @@ print
 print 'elementclass circuit_link {'
 print '  input%s' % (str(list(xrange(NUM_RACKS))))
 print '    => ps :: SimplePullSwitch(-1)'
-print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY, $CIRCUIT_BW)'
+print '    -> lu :: LinkUnqueue($CIRCUIT_LATENCY_s_TDF, $CIRCUIT_BW_Gbps)'
 print '    -> StoreData(1, 1) -> SetIPChecksum'  # did packet go over circuit?
 print '    -> output'
 print '}'

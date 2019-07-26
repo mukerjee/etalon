@@ -4,14 +4,18 @@ import copy
 import glob
 import socket
 import numpy as np
-
 from struct import unpack
 from collections import defaultdict
+import sys
+# Directory containing this program.
+PROGDIR = path.dirname(path.realpath(__file__))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, "..", "etc"))
+
+from python_config import CIRCUIT_BW_Gbps_TDF, TDF
 
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = 0.001200
-CIRCUIT_BW = 4  # without TDF
-TDF = 20.
 # 1/1000 seconds.
 bin_size = 1
 
@@ -318,7 +322,7 @@ def parse_packet_log(fn):
         for ts in circuit_starts[sr]:
             if ts >= flow_start[sr] and ts <= flow_end[sr]:
                 n += 1
-        max_bytes = n * RTT * (CIRCUIT_BW * 1e9 / 8.)
+        max_bytes = n * RTT * (CIRCUIT_BW_Gbps_TDF * 1e9 / 8.)
         for i, r in sorted(bytes_in_rtt[sr].items()):
             b[sr][i] = (r / max_bytes) * 100
 

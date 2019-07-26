@@ -15,19 +15,19 @@ import rpyc
 import click_common
 sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
-    EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW, \
-    PACKET_BW, FQDN, DATA_NET, CONTROL_NET, DFSIOE, get_phost_from_host, \
+    EXPERIMENTS, PHYSICAL_NODES, RPYC_CONNECTIONS, RPYC_PORT, CIRCUIT_BW_Gbps, \
+    PACKET_BW_Gbps, FQDN, DATA_NET, CONTROL_NET, DFSIOE, get_phost_from_host, \
     get_phost_id, IMAGE_CPU, CPU_COUNT, CPU_SET, DEFAULT_REQUEST_SIZE, \
     IMAGE_CMD, IMAGE_SETUP, DOCKER_RUN, DOCKER_IMAGE, PIPEWORK, DATA_EXT_IF, \
-    DATA_INT_IF, IMAGE_SKIP_TC, TC, DATA_RATE, SWITCH_PING, GET_SWITCH_MAC, \
-    ARP_POISON, CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE, DOCKER_CLEAN, \
-    IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, get_host_from_rack_and_id, SCP, \
-    get_data_ip_from_host, get_control_ip_from_host, FLOWGRIND_PORT, \
-    HDFS_PORT, DOCKER_SAVE, SCP_TO, DOCKER_LOCAL_IMAGE_PATH, \
-    DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, get_phost_from_id, DID_BUILD_FN, \
-    gen_hosts_file, HOSTS_FILE, IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, \
-    gen_slaves_file, SLAVES_FILE, get_hostname_from_rack_and_id, \
-    get_rack_and_id_from_host
+    DATA_INT_IF, IMAGE_SKIP_TC, TC, DATA_RATE_Gbps, SWITCH_PING, GET_SWITCH_MAC, \
+    ARP_POISON, CONTROL_EXT_IF, CONTROL_INT_IF, CONTROL_RATE_Gbps, \
+    DOCKER_CLEAN, IMAGE_NUM_HOSTS, DOCKER_BUILD, SET_CC, \
+    get_host_from_rack_and_id, SCP, get_data_ip_from_host, \
+    get_control_ip_from_host, FLOWGRIND_PORT, HDFS_PORT, DOCKER_SAVE, SCP_TO, \
+    DOCKER_LOCAL_IMAGE_PATH, DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, \
+    get_phost_from_id, DID_BUILD_FN, gen_hosts_file, HOSTS_FILE, \
+    IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, gen_slaves_file, SLAVES_FILE, \
+    get_hostname_from_rack_and_id, get_rack_and_id_from_host
 
 CURRENT_CC = ''
 START_TIME = None
@@ -159,8 +159,8 @@ def get_flowgrind_host(h):
 
 def gen_big_and_small_flows(seed=92611, rings=1):
     np.random.seed(seed)
-    big_bw = 1/3.0 * CIRCUIT_BW / 8.0 / rings
-    little_bw = 1/3.0 * PACKET_BW / 8.0 / NUM_RACKS
+    big_bw = 1 / 3.0 * CIRCUIT_BW_Gbps / 8. / rings
+    little_bw = 1 / 3.0 * PACKET_BW_Gbps / 8. / NUM_RACKS
     big_nodes = []
     for i in xrange(1, NUM_RACKS+1):
         big_nodes.append((i, (i % NUM_RACKS) + 1))
@@ -387,7 +387,7 @@ def launch(phost, image, host_id):
                                        id=host_id))
     if not IMAGE_SKIP_TC[image]:
         run_on_host(phost, TC.format(int_if=DATA_INT_IF,
-                                     id=my_id, rate=DATA_RATE))
+                                     id=my_id, rate=DATA_RATE_Gbps_TDF))
 
     run_on_host(my_id, SWITCH_PING, timeout_s=600)
     smac = run_on_host(my_id, GET_SWITCH_MAC).strip()
@@ -409,7 +409,7 @@ def launch(phost, image, host_id):
                                 id=host_id))
     if not IMAGE_SKIP_TC[image]:
         run_on_host(phost, TC.format(int_if=CONTROL_INT_IF, id=my_id,
-                                     rate=CONTROL_RATE))
+                                     rate=CONTROL_RATE_Gbps_TDF))
 
 
 def launch_rack(phost, image, blocking=True):

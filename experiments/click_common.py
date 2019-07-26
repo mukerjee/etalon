@@ -5,7 +5,8 @@ import common
 import sys
 sys.path.insert(0, '/etalon/etc')
 from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
-    CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE, DEFAULT_CIRCUIT_CONFIG
+    CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE, DEFAULT_CIRCUIT_CONFIG, \
+    CIRCUIT_LATENCY_s_TDF, RECONFIG_DELAY_us
 
 CLICK_SOCKET = None
 CURRENT_CONFIG = {}
@@ -224,8 +225,8 @@ def setConfig(config):
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
                       'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
-                      'divert_acks': False, 'circuit_link_delay': 0.000600,
-                      'packet_link_bandwidth': 10 / 20.0, 'hdfs': False,
+                      'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
+                      'packet_link_bandwidth': PACKET_BW_Gbps_TDF, 'hdfs': False,
                       'thresh': 1000000}
     CURRENT_CONFIG.update(config)
     c = CURRENT_CONFIG
@@ -237,15 +238,16 @@ def setConfig(config):
     setInAdvance(c['in_advance'])
     common.setCC(c['cc'])
     setSolsticeThresh(c['thresh'])
+
     t = c['type']
     if t == 'normal':
         enableSolstice()
     if t == 'no_circuit':
         disableCircuit()
     if t == 'strobe':
-        setStrobeSchedule(reconfig_delay=20)
+        setStrobeSchedule(reconfig_delay=RECONFIG_DELAY_us)
     if t == 'short_reconfig':
-        setStrobeSchedule(reconfig_delay=10)
+        setStrobeSchedule(reconfig_delay=RECONFIG_DELAY_us / 2.)
     if t == 'circuit':
         setCircuitSchedule(DEFAULT_CIRCUIT_CONFIG)
     if t == 'fixed':
