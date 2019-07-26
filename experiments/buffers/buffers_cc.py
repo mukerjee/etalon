@@ -34,6 +34,10 @@ def main():
             # Make a copy to avoid modifying the original configuration object.
             cnf_c = copy.deepcopy(cnf)
             cnf_c["cc"] = ccm
+            if ccm == "dctcp":
+                # For DCTCP, enable threshold-based ECN marking.
+                cnf_c['ecn'] = python_config.DCTCP_THRESH
+
             print("--- running test type {}...".format(cnf_c["type"]))
             print("--- using CC mode {}...".format(cnf_c["cc"]))
             print("--- setting switch buffer size to {}...".format(

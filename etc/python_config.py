@@ -82,6 +82,10 @@ DEFAULT_CIRCUIT_CONFIG = '1/2/0'
 # The default packet size for flowgrind, in bytes.
 DEFAULT_REQUEST_SIZE = 8948
 
+# The queue size, in packets, beyond which the switch should mark packets' ECN
+# bits as "Congestion Experienced".
+DCTCP_THRESH = 40
+
 # commands for building / running vhosts
 DOCKER_IMAGE = 'etalon'
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \

@@ -193,6 +193,32 @@ def setFixedSchedule(schedule):
     time.sleep(0.1)
 
 
+def setEceEnabled(enabled):
+    """ Enable/disable ECE marking. """
+    clickWriteHandler('ecemark', 'enabled', 'true' if enabled else 'false')
+    time.sleep(0.1)
+
+
+def setEcnEnabled(enabled):
+    """ Enable/disable threshold-based ECN marking. """
+    val = 'true' if enabled else 'false'
+    for src in xrange(1, NUM_RACKS + 1):
+        for dst in xrange(1, NUM_RACKS + 1):
+            clickWriteHandler('hybrid_switch/q{}{}/q'.format(src, dst),
+                              'marking_enabled', val)
+    clickWriteHandler('ecn', 'enabled', 'true' if enabled else 'false')
+    time.sleep(0.1)
+
+
+def setEcnThresh(thresh):
+    """ Set the ECN marking threshold. """
+    for src in xrange(1, NUM_RACKS + 1):
+        for dst in xrange(1, NUM_RACKS + 1):
+            clickWriteHandler('hybrid_switch/q{}{}/q'.format(src, dst),
+                              'marking_threshold', thresh)
+    time.sleep(0.1)
+
+
 def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
@@ -224,6 +250,14 @@ def setConfig(config):
         setCircuitSchedule(DEFAULT_CIRCUIT_CONFIG)
     if t == 'fixed':
         setFixedSchedule(c['fixed_schedule'])
+
+    # Enable threshold-based ECN marking only if it is explicitly configured.
+    ecn_enabled = 'ecn' in c:
+    if ecn_enabled:
+        setEcnThresh(c['ecn'])
+    setEcnEnabled(ecn_enabled)
+    setEceEnabled(not ecn_enabled)
+
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
     setPacketLinkBandwidth(c['packet_link_bandwidth'])
