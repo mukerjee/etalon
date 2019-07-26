@@ -212,7 +212,6 @@ def setEcnEnabled(enabled):
         for dst in xrange(1, NUM_RACKS + 1):
             clickWriteHandler('hybrid_switch/q{}{}/q'.format(src, dst),
                               'marking_enabled', val)
-    clickWriteHandler('ecn', 'enabled', 'true' if enabled else 'false')
     time.sleep(0.1)
 
 
