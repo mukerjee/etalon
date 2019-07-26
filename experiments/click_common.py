@@ -201,7 +201,7 @@ def setFixedSchedule(schedule):
 
 def setEceEnabled(enabled):
     """ Enable/disable ECE marking. """
-    clickWriteHandler('ecemark', 'enabled', 'true' if enabled else 'false')
+    clickWriteHandler('ecem', 'enabled', 'true' if enabled else 'false')
     time.sleep(0.1)
 
 
