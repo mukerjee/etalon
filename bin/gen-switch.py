@@ -268,18 +268,16 @@ for i in xrange(1, NUM_RACKS+1):
 print ' :: {'
 # We need to name the LockQueue "q" so that EstimateTraffic can find it. If
 # threshold-based ECN marking is enabled (e.g., for DCTCP), then LockQueue
-# annotates a packet with whether it should be marked. Packets then pass through
-# MarkIPCE, which looks at these annotations and, if necessary, sets the
-# packet's ECN bits to "Congestion Experienced".
-print '      input[0] -> q :: LockQueue(CAPACITY $SMALL_BUFFER_SIZE) -> ecn :: MarkIPCE'
+# annotates a packet with whether it should be marked.
+print '      input[0] -> q :: LockQueue(CAPACITY $SMALL_BUFFER_SIZE)'
 # lq is the loss queue. It fills up with packets that were dropped in the packet
 # switch. lq packets will have priority over q packets (see PrioSched, below).
 print '      input[1] -> lq :: Queue(CAPACITY 5)'
-# lq and ecn connect to input ports 0 and 1, respectively. When trying to pull a
+# lq and q connect to input ports 0 and 1, respectively. When trying to pull a
 # packet, PrioSched checks its input ports in order, starting from port 0,
 # meaning that packets from port 0 (lq) will always be pulled before packets
-# from port 1 (ecn).
-print '      lq, ecn => PrioSched -> output'
+# from port 1 (q).
+print '      lq, q => PrioSched -> output'
 print ' }'
 print
 
@@ -402,6 +400,11 @@ print '   -> hsl :: HSLog($NUM_RACKS)'
 # ECE marking (for reTCP). The name is required so that RunSchedule can call
 # its handler.
 print '   -> ecem :: ECEMark($NUM_RACKS)'
+# Packets then pass through MarkIPCE, which looks at the THRESH_EXCEEDED_ANNO
+# user annotation and, if it equals 1, sets the packet's ECN bits to "Congestion
+# Experienced". This element must be named so that scripts can call its write
+# handlers.
+print '   -> ecn :: MarkIPCE'
 print '   -> arp_q '
 print '   -> out'
 print
