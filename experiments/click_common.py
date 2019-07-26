@@ -254,7 +254,7 @@ def setConfig(config):
         setFixedSchedule(c['fixed_schedule'])
 
     # Enable threshold-based ECN marking only if it is explicitly configured.
-    ecn_enabled = 'ecn' in c:
+    ecn_enabled = 'ecn' in c
     if ecn_enabled:
         setEcnThresh(c['ecn'])
     setEcnEnabled(ecn_enabled)
