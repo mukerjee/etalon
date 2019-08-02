@@ -83,7 +83,7 @@ def initializeExperiment(image, cc=DEFAULT_CC):
     click_common.initializeClickControl()
 
     print '--- setting default click buffer sizes and traffic sources...'
-    click_common.setConfig({})
+    click_common.setConfig({'cc': cc})
     print '--- done...'
     time.sleep(2)
     print '--- done starting experiment...'
