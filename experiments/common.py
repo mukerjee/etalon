@@ -31,15 +31,15 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     DOCKER_LOCAL_IMAGE_PATH, DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, \
     get_phost_from_id, DID_BUILD_FN, gen_hosts_file, HOSTS_FILE, \
     IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, gen_slaves_file, SLAVES_FILE, \
-    get_hostname_from_rack_and_id, get_rack_and_id_from_host
+    get_hostname_from_rack_and_id, get_rack_and_id_from_host, DEFAULT_CC
 
-CURRENT_CC = ''
+CURRENT_CC = None
 START_TIME = None
 
 ##
 # Experiment commands
 ##
-def initializeExperiment(image):
+def initializeExperiment(image, cc=DEFAULT_CC):
     global IMAGE, START_TIME
     IMAGE = image
     START_TIME = datetime.datetime.now()
@@ -60,8 +60,8 @@ def initializeExperiment(image):
     connect_all_rpyc_daemon()
     print '--- done...'
 
-    print '--- setting CC to reno...'
-    setCC('reno')
+    print '--- setting CC to {}...'.format(cc)
+    setCC(cc)
     print '--- done...'
 
     print '--- building etalon docker image...'
@@ -329,7 +329,9 @@ def setCC(cc):
                                    args=(phost, cc)))
         ts[-1].start()
     map(lambda t: t.join(), ts)
-    if CURRENT_CC and cc != CURRENT_CC:
+    # If the CC mode was previously configured to something else, then restart
+    # the cluster.
+    if CURRENT_CC is not None and cc != CURRENT_CC:
         launch_all_racks(IMAGE, blocking=False)
     CURRENT_CC = cc
 

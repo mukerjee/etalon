@@ -11,7 +11,7 @@ import time
 import common
 from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
     CLICK_ADDR, CLICK_PORT, CLICK_BUFFER_SIZE, DEFAULT_CIRCUIT_CONFIG, \
-    CIRCUIT_LATENCY_s_TDF, RECONFIG_DELAY_us, PACKET_BW_Gbps_TDF
+    CIRCUIT_LATENCY_s_TDF, RECONFIG_DELAY_us, PACKET_BW_Gbps_TDF, DEFAULT_CC
 
 CLICK_SOCKET = None
 CURRENT_CONFIG = {}
@@ -228,7 +228,7 @@ def setConfig(config):
     global CURRENT_CONFIG, FN_FORMAT
     CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
                       'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'in_advance': 12000, 'cc': 'reno', 'packet_log': True,
+                      'in_advance': 12000, 'cc': DEFAULT_CC, 'packet_log': True,
                       'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
                       'packet_link_bandwidth': PACKET_BW_Gbps_TDF, 'hdfs': False,
                       'thresh': 1000000}

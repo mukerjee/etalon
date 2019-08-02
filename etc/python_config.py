@@ -266,12 +266,15 @@ IMAGE_CMD = {
 }
 
 
-# All available CC modules. Found by:
+# All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
-# CCMS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
-#         "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
-#         "westwood", "yeah"]
-CCMS = ["bbr"]
+# CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
+#        "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
+#        "westwood", "yeah"]
+CCS = ["dctcp"]
+
+# The default CC mode.
+DEFAULT_CC = "reno"
 
 # host1 --> apt105.apt.emulab.net
 def handle_to_machine(h):
