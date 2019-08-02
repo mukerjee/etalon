@@ -14,7 +14,6 @@ from python_config import NUM_RACKS, TIMESTAMP, SCRIPT, TDF, EXPERIMENTS, \
     CIRCUIT_LATENCY_s_TDF, RECONFIG_DELAY_us, PACKET_BW_Gbps_TDF, DEFAULT_CC
 
 CLICK_SOCKET = None
-CURRENT_CONFIG = {}
 FN_FORMAT = ''
 
 
@@ -225,15 +224,15 @@ def setEcnThresh(thresh):
 
 
 def setConfig(config):
-    global CURRENT_CONFIG, FN_FORMAT
-    CURRENT_CONFIG = {'type': 'normal', 'buffer_size': 16,
-                      'traffic_source': 'QUEUE', 'queue_resize': False,
-                      'in_advance': 12000, 'cc': DEFAULT_CC, 'packet_log': True,
-                      'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
-                      'packet_link_bandwidth': PACKET_BW_Gbps_TDF, 'hdfs': False,
-                      'thresh': 1000000}
-    CURRENT_CONFIG.update(config)
-    c = CURRENT_CONFIG
+    global FN_FORMAT
+    c = {'type': 'normal', 'buffer_size': 16,
+         'traffic_source': 'QUEUE', 'queue_resize': False,
+         'in_advance': 12000, 'cc': DEFAULT_CC, 'packet_log': True,
+         'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
+         'packet_link_bandwidth': PACKET_BW_Gbps_TDF, 'hdfs': False,
+         'thresh': 1000000}
+
+    c.update(config)
     clearCounters()
     setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
