@@ -262,7 +262,8 @@ def setConfig(config):
     if ecn_enabled:
         setEcnThresh(c['ecn'])
     setEcnEnabled(ecn_enabled)
-    setEceEnabled(not ecn_enabled)
+    # If using reTCP, then enable ECE marking.
+    setEceEnabled(c['cc'] == 'retcp')
 
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
