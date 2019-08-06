@@ -405,7 +405,7 @@ print '   -> ecem :: ECEMark($NUM_RACKS)'
 # user annotation and, if it equals 1, sets the packet's ECN bits to "Congestion
 # Experienced". This element must be named so that scripts can call its write
 # handlers.
-print '   -> ecn :: MarkIPCE'
+print '   -> ecn :: MarkIPCE(FORCE true)'
 print '   -> arp_q '
 print '   -> out'
 print
