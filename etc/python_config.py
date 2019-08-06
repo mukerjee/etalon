@@ -268,10 +268,10 @@ IMAGE_CMD = {
 
 # All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
-# CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
-#        "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
-#        "westwood", "yeah"]
-CCS = ["dctcp"]
+CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
+       "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
+       "westwood", "yeah"]
+# CCS = ["reno"]
 
 # The default CC mode.
 DEFAULT_CC = "reno"
