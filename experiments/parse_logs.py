@@ -189,7 +189,7 @@ def get_seq_data(fn):
         print f
         chunks = []
         last = 0
-        print len(circuit_starts[sr])
+        print "circuit starts: {}".format(len(circuit_starts[sr]))
         bad_windows = 0
         first_ts = flows[f][0][0]
         last_ts = flows[f][-1][0]
