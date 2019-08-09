@@ -157,15 +157,12 @@ def disableCircuit():
     time.sleep(0.1)
 
 
-def setStrobeSchedule(reconfig_delay):
+def setStrobeSchedule(night_len_us=20, day_len_us=180):
     disableSolstice()
     # Configuration that turns off all the circuit links. Remove trailing '/'.
     off_config = ('-1/' * NUM_RACKS)[:-1]
     # Day len, day config, night len, off config
     config_s = '%d %s %d %s '
-    night_len = reconfig_delay * TDF
-    # night_len * duty_cycle
-    day_len = night_len * 9
     # The first element is the number of configurations. There are NUM_RACKS - 1
     # configurations because there does not need to be a configuration where the
     # racks connect to themselves. Each configuration actually contains both a
@@ -177,7 +174,7 @@ def setStrobeSchedule(reconfig_delay):
             day_config += '%d/' % ((i + 1 + j) % NUM_RACKS)
         # Remove trailing '/'.
         day_config = day_config[:-1]
-        schedule += config_s % (day_len, day_config, night_len, off_config)
+        schedule += config_s % (day_len_us, day_config, night_len_us, off_config)
 
     # Remove trailing space.
     schedule = schedule[:-1]
@@ -230,7 +227,8 @@ def setConfig(config):
          'in_advance': 12000, 'cc': DEFAULT_CC, 'packet_log': True,
          'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
          'packet_link_bandwidth': PACKET_BW_Gbps_TDF, 'hdfs': False,
-         'thresh': 1000000}
+         'thresh': 1000000, 'night_len_us': RECONFIG_DELAY_us,
+         'day_len_us': RECONFIG_DELAY_us * 9}
 
     c.update(config)
     clearCounters()
@@ -248,9 +246,7 @@ def setConfig(config):
     if t == 'no_circuit':
         disableCircuit()
     if t == 'strobe':
-        setStrobeSchedule(reconfig_delay=RECONFIG_DELAY_us)
-    if t == 'short_reconfig':
-        setStrobeSchedule(reconfig_delay=RECONFIG_DELAY_us / 2.)
+        setStrobeSchedule(c['night_len_us'], c['day_len_us'])
     if t == 'circuit':
         setCircuitSchedule(DEFAULT_CIRCUIT_CONFIG)
     if t == 'fixed':
@@ -277,6 +273,9 @@ def setConfig(config):
                                                        c['circuit_link_delay'],
                                                        c['packet_link_bandwidth'],
                                                        c['hdfs'])
+    if t == 'strobe':
+        FN_FORMAT += '%d-%d' % (c['night_len_us'], c['day_len_us'])
+
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
         setLog('/tmp/' + FN_FORMAT % 'click')
