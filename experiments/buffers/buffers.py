@@ -11,8 +11,11 @@ import common
 def main():
     common.initializeExperiment('flowgrindd')
 
-    # Total number of experiments.
     cnfs = buffer_common.CONFIGS
+    # For every configuration, add a copy that uses reTCP as the CC mode. Put
+    # the new configurations at the end so that the CC mode needs to be changed
+    # only once.
+    cnfs += [dict(cnf, {'cc': "retcp"}) for cnf in cnfs]
     tot = len(cnfs)
     for cnt, cnf in enumerate(cnfs):
         print('--- running test type {}...'.format(cnf['type']))

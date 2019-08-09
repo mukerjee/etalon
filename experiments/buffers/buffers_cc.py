@@ -22,9 +22,7 @@ def main():
     # restart the cluster for the first CC mode's experiments.
     common.initializeExperiment("flowgrindd", ccs[0])
 
-    # Skip the reTCP experiments because they will be run anyway when
-    # cc == "retcp".
-    cnfs = [cnf for cnf in buffer_common.CONFIGS if "cc" not in cnf]
+    cnfs = buffer_common.CONFIGS
     # Total number of experiments.
     tot = len(ccs) * len(cnfs)
     cnt = 0
