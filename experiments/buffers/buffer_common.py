@@ -6,6 +6,7 @@ CONFIGS = [
     {'type': 'strobe', 'buffer_size':  32},
     {'type': 'strobe', 'buffer_size':  64},
     {'type': 'strobe', 'buffer_size': 128},
+    {'type': 'resize', 'buffer_size':  16, 'in_advance': 0},
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 500},
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 1000},
     {'type': 'resize', 'buffer_size':  16, 'in_advance': 1500},
