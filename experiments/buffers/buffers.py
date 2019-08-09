@@ -9,9 +9,11 @@ import common
 
 
 def main():
-    common.initializeExperiment('flowgrindd')
-
     cnfs = buffer_common.CONFIGS
+    # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
+    # This avoid unnecessarily restarting the cluster.
+    common.initializeExperiment('flowgrindd', cnfs[0].get("cc", "reno"))
+
     # For every configuration, add a copy that uses reTCP as the CC mode. Put
     # the new configurations at the end so that the CC mode needs to be changed
     # only once.
