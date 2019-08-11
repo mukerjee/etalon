@@ -54,11 +54,12 @@ def main():
         if cc in ["reno", "cubic"]:
             # Old optical switches.
             cnfs += [{"type": "strobe", "buffer_size": 16,
-                      "night_len_us": 1000., "day_len_us": 9000., "cc": cc}]
+                      "night_len_us": 1000. * TDF, "day_len_us": 9000. * TDF,
+                      "cc": cc}]
             # New optical switches, but using long days.
             cnfs += [{"type": "strobe", "buffer_size": 16,
-                      "night_len_us": python_config.RECONFIG_DELAY_us,
-                      "day_len_us": 9000., "cc": cc}]
+                      "night_len_us": python_config.RECONFIG_DELAY_us * TDF,
+                      "day_len_us": 9000. * TDF, "cc": cc}]
 
     # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
     # This avoid unnecessarily restarting the cluster.

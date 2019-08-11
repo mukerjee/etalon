@@ -227,8 +227,8 @@ def setConfig(config):
          'in_advance': 12000, 'cc': DEFAULT_CC, 'packet_log': True,
          'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
          'packet_link_bandwidth': PACKET_BW_Gbps_TDF, 'hdfs': False,
-         'thresh': 1000000, 'night_len_us': RECONFIG_DELAY_us,
-         'day_len_us': RECONFIG_DELAY_us * 9}
+         'thresh': 1000000, 'night_len_us': RECONFIG_DELAY_us * TDF,
+         'day_len_us': RECONFIG_DELAY_us * TDF * 9}
 
     c.update(config)
     clearCounters()
