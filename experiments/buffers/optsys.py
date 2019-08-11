@@ -25,29 +25,40 @@ def maybe(fnc, do=not DRY_RUN):
 
 def main():
     cnfs = []
-    # Static buffers of different sizes.
-    for i in xrange(2, 8):
-        cnfs += [{"type": "strobe", "buffer_size": 2**i}]
-    # Dynamic buffers for the various CC modes. CC modes are the outside loop to
-    # minimize how frequently we change the CC mode, since doing so requires
-    # restarting the cluster.
+
+    # CC modes are the outside loop to minimize how frequently we change the CC
+    # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
+        # For DCTCP, we will enable threshold-based ECN marking.
+        dctcp = cc == "dctcp"
+
+        # Static buffers. Show that all the TCP variants perform poorly when
+        # nights/days are short.
+        cnf = {"type": "strobe", "buffer_size": 16, "cc": cc}
+        if dctcp:
+            cnf["ecn"] = python_config.DCTCP_THRESH
+        cnfs += [cnf]
+
+        # Dynamic buffers. Show that dynamic buffers help all TCP variants when
+        # nights/days are short.
         for i in xrange(MAX_RESIZE + 1):
             if i % 500 == 0:
                 cnf = {"type": "resize", "buffer_size":  16, "in_advance": i,
                        "cc": cc}
-                if cc == "dctcp":
-                    # For DCTCP, enable threshold-based ECN marking.
+                if dctcp:
                     cnf["ecn"] = python_config.DCTCP_THRESH
                 cnfs += [cnf]
-    for cc in ["reno", "cubic"]:
-        # Old optical switches.
-        cnfs += [{"type": "strobe", "buffer_size": 16,
-                  "night_len_us": 1000, "day_len_us": 9000, "cc": cc}]
-        # New optical switches, but using long days.
-        cnfs += [{"type": "strobe", "buffer_size": 16,
-                  "night_len_us": python_config.RECONFIG_DELAY_us,
-                  "day_len_us": 9000, "cc": cc}]
+
+        # Long days, static buffers. Show the cases where TCP ramp up is not a
+        # problem.
+        if cc in ["reno", "cubic"]:
+            # Old optical switches.
+            cnfs += [{"type": "strobe", "buffer_size": 16,
+                      "night_len_us": 1000., "day_len_us": 9000., "cc": cc}]
+            # New optical switches, but using long days.
+            cnfs += [{"type": "strobe", "buffer_size": 16,
+                      "night_len_us": python_config.RECONFIG_DELAY_us,
+                      "day_len_us": 9000., "cc": cc}]
 
     # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
     # This avoid unnecessarily restarting the cluster.
