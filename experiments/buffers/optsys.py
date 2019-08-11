@@ -40,14 +40,15 @@ def main():
         cnfs += [cnf]
 
         # Dynamic buffers. Show that dynamic buffers help all TCP variants when
-        # nights/days are short.
-        for i in xrange(MAX_RESIZE + 1):
-            if i % 500 == 0:
-                cnf = {"type": "resize", "buffer_size":  16, "in_advance": i,
-                       "cc": cc}
-                if dctcp:
-                    cnf["ecn"] = python_config.DCTCP_THRESH
-                cnfs += [cnf]
+        # nights/days are short. For now, only show this for reno.
+        if cc in ["reno"]:
+            for i in xrange(MAX_RESIZE + 1):
+                if i % 500 == 0:
+                    cnf = {"type": "resize", "buffer_size":  16, "in_advance": i,
+                           "cc": cc}
+                    if dctcp:
+                        cnf["ecn"] = python_config.DCTCP_THRESH
+                    cnfs += [cnf]
 
         # Long days, static buffers. Show the cases where TCP ramp up is not a
         # problem.
