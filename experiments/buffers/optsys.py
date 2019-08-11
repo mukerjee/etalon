@@ -14,7 +14,7 @@ import common
 import python_config
 
 # If True, then do not run experiments and instead only print configurations.
-DRY_RUN = True
+DRY_RUN = False
 MAX_RESIZE = 4500
 
 
