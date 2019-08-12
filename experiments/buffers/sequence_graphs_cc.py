@@ -15,8 +15,9 @@ import sequence_graphs
 
 
 def main():
-    if not os.path.isdir(sys.argv[1]):
-        print("first arg must be dir")
+    exp = sys.argv[1]
+    if not path.isdir(exp):
+        print("The first argument must be a directory, but is: {}".format(exp))
         sys.exit(-1)
 
     # Create entries for each CC mode. Keys are of the form "resize-<CC mode>".
@@ -24,13 +25,12 @@ def main():
     for cc in python_config.CCS:
         sequence_graphs.FILES[fmt.format(cc)] = \
             "/*-QUEUE-True-*-{}-*click.txt".format(cc)
-    for cc in python_config.CCS:
         sequence_graphs.KEY_FN[fmt.format(cc)] = \
             sequence_graphs.KEY_FN["resize"]
 
     # Parse the static data to figure out the 0 us case. Copy the results and
     # store the database file.
-    db = shelve.open(path.join(sys.argv[1], "seq_static_shelve.db"))
+    db = shelve.open(path.join(exp, "seq_static_shelve.db"))
     db["static"] = sequence_graphs.get_data(db, "static")
     dbs = copy.deepcopy(db["static"])
     db.close()
@@ -40,7 +40,7 @@ def main():
         # Use a new database for each CC mode to avoid storing everything in
         # memory at once. This also enables the program to be killed and
         # restarted partway through without losing progress.
-        db = shelve.open(path.join(sys.argv[1], "seq_{}_shelve.db".format(cc)))
+        db = shelve.open(path.join(exp, "seq_{}_shelve.db".format(cc)))
         key = fmt.format(cc)
         db[key] = sequence_graphs.get_data(db, key)
         cc_data = copy.deepcopy(db[key])
