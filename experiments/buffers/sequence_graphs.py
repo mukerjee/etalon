@@ -27,7 +27,8 @@ FILES = {
     'resize': '/*-QUEUE-True-*-reno-*click.txt',
 }
 
-# Maps experiment to a function that convert a filename to an integer key.
+# Maps experiment to a function that convert a filename to an integer key
+# identifying this experiment (i.e., for the legend).
 KEY_FN = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / TDF,
