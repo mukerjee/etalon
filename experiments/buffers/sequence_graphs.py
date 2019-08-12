@@ -63,7 +63,7 @@ def get_data(db, name):
         #     events.
         # data["raw_data"][i][1][1][0] = The time at which the first day began.
 
-        ptn = sys.argv[1] + FILES[name]
+        ptn = path.join(sys.argv[1], FILES[name])
         fns = glob.glob(ptn)
         print("Found files for pattern: {}".format(ptn))
         for fn in fns:
@@ -177,7 +177,7 @@ if __name__ == '__main__':
     if not os.path.isdir(sys.argv[1]):
         print 'first arg must be dir'
         sys.exit(-1)
-    db = shelve.open(sys.argv[1] + '/seq_shelve.db')
+    db = shelve.open(path.join(sys.argv[1], 'seq_shelve.db'))
     db['static'] = get_data(db, 'static')
     plot_seq(db['static'], 'static')
 
