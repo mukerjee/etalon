@@ -29,29 +29,9 @@ def main():
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
-        # For DCTCP, we will enable threshold-based ECN marking.
-        dctcp = cc == "dctcp"
 
-        # Static buffers. Show that all the TCP variants perform poorly when
-        # nights/days are short.
-        cnf = {"type": "strobe", "buffer_size": 16, "cc": cc}
-        if dctcp:
-            cnf["ecn"] = python_config.DCTCP_THRESH
-        cnfs += [cnf]
-
-        # Dynamic buffers. Show that dynamic buffers help all TCP variants when
-        # nights/days are short. For now, only show this for reno.
-        if cc in ["reno"]:
-            for i in xrange(MAX_RESIZE + 1):
-                if i % 500 == 0:
-                    cnf = {"type": "resize", "buffer_size":  16,
-                           "in_advance": i, "cc": cc}
-                    if dctcp:
-                        cnf["ecn"] = python_config.DCTCP_THRESH
-                    cnfs += [cnf]
-
-        # Long days, static buffers. Show the cases where TCP ramp up is not a
-        # problem.
+        # (1) Long days, static buffers. Show the cases where TCP ramp up is not
+        #     a problem.
         if cc in ["reno", "cubic"]:
             # Old optical switches.
             cnfs += [{"type": "strobe", "buffer_size": 16,
@@ -63,6 +43,29 @@ def main():
                       "night_len_us": python_config.RECONFIG_DELAY_us * \
                           python_config.TDF,
                       "day_len_us": 9000. * python_config.TDF, "cc": cc}]
+
+        # (2) Static buffers. Show that all the TCP variants perform poorly when
+        #     nights/days are short.
+        cnf = {"type": "strobe", "buffer_size": 16, "cc": cc}
+        # For DCTCP, we will enable threshold-based ECN marking.
+        dctcp = cc == "dctcp"
+        if dctcp:
+            cnf["ecn"] = python_config.DCTCP_THRESH
+        cnfs += [cnf]
+
+        # (3) Dynamic buffers. Show that dynamic buffers help all TCP variants
+        #     when nights/days are short. For now, only show this for reno.
+        if cc in ["reno"]:
+            for i in xrange(MAX_RESIZE + 1):
+                if i % 500 == 0:
+                    cnf = {"type": "strobe", "buffer_size":  16,
+                           "queue_resize": True, "in_advance": i, "cc": cc}
+                    if dctcp:
+                        cnf["ecn"] = python_config.DCTCP_THRESH
+                    cnfs += [cnf]
+
+    # For all configurations, enable the packet log.
+    cnfs = [dict(cnf, {"packet_log": True}) for cnf in cnfs]
 
     # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
     # This avoid unnecessarily restarting the cluster.
