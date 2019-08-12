@@ -113,9 +113,10 @@ def get_data(db, name):
                 optimal[-1] + cr_KBpus * us
                 for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
 
-        # Verify that optimal contains the correct number of elements and that
-        # no two adjacent elements are equal.
-        assert len(optimal) == DURATION
+        # Set the duration based on the actual circuit timings.
+        global DURATION
+        DURATION = len(optimal)
+        # Verify that in optimal, no two adjacent elements are equal.
         for i in xrange(len(optimal) - 1):
             assert optimal[i] != optimal[i + 1], \
                 "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
