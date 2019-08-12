@@ -44,7 +44,7 @@ class FileReader(object):
         self.name = name
 
     def __call__(self, fn):
-        key = int(round(float(KEY_FN[self.name](fn.split('/')[-1]))))
+        key = KEY_FN[self.name](fn.split('/')[-1])
         print fn, key
         return key, get_seq_data(fn)
 
