@@ -274,7 +274,7 @@ def setConfig(config):
                                                        c['packet_link_bandwidth'],
                                                        c['hdfs'])
     if t == 'strobe':
-        FN_FORMAT += '%d-%d' % (c['night_len_us'], c['day_len_us'])
+        FN_FORMAT += '%d-%d-' % (c['night_len_us'], c['day_len_us'])
 
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
