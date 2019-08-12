@@ -44,8 +44,8 @@ def main():
         if cc in ["reno"]:
             for i in xrange(MAX_RESIZE + 1):
                 if i % 500 == 0:
-                    cnf = {"type": "resize", "buffer_size":  16, "in_advance": i,
-                           "cc": cc}
+                    cnf = {"type": "resize", "buffer_size":  16,
+                           "in_advance": i, "cc": cc}
                     if dctcp:
                         cnf["ecn"] = python_config.DCTCP_THRESH
                     cnfs += [cnf]
