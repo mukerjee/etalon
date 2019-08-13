@@ -140,7 +140,7 @@ def main():
         static_key = STATIC_KEY_FMT.format("{}-retcp".format(cc))
         # Match the current CC mode and reTCP.
         sqg.FILES[static_key] = STATIC_PTN.format(
-            "{" + "{}, retcp".format(cc) + "}")
+            "{" + "{},retcp".format(cc) + "}")
         # Extract the CC mode.
         sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
