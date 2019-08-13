@@ -75,7 +75,7 @@ def get_data(db, name):
         p.close()
         p.join()
         data['raw_data'] = sorted(data['raw_data'].items())
-        data['keys'] = list(zip(*data['raw_data'])[0]) + ['Optimal']
+        data['keys'] = list(zip(*data['raw_data'])[0]) + ['optimal']
         data['lines'] = data['raw_data'][0][1][1]
         data['data'] = [map(lambda x: x / UNITS, f) for f in
                         zip(*zip(*data['raw_data'])[1])[0]]
@@ -125,18 +125,26 @@ def plot_seq(data, fn):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
+    # Format the legend labels.
+    if 'static' in fn:
+        lls = ['%s packets' % k for k in data['keys'][:-1]]
+        lls += [data['keys'][-1]]
+    else:
+        try:
+            lls = ['%s $\mu$s' % int(k) for k in data['keys'][:-1]]
+            lls += [data['keys'][-1]]
+        except ValueError:
+            lls = data['keys']
+
     options = DotMap()
     options.plot_type = 'LINE'
-    options.legend.options.labels = \
-        ['%s packets' % k for k in data['keys'][:-1]] if 'static' in fn \
-        else ['%s $\mu$s' % k for k in data['keys'][:-1]]
-    options.legend.options.labels += ['Optimal']
+    options.legend.options.labels = lls
     options.legend.options.fontsize = 14
-    options.legend.options.ncol = 2
+    options.legend.options.ncol = 1
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
     options.output_fn = path.join(PROGDIR, 'graphs', 'seq_%s.pdf' % fn)
     options.x.label.xlabel = 'Time ($\mu$s)'
-    options.y.label.ylabel = 'Expected seq. num. (K)'
+    options.y.label.ylabel = 'Kilobytes'
     options.x.label.fontsize = options.y.label.fontsize = 16
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 16
