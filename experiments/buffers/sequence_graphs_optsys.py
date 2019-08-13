@@ -56,7 +56,7 @@ BASIC_CCS = ["cubic", "reno"]
 # CC mode indices to display in static graph.
 DESIRED_CCS = [idx for idx in xrange(10)]
 # Resize time indices to display in resize graph.
-DESIRED_RESIZE_US = [0, 2, 4, 6, 8, 10]
+DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10]
 
 
 def rst_glb(dur):
@@ -119,7 +119,7 @@ def main():
         #     themselves, then graph all of the CC modes together.
         rst_glb(STATIC_DUR)
         static_key = STATIC_KEY_FMT.format(cc)
-        # Match any CC mode.
+        # Match only the current CC mode.
         sqg.FILES[static_key] = STATIC_PTN.format(cc)
         # Extract the CC mode.
         sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
