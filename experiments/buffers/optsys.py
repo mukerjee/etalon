@@ -65,7 +65,7 @@ def main():
                     cnfs += [cnf]
 
     # For all configurations, enable the packet log.
-    cnfs = [dict(cnf, {"packet_log": True}) for cnf in cnfs]
+    cnfs = [dict(cnf, packet_log=True) for cnf in cnfs]
 
     # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
     # This avoid unnecessarily restarting the cluster.
