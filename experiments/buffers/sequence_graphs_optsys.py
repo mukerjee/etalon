@@ -81,12 +81,12 @@ def main():
     else:
         os.makedirs(odr)
 
+    # The circuit day boundaries.
     days = None
-
     for cc in BASIC_CCS:
         # (1) Long days, static buffers. Show the cases where TCP ramp up is not
         #     a problem.
-
+        #
         # Old optical switches.
         rst_glb(OLD_DUR)
         old_key = OLD_KEY_FMT.format(cc)
