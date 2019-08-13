@@ -147,10 +147,7 @@ def main():
         static_db[static_key] = sqg.get_data(static_db, static_key)
         # Use the same circuit windows for all graphs with short nights and
         # short days (i.e., (2) and (3)).
-        if days is None:
-            days = copy.deepcopy(static_db[static_key][LINES_KEY])
-        else:
-            static_db[static_key][LINES_KEY] = days
+        assert days is not None, "\"days\" is None!"
         sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
         static_db.close()
 
@@ -185,6 +182,7 @@ def main():
     static_db[static_key] = sqg.get_data(static_db, static_key)
     # Use the same circuit windows for all graphs with short nights and
     # short days (i.e., (2) and (3)).
+    assert days is not None, "\"days\" is None!"
     static_db[static_key][LINES_KEY] = days
     sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS,
                  flt=lambda idx, ccs=DESIRED_CCS: idx in ccs)
