@@ -31,12 +31,12 @@ NEW_LONG_INS = None
 STATIC_INS = None
 RESIZE_INS = None
 
-STATIC_KEY = "static"
-RESIZE_KEY = "resize"
 LINES_KEY = "lines"
 DB_FMT = "{}.db"
 OLD_KEY_FMT = "old-{}"
 NEW_LONG_KEY_FMT = "new-long-{}"
+STATIC_KEY_FMT = "static-{}"
+RESIZE_KEY = "resize"
 
 # Matches experiments with a particular CC mode, 1000 us nights, and 9000 us
 # days (under TDF).
@@ -44,9 +44,9 @@ OLD_FMT = "*-{}-*-20000-180000-click.txt"
 # Matches experiments with a particular CC mode, 20 us nights, and 9000 us days
 # (under TDF).
 NEW_LONG_FMT = "*-{}-*-400-180000-click.txt"
-# Matches experiments with static buffers, 20 us nights, and 180 us days (under
-# TDF).
-STATIC_PTN = "*-QUEUE-False-*-400-3600-click.txt"
+# Matches experiments with static buffers, a particular CC mode, 20 us nights,
+# and 180 us days (under TDF).
+STATIC_PTN = "*-QUEUE-False-*-{}-*-400-3600-click.txt"
 # Matches experiments with dynamic buffers and CC mode "reno".
 RESIZE_PTN = "*-QUEUE-True-*-reno-*click.txt"
 
@@ -111,20 +111,43 @@ def main():
         sqg.plot_seq(new_long_db[new_long_key], new_long_key, odr, NEW_LONG_INS)
         new_long_db.close()
 
-    sys.exit(0)
+        # (2) Static buffers. Show that all the TCP variants perform poorly when
+        #     nights/days are short. Start by graphing the basic CC modes by
+        #     themselves, then graph all of the CC modes together.
+        rst_glb(STATIC_DUR)
+        static_key = STATIC_KEY_FMT.format(cc)
+        # Match any CC mode.
+        sqg.FILES[static_key] = STATIC_PTN.format(cc)
+        # Extract the CC mode.
+        sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
+        static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
+        static_db[static_key] = sqg.get_data(static_db, static_key)
+        # Use the same circuit windows for all graphs with short nights and
+        # short days (i.e., (2) and (3)).
+        if days is None:
+            days = copy.deepcopy(static_db[static_key][LINES_KEY])
+        else:
+            static_db[static_key][LINES_KEY] = days
+        sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
+        static_db.close()
 
-    # (2) Static buffers. Show that all the TCP variants perform poorly when
-    #     nights/days are short.
+    # (2) Static buffers. See above.
     rst_glb(STATIC_DUR)
-    sqg.FILES[STATIC_KEY] = STATIC_PTN
+    static_key = STATIC_KEY_FMT.format("all")
+    # Match any CC mode.
+    sqg.FILES[static_key] = STATIC_PTN.format("*")
     # Extract the CC mode.
-    sqg.KEY_FN[STATIC_KEY] = lambda fn: fn.split("-")[7]
-    static_db = shelve.open(path.join(exp, DB_FMT.format(STATIC_KEY)))
-    static_db[STATIC_KEY] = sqg.get_data(static_db, STATIC_KEY)
-    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY, odr, STATIC_INS,
+    sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
+    static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
+    static_db[static_key] = sqg.get_data(static_db, static_key)
+    # Use the same circuit windows for all graphs with short nights and
+    # short days (i.e., (2) and (3)).
+    static_db[static_key][LINES_KEY] = days
+    sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS,
                  flt=lambda idx, ccs=DESIRED_CCS: idx in ccs)
-    days = copy.deepcopy(static_db[STATIC_KEY][LINES_KEY])
     static_db.close()
+
+    sys.exit(0)
 
     # (3) Dynamic buffers. Show that dynamic buffers help all TCP variants
     #     when nights/days are short. For now, only show this for reno.
@@ -134,7 +157,8 @@ def main():
     sqg.KEY_FN[RESIZE_KEY] = lambda fn: int(fn.split("-")[6]) / pyc.TDF,
     resize_db = shelve.open(path.join(exp, DB_FMT.format(RESIZE_KEY)))
     resize_db[RESIZE_KEY] = sqg.get_data(resize_db, RESIZE_KEY)
-    # Use the same circuit windows as in the static buffers graph.
+    # Use the same circuit windows for all graphs with short nights and short
+    # days (i.e., (2) and (3)).
     resize_db[RESIZE_KEY][LINES_KEY] = days
     sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY, odr, RESIZE_INS)
     resize_db.close()
