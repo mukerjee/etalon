@@ -151,25 +151,25 @@ def main():
         sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
         static_db.close()
 
-        # (5) reTCP. Show how much improvement reTCP offers with dynamic
-        #     buffers.
-        rst_glb(RESIZE_DUR)
-        resize_key = RESIZE_KEY_FMT.format("{}-retcp".format(cc))
-        # Match the resize time 3000 us and both the current CC mode and retcp.
-        sqg.FILES[resize_key] = RESIZE_PTN_FMT.format(
-            "3000", "{" + "{},retcp".format(cc) + "}")
-        # Extract the CC mode.
-        sqg.KEY_FN[resize_key] = lambda fn: fn.split("-")[7]
-        resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
-        resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
-        # Use the same circuit windows for all graphs with short nights and
-        # short days (i.e., (2) and (3)).
-        assert days is not None, "\"days\" is None!"
-        resize_db[resize_key][LINES_KEY] = days
-        sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS,
-                     flt=lambda idx, resize_us=DESIRED_RESIZE_US: \
-                         idx in resize_us)
-        resize_db.close()
+        # # (5) reTCP. Show how much improvement reTCP offers with dynamic
+        # #     buffers.
+        # rst_glb(RESIZE_DUR)
+        # resize_key = RESIZE_KEY_FMT.format("{}-retcp".format(cc))
+        # # Match the resize time 3000 us and both the current CC mode and retcp.
+        # sqg.FILES[resize_key] = RESIZE_PTN_FMT.format(
+        #     "3000", "{" + "{},retcp".format(cc) + "}")
+        # # Extract the CC mode.
+        # sqg.KEY_FN[resize_key] = lambda fn: fn.split("-")[7]
+        # resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
+        # resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
+        # # Use the same circuit windows for all graphs with short nights and
+        # # short days (i.e., (2) and (3)).
+        # assert days is not None, "\"days\" is None!"
+        # resize_db[resize_key][LINES_KEY] = days
+        # sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS,
+        #              flt=lambda idx, resize_us=DESIRED_RESIZE_US: \
+        #                  idx in resize_us)
+        # resize_db.close()
 
     # (2) Static buffers. See above. Now, graph all CC modes together.
     rst_glb(STATIC_DUR)
