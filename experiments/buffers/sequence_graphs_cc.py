@@ -24,7 +24,7 @@ def main():
     fmt = "resize-{}"
     for cc in python_config.CCS:
         sequence_graphs.FILES[fmt.format(cc)] = \
-            "/*-QUEUE-True-*-{}-*click.txt".format(cc)
+            "*-QUEUE-True-*-{}-*click.txt".format(cc)
         sequence_graphs.KEY_FN[fmt.format(cc)] = \
             sequence_graphs.KEY_FN["resize"]
 

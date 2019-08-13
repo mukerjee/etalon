@@ -23,8 +23,8 @@ from python_config import TDF, CIRCUIT_BW_Gbps, PACKET_BW_Gbps
 
 # Maps experiment to filename.
 FILES = {
-    'static': '/*-strobe-*-False-*-reno-*click.txt',
-    'resize': '/*-QUEUE-True-*-reno-*click.txt',
+    'static': '*-strobe-*-False-*-reno-*click.txt',
+    'resize': '*-QUEUE-True-*-reno-*click.txt',
 }
 
 # Maps experiment to a function that convert a filename to an integer key
