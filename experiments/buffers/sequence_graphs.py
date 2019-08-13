@@ -130,12 +130,15 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
 
     # Format the legend labels.
     if 'static' in fn:
-        lls = ['%s packets' % k for k in data['keys'][:-1]]
-        lls += [data['keys'][-1]]
+        try:
+            lls = [data['keys'][0]]
+            lls += ['%s packets' % int(k) for k in data['keys'][1:]]
+        except ValueError:
+            lls = data['keys']
     else:
         try:
-            lls = ['%s $\mu$s' % int(k) for k in data['keys'][:-1]]
-            lls += [data['keys'][-1]]
+            lls = [data['keys'][0]]
+            lls += ['%s $\mu$s' % int(k) for k in data['keys'][1:]]
         except ValueError:
             lls = data['keys']
 
