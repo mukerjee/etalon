@@ -54,6 +54,8 @@ RESIZE_PTN = "*-QUEUE-True-*-reno-*click.txt"
 BASIC_CCS = ["cubic", "reno"]
 # CC mode indices to display in static graph.
 DESIRED_CCS = [idx for idx in xrange(10)]
+# Resize time indices to display in resize graph.
+DESIRED_RESIZE_US = [0, 2, 4, 6, 8, 10]
 
 
 def rst_glb(dur):
@@ -147,20 +149,19 @@ def main():
                  flt=lambda idx, ccs=DESIRED_CCS: idx in ccs)
     static_db.close()
 
-    sys.exit(0)
-
     # (3) Dynamic buffers. Show that dynamic buffers help all TCP variants
     #     when nights/days are short. For now, only show this for reno.
     rst_glb(RESIZE_DUR)
     sqg.FILES[RESIZE_KEY] = RESIZE_PTN
     # Extract how long in advance the buffers resize.
-    sqg.KEY_FN[RESIZE_KEY] = lambda fn: int(fn.split("-")[6]) / pyc.TDF,
+    sqg.KEY_FN[RESIZE_KEY] = lambda fn: int(fn.split("-")[6]) / pyc.TDF
     resize_db = shelve.open(path.join(exp, DB_FMT.format(RESIZE_KEY)))
     resize_db[RESIZE_KEY] = sqg.get_data(resize_db, RESIZE_KEY)
     # Use the same circuit windows for all graphs with short nights and short
     # days (i.e., (2) and (3)).
     resize_db[RESIZE_KEY][LINES_KEY] = days
-    sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY, odr, RESIZE_INS)
+    sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY, odr, RESIZE_INS,
+                 flt=lambda idx, resize_us=DESIRED_RESIZE_US: idx in resize_us)
     resize_db.close()
 
 
