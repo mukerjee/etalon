@@ -64,6 +64,7 @@ def get_data(db, name):
 
         ptn = path.join(sys.argv[1], FILES[name])
         fns = glob.glob(ptn)
+        assert len(fns) > 0, "Found no files for pattern: {}".format(ptn)
         print("Found files for pattern: {}".format(ptn))
         for fn in fns:
             print("    {}".format(fn))
