@@ -46,6 +46,8 @@ def main():
 
         # (2) Static buffers. Show that all the TCP variants perform poorly when
         #     nights/days are short.
+        # (3) reTCP. Show how much improvement reTCP offers with static buffers
+        #     (i.e., on its own).
         cnf = {"type": "strobe", "buffer_size": 16, "cc": cc}
         # For DCTCP, we will enable threshold-based ECN marking.
         dctcp = cc == "dctcp"
@@ -53,9 +55,11 @@ def main():
             cnf["ecn"] = python_config.DCTCP_THRESH
         cnfs += [cnf]
 
-        # (3) Dynamic buffers. Show that dynamic buffers help all TCP variants
-        #     when nights/days are short. For now, only show this for reno.
-        if cc in ["reno"]:
+        # (4) Dynamic buffers. Show that dynamic buffers help TCP Reno when
+        #     nights/days are short. For now, only show this for reno.
+        # (5) reTCP. Show how much improvement reTCP offers with dynamic
+        #     buffers.
+        if cc in ["reno", "retcp"]:
             for i in xrange(MAX_RESIZE + 1):
                 if i % 500 == 0:
                     cnf = {"type": "strobe", "buffer_size":  16,
