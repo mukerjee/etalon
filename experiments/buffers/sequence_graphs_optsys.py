@@ -51,7 +51,8 @@ STATIC_PTN = "/*-QUEUE-False-*-400-3600-click.txt"
 RESIZE_PTN = "/*-QUEUE-True-*-reno-*click.txt"
 
 
-def rst_sqg(dur):
+def rst_glb(dur):
+    """ Reset global variables. """
     # Reset global lookup tables.
     sqg.FILES = {}
     sqg.KEY_FN = {}
@@ -79,7 +80,7 @@ def main():
     #     a problem.
     for cc in ["reno", "cubic"]:
         # Old optical switches.
-        rst_sqg(OLD_DUR)
+        rst_glb(OLD_DUR)
         old_key = OLD_KEY_FMT.format(cc)
         sqg.FILES[old_key] = OLD_FMT.format(cc)
         # Pass "cc" as a default parameter to avoid the warning
@@ -91,7 +92,7 @@ def main():
         old_db.close()
 
         # New optical switches, but using long days.
-        rst_sqg(NEW_LONG_DUR)
+        rst_glb(NEW_LONG_DUR)
         new_long_key = NEW_LONG_KEY_FMT.format(cc)
         sqg.FILES[new_long_key] = NEW_LONG_FMT.format(cc)
         # Pass "cc" as a default parameter to avoid the warning
@@ -106,7 +107,7 @@ def main():
 
     # (2) Static buffers. Show that all the TCP variants perform poorly when
     #     nights/days are short.
-    rst_sqg(STATIC_DUR)
+    rst_glb(STATIC_DUR)
     sqg.FILES[STATIC_KEY] = STATIC_PTN
     # Extract the CC mode.
     sqg.KEY_FN[STATIC_KEY] = lambda fn: fn.split("-")[7]
@@ -118,7 +119,7 @@ def main():
 
     # (3) Dynamic buffers. Show that dynamic buffers help all TCP variants
     #     when nights/days are short. For now, only show this for reno.
-    rst_sqg(RESIZE_DUR)
+    rst_glb(RESIZE_DUR)
     sqg.FILES[RESIZE_KEY] = RESIZE_PTN
     # Extract how long in advance the buffers resize.
     sqg.KEY_FN[RESIZE_KEY] = lambda fn: int(fn.split("-")[6]) / pyc.TDF,
