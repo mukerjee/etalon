@@ -50,6 +50,11 @@ STATIC_PTN = "*-QUEUE-False-*-400-3600-click.txt"
 # Matches experiments with dynamic buffers and CC mode "reno".
 RESIZE_PTN = "*-QUEUE-True-*-reno-*click.txt"
 
+# Primary CC modes to demonstrate.
+BASIC_CCS = ["cubic", "reno"]
+# CC modes to display in bulk graphs.
+DESIRED_CCS = [idx for idx in xrange(10)]
+
 
 def rst_glb(dur):
     """ Reset global variables. """
@@ -76,9 +81,12 @@ def main():
     else:
         os.makedirs(odr)
 
-    # (1) Long days, static buffers. Show the cases where TCP ramp up is not
-    #     a problem.
-    for cc in ["reno", "cubic"]:
+    days = None
+
+    for cc in BASIC_CCS:
+        # (1) Long days, static buffers. Show the cases where TCP ramp up is not
+        #     a problem.
+
         # Old optical switches.
         rst_glb(OLD_DUR)
         old_key = OLD_KEY_FMT.format(cc)
@@ -113,7 +121,8 @@ def main():
     sqg.KEY_FN[STATIC_KEY] = lambda fn: fn.split("-")[7]
     static_db = shelve.open(path.join(exp, DB_FMT.format(STATIC_KEY)))
     static_db[STATIC_KEY] = sqg.get_data(static_db, STATIC_KEY)
-    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY, odr, STATIC_INS)
+    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY, odr, STATIC_INS,
+                 flt=lambda idx, ccs=DESIRED_CCS: idx in ccs)
     days = copy.deepcopy(static_db[STATIC_KEY][LINES_KEY])
     static_db.close()
 
