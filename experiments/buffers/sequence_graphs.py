@@ -76,7 +76,7 @@ def get_data(db, name):
         p.close()
         p.join()
         data['raw_data'] = sorted(data['raw_data'].items())
-        data['keys'] = list(zip(*data['raw_data'])[0]) + ['optimal']
+        data['keys'] = list(zip(*data['raw_data'])[0])
         data['lines'] = data['raw_data'][0][1][1]
         data['data'] = [map(lambda x: x / UNITS, f) for f in
                         zip(*zip(*data['raw_data'])[1])[0]]
@@ -118,7 +118,8 @@ def get_data(db, name):
             assert optimal[i] != optimal[i + 1], \
                 "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
 
-        data['data'].append(optimal)
+        data['keys'].insert(0, "optimal")
+        data['data'].insert(0, optimal)
         return dict(data)
 
 
