@@ -24,6 +24,12 @@ NEW_LONG_DUR = (20 + 9000) * 6
 STATIC_DUR = (20 + 180) * 6
 RESIZE_DUR = (20 + 180) * 6
 
+# Inset window bounds.
+OLD_INS = None
+NEW_LONG_INS = None
+STATIC_INS = None
+RESIZE_INS = None
+
 STATIC_KEY = "static"
 RESIZE_KEY = "resize"
 LINES_KEY = "lines"
@@ -72,7 +78,7 @@ def main():
         sqg.KEY_FN[old_key] = lambda fn, cc=cc: cc
         old_db = shelve.open(path.join(exp, DB_FMT.format(old_key)))
         old_db[old_key] = sqg.get_data(old_db, old_key)
-        sqg.plot_seq(old_db[old_key], old_key)
+        sqg.plot_seq(old_db[old_key], old_key, OLD_INS)
         old_db.close()
 
         # New optical switches, but using long days.
@@ -84,7 +90,7 @@ def main():
         sqg.KEY_FN[new_long_key] = lambda fn, cc=cc: cc
         new_long_db = shelve.open(path.join(exp, DB_FMT.format(new_long_key)))
         new_long_db[new_long_key] = sqg.get_data(new_long_db, new_long_key)
-        sqg.plot_seq(new_long_db[new_long_key], new_long_key)
+        sqg.plot_seq(new_long_db[new_long_key], new_long_key, NEW_LONG_INS)
         new_long_db.close()
 
     sys.exit(0)
@@ -97,7 +103,7 @@ def main():
     sqg.KEY_FN[STATIC_KEY] = lambda fn: fn.split("-")[7]
     static_db = shelve.open(path.join(exp, DB_FMT.format(STATIC_KEY)))
     static_db[STATIC_KEY] = sqg.get_data(static_db, STATIC_KEY)
-    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY)
+    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY, STATIC_INS)
     days = copy.deepcopy(static_db[STATIC_KEY][LINES_KEY])
     static_db.close()
 
@@ -111,7 +117,7 @@ def main():
     resize_db[RESIZE_KEY] = sqg.get_data(resize_db, RESIZE_KEY)
     # Use the same circuit windows as in the static buffers graph.
     resize_db[RESIZE_KEY][LINES_KEY] = days
-    sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY)
+    sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY, RESIZE_INS)
     resize_db.close()
 
 

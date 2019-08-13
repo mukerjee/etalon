@@ -36,6 +36,8 @@ def main():
     db.close()
 
     # Create a graph for each CC mode.
+    ins = ((620, 800), (7, 270))
+    flt = lambda idx: idx in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
     for cc in python_config.CCS:
         # Use a new database for each CC mode to avoid storing everything in
         # memory at once. This also enables the program to be killed and
@@ -50,7 +52,7 @@ def main():
         # Use the data for 0 us from the "static" experiment.
         cc_data["keys"] = [0] + cc_data["keys"]
         cc_data["data"] = [dbs["data"][2]] + cc_data["data"]
-        sequence_graphs.plot_seq(cc_data, key)
+        sequence_graphs.plot_seq(cc_data, key, ins, flt)
 
 
 if __name__ == "__main__":
