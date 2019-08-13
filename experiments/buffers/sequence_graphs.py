@@ -62,10 +62,17 @@ def get_data(db, name):
         #     events.
         # data["raw_data"][i][1][1][0] = The time at which the first day began.
 
-        ptn = path.join(sys.argv[1], FILES[name])
-        fns = glob.glob(ptn)
-        assert len(fns) > 0, "Found no files for pattern: {}".format(ptn)
-        print("Found files for pattern: {}".format(ptn))
+        ptns = FILES[name]
+        if not isinstance(ptns, list):
+            ptns = [ptns]
+        # For each pattern, extract the matches. Then, flatten them into a
+        # single list.
+        fns = [fn for matches in
+                   [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
+               for fn in matches]
+
+        assert len(fns) > 0, "Found no files for patterns: {}".format(ptns)
+        print("Found files for patterns: {}".format(ptns))
         for fn in fns:
             print("    {}".format(fn))
 

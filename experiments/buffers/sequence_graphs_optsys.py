@@ -46,7 +46,7 @@ OLD_FMT = "*-{}-*-20000-180000-click.txt"
 NEW_LONG_FMT = "*-{}-*-400-180000-click.txt"
 # Matches experiments with static buffers, a particular CC mode, 20 us nights,
 # and 180 us days (under TDF).
-STATIC_PTN = "*-QUEUE-False-*-{}-*-400-3600-click.txt"
+STATIC_PTN_FMT = "*-QUEUE-False-*-{}-*-400-3600-click.txt"
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
 RESIZE_PTN_FMT = "*-QUEUE-True-{}-{}-*click.txt"
@@ -120,7 +120,7 @@ def main():
         rst_glb(STATIC_DUR)
         static_key = STATIC_KEY_FMT.format(cc)
         # Match only the current CC mode.
-        sqg.FILES[static_key] = STATIC_PTN.format(cc)
+        sqg.FILES[static_key] = STATIC_PTN_FMT.format(cc)
         # Extract the CC mode.
         sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
@@ -139,8 +139,8 @@ def main():
         rst_glb(STATIC_DUR)
         static_key = STATIC_KEY_FMT.format("{}-retcp".format(cc))
         # Match the current CC mode and reTCP.
-        sqg.FILES[static_key] = STATIC_PTN.format(
-            "{" + "{},retcp".format(cc) + "}")
+        sqg.FILES[static_key] = [
+            STATIC_PTN_FMT.format(cc), STATIC_PTN_FMT.format("retcp")]
         # Extract the CC mode.
         sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
@@ -156,8 +156,8 @@ def main():
         # rst_glb(RESIZE_DUR)
         # resize_key = RESIZE_KEY_FMT.format("{}-retcp".format(cc))
         # # Match the resize time 3000 us and both the current CC mode and retcp.
-        # sqg.FILES[resize_key] = RESIZE_PTN_FMT.format(
-        #     "3000", "{" + "{},retcp".format(cc) + "}")
+        # sqg.FILES[resize_key] = [RESIZE_PTN_FMT.format("3000", cc),
+        #                          RESIZE_PTN_FMT.format("3000", "retcp")]
         # # Extract the CC mode.
         # sqg.KEY_FN[resize_key] = lambda fn: fn.split("-")[7]
         # resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
@@ -175,7 +175,7 @@ def main():
     rst_glb(STATIC_DUR)
     static_key = STATIC_KEY_FMT.format("all")
     # Match any CC mode.
-    sqg.FILES[static_key] = STATIC_PTN.format("*")
+    sqg.FILES[static_key] = STATIC_PTN_FMT.format("*")
     # Extract the CC mode.
     sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
     static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
