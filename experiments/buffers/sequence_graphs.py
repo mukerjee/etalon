@@ -150,8 +150,8 @@ def plot_seq(data, fn, ins=None, flt=lambda idx: True):
         options.y.ticks.major.options.labelsize = 16
     options.x.axis.show = options.y.axis.show = True
     options.x.axis.color = options.y.axis.color = 'black'
-    options.vertical_lines.lines = data['lines']
     lines = data['lines']
+    options.vertical_lines.lines = lines
     shaded = []
     for i in xrange(0, len(lines), 2):
         shaded.append((lines[i], lines[i+1]))
