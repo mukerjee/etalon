@@ -46,9 +46,9 @@ OLD_FMT = "*-{}-*-20000-180000-click.txt"
 NEW_LONG_FMT = "*-{}-*-400-180000-click.txt"
 # Matches experiments with static buffers, 20 us nights, and 180 us days (under
 # TDF).
-STATIC_PTN = "/*-QUEUE-False-*-400-3600-click.txt"
+STATIC_PTN = "*-QUEUE-False-*-400-3600-click.txt"
 # Matches experiments with dynamic buffers and CC mode "reno".
-RESIZE_PTN = "/*-QUEUE-True-*-reno-*click.txt"
+RESIZE_PTN = "*-QUEUE-True-*-reno-*click.txt"
 
 
 def rst_glb(dur):
