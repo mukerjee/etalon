@@ -56,7 +56,7 @@ def main():
         cnfs += [cnf]
 
         # (4) Dynamic buffers. Show that dynamic buffers help TCP Reno when
-        #     nights/days are short. For now, only show this for reno.
+        #     nights/days are short.
         # (5) reTCP. Show how much improvement reTCP offers with dynamic
         #     buffers.
         if cc in ["reno", "retcp"]:

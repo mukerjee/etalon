@@ -126,7 +126,7 @@ def main():
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
         static_db[static_key] = sqg.get_data(static_db, static_key)
         # Use the same circuit windows for all graphs with short nights and
-        # short days (i.e., (2) and (3)).
+        # short days (i.e., (2) - (5)).
         if days is None:
             days = copy.deepcopy(static_db[static_key][LINES_KEY])
         else:
@@ -134,8 +134,8 @@ def main():
         sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
         static_db.close()
 
-        # (3) reTCP. Show how much improvement reTCP offers on its own and with
-        #     dynamic buffers. Start by graphing reTCP with static buffers.
+        # (3) reTCP. Show how much improvement reTCP offers with static buffers
+        #     (i.e., on its own).
         rst_glb(STATIC_DUR)
         static_key = STATIC_KEY_FMT.format("{}-retcp".format(cc))
         # Match the current CC mode and reTCP.
@@ -146,7 +146,7 @@ def main():
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
         static_db[static_key] = sqg.get_data(static_db, static_key)
         # Use the same circuit windows for all graphs with short nights and
-        # short days (i.e., (2) and (3)).
+        # short days (i.e., (2) - (5)).
         assert days is not None, "\"days\" is None!"
         sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
         static_db.close()
@@ -163,7 +163,7 @@ def main():
         # resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
         # resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
         # # Use the same circuit windows for all graphs with short nights and
-        # # short days (i.e., (2) and (3)).
+        # # short days (i.e., (2) - (5)).
         # assert days is not None, "\"days\" is None!"
         # resize_db[resize_key][LINES_KEY] = days
         # sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS,
@@ -181,7 +181,7 @@ def main():
     static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
     static_db[static_key] = sqg.get_data(static_db, static_key)
     # Use the same circuit windows for all graphs with short nights and
-    # short days (i.e., (2) and (3)).
+    # short days (i.e., (2) - (5)).
     assert days is not None, "\"days\" is None!"
     static_db[static_key][LINES_KEY] = days
     sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS,
@@ -199,7 +199,7 @@ def main():
     resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
     resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
     # Use the same circuit windows for all graphs with short nights and short
-    # days (i.e., (2) and (3)).
+    # days (i.e., (2) - (5)).
     assert days is not None, "\"days\" is None!"
     resize_db[resize_key][LINES_KEY] = days
     sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS,
