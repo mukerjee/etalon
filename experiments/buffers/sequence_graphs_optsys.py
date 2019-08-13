@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# This program parses experiments produced by
+# This program generates graphs for experiments produced by
 # etalon/experiments/buffers/optsys.py.
 
 import copy
@@ -52,7 +52,7 @@ RESIZE_PTN = "*-QUEUE-True-*-reno-*click.txt"
 
 # Primary CC modes to demonstrate.
 BASIC_CCS = ["cubic", "reno"]
-# CC modes to display in bulk graphs.
+# CC mode indices to display in static graph.
 DESIRED_CCS = [idx for idx in xrange(10)]
 
 
