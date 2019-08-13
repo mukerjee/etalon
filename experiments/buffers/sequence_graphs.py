@@ -36,7 +36,6 @@ KEY_FN = {
 
 UNITS = 1000.0  # Kilo-sequence number
 NUM_HOSTS = 16.0
-DURATION = 1200
 
 
 class FileReader(object):
@@ -113,9 +112,6 @@ def get_data(db, name):
                 optimal[-1] + cr_KBpus * us
                 for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
 
-        # Set the duration based on the actual circuit timings.
-        global DURATION
-        DURATION = len(optimal)
         # Verify that in optimal, no two adjacent elements are equal.
         for i in xrange(len(optimal) - 1):
             assert optimal[i] != optimal[i + 1], \
@@ -126,7 +122,7 @@ def get_data(db, name):
 
 
 def plot_seq(data, fn):
-    x = [xrange(DURATION) for i in xrange(len(data['keys']))]
+    x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
     options = DotMap()
