@@ -4,6 +4,7 @@
 # etalon/experiments/buffers/optsys.py.
 
 import copy
+import os
 from os import path
 import shelve
 import sys
@@ -65,6 +66,14 @@ def main():
     if not path.isdir(exp):
         print("The first argument must be a directory, but is: {}".format(exp))
         sys.exit(-1)
+    # Specify and create the output directory.
+    odr = path.join(PROGDIR, 'graphs', 'optsys')
+    if path.exists(odr):
+        if not path.isdir(odr):
+            print("Output directory exists and is a file: {}".format(odr))
+            sys.exit(-1)
+    else:
+        os.makedirs(odr)
 
     # (1) Long days, static buffers. Show the cases where TCP ramp up is not
     #     a problem.
@@ -78,7 +87,7 @@ def main():
         sqg.KEY_FN[old_key] = lambda fn, cc=cc: cc
         old_db = shelve.open(path.join(exp, DB_FMT.format(old_key)))
         old_db[old_key] = sqg.get_data(old_db, old_key)
-        sqg.plot_seq(old_db[old_key], old_key, OLD_INS)
+        sqg.plot_seq(old_db[old_key], old_key, odr, OLD_INS)
         old_db.close()
 
         # New optical switches, but using long days.
@@ -90,7 +99,7 @@ def main():
         sqg.KEY_FN[new_long_key] = lambda fn, cc=cc: cc
         new_long_db = shelve.open(path.join(exp, DB_FMT.format(new_long_key)))
         new_long_db[new_long_key] = sqg.get_data(new_long_db, new_long_key)
-        sqg.plot_seq(new_long_db[new_long_key], new_long_key, NEW_LONG_INS)
+        sqg.plot_seq(new_long_db[new_long_key], new_long_key, odr, NEW_LONG_INS)
         new_long_db.close()
 
     sys.exit(0)
@@ -103,7 +112,7 @@ def main():
     sqg.KEY_FN[STATIC_KEY] = lambda fn: fn.split("-")[7]
     static_db = shelve.open(path.join(exp, DB_FMT.format(STATIC_KEY)))
     static_db[STATIC_KEY] = sqg.get_data(static_db, STATIC_KEY)
-    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY, STATIC_INS)
+    sqg.plot_seq(static_db[STATIC_KEY], STATIC_KEY, odr, STATIC_INS)
     days = copy.deepcopy(static_db[STATIC_KEY][LINES_KEY])
     static_db.close()
 
@@ -117,7 +126,7 @@ def main():
     resize_db[RESIZE_KEY] = sqg.get_data(resize_db, RESIZE_KEY)
     # Use the same circuit windows as in the static buffers graph.
     resize_db[RESIZE_KEY][LINES_KEY] = days
-    sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY, RESIZE_INS)
+    sqg.plot_seq(resize_db[RESIZE_KEY], RESIZE_KEY, odr, RESIZE_INS)
     resize_db.close()
 
 

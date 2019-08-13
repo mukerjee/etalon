@@ -121,7 +121,8 @@ def get_data(db, name):
         return dict(data)
 
 
-def plot_seq(data, fn, ins=None, flt=lambda idx: True):
+def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
+             ins=None, flt=lambda idx: True):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
@@ -142,7 +143,7 @@ def plot_seq(data, fn, ins=None, flt=lambda idx: True):
     options.legend.options.fontsize = 14
     options.legend.options.ncol = 1
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
-    options.output_fn = path.join(PROGDIR, 'graphs', 'seq_%s.pdf' % fn)
+    options.output_fn = path.join(odr, 'seq_%s.pdf' % fn)
     options.x.label.xlabel = 'Time ($\mu$s)'
     options.y.label.ylabel = 'Kilobytes'
     options.x.label.fontsize = options.y.label.fontsize = 16
