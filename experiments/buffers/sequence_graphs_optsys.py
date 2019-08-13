@@ -18,7 +18,7 @@ import parse_logs as par
 import python_config as pyc
 import sequence_graphs as sqg
 
-
+# Durations.
 OLD_DUR = (1000 + 9000) * 6
 NEW_LONG_DUR = (20 + 9000) * 6
 STATIC_DUR = (20 + 180) * 6
