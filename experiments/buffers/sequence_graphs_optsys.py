@@ -57,6 +57,8 @@ BASIC_CCS = ["cubic", "reno"]
 DESIRED_CCS = [idx for idx in xrange(10)]
 # Resize time indices to display in resize graph.
 DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10]
+# Resize time to graph for reTCP.
+CHOSEN_RESIZE_US = int(150 * pyc.TDF)
 
 
 def rst_glb(dur):
@@ -154,10 +156,12 @@ def main():
         # (5) reTCP. Show how much improvement reTCP offers with dynamic
         #     buffers.
         rst_glb(RESIZE_DUR)
-        resize_key = RESIZE_KEY_FMT.format("{}-retcp".format(cc))
-        # Match the resize time 3000 us and both the current CC mode and retcp.
-        sqg.FILES[resize_key] = [RESIZE_PTN_FMT.format("3000", cc),
-                                 RESIZE_PTN_FMT.format("3000", "retcp")]
+        resize_key = RESIZE_KEY_FMT.format(
+            "{}-retcp-{}".format(cc, CHOSEN_RESIZE_US))
+        # Match the resize time  us and both the current CC mode and retcp.
+        sqg.FILES[resize_key] = [RESIZE_PTN_FMT.format(CHOSEN_RESIZE_US, cc),
+                                 RESIZE_PTN_FMT.format(
+                                     CHOSEN_RESIZE_US, "retcp")]
         # Extract the CC mode.
         sqg.KEY_FN[resize_key] = lambda fn: fn.split("-")[7]
         resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
