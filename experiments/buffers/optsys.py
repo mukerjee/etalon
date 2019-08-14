@@ -59,7 +59,7 @@ def main():
         #     nights/days are short.
         # (5) reTCP. Show how much improvement reTCP offers with dynamic
         #     buffers.
-        if cc in ["reno", "retcp"]:
+        if cc in ["reno", "cubic", "retcp"]:
             for i in xrange(MAX_RESIZE + 1):
                 if i % 500 == 0:
                     cnf = {"type": "strobe", "buffer_size":  16,
