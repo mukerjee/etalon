@@ -54,7 +54,10 @@ RESIZE_PTN_FMT = "*-QUEUE-True-{}-{}-*click.txt"
 # Primary CC modes to demonstrate.
 BASIC_CCS = ["cubic", "reno"]
 # CC mode indices to display in static graph.
-DESIRED_CCS = [idx for idx in xrange(10)]
+DESIRED_CCS = ["optimal", "bbr", "dctcp", "highspeed", "illinois", "reno",
+               "scalable", "veno", "westwood", "yeah"]
+# DESIRED_CCS = [idx for idx in xrange(10)]
+# DESIRED_CCS = [0] + [idx for idx in xrange(10, 19)]
 # Resize time indices to display in resize graph.
 DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10, 11]
 # Resize time to graph for reTCP.
@@ -187,7 +190,7 @@ def main():
     assert days is not None, "\"days\" is None!"
     static_db[static_key][LINES_KEY] = days
     sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS,
-                 flt=lambda idx, ccs=DESIRED_CCS: idx in ccs)
+                 flt=lambda idx, label, ccs=DESIRED_CCS: label in ccs)
     static_db.close()
 
     # (4) Dynamic buffers. Show that dynamic buffers help TCP Reno when
@@ -208,7 +211,7 @@ def main():
     assert days is not None, "\"days\" is None!"
     resize_db[resize_key][LINES_KEY] = days
     sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS,
-                 flt=lambda idx, resize_us=DESIRED_RESIZE_US: idx in resize_us)
+                 flt=lambda idx, label, resize_us=DESIRED_RESIZE_US: idx in resize_us)
     resize_db.close()
 
 

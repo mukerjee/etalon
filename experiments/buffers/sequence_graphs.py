@@ -132,7 +132,7 @@ def get_data(db, name):
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
-             ins=None, flt=lambda idx: True):
+             ins=None, flt=lambda idx, label: True):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
@@ -184,7 +184,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
     x, y, options.legend.options.labels = zip(
         *[(a, b, l) for (i, (a, b, l)) in enumerate(
             zip(x, y, options.legend.options.labels))
-          if flt(i)])
+          if flt(i, l)])
     plot(x, y, options)
 
 
