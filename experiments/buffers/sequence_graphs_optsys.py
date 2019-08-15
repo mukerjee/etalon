@@ -56,7 +56,7 @@ BASIC_CCS = ["cubic", "reno"]
 # CC mode indices to display in static graph.
 DESIRED_CCS = [idx for idx in xrange(10)]
 # Resize time indices to display in resize graph.
-DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10]
+DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10, 11]
 # Resize time to graph for reTCP.
 CHOSEN_RESIZE_US = int(150 * pyc.TDF)
 
@@ -195,9 +195,12 @@ def main():
     rst_glb(RESIZE_DUR)
     resize_key = RESIZE_KEY_FMT.format("reno")
     # Match any resize time, but only CC mode reno.
-    sqg.FILES[resize_key] = RESIZE_PTN_FMT.format("*", "reno")
+    sqg.FILES[resize_key] = [
+        RESIZE_PTN_FMT.format("*", "reno"), STATIC_PTN_FMT.format("reno")]
     # Extract how long in advance the buffers resize.
-    sqg.KEY_FN[resize_key] = lambda fn: int(fn.split("-")[6]) / pyc.TDF
+    sqg.KEY_FN[resize_key] = \
+        lambda fn: int(fn.split("-")[6]) / pyc.TDF \
+        if "QUEUE-True" in fn else "static"
     resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
     resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
     # Use the same circuit windows for all graphs with short nights and short
