@@ -82,6 +82,7 @@ def get_data(db, name):
         # Clean up p.
         p.close()
         p.join()
+
         data['raw_data'] = sorted(data['raw_data'].items())
         data['keys'] = list(zip(*data['raw_data'])[0])
         data['lines'] = data['raw_data'][0][1][1]
