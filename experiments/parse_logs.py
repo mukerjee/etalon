@@ -72,6 +72,8 @@ def get_seq_data(fn):
     flows = defaultdict(list)
     seen = defaultdict(list)
     for msg in msg_from_file(fn):
+        # type (int), timestamp (char[32]), latency (int), src (int), dst (int),
+        # data (char[64])
         (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
         ip_bytes = unpack('!H', data[2:4])[0]
         sender = socket.inet_ntoa(data[12:16])
