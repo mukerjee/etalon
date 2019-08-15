@@ -196,7 +196,7 @@ def main():
     resize_key = RESIZE_KEY_FMT.format("reno")
     # Match any resize time, but only CC mode reno.
     sqg.FILES[resize_key] = [
-        RESIZE_PTN_FMT.format("*", "reno"), STATIC_PTN_FMT.format("reno")]
+        STATIC_PTN_FMT.format("reno"), RESIZE_PTN_FMT.format("*", "reno")]
     # Extract how long in advance the buffers resize.
     sqg.KEY_FN[resize_key] = \
         lambda fn: int(fn.split("-")[6]) / pyc.TDF \
