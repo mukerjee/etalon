@@ -137,18 +137,15 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
     y = data['data']
 
     # Format the legend labels.
-    if 'static' in fn:
+    lls = []
+    for k in data['keys']:
         try:
-            lls = [data['keys'][0]]
-            lls += ['%s packets' % int(k) for k in data['keys'][1:]]
+            if 'static' in fn:
+                lls += ['%s packets' % int(k)]
+            else:
+                lls += ['%s $\mu$s' % int(k)]
         except ValueError:
-            lls = data['keys']
-    else:
-        try:
-            lls = [data['keys'][0]]
-            lls += ['%s $\mu$s' % int(k) for k in data['keys'][1:]]
-        except ValueError:
-            lls = data['keys']
+            lls += [k]
 
     options = DotMap()
     options.plot_type = 'LINE'
