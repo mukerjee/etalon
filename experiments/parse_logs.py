@@ -240,8 +240,22 @@ def get_seq_data(fn):
         unzipped = zip(*chunks)
         results[f] = [np.average(q) for q in unzipped]
         print 'bad windows', bad_windows
+
+    print("len(results): {}".format(len(results)))
     results = {k: v for k, v in results.items() if v}
+    print("len(results): {}".format(len(results)))
+    print("results:")
+    for k in results.keys():
+        print("\t{}".format(k))
+
+    # Turn a list of lists of results for each flow into a list of lists of
+    # results for all flows at one timestep.
     unzipped = zip(*results.values())
+    print("len(unzipped): {}".format(len(unzipped)))
+    print("len(unzipped[0]): {}".format(len(unzipped[0])))
+    print("unzipped[-1]: {}".format(unzipped[-1]))
+    # Average the results of all flows at each timestep. So, the output is
+    # really: For each timestep, what's the average sequence number of all flows.
     results = [np.average(q) for q in unzipped]
     return results, (out_start, out_end, out_next_start, out_next_end,
                      out_next_next_start, out_next_next_end)
