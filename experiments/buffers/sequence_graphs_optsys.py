@@ -199,7 +199,7 @@ def main():
         STATIC_PTN_FMT.format("reno"), RESIZE_PTN_FMT.format("*", "reno")]
     # Extract how long in advance the buffers resize.
     sqg.KEY_FN[resize_key] = \
-        lambda fn: int(fn.split("-")[6]) / pyc.TDF \
+        lambda fn: int(float(fn.split("-")[6]) / pyc.TDF) \
         if "QUEUE-True" in fn else "static"
     resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
     resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
