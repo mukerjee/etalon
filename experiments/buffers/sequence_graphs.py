@@ -159,7 +159,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
     options.output_fn = path.join(odr, 'seq_%s.pdf' % fn)
     options.x.label.xlabel = 'Time ($\mu$s)'
-    options.y.label.ylabel = 'Expected seq. num. ($\times$1000)'
+    options.y.label.ylabel = 'Expected seq. num.\n($\\times$1000)'
     options.x.label.fontsize = options.y.label.fontsize = 16
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 16
