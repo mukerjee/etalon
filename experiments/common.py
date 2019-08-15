@@ -153,7 +153,7 @@ def connect_all_rpyc_daemon():
                     phost, RPYC_PORT,
                     config={"allow_all_attrs": True, "sync_request_timeout": 1000})
         except:
-            raise RuntimeError('could not connect to ' + phost)
+            raise RuntimeError('Could not connect to: ' + phost)
 
 
 ##
