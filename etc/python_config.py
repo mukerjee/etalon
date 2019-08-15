@@ -90,7 +90,7 @@ DEFAULT_REQUEST_SIZE = 8948
 
 # The queue size, in packets, beyond which the switch should mark packets' ECN
 # bits as "Congestion Experienced".
-DCTCP_THRESH = 40
+DCTCP_THRESH = 10
 
 # commands for building / running vhosts
 DOCKER_IMAGE = 'etalon'
