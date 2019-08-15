@@ -61,7 +61,7 @@ DESIRED_CCS = ["optimal", "bbr", "dctcp", "highspeed", "illinois", "reno",
 # Resize time indices to display in resize graph.
 DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10, 11]
 # Resize time to graph for reTCP.
-CHOSEN_RESIZE_US = int(150 * pyc.TDF)
+CHOSEN_RESIZE_US = int(175 * pyc.TDF)
 
 
 def rst_glb(dur):
