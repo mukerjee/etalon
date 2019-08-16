@@ -1,8 +1,13 @@
 #!/usr/bin/env python
 
+from os import path
 import sys
-sys.path.insert(0, '..')
-import os
+# Directory containing this program.
+PROGDIR = path.dirname(path.realpath(__file__))
+# For parse_logs.
+sys.path.insert(0, path.join(PROGDIR, ".."))
+# For python_config.
+sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
 import shelve
 import glob
 import numpy as np
@@ -10,24 +15,27 @@ import numpy as np
 from collections import defaultdict
 from dotmap import DotMap
 from simpleplotlib import plot
-from parse_logs import parse_packet_log
+
+import parse_logs as pl
+import python_config as pyc
+
 
 SR = (1, 2)
 
 TYPES = ['static', 'resize', 'reTCP', 'reTCP+resize']
 
 FILES = {
-    'static': '/*-strobe-*-False-*-reno-*click.txt',
-    'resize': '/*-QUEUE-True-*-reno-*click.txt',
+    'static': '/*-strobe-*-False-*-cubic-*click.txt',
+    'resize': '/*-QUEUE-True-*-cubic-*click.txt',
     'reTCP': '/*-QUEUE-False-*-retcp-*click.txt',
     'reTCP+resize': '/*-QUEUE-True-*-retcp-*click.txt',
 }
 
 KEY_FN = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
-    'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / 20.0,
+    'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / pyc.TDF,
     'reTCP': lambda fn: 0,
-    'reTCP+resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / 20.0,
+    'reTCP+resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / pyc.TDF,
 }
 
 
@@ -38,7 +46,7 @@ def get_data(name, files=FILES, key_fn=KEY_FN):
         data = defaultdict(lambda: defaultdict(dict))
         for fn in glob.glob(sys.argv[1] + files[name]):
             key = key_fn[name](fn.split('/')[-1])
-            _, lat, _, circ_util, _, _, _ = parse_packet_log(fn)
+            _, lat, _, circ_util, _, _, _ = pl.parse_packet_log(fn)
             data['lat'][50][key] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][key] = [x[1] for x in zip(*lat)[3]]
             data['circ_util'][key] = circ_util[SR]
@@ -126,7 +134,7 @@ def graph_util_vs_latency(utils, latencies, fn):
 
 
 if __name__ == '__main__':
-    if not os.path.isdir(sys.argv[1]):
+    if not path.isdir(sys.argv[1]):
         print 'first arg must be dir'
         sys.exit(-1)
     db = shelve.open(sys.argv[1] + '/buffer_shelve.db')
