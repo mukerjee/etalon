@@ -121,11 +121,19 @@ def get_data(db, name):
                 optimal[-1] + cr_KBpus * us
                 for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
 
+        # Bytes sent if we only used the packet network.
+        pkt_only = [pr_KBpus * us for us in xrange(1, bounds[-1] + 1)]
+
         # Verify that in optimal, no two adjacent elements are equal.
-        for i in xrange(len(optimal) - 1):
+        for i in xrange(bounds[-1] - 1):
+            assert pkt_only[i] != pkt_only[i + 1], \
+                "pkt_only[{}] == pkt_only[{}] == {}".format(
+                    i, i + 1, pkt_only[i])
             assert optimal[i] != optimal[i + 1], \
                 "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
 
+        data['keys'].insert(0, "packet only")
+        data['data'].insert(0, pkt_only)
         data['keys'].insert(0, "optimal")
         data['data'].insert(0, optimal)
         return dict(data)
