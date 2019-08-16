@@ -44,9 +44,9 @@ OLD_FMT = "*-{}-*-20000-180000-click.txt"
 # Matches experiments with a particular CC mode, 20 us nights, and 9000 us days
 # (under TDF).
 NEW_LONG_FMT = "*-{}-*-400-180000-click.txt"
-# Matches experiments with static buffers, a particular CC mode, 20 us nights,
-# and 180 us days (under TDF).
-STATIC_PTN_FMT = "*-QUEUE-False-*-{}-*-400-3600-click.txt"
+# Matches experiments with static buffers of a particular size, a particular CC
+# mode, 20 us nights, and 180 us days (under TDF).
+STATIC_PTN_FMT = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
 RESIZE_PTN_FMT = "*-QUEUE-True-{}-{}-*click.txt"
@@ -62,6 +62,8 @@ DESIRED_CCS = ["optimal", "bbr", "dctcp", "highspeed", "illinois", "reno",
 DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10, 11]
 # Resize time to graph for reTCP.
 CHOSEN_RESIZE_US = int(175 * pyc.TDF)
+# Static buffer size to use.
+CHOSEN_STATIC = 16
 
 
 def rst_glb(dur):
@@ -125,7 +127,7 @@ def main():
         rst_glb(STATIC_DUR)
         static_key = STATIC_KEY_FMT.format(cc)
         # Match only the current CC mode.
-        sqg.FILES[static_key] = STATIC_PTN_FMT.format(cc)
+        sqg.FILES[static_key] = STATIC_PTN_FMT.format(CHOSEN_STATIC, cc)
         # Extract the CC mode.
         sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
@@ -144,8 +146,8 @@ def main():
         rst_glb(STATIC_DUR)
         static_key = STATIC_KEY_FMT.format("{}-retcp".format(cc))
         # Match the current CC mode and reTCP.
-        sqg.FILES[static_key] = [
-            STATIC_PTN_FMT.format(cc), STATIC_PTN_FMT.format("retcp")]
+        sqg.FILES[static_key] = [STATIC_PTN_FMT.format(CHOSEN_STATIC, cc),
+                                 STATIC_PTN_FMT.format(CHOSEN_STATIC, "retcp")]
         # Extract the CC mode.
         sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
         static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
@@ -180,7 +182,7 @@ def main():
     rst_glb(STATIC_DUR)
     static_key = STATIC_KEY_FMT.format("all")
     # Match any CC mode.
-    sqg.FILES[static_key] = STATIC_PTN_FMT.format("*")
+    sqg.FILES[static_key] = STATIC_PTN_FMT.format(CHOSEN_STATIC, "*")
     # Extract the CC mode.
     sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
     static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
@@ -196,10 +198,10 @@ def main():
     # (4) Dynamic buffers. Show that dynamic buffers help TCP Reno when
     #     nights/days are short.
     rst_glb(RESIZE_DUR)
-    resize_key = RESIZE_KEY_FMT.format("reno")
+    resize_key = RESIZE_KEY_FMT.format(RESIZE_CC)
     # Match any resize time, but only CC mode reno.
-    sqg.FILES[resize_key] = [
-        STATIC_PTN_FMT.format("reno"), RESIZE_PTN_FMT.format("*", "reno")]
+    sqg.FILES[resize_key] = [STATIC_PTN_FMT.format(CHOSEN_STATIC, RESIZE_CC),
+                             RESIZE_PTN_FMT.format("*", RESIZE_CC)]
     # Extract how long in advance the buffers resize.
     sqg.KEY_FN[resize_key] = \
         lambda fn: int(float(fn.split("-")[6]) / pyc.TDF) \
