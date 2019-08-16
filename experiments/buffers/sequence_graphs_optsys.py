@@ -54,14 +54,16 @@ RESIZE_PTN_FMT = "*-QUEUE-True-{}-{}-*click.txt"
 # Primary CC modes to demonstrate.
 BASIC_CCS = ["cubic", "reno"]
 # CC mode indices to display in static graph.
-DESIRED_CCS = ["optimal", "bbr", "dctcp", "highspeed", "illinois", "reno",
-               "scalable", "veno", "westwood", "yeah"]
+DESIRED_CCS = ["optimal", "packet only", "bbr", "cubic", "dctcp", "highspeed",
+               "illinois", "scalable", "westwood", "yeah"]
 # DESIRED_CCS = [idx for idx in xrange(10)]
 # DESIRED_CCS = [0] + [idx for idx in xrange(10, 19)]
 # Resize time indices to display in resize graph.
-DESIRED_RESIZE_US = [0, 2, 4, 5, 6, 7, 8, 10, 11]
+DESIRED_RESIZE_US = [0, 1, 3, 5, 7, 8, 9, 11, 12]
 # Resize time to graph for reTCP.
 CHOSEN_RESIZE_US = int(175 * pyc.TDF)
+# Resize CC mode.
+RESIZE_CC = "cubic"
 # Static buffer size to use.
 CHOSEN_STATIC = 16
 
