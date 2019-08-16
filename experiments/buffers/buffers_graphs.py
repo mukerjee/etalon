@@ -25,10 +25,10 @@ SR = (1, 2)
 TYPES = ['static', 'resize', 'reTCP', 'reTCP+resize']
 
 FILES = {
-    'static': '/*-strobe-*-False-*-cubic-*click.txt',
-    'resize': '/*-QUEUE-True-*-cubic-*click.txt',
-    'reTCP': '/*-QUEUE-False-*-retcp-*click.txt',
-    'reTCP+resize': '/*-QUEUE-True-*-retcp-*click.txt',
+    'static': '*-strobe-*-False-*-cubic-*click.txt',
+    'resize': '*-QUEUE-True-*-cubic-*click.txt',
+    'reTCP': '*-QUEUE-False-*-retcp-*click.txt',
+    'reTCP+resize': 'w*-QUEUE-True-*-retcp-*click.txt',
 }
 
 KEY_FN = {
@@ -44,7 +44,15 @@ def get_data(name, files=FILES, key_fn=KEY_FN):
         return db[name]
     else:
         data = defaultdict(lambda: defaultdict(dict))
-        for fn in glob.glob(sys.argv[1] + files[name]):
+
+        ptn = path.join(sys.argv[1], files[name])
+        fns = glob.glob(ptn)
+        assert len(fns) > 0, "Found no files for pattern: {}".format(ptn)
+        print("Found files for pattern: {}".format(ptn))
+        for fn in fns:
+            print("    {}".format(fn))
+
+        for fn in fns:
             key = key_fn[name](fn.split('/')[-1])
             _, lat, _, circ_util, _, _, _ = pl.parse_packet_log(fn)
             data['lat'][50][key] = [x[1] for x in zip(*lat)[1]]
@@ -68,7 +76,7 @@ def graph_lat(keys, latencies, fn):
     options.legend.options.fontsize = 19
     options.series_options = [DotMap(marker='o', markersize=10, linewidth=5)
                               for i in range(len(x))]
-    options.output_fn = 'graphs/%s_vs_latency.pdf' % fn
+    options.output_fn = path.join(PROGDIR, 'graphs', '{}_vs_latency.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
                              else 'Early buffer resize ($\mu$s)'
     options.y.label.ylabel = 'Median latency ($\mu$s)'
@@ -90,7 +98,8 @@ def graph_circuit_util(util, fn):
     options.legend.options.fontsize = 12
     options.bar_labels.format_string = '%1.0f'
     options.bar_labels.options.fontsize = 25
-    options.output_fn = 'graphs/%s_vs_circuit_util.pdf' % fn
+    options.output_fn = path.join(
+        PROGDIR, 'graphs', '{}_vs_circuit_util.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
                              else 'Early buffer resize ($\mu$s)'
     options.y.label.ylabel = 'Avg. circuit utilization (%)'
@@ -120,8 +129,10 @@ def graph_util_vs_latency(utils, latencies, fn):
     options.series_options[2].s = 100
     del options.series_options[2].markersize
     options.series_options[2].zorder = 10
-    options.output_fn = 'graphs/throughput_vs_latency99.pdf' if '99' in fn \
-                        else 'graphs/throughput_vs_latency.pdf'
+    options.output_fn = \
+        path.join(PROGDIR, 'graphs', 'throughput_vs_latency99.pdf') \
+        if '99' in fn \
+           else path.join(PROGDIR, 'graphs', 'throughput_vs_latency.pdf')
     options.x.label.xlabel = 'Circuit utilization (%)'
     options.y.label.ylabel = '99th percent. latency ($\mu$s)' if '99' in fn \
                              else 'Median latency ($\mu$s)'
