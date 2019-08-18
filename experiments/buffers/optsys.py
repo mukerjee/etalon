@@ -48,7 +48,7 @@ def main():
         #     nights/days are short.
         # (3) reTCP. Show how much improvement reTCP offers with static buffers
         #     (i.e., on its own).
-        if cc in ["cubic"]:
+        if cc in ["cubic", "retcp"]:
             for exp in range(2, 8):
                 cnfs += [{"type": "strobe", "buffer_size": 2**exp, "cc": cc}]
             else:
