@@ -54,6 +54,7 @@ def get_data(name, files=FILES, key_fn=KEY_FN):
 
         for fn in fns:
             key = key_fn[name](fn.split('/')[-1])
+            print("key: {}".format(key))
             _, lat, _, circ_util, _, _, _ = pl.parse_packet_log(fn)
             data['lat'][50][key] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][key] = [x[1] for x in zip(*lat)[3]]
@@ -157,6 +158,7 @@ if __name__ == '__main__':
 
     typ = 'resize'
     db[typ] = get_data(typ)
+    print(db["static"]["lat"][50])
     graph_lat([0] + db[typ]['keys'],
               [db['static']['lat'][50][2]] + db[typ]['lat'][50], typ)
     graph_circuit_util([db['static']['circ_util'][2]] + db[typ]['circ_util'],
