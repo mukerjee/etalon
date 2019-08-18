@@ -32,7 +32,7 @@ def main():
 
         # (1) Long days, static buffers. Show the cases where TCP ramp up is not
         #     a problem.
-        if cc in ["reno", "cubic"]:
+        if cc in ["cubic"]:
             # Old optical switches.
             cnfs += [{"type": "strobe", "buffer_size": 16,
                       "night_len_us": 1000. * python_config.TDF,
@@ -56,11 +56,11 @@ def main():
                 cnf["ecn"] = python_config.DCTCP_THRESH
             cnfs += [cnf]
 
-        # (4) Dynamic buffers. Show that dynamic buffers help TCP Reno when
+        # (4) Dynamic buffers. Show that dynamic buffers help TCP cubic when
         #     nights/days are short.
         # (5) reTCP. Show how much improvement reTCP offers with dynamic
         #     buffers.
-        if cc in ["reno", "cubic", "retcp"]:
+        if cc in ["cubic", "retcp"]:
             for i in xrange(MAX_RESIZE + 1):
                 if i % 500 == 0:
                     cnf = {"type": "strobe", "buffer_size":  16,
@@ -72,10 +72,10 @@ def main():
     # For all configurations, enable the packet log.
     cnfs = [dict(cnf, packet_log=True) for cnf in cnfs]
 
-    # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
+    # Use the first experiment's CC mode, or "cubic" if no CC mode is specified.
     # This avoid unnecessarily restarting the cluster.
     maybe(lambda: common.initializeExperiment(
-        "flowgrindd", cnfs[0].get("cc", "reno")))
+        "flowgrindd", cnfs[0].get("cc", "cubic")))
 
     # Total number of experiments.
     tot = len(cnfs)
