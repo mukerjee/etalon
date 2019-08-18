@@ -48,13 +48,16 @@ def main():
         #     nights/days are short.
         # (3) reTCP. Show how much improvement reTCP offers with static buffers
         #     (i.e., on its own).
-        for exp in range(2, 8):
-            cnf = {"type": "strobe", "buffer_size": 2**exp, "cc": cc}
-            # For DCTCP, we will enable threshold-based ECN marking.
-            dctcp = cc == "dctcp"
-            if dctcp:
-                cnf["ecn"] = python_config.DCTCP_THRESH
-            cnfs += [cnf]
+        if cc in ["cubic"]:
+            for exp in range(2, 8):
+                cnfs += [{"type": "strobe", "buffer_size": 2**exp, "cc": cc}]
+            else:
+                cnf = {"type": "strobe", "buffer_size": 2**4, "cc": cc}
+                # For DCTCP, we will enable threshold-based ECN marking.
+                dctcp = cc == "dctcp"
+                if dctcp:
+                    cnf["ecn"] = python_config.DCTCP_THRESH
+                cnfs += [cnf]
 
         # (4) Dynamic buffers. Show that dynamic buffers help TCP cubic when
         #     nights/days are short.
