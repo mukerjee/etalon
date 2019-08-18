@@ -25,10 +25,10 @@ SR = (1, 2)
 TYPES = ['static', 'resize', 'reTCP', 'reTCP+resize']
 
 FILES = {
-    'static': '*-strobe-*-False-*-cubic-*click.txt',
-    'resize': '*-QUEUE-True-*-cubic-*click.txt',
-    'reTCP': '*-QUEUE-False-*-retcp-*click.txt',
-    'reTCP+resize': 'w*-QUEUE-True-*-retcp-*click.txt',
+    'static': '*-strobe-*-False-*-cubic-*-400-3600-click.txt',
+    'resize': '*-QUEUE-True-*-cubic-*-400-3600-click.txt',
+    'reTCP': '*-QUEUE-False-*-retcp-*-400-3600-click.txt',
+    'reTCP+resize': '*-QUEUE-True-*-retcp-*-400-3600-click.txt',
 }
 
 KEY_FN = {
@@ -66,7 +66,7 @@ def get_data(name, files=FILES, key_fn=KEY_FN):
         return dict(data)
 
 
-def graph_lat(keys, latencies, fn):
+def graph_lat(keys, latencies, fn, y_lab):
     x = [keys for i in xrange(len(latencies[0]))]
     y = zip(*latencies)
 
@@ -79,14 +79,14 @@ def graph_lat(keys, latencies, fn):
                               for i in range(len(x))]
     options.output_fn = path.join(PROGDIR, 'graphs', '{}_vs_latency.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
-                             else 'Early buffer resize ($\mu$s)'
-    options.y.label.ylabel = 'Median latency ($\mu$s)'
+                             else 'Early buffer resizing ($\mu$s)'
+    options.y.label.ylabel = '{} latency ($\mu$s)'.format(y_lab)
     options.x.ticks.major.labels = DotMap(
         locations=[4, 8, 16, 32, 64, 128]) if 'static' in fn \
-        else DotMap(locations=[0, 200, 400, 600, 800, 1000, 1200, 1400])
+        else DotMap(locations=[0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
     options.y.ticks.major.labels = DotMap(
-        locations=[0, 100, 200, 300, 400, 500, 600])
-    options.y.limits = [0, 600]
+        locations=[0, 50, 100, 150, 200, 250, 300, 350])
+    options.y.limits = [0, 350]
     plot(x, y, options)
 
 
@@ -102,7 +102,7 @@ def graph_circuit_util(util, fn):
     options.output_fn = path.join(
         PROGDIR, 'graphs', '{}_vs_circuit_util.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
-                             else 'Early buffer resize ($\mu$s)'
+                             else 'Early buffer resizing ($\mu$s)'
     options.y.label.ylabel = 'Avg. circuit utilization (%)'
     options.x.ticks.major.labels = DotMap(
         text=[4, 8, 16, 32, 64, 128]) if 'static' in fn \
@@ -153,14 +153,19 @@ if __name__ == '__main__':
 
     typ = 'static'
     db[typ] = get_data(typ)
-    graph_lat(db[typ]['keys'], db[typ]['lat'][50], typ)
+    graph_lat(keys=db[typ]['keys'], latencies=db[typ]['lat'][50], fn=typ,
+              y_lab="Median")
     graph_circuit_util(db[typ]['circ_util'], typ)
 
     typ = 'resize'
     db[typ] = get_data(typ)
-    print(db["static"]["lat"][50])
-    graph_lat([0] + db[typ]['keys'],
-              [db['static']['lat'][50][2]] + db[typ]['lat'][50], typ)
+    graph_lat(keys=[0] + db[typ]['keys'],
+              latencies=[db['static']['lat'][50][2]] + db[typ]['lat'][50],
+              fn="{}-median".format(typ),
+              y_lab="Median")
+    graph_lat(keys=[0] + db[typ]['keys'],
+              latencies=[db['static']['lat'][99][2]] + db[typ]['lat'][99],
+              fn="{}-99".format(typ), y_lab="99th percentile\n")
     graph_circuit_util([db['static']['circ_util'][2]] + db[typ]['circ_util'],
                        typ)
 
