@@ -70,6 +70,14 @@ def graph_lat(keys, latencies, fn, y_lab):
     x = [keys for i in xrange(len(latencies[0]))]
     y = zip(*latencies)
 
+    print("")
+    print("raw data for: {}".format(fn))
+    print("{}:".format(y_lab.strip("\n")))
+    print("\tall: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[0], y[0])])))
+    print("\tcircuit: {}".format(". ".join(["({}: {})".format(a, b) for a, b in zip(x[1], y[1])])))
+    print("\tpacket: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[2], y[2])])))
+    print("")
+
     options = DotMap()
     options.plot_type = 'LINE'
     options.legend.options.labels = ['All traffic', 'Only circuit',
