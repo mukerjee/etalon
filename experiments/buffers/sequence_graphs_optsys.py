@@ -214,8 +214,13 @@ def main():
     # days (i.e., (2) - (5)).
     assert days is not None, "\"days\" is None!"
     resize_db[resize_key][LINES_KEY] = days
-    sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS,
-                 flt=lambda idx, label, resize_us=DESIRED_RESIZE_US: idx in resize_us)
+    sqg.plot_seq(resize_db[resize_key],
+                 resize_key,
+                 odr,
+                 RESIZE_INS,
+                 flt=lambda idx, label, resize_us=DESIRED_RESIZE_US: \
+                     idx in resize_us,
+                 order=["optimal", "packet only", "static", "25", "75", "125", "150", "175", "225"])
     resize_db.close()
 
 

@@ -140,7 +140,7 @@ def get_data(db, name):
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
-             ins=None, flt=lambda idx, label: True):
+             ins=None, flt=lambda idx, label: True, order=None):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
@@ -190,11 +190,30 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
         options.inset.options.x.limits = xlm
         options.inset.options.y.limits = ylm
 
+
     # Pick only the lines that we want.
     x, y, options.legend.options.labels = zip(
         *[(a, b, l) for (i, (a, b, l)) in enumerate(
             zip(x, y, options.legend.options.labels))
           if flt(i, l)])
+
+    if order is not None:
+        real_x = []
+        real_y = []
+        real_l = []
+        for item in order:
+            idx = 0
+            for possibility in options.legend.options.labels:
+                if item in possibility:
+                    break
+                idx += 1
+            real_x.append(x[idx])
+            real_y.append(y[idx])
+            real_l.append(options.legend.options.labels[idx])
+        x = real_x
+        y = real_y
+        options.legend.options.labels = real_l
+
     plot(x, y, options)
 
 
