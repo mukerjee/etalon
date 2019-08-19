@@ -29,6 +29,7 @@ RESIZE_DUR = (20 + 180) * 6
 OLD_INS = None
 NEW_LONG_INS = None
 STATIC_INS = None
+# RESIZE_INS = ((620, 800), (50, 275))
 RESIZE_INS = None
 
 LINES_KEY = "lines"
