@@ -51,13 +51,13 @@ def main():
         if cc in ["cubic", "retcp"]:
             for exp in range(2, 8):
                 cnfs += [{"type": "strobe", "buffer_size": 2**exp, "cc": cc}]
-            else:
-                cnf = {"type": "strobe", "buffer_size": 2**4, "cc": cc}
-                # For DCTCP, we will enable threshold-based ECN marking.
-                dctcp = cc == "dctcp"
-                if dctcp:
-                    cnf["ecn"] = python_config.DCTCP_THRESH
-                cnfs += [cnf]
+        else:
+            cnf = {"type": "strobe", "buffer_size": 2**4, "cc": cc}
+            # For DCTCP, we will enable threshold-based ECN marking.
+            dctcp = cc == "dctcp"
+            if dctcp:
+                cnf["ecn"] = python_config.DCTCP_THRESH
+            cnfs += [cnf]
 
         # (4) Dynamic buffers. Show that dynamic buffers help TCP cubic when
         #     nights/days are short.
