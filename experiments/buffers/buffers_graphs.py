@@ -170,12 +170,12 @@ if __name__ == '__main__':
 
     typ = 'resize'
     db[typ] = get_data(typ)
-    graph_lat(keys=[0] + db[typ]['keys'],
-              latencies=[db['static']['lat'][50][2]] + db[typ]['lat'][50],
+    graph_lat(keys=db[typ]['keys'],
+              latencies=db[typ]['lat'][50],
               fn="{}-median".format(typ),
               y_lab="Median")
-    graph_lat(keys=[0] + db[typ]['keys'],
-              latencies=[db['static']['lat'][99][2]] + db[typ]['lat'][99],
+    graph_lat(keys=db[typ]['keys'],
+              latencies=db[typ]['lat'][99],
               fn="{}-99".format(typ), y_lab="99th percentile\n")
     graph_circuit_util([db['static']['circ_util'][2]] + db[typ]['circ_util'],
                        typ)
