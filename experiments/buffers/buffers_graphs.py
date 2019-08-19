@@ -80,9 +80,12 @@ def graph_lat(keys, latencies, fn, y_lab):
 
     options = DotMap()
     options.plot_type = 'LINE'
-    options.legend.options.labels = ['All traffic', 'Only circuit',
-                                     'Only packet']
-    options.legend.options.fontsize = 19
+    options.legend.options.labels = ['all traffic', 'only circuit',
+                                     'only packet']
+    options.legend.options.fontsize = 18
+    options.x.label.fontsize = options.y.label.fontsize = 18
+    options.x.ticks.major.options.labelsize = \
+        options.y.ticks.major.options.labelsize = 18
     options.series_options = [DotMap(marker='o', markersize=10, linewidth=5)
                               for i in range(len(x))]
     options.output_fn = path.join(PROGDIR, 'graphs', '{}_vs_latency.pdf'.format(fn))
