@@ -158,18 +158,18 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
     options = DotMap()
     options.plot_type = 'LINE'
     options.legend.options.loc = "center right"
-    options.legend.options.bbox_to_anchor = (1.25, 0.5)
+    options.legend.options.bbox_to_anchor = (1.4, 0.5)
     options.legend.options.labels = lls
-    options.legend.options.fontsize = 14
+    options.legend.options.fontsize = 18
     # Use 1 column if there are fewer than 4 lines, otherwise use 2 columns.
     options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
     options.output_fn = path.join(odr, 'seq_%s.pdf' % fn)
     options.x.label.xlabel = 'Time ($\mu$s)'
     options.y.label.ylabel = 'Expected seq. num.\n($\\times$1000)'
-    options.x.label.fontsize = options.y.label.fontsize = 16
+    options.x.label.fontsize = options.y.label.fontsize = 18
     options.x.ticks.major.options.labelsize = \
-        options.y.ticks.major.options.labelsize = 16
+        options.y.ticks.major.options.labelsize = 18
     options.x.axis.show = options.y.axis.show = True
     options.x.axis.color = options.y.axis.color = 'black'
     lines = data['lines']
