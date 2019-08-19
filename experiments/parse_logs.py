@@ -13,10 +13,10 @@ PROGDIR = path.dirname(path.realpath(__file__))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "etc"))
 
-from python_config import CIRCUIT_BW_Gbps_TDF, TDF
+from python_config import CIRCUIT_BW_Gbps_TDF, CIRCUIT_LATENCY_s_TDF, TDF
 
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
-RTT = 0.001200
+RTT = CIRCUIT_LATENCY_s_TDF * 2
 DURATION = 1200
 # 1/1000 seconds.
 bin_size = 1
