@@ -31,7 +31,8 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     DOCKER_LOCAL_IMAGE_PATH, DOCKER_REMOTE_IMAGE_PATH, DOCKER_LOAD, \
     get_phost_from_id, DID_BUILD_FN, gen_hosts_file, HOSTS_FILE, \
     IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, gen_slaves_file, SLAVES_FILE, \
-    get_hostname_from_rack_and_id, get_rack_and_id_from_host, DEFAULT_CC
+    get_hostname_from_rack_and_id, get_rack_and_id_from_host, DEFAULT_CC, \
+    FLOWGRIND_DEFAULT_DUR_S
 
 CURRENT_CC = None
 START_TIME = None
@@ -214,7 +215,11 @@ def flowgrind(settings):
                         flows.append(fl)
                 else:
                     flows.append(f)
-    cmd = '-I -Ts=2 -Ys=0 -Gs=q:C:%d -i 0.001 -n %s ' % (DEFAULT_REQUEST_SIZE, len(flows))
+    if "dur" in settings:
+        dur_s = settings["dur"]
+    else:
+        dur_s = FLOWGRIND_DEFAULT_DUR_S
+    cmd = '-I -Ts=%d -Ys=0 -Gs=q:C:%d -i 0.001 -n %s ' % (dur_s, DEFAULT_REQUEST_SIZE, len(flows))
     for i, f in enumerate(flows):
         cmd += '-F %d -Hs=%s,d=%s ' % \
                (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']))

@@ -16,6 +16,10 @@ import common
 import python_config
 
 
+# Flowgrind flow duration, in seconds.
+DUR_S = 2
+
+
 def main():
     ccs = python_config.CCS
     # Use the first CC mode when starting the cluster to avoid needing to
@@ -46,7 +50,8 @@ def main():
             click_common.setConfig(cnf_c)
             print("--- done...")
             print("--- experiment {} of {}".format(cnt, tot))
-            common.flowgrind(settings={"flows": [{"src": "r1", "dst": "r2"}]})
+            common.flowgrind(
+                settings={"flows": [{"src": "r1", "dst": "r2"}], "dur": DUR_S})
 
     common.finishExperiment()
 

@@ -92,6 +92,9 @@ DEFAULT_REQUEST_SIZE = 8948
 # bits as "Congestion Experienced".
 DCTCP_THRESH = 10
 
+# Default flowgrind flow duration, in seconds.
+FLOWGRIND_DEFAULT_DUR_S = 2
+
 # commands for building / running vhosts
 DOCKER_IMAGE = 'etalon'
 DOCKER_CLEAN = 'sudo docker ps -q | xargs sudo docker stop -t 0 ' \
