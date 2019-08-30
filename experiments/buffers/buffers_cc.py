@@ -24,6 +24,8 @@ FIXED = "2 40400 -1/-1/-1 3600 1/2/0"
 
 def main():
     ccs = python_config.CCS
+    ccs = ccs[:1]
+
     # Use the first CC mode when starting the cluster to avoid needing to
     # restart the cluster for the first CC mode's experiments.
     common.initializeExperiment("flowgrindd", ccs[0])
