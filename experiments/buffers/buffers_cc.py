@@ -18,6 +18,8 @@ import python_config
 
 # Flowgrind flow duration, in seconds.
 DUR_S = 2
+# Fixed schedule: 2000 us pause, 20 us circuit night, 180 us circuit day.
+FIXED = "2 40400 -1/-1/-1 3600 1/2/0"
 
 
 def main():
@@ -42,6 +44,9 @@ def main():
             if cc == "dctcp":
                 # For DCTCP, enable threshold-based ECN marking.
                 cnf_c['ecn'] = python_config.DCTCP_THRESH
+            if cnf_c["type"] == "strobe":
+                cnf_c["type"] = "fixed"
+                cnf_c["fixed_schedule"] = FIXED
 
             print("--- running test type {}...".format(cnf_c["type"]))
             print("--- using CC mode {}...".format(cnf_c["cc"]))
