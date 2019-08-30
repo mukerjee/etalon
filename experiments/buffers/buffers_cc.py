@@ -17,7 +17,7 @@ import python_config
 
 
 # Flowgrind flow duration, in seconds.
-DUR_S = 2
+DUR_S = 5
 # Fixed schedule: 2000 us pause, 20 us circuit night, 180 us circuit day.
 FIXED = "2 40400 -1/-1/-1 3600 1/2/0"
 
