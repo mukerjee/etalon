@@ -36,7 +36,7 @@ def main():
     db.close()
 
     # Create a graph for each CC mode.
-    ins = ((620, 800), (7, 270))
+    ins = None  # ((620, 800), (7, 270))
     flt = lambda idx: idx in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
     for cc in python_config.CCS:
         # Use a new database for each CC mode to avoid storing everything in

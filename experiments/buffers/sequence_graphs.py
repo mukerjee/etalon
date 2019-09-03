@@ -23,14 +23,14 @@ from python_config import TDF, CIRCUIT_BW_Gbps, PACKET_BW_Gbps
 
 # Maps experiment to filename.
 FILES = {
-    'static': '*-strobe-*-False-*-reno-*click.txt',
+    'static': '*-fixed-*-False-*-reno-*click.txt',
     'resize': '*-QUEUE-True-*-reno-*click.txt',
 }
 
 # Maps experiment to a function that convert a filename to an integer key
 # identifying this experiment (i.e., for the legend).
 KEY_FN = {
-    'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
+    'static': lambda fn: int(fn.split('fixed-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / TDF,
 }
 

@@ -17,7 +17,7 @@ from python_config import CIRCUIT_BW_Gbps_TDF, CIRCUIT_LATENCY_s_TDF, TDF
 
 percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = CIRCUIT_LATENCY_s_TDF * 2
-DURATION = 1200
+DURATION = 7000
 # 1/1000 seconds.
 bin_size = 1
 
