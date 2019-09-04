@@ -4,16 +4,14 @@ from collections import defaultdict
 import copy
 import glob
 from multiprocessing import Pool
-import os
 from os import path
-import shelve
 import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
 # For parse_logs.
-sys.path.insert(0, path.join(PROGDIR, '..'))
+sys.path.insert(0, path.join(PROGDIR, '..', '..'))
 # For python_config.
-sys.path.insert(0, path.join(PROGDIR, '..', '..', 'etc'))
+sys.path.insert(0, path.join(PROGDIR, '..', '..', '..', 'etc'))
 
 from dotmap import DotMap
 from simpleplotlib import plot
@@ -26,15 +24,14 @@ FILES = {
     'static': '*-fixed-*-False-*-reno-*click.txt',
     'resize': '*-QUEUE-True-*-reno-*click.txt',
 }
-
 # Maps experiment to a function that convert a filename to an integer key
 # identifying this experiment (i.e., for the legend).
 KEY_FN = {
     'static': lambda fn: int(fn.split('fixed-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / TDF,
 }
-
-UNITS = 1000.0  # Kilo-sequence number
+# Kilo-sequence number
+UNITS = 1000.0
 NUM_HOSTS = 16.0
 
 
@@ -48,10 +45,12 @@ class FileReader(object):
         return key, get_seq_data(fn)
 
 
-def get_data(db, name):
-    if name in db:
-        return db[name]
-    else:
+def get_data(db, key):
+    """
+    (Optionally) loads the results for the specified key into the provided
+    database and returns a copy of them.
+    """
+    if key not in db:
         # data["raw_data"] = A list of pairs, where each pair corresponds to an
         #     experiment file.
         # data["raw_data"][i] = A pair of (key value, results).
@@ -62,23 +61,23 @@ def get_data(db, name):
         #     events.
         # data["raw_data"][i][1][1][0] = The time at which the first day began.
 
-        ptns = FILES[name]
+        ptns = FILES[key]
         if not isinstance(ptns, list):
             ptns = [ptns]
         # For each pattern, extract the matches. Then, flatten them into a
         # single list.
         fns = [fn for matches in
-                   [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
+               [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
                for fn in matches]
 
-        assert len(fns) > 0, "Found no files for patterns: {}".format(ptns)
+        assert fns, "Found no files for patterns: {}".format(ptns)
         print("Found files for patterns: {}".format(ptns))
         for fn in fns:
             print("    {}".format(fn))
 
         data = defaultdict(dict)
         p = Pool()
-        data['raw_data'] = dict(p.map(FileReader(name), fns))
+        data['raw_data'] = dict(p.map(FileReader(key), fns))
         # Clean up p.
         p.close()
         p.join()
@@ -89,57 +88,82 @@ def get_data(db, name):
         data['data'] = [map(lambda x: x / UNITS, f) for f in
                         zip(*zip(*data['raw_data'])[1])[0]]
 
-        # Compute optimal sequence numbers. Recall that sequence numbers are in
-        # terms of bytes.
-        print("Computing optimal...")
-        # Billions of total b/s -> total B/s -> total KB/s -> total KB/us
-        #     -> per-host KB/us
-        factor = 10**9 / 8. / UNITS / 10**6 / NUM_HOSTS
-        pr_KBpus = PACKET_BW_Gbps * factor
-        cr_KBpus = CIRCUIT_BW_Gbps * factor
-        # Circuit start and end times, of the form:
-        #     [<start>, <end>, <start>, <end>, ...]
-        bounds = [int(round(q)) for q in data['lines']]
-        assert len(bounds) % 2 == 0
-        # Each entry is the optimal sequence number at that microsecond. The
-        # optimal sequence number is the maximum amount of data that could have
-        # been sent at a certain time.
-        optimal = []
-        print("bounds: {}".format(bounds))
-        for state in xrange(0, len(bounds), 2):
-            # Circuit night.
-            if state == 0:
-                # 0 to first day start.
-                optimal = [pr_KBpus * us for us in xrange(bounds[state])]
-            else:
-                # Previous day end to current day start.
-                optimal += [
-                    optimal[-1] + pr_KBpus * us
-                    for us in xrange(1, bounds[state] - bounds[state - 1] + 1)]
-            # Current day start to current day end.
+        # Store the new data in the database.
+        db[key] = data
+
+    data = copy.deepcopy(db[key])
+    add_optimal(data)
+    return data
+
+
+def add_optimal(data):
+    """
+    Adds the calculated baselines (optimal and packet-only) to the provided data
+    dictionary.
+    """
+    # Compute optimal sequence numbers. Recall that sequence numbers are in
+    # terms of bytes, so we use bytes in some of the below comments.
+    print("Computing optimal...")
+
+    # Calculate the raw rate of the packet and circuit networks.
+    #
+    # Constant used to convert Gb/s to the units of the graphs. E.g., using
+    # NUM_HOSTS = 16 and UNITS = KB, our target is KB / us / host:
+    #
+    #                                 div by    div by
+    #                                NUM_HOSTS  UNITS
+    #
+    #     10**9 b    1 B      1 s     1 rack     1 KB    0.0078125 KB
+    #     ------- x  --- x -------- x ------- x ------ = ------------
+    #       Gb       8 b   10**6 us   16 host   1000 B    us x host
+    factor = 10**9 / 8. / 10**6 / NUM_HOSTS / UNITS
+    pr_KBpus = PACKET_BW_Gbps * factor
+    cr_KBpus = CIRCUIT_BW_Gbps * factor
+
+    # Circuit start and end times, of the form:
+    #     [<start>, <end>, <start>, <end>, ...]
+    bounds = [int(round(q)) for q in data['lines']]
+    assert len(bounds) % 2 == 0, \
+        ("Circuit starts and ends must come in pairs, but the list of them "
+         "contains an odd number of elements: {}".format(bounds))
+    print("circuit bounds: {}".format(bounds))
+
+    # Each entry is the maximum amount of data that could have been sent by that
+    # time.
+    optimal = []
+    for state in xrange(0, len(bounds), 2):
+        # Circuit night.
+        if state == 0:
+            # 0 to first day start.
+            optimal = [pr_KBpus * us for us in xrange(bounds[state])]
+        else:
+            # Previous day end to current day start.
             optimal += [
-                optimal[-1] + cr_KBpus * us
-                for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
+                optimal[-1] + pr_KBpus * us
+                for us in xrange(1, bounds[state] - bounds[state - 1] + 1)]
+        # Current day start to current day end.
+        optimal += [
+            optimal[-1] + cr_KBpus * us
+            for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
 
-        # Bytes sent if we only used the packet network.
-        pkt_only = [pr_KBpus * us for us in xrange(1, bounds[-1] + 1)]
+    # Bytes sent if we only used the packet network.
+    pkt_only = [pr_KBpus * us for us in xrange(0, bounds[-1])]
 
-        # Verify that in optimal, no two adjacent elements are equal.
-        for i in xrange(bounds[-1] - 1):
-            assert pkt_only[i] != pkt_only[i + 1], \
-                "pkt_only[{}] == pkt_only[{}] == {}".format(
-                    i, i + 1, pkt_only[i])
-            assert optimal[i] != optimal[i + 1], \
-                "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
+    # Verify that in optimal, no two adjacent elements are equal.
+    for i in xrange(bounds[-1] - 1):
+        assert pkt_only[i] != pkt_only[i + 1], \
+            "pkt_only[{}] == pkt_only[{}] == {}".format(
+                i, i + 1, pkt_only[i])
+        assert optimal[i] != optimal[i + 1], \
+            "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
 
-        data['keys'].insert(0, "packet only")
-        data['data'].insert(0, pkt_only)
-        data['keys'].insert(0, "optimal")
-        data['data'].insert(0, optimal)
-        return dict(data)
+    data['keys'].insert(0, "packet only")
+    data['data'].insert(0, pkt_only)
+    data['keys'].insert(0, "optimal")
+    data['data'].insert(0, optimal)
 
 
-def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
+def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
              ins=None, flt=lambda idx, label: True, order=None):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
@@ -214,23 +238,3 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, 'graphs'),
         options.legend.options.labels = real_l
 
     plot(x, y, options)
-
-
-if __name__ == '__main__':
-    if not os.path.isdir(sys.argv[1]):
-        print 'first arg must be dir'
-        sys.exit(-1)
-    db = shelve.open(path.join(sys.argv[1], 'seq_shelve.db'))
-    db['static'] = get_data(db, 'static')
-    plot_seq(db['static'], 'static')
-
-    db['resize'] = get_data(db, 'resize')
-    resize_data = copy.copy(db['resize'])
-    # Use the same circuit windows as the 'static' experiment.
-    resize_data['lines'] = db['static']['lines']
-    # Use the data for 0 us from the 'static' experiment.
-    resize_data['keys'] = [0] + db['resize']['keys']
-    resize_data['data'] = [db['static']['data'][2]] + db['resize']['data']
-    plot_seq(resize_data, 'resize')
-
-    db.close()
