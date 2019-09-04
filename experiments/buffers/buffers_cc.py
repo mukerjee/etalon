@@ -18,7 +18,7 @@ import python_config
 
 
 # If True, then do not run experiments and instead only print configurations.
-DRY_RUN = True
+DRY_RUN = False
 # Flowgrind flow duration, in seconds.
 DUR_S = 7
 # Fixed schedule: 20 us circuit night, 2000 us pause, 20 us circuit night,
@@ -35,7 +35,7 @@ def main():
     # Generate the list of configurations first so that we know the total number
     # of experiments. CC modes are the outside loop to minimize how frequently
     # we change the CC mode, since doing so requires restarting the cluster.
-    ccs = python_config.CCS
+    ccs = python_config.CCS[:1]
     cnfs = []
     for cc in ccs:
         sweep = buffer_common.gen_resize_sweep(0, 4500, 500)
@@ -44,9 +44,9 @@ def main():
             if cc == "dctcp":
                 # For DCTCP, enable threshold-based ECN marking.
                 cnf['ecn'] = python_config.DCTCP_THRESH
-            # if cnf_c["type"] == "strobe":
-            #     cnf["type"] = "fixed"
-            #     cnf["fixed_schedule"] = FIXED
+            if cnf["type"] == "strobe":
+                cnf["type"] = "fixed"
+                cnf["fixed_schedule"] = FIXED
         cnfs += sweep
     # Total number of experiments.
     tot = len(cnfs)
