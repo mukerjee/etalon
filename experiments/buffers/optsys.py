@@ -84,8 +84,7 @@ def main():
     tot = len(cnfs)
     for cnt, cnf in enumerate(cnfs, start=1):
         maybe(lambda: click_common.setConfig(cnf))
-        print("--- config:\n{}".format(cnf))
-        print("--- experiment {} of {}".format(cnt, tot))
+        print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
         maybe(lambda: common.flowgrind(
             settings={"flows": [{"src": "r1", "dst": "r2"}]}))
 
