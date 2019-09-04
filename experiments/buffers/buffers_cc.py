@@ -54,7 +54,7 @@ def main():
     # Use the first CC mode when starting the cluster to avoid needing to
     # restart the cluster for the first CC mode's experiments.
     maybe(lambda: common.initializeExperiment("flowgrindd", ccs[0]))
-    for cnt, cnf in enumerate(cnfs):
+    for cnt, cnf in enumerate(cnfs, 1):
         maybe(lambda: click_common.setConfig(cnf))
         print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
         maybe(lambda: common.flowgrind(

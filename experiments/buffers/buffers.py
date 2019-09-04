@@ -19,13 +19,13 @@ def main():
     # only once.
     cnfs += [dict(cnf, {'cc': "retcp"}) for cnf in cnfs]
     tot = len(cnfs)
-    for cnt, cnf in enumerate(cnfs):
+    for cnt, cnf in enumerate(cnfs, 1):
         print('--- running test type {}...'.format(cnf['type']))
         print('--- setting switch buffer size to {}...'.format(
             cnf['buffer_size']))
         click_common.setConfig(cnf)
         print('--- done...')
-        print("--- experiment {} of {}".format(cnt + 1, tot))
+        print("--- experiment {} of {}".format(cnt, tot))
         common.flowgrind(settings={"flows": [{"src": "r1", "dst": "r2"}]})
 
     common.finishExperiment()
