@@ -235,7 +235,6 @@ def setConfig(config):
     setQueueResize(False)  # let manual queue sizes be passed through first
     setQueueSize(c['buffer_size'])
     setEstimateTrafficSource(c['traffic_source'])
-    setQueueResize(c['queue_resize'])
     setInAdvance(c['in_advance'])
     common.setCC(c['cc'])
     setSolsticeThresh(c['thresh'])
@@ -259,6 +258,10 @@ def setConfig(config):
     setEcnEnabled(ecn_enabled)
     # If using reTCP, then enable ECE marking.
     setEceEnabled(c['cc'] == 'retcp')
+
+    # Do this after passing through manual queue sizes and setting the ECN
+    # marking threshold.
+    setQueueResize(c['queue_resize'])
 
     divertACKs(c['divert_acks'])
     setCircuitLinkDelay(c['circuit_link_delay'])
