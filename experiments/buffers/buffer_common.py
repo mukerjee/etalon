@@ -1,36 +1,22 @@
 
-CONFIGS = [
-    {'type': 'strobe', 'buffer_size':   4},
-    {'type': 'strobe', 'buffer_size':   8},
-    {'type': 'strobe', 'buffer_size':  16},
-    {'type': 'strobe', 'buffer_size':  32},
-    {'type': 'strobe', 'buffer_size':  64},
-    {'type': 'strobe', 'buffer_size': 128},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 0},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 1000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 1500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 2000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 2500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 3000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 3500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 4000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 4400},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 4500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 5000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 5500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 6000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 6500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 7000},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 7500},
-    {'type': 'resize', 'buffer_size':  16, 'in_advance': 8000},
-]
+
+def gen_static_sweep(mn, mx):
+    return [{
+        # Enable Click's HSLog packet log. This should already be enabled by default.
+        'packet_log': True,
+        'type': 'strobe',
+        'buffer_size': 2**exp
+        } for exp in range(mn, mx + 1)]
 
 
-for c in CONFIGS:
-    # Enable Click's HSLog packet log. This should already be enabled by default.
-    c['packet_log'] = True
+def gen_resize_sweep(mn, mx, dl):
+    return [{
+        # Enable Click's HSLog packet log. This should already be enabled by default.
+        'packet_log': True,
+        'type': 'strobe',
+        'queue_resize': True,
+        'buffer_size': 16,
+        'in_advance': us
+    } for us in xrange(mn, mx + 1, dl)]
 
-    if c['type'] == 'resize':
-        c['type'] = 'strobe'
-        c['queue_resize'] = True
+CONFIGS = gen_static_sweep(2, 7) + gen_resize_sweep(0, 8000, 500)
