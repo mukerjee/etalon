@@ -19,6 +19,8 @@ import python_config
 
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
+# The upper bound on the resize time sweep.
+MAX_RESIZE_US = 0
 # Flowgrind flow duration, in seconds.
 DUR_S = 7
 # Fixed schedule: 20 us circuit night, 2000 us pause, 20 us circuit night,
@@ -38,7 +40,7 @@ def main():
     ccs = ["cubic", "dctcp", "bbr", "westwood"]
     cnfs = []
     for cc in ccs:
-        sweep = buffer_common.gen_resize_sweep(0, 4500, 500)
+        sweep = buffer_common.gen_resize_sweep(0, MAX_RESIZE_US, 500)
         for cnf in sweep:
             cnf["cc"] = cc
             if cc == "dctcp":
