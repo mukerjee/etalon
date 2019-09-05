@@ -22,10 +22,13 @@ DRY_RUN = False
 # The upper bound on the resize time sweep.
 MAX_RESIZE_US = 0
 # Flowgrind flow duration, in seconds.
-DUR_S = 7
-# Fixed schedule: 20 us circuit night, 2000 us pause, 20 us circuit night,
-# 180 us circuit day.
-FIXED = "2 40800 -1/-1/-1 3600 1/2/0"
+DUR_S = 4.3
+# Fixed schedule: 180 us circuit day, 20 us circuit night, 2000 us pause, 20 us
+# circuit night.
+# FIXED = "2 3600 1/2/0 40800 -1/-1/-1" Broken
+# FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 400 -1/-1/-1" Works
+# FIXED = "2 3600 1/2/0 400 -1/-1/-1" Broken
+FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"
 
 
 def maybe(fnc, do=not DRY_RUN):
