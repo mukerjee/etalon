@@ -18,8 +18,7 @@ def main():
         print("The first argument must be a directory, but is: {}".format(exp))
         sys.exit(-1)
 
-    ccs = python_config.CCS
-    ccs = ccs[:1]
+    ccs = ["cubic", "dctcp", "bbr", "westwood"]
 
     # Create entries for each CC mode. Keys are of the form "resize-<CC mode>".
     fmt = "resize-{}"

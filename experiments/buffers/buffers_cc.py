@@ -35,7 +35,7 @@ def main():
     # Generate the list of configurations first so that we know the total number
     # of experiments. CC modes are the outside loop to minimize how frequently
     # we change the CC mode, since doing so requires restarting the cluster.
-    ccs = python_config.CCS[:1]
+    ccs = ["cubic", "dctcp", "bbr", "westwood"]
     cnfs = []
     for cc in ccs:
         sweep = buffer_common.gen_resize_sweep(0, 4500, 500)
