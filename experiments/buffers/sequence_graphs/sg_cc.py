@@ -18,9 +18,8 @@ def main():
         print("The first argument must be a directory, but is: {}".format(exp))
         sys.exit(-1)
 
-    ccs = ["cubic", "dctcp", "bbr", "westwood"]
-
     # Create entries for each CC mode. Keys are of the form "resize-<CC mode>".
+    ccs = python_config.CCS
     fmt = "resize-{}"
     for cc in ccs:
         sg.FILES[fmt.format(cc)] = "*-QUEUE-True-*-{}-*click.txt".format(cc)
@@ -28,7 +27,7 @@ def main():
 
     # Create a graph for each CC mode.
     lines = None
-    ins = ((2600, 2820), (175, 450))
+    ins = ((2600, 2820), (50, 450))
     flt = lambda idx, label: idx < 10  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
     for cc in ccs:
         # Use a new database for each CC mode to avoid storing everything in
