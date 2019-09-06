@@ -16,6 +16,8 @@ import python_config
 
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
+# Flowgrind flow duration, in seconds.
+DUR_S = 1.2
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Run buffer resizing experiments up to MAX_RESIZE_US us in advance of circuit
@@ -75,7 +77,7 @@ def main():
         # Generate a flow from each machine on rack 1 to its corresponding
         # partner machine on rack 2.
         maybe(lambda: common.flowgrind(
-            settings={"flows": [{"src": "r1", "dst": "r2"}]}))
+            settings={"flows": [{"src": "r1", "dst": "r2"}], "dur": DUR_S}))
     maybe(common.finishExperiment)
 
 
