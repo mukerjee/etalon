@@ -32,14 +32,14 @@ def maybe(fnc, do=not DRY_RUN):
 
 
 def main():
-    # Experiments
+    # Experiments:
     # (1) Long nights/days, static buffers. CUBIC. Old optical switches.
     # (2) Very short nights/days, static buffers, CUBIC. Future optical
     #     switches.
     # (3) Short nights/days, static buffers, all TCP variants.
     # (4) Short nights/days, dynamic buffers, all TCP variants.
 
-    # Build configurations.
+    # Assemble configurations.
     cnfs = []
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
