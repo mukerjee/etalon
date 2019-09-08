@@ -83,21 +83,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-    # Graphs
-    #
-    # Motivation
-    # - Sequence: Long nights/days, static buffers, CUBIC. Everything is fine.
-    # - Sequence: Short nights/days, static buffers, CUBIC. Cannot use all the
-    #   bandwidth.
-    # - Sequence: Very short nights/days, static buffers, CUBIC. Everything is
-    #   fine?
-    # - Sequence: Short nights/days, static buffers, all TCP variants. Still
-    #   cannot use all the bandwidth.
-    #
-    # Contributions
-    # - Sequence, utilization, latency 50, latency 99: Static buffers, CUBIC.
-    #   Cannot get high utilization and low latency.
-    # - Sequence, utilization, latency 50, latency 99: Dynamic buffers, CUBIC.
-    # - Sequence, utilization, latency 50, latency 99: Static buffers, reTCP.
-    # - Sequence, utilization, latency 50, latency 99: Dynamic buffers, reTCP.
