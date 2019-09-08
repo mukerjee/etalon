@@ -39,7 +39,8 @@ def main():
     # (3) Short nights/days, static buffers, all TCP variants.
     # (4) Short nights/days, dynamic buffers, all TCP variants.
 
-    # Assemble configurations.
+    # Assemble configurations. Generate the list of configurations first so that
+    # we know the total number of experiments.
     cnfs = []
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
