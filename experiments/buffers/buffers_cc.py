@@ -20,7 +20,7 @@ import python_config
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
 # The upper bound on the resize time sweep.
-MAX_RESIZE_US = 4500
+MAX_RESIZE_US = 0
 # Flowgrind flow duration, in seconds.
 DUR_S = 4.3
 # Fixed schedule: 180 us circuit day, 20 us circuit night, 2000 us pause, 20 us
