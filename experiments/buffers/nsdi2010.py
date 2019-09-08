@@ -65,7 +65,6 @@ def main():
     for cnf in cnfs:
         if cnf["cc"] == "dctcp":
             cnf["ecn"] = python_config.DCTCP_THRESH
-        cnf["packet_log"] = True
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
