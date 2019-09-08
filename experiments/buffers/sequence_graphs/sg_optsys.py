@@ -11,9 +11,9 @@ import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
 # For python_config.
-sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
+sys.path.insert(0, path.join(PROGDIR, "..", "..", "..", "etc"))
 # For parse_logs.
-sys.path.insert(0, path.join(PROGDIR, ".."))
+sys.path.insert(0, path.join(PROGDIR, "..", ".."))
 
 import parse_logs as par
 import python_config as pyc
