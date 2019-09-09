@@ -15,7 +15,7 @@ import common
 import python_config
 
 # If True, then do not run experiments and instead only print configurations.
-DRY_RUN = True
+DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Run buffer resizing experiments up to MAX_RESIZE_US us in advance of circuit
