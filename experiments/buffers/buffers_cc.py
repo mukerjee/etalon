@@ -22,7 +22,8 @@ DRY_RUN = False
 # The upper bound on the resize time sweep.
 MAX_RESIZE_US = 0
 # Flowgrind flow duration, in seconds.
-DUR_S = 4.3
+# DUR_S = 4.3  # 1400 us week x 3 + 0.1 (for good measure)
+DUR_S = 1.3  # 400 us week * 3 + 0.1 (for good measure)
 # Fixed schedule: 180 us circuit day, 20 us circuit night, 2000 us pause, 20 us
 # circuit night.
 # FIXED = "2 3600 1/2/0 40800 -1/-1/-1" Broken
