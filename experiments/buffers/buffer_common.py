@@ -2,7 +2,8 @@
 
 def gen_static_sweep(mn, mx):
     return [{
-        # Enable Click's HSLog packet log. This should already be enabled by default.
+        # Enable the hybrid switch's packet log. This should already be enabled
+        # by default.
         'packet_log': True,
         'type': 'strobe',
         'buffer_size': 2**exp
@@ -11,7 +12,8 @@ def gen_static_sweep(mn, mx):
 
 def gen_resize_sweep(mn, mx, dl):
     return [{
-        # Enable Click's HSLog packet log. This should already be enabled by default.
+        # Enable the hybrid switch's packet log. This should already be enabled
+        # by default.
         'packet_log': True,
         'type': 'strobe',
         'queue_resize': True,
