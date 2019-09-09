@@ -26,10 +26,11 @@ MAX_RESIZE_US = 0
 DUR_S = 1.3  # 400 us week * 3 + 0.1 (for good measure)
 # Fixed schedule: 180 us circuit day, 20 us circuit night, 2000 us pause, 20 us
 # circuit night.
-# FIXED = "2 3600 1/2/0 40800 -1/-1/-1" Broken
-# FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 400 -1/-1/-1" Works
-# FIXED = "2 3600 1/2/0 400 -1/-1/-1" Broken
-FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"
+# FIXED = "2 3600 1/2/0 40800 -1/-1/-1"  # Broken
+# FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 400 -1/-1/-1"  # Works
+# FIXED = "2 3600 1/2/0 400 -1/-1/-1"  # Broken
+# FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"  # Works, but the packet network does not work.
+FIXED = None
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -50,7 +51,7 @@ def main():
             if cc == "dctcp":
                 # For DCTCP, enable threshold-based ECN marking.
                 cnf['ecn'] = python_config.DCTCP_THRESH
-            if cnf["type"] == "strobe":
+            if FIXED is not None:
                 cnf["type"] = "fixed"
                 cnf["fixed_schedule"] = FIXED
         cnfs += sweep
