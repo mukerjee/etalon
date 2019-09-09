@@ -42,7 +42,7 @@ def main():
     cnfs = []
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
-    for cc in ["cubic"]:
+    for cc in python_config.CCS:
         if cc in ["cubic"]:
             # (1)
             cnfs += [{"type": "strobe", "buffer_size": 16,
