@@ -17,7 +17,8 @@ import python_config
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
 # Flowgrind flow duration, in seconds.
-DUR_S = 1.2
+# 400 us week * 3 + 0.1 (for good measure)
+DUR_S = 1.3
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Run buffer resizing experiments up to MAX_RESIZE_US us in advance of circuit
