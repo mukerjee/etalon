@@ -89,7 +89,10 @@ def main():
             # partner machine on rack 2.
             "flows": [{"src": "r1", "dst": "r2"}],
             # Run the flow for three thousand weeks plus 100 ms for good
-            # measure, converted to seconds.
+            # measure, converted to seconds. The resulting duration is not under
+            # TDF, but the flow will be under TDF when it is executed (i.e., the
+            # flow will actually take TDF times longer than the value computed
+            # here).
             "dur": (((cnf["night_len_us"] + cnf["day_len_us"])  # One night and day under TDF.
                      / python_config.TDF  # Convert from TDF to real time.
                      * (python_config.NUM_RACKS - 1 )  # Convert to a full week.
