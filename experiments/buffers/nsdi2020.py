@@ -68,8 +68,9 @@ def main():
             # If the configuration uses DCTCP, then enable threshold-based ECN
             # marking.
             cnf["ecn"] = python_config.DCTCP_THRESH
-        # Explicitly set the night and day lens instead of relying on the
-        # defaults so that we can automatically calculate the experiment
+        # If the night and day lengths have not been set already, then do so
+        # here. Explicitly set the night and day lengths instead of relying on
+        # their defaults so that we can automatically calculate the experiment
         # duration, below.
         if "night_len_us" not in cnf:
             cnf["night_len_us"] = 20 * python_config.TDF
