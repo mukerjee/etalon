@@ -65,6 +65,8 @@ def main():
         # by default.
         cnf["packet_log"] = True
         if cnf["cc"] == "dctcp":
+            # If the configuration uses DCTCP, then enable threshold-based ECN
+            # marking.
             cnf["ecn"] = python_config.DCTCP_THRESH
         # Explicitly set the night and day lens instead of relying on the
         # defaults so that we can automatically calculate the experiment
