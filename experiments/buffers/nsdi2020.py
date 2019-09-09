@@ -61,6 +61,9 @@ def main():
                          mn=0, mx=MAX_RESIZE_US, dl=500))]
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
+        # Enable the hybrid switch's packet log. This should already be enabled
+        # by default.
+        cnf["packet_log"] = True
         if cnf["cc"] == "dctcp":
             cnf["ecn"] = python_config.DCTCP_THRESH
         # Explicitly set the night and day lens instead of relying on the
