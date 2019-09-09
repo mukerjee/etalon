@@ -15,10 +15,7 @@ import common
 import python_config
 
 # If True, then do not run experiments and instead only print configurations.
-DRY_RUN = False
-# Flowgrind flow duration, in seconds.
-# 400 us week * 3 + 0.1 (for good measure)
-DUR_S = 1.3
+DRY_RUN = True
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Run buffer resizing experiments up to MAX_RESIZE_US us in advance of circuit
@@ -66,6 +63,12 @@ def main():
     for cnf in cnfs:
         if cnf["cc"] == "dctcp":
             cnf["ecn"] = python_config.DCTCP_THRESH
+        # Explicitly set the night and day lens instead of relying on the
+        # defaults so that we can automatically calculate the experiment
+        # duration, below.
+        if "night_len_us" not in cnf:
+            cnf["night_len_us"] = 20 * python_config.TDF
+            cnf["day_len_us"] = 180 * python_config.TDF
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
@@ -75,10 +78,20 @@ def main():
     for cnt, cnf in enumerate(cnfs, start=1):
         maybe(lambda: click_common.setConfig(cnf))
         print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
-        # Generate a flow from each machine on rack 1 to its corresponding
-        # partner machine on rack 2.
-        maybe(lambda: common.flowgrind(
-            settings={"flows": [{"src": "r1", "dst": "r2"}], "dur": DUR_S}))
+        maybe(lambda: common.flowgrind(settings={
+            # Generate a flow from each machine on rack 1 to its corresponding
+            # partner machine on rack 2.
+            "flows": [{"src": "r1", "dst": "r2"}],
+            # Run the flow for three thousand weeks plus 100 ms for good
+            # measure, converted to seconds.
+            "dur": (((cnf["night_len_us"] + cnf["day_len_us"])  # One night and day under TDF.
+                     / python_config.TDF  # Convert from TDF to real time.
+                     * (NUM_RACKS - 1 )  # Convert to a full week.
+                     / 1e3  # Convert from us to ms.
+                     * 3000  # 3000 weeks.
+                     + 100)  # Extra 100 ms, for good measure.
+                    / 1e3)  # Convert to seconds.
+        }))
     maybe(common.finishExperiment)
 
 
