@@ -184,12 +184,12 @@ def main():
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
-            key_fnc=(lambda fn:
-                     int(round(float(fn.split("-")[6]) / python_config.TDF)))
+            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                         / python_config.TDF)),
             dur=1200,
             ins=ins,
             flt=(lambda idx, label, order=DYN_ORDER: \
-                 label.strip(" $\mu$s") in order,)
+                 label.strip(" $\mu$s") in order),
             order=DYN_ORDER)
 
     # (7.1)
