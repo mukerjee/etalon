@@ -76,12 +76,12 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
          indicating whether to include that line.
     order: List of the legend labels in their desired order.
     """
+    print("Plotting: {}".format(name))
     rst_glb(dur)
     sg.FILES[name] = ptn
     sg.KEY_FN[name] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(name)))
-    db[name] = sg.get_data(db, name)
-    sg.plot_seq(db[name], name, odr, ins, flt, order)
+    sg.plot_seq(sg.get_data(db, name), name, odr, ins, flt, order)
     db.close()
 
 
@@ -163,8 +163,7 @@ def main():
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
-        flt=(lambda idx, label, ccs=DESIRED_CCS + ["optimal", "packet_only"]:
-             label in ccs))
+        flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
 
     # (5.1)
     seq(name="static-{}".format(CHOSEN_TCP),
@@ -195,8 +194,7 @@ def main():
         ptn=DYN_PTN.format("3500", "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
-        flt=(lambda idx, label, ccs=DESIRED_CCS + ["optimal", "packet_only"]:
-             label in ccs))
+        flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
 
     # (8.1)
     seq(name="static-retcp",
