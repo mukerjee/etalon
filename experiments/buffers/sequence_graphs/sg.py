@@ -215,10 +215,11 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
         options.inset.options.y.limits = ylm
 
     # Pick only the lines that we want.
-    x, y, options.legend.options.labels = zip(
-        *[(a, b, l) for (i, (a, b, l)) in enumerate(
-            zip(x, y, options.legend.options.labels))
-          if flt(i, l)])
+    if flt is not None:
+        x, y, options.legend.options.labels = zip(
+            *[(a, b, l) for (i, (a, b, l)) in enumerate(
+                zip(x, y, options.legend.options.labels))
+              if flt(i, l)])
 
     if order is not None:
         real_x = []
@@ -226,13 +227,16 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
         real_l = []
         for item in order:
             idx = 0
+            found = False
             for possibility in options.legend.options.labels:
                 if item in possibility:
+                    found = True
                     break
                 idx += 1
-            real_x.append(x[idx])
-            real_y.append(y[idx])
-            real_l.append(options.legend.options.labels[idx])
+            if found:
+                real_x.append(x[idx])
+                real_y.append(y[idx])
+                real_l.append(options.legend.options.labels[idx])
         x = real_x
         y = real_y
         options.legend.options.labels = real_l
