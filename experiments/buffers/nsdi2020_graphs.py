@@ -3,68 +3,49 @@
 # This program generates graphs for experiments produced by
 # etalon/experiments/buffers/nsdi2020.py.
 
-import copy
 import os
 from os import path
 import shelve
 import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
+# For parse_logs.
+sys.path.insert(0, path.join(PROGDIR, '..'))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
-# For parse_logs.
-sys.path.insert(0, path.join(PROGDIR, ".."))
+# For sg.
+sys.path.insert(0, path.join(PROGDIR, "sequence_graphs"))
 
-import parse_logs as par
-import python_config as pyc
-import sequence_graphs as sqg
+import parse_logs
+import python_config
+import sg
 
-# Durations.
-OLD_DUR = (1000 + 9000) * 6
-NEW_LONG_DUR = (20 + 9000) * 6
-STATIC_DUR = (20 + 180) * 6
-RESIZE_DUR = (20 + 180) * 6
-
-# Inset window bounds.
-OLD_INS = None
-NEW_LONG_INS = None
-STATIC_INS = None
-# RESIZE_INS = ((620, 800), (50, 275))
-RESIZE_INS = None
-
-LINES_KEY = "lines"
-DB_FMT = "{}.db"
-OLD_KEY_FMT = "old-{}"
-NEW_LONG_KEY_FMT = "new-long-{}"
-STATIC_KEY_FMT = "static-{}"
-RESIZE_KEY_FMT = "resize-{}"
-
+# Filename patterns.
+#
 # Matches experiments with a particular CC mode, 1000 us nights, and 9000 us
 # days (under TDF).
-OLD_FMT = "*-{}-*-20000-180000-click.txt"
-# Matches experiments with a particular CC mode, 20 us nights, and 9000 us days
+OLD_PTN = "*-{}-*-20000-180000-click.txt"
+# Matches experiments with a particular CC mode, 0.1 us nights, and 0.9 us days
 # (under TDF).
-NEW_LONG_FMT = "*-{}-*-400-180000-click.txt"
+FUTURE_PTN = "*-{}-*-2-18-click.txt"
 # Matches experiments with static buffers of a particular size, a particular CC
 # mode, 20 us nights, and 180 us days (under TDF).
-STATIC_PTN_FMT = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
+STATIC_PTN = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
-RESIZE_PTN_FMT = "*-QUEUE-True-{}-{}-*click.txt"
+DYN_PTN = "*-QUEUE-True-{}-{}-*click.txt"
 
-# Primary CC modes to demonstrate.
-BASIC_CCS = ["cubic", "reno"]
+# Inset window bounds.
+DYN_INS = ((620, 800), (50, 275))
 # CC mode indices to display in static graph.
 DESIRED_CCS = ["optimal", "packet only", "bbr", "cubic", "dctcp", "highspeed",
                "illinois", "scalable", "westwood", "yeah"]
-# DESIRED_CCS = [idx for idx in xrange(10)]
-# DESIRED_CCS = [0] + [idx for idx in xrange(10, 19)]
 # Resize time indices to display in resize graph.
 DESIRED_RESIZE_US = [0, 1, 3, 5, 7, 8, 9, 11, 12]
 # Resize time to graph for reTCP.
-CHOSEN_RESIZE_US = int(175 * pyc.TDF)
-# Resize CC mode.
-RESIZE_CC = "cubic"
+CHOSEN_RESIZE_US = int(175 * python_config.TDF)
+# The TCP variant to use as our baseline.
+CHOSEN_TCP = "cubic"
 # Static buffer size to use.
 CHOSEN_STATIC = 16
 
@@ -72,49 +53,78 @@ CHOSEN_STATIC = 16
 def rst_glb(dur):
     """ Reset global variables. """
     # Reset global lookup tables.
-    sqg.FILES = {}
-    sqg.KEY_FN = {}
+    sg.FILES = {}
+    sg.KEY_FN = {}
     # Reset experiment duration.
-    par.DURATION = dur
-    # Do not set sqg.DURATION because it get configured automatically based on
+    parse_logs.DURATION = dur
+    # Do not set sg.DURATION because it get configured automatically based on
     # the actual circuit timings.
 
 
-def seq(dur, cc, odr):
-    # (1)
-    rst_glb(DUR)
-    key = KEY_FMT.format(cc)
-    sqg.FILES[key] = FMT.format(cc)
-    # Pass "cc" as a default parameter to avoid the warning
-    # "cell-var-from-loop".
-    sqg.KEY_FN[key] = lambda fn, cc=cc: cc
-    db = shelve.open(path.join(exp, DB_FMT.format(key)))
-    db[key] = sqg.get_data(db, key)
-    sqg.plot_seq(db[key], key, odr, ins)
+def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
+    """ Create a sequence graph.
+
+    name: Name of this experiment, which become the output filename.
+    edr: Experiment dir.
+    odr: Output dir.
+    ptn: Glob pattern for experiment files.
+    key_fnc: Function that takes an experiment data filename returns a legend
+             key.
+    dur: The duration of the experiment, in milliseconds.
+    ins: An inset specification.
+    flt: Function that takes a legend index and label and returns a boolean
+         indicating whether to include that line.
+    order: List of the legend labels in their desired order.
+    """
+    rst_glb(dur)
+    sg.FILES[name] = ptn
+    sg.KEY_FN[name] = key_fnc
+    db = shelve.open(path.join(edr, "{}.db".format(name)))
+    db[name] = sg.get_data(db, name)
+    sg.plot_seq(db[name], name, odr, ins, flt, order)
     db.close()
 
 
 def main():
     # Graphs:
     # - Motivation:
-    #   (1) Sequence: Long nights/days, static buffers, CUBIC.
-    #   (2) Sequence: Short nights/days, static buffers, CUBIC.
-    #   (3) Sequence: Very short nights/days, static buffers, CUBIC.
-    #   (4) Sequence: Short nights/days, static buffers, all TCP variants.
+    #   (1) Sequence: Long nights/days, static buffers, CUBIC
+    #   (2) Sequence: Short nights/days, static buffers, CUBIC
+    #   (3) Sequence: Very short nights/days, static buffers, CUBIC
+    #   (4) Sequence: Short nights/days, static buffers, all TCP variants
     # - Contributions:
-    #   (5) Sequence, util., latency 50, latency 99: Static buffers, CUBIC.
-    #   (6) Sequence, util., latency 50, latency 99: Dynamic buffers, CUBIC.
-    #   (9) Sequence, util., latency 50 (?), latency 99 (?): Dynamic buffers,
-    #       all TCP variants.
-    #   (7) Sequence, util., latency 50, latency 99: Static buffers, reTCP.
-    #   (8) Sequence, util., latency 50, latency 99: Dynamic buffers, reTCP.
+    #   (5) Static buffers, CUBIC
+    #     (5.1) Sequence
+    #     (5.2) Utilization
+    #     (5.3) Latency 50
+    #     (5.4) Latency 99
+    #   (6) Dynamic buffers, CUBIC.
+    #     (6.1) Sequence
+    #     (6.2) Utilization
+    #     (6.3) Latency 50
+    #     (6.4) Latency 99
+    #   (7) Dynamic buffers, all TCP variants
+    #     (7.1) Sequence
+    #     (7.2) Utilization
+    #     (7.3) Latency 50
+    #     (7.4) Latency 99
+    #   (8) Static buffers, reTCP
+    #     (8.1) Sequence
+    #     (8.2) Utilization
+    #     (8.3) Latency 50
+    #     (8.4) Latency 99
+    #   (9) Dynamic buffers, reTCP
+    #     (9.1) Sequence
+    #     (9.2) Utilization
+    #     (9.3) Latency 50
+    #     (9.4) Latency 99
 
-    exp = sys.argv[1]
-    if not path.isdir(exp):
-        print("The first argument must be a directory, but is: {}".format(exp))
+    edr = sys.argv[1]
+    if not path.isdir(edr):
+        print("The first argument must be a directory, but is: {}".format(edr))
         sys.exit(-1)
     # Specify and create the output directory.
-    odr = path.join(PROGDIR, 'graphs', 'optsys')
+    odr = path.join(PROGDIR, 'graphs', 'nsdi2020')
     if path.exists(odr):
         if not path.isdir(odr):
             print("Output directory exists and is a file: {}".format(odr))
@@ -123,194 +133,91 @@ def main():
         os.makedirs(odr)
 
     # (1)
-    rst_glb(OLD_DUR)
-    old_key = OLD_KEY_FMT.format(cc)
-    sqg.FILES[old_key] = OLD_FMT.format(cc)
-    # Pass "cc" as a default parameter to avoid the warning
-    # "cell-var-from-loop".
-    sqg.KEY_FN[old_key] = lambda fn, cc=cc: cc
-    old_db = shelve.open(path.join(exp, DB_FMT.format(old_key)))
-    old_db[old_key] = sqg.get_data(old_db, old_key)
-    sqg.plot_seq(old_db[old_key], old_key, odr, OLD_INS)
-    old_db.close()
+    seq(name="old-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=OLD_PTN.format("cubic"),
+        key_fnc=lambda fn: "cubic",
+        dur=60000)
 
     # (2)
-    rst_glb(OLD_DUR)
-    old_key = OLD_KEY_FMT.format(cc)
-    sqg.FILES[old_key] = OLD_FMT.format(cc)
-    # Pass "cc" as a default parameter to avoid the warning
-    # "cell-var-from-loop".
-    sqg.KEY_FN[old_key] = lambda fn, cc=cc: cc
-    old_db = shelve.open(path.join(exp, DB_FMT.format(old_key)))
-    old_db[old_key] = sqg.get_data(old_db, old_key)
-    sqg.plot_seq(old_db[old_key], old_key, odr, OLD_INS)
-    old_db.close()
+    seq(name="current-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format(CHOSEN_STATIC, "cubic"),
+        key_fnc=lambda fn: "cubic",
+        dur=1200)
 
     # (3)
-    rst_glb(OLD_DUR)
-    old_key = OLD_KEY_FMT.format(cc)
-    sqg.FILES[old_key] = OLD_FMT.format(cc)
-    # Pass "cc" as a default parameter to avoid the warning
-    # "cell-var-from-loop".
-    sqg.KEY_FN[old_key] = lambda fn, cc=cc: cc
-    old_db = shelve.open(path.join(exp, DB_FMT.format(old_key)))
-    old_db[old_key] = sqg.get_data(old_db, old_key)
-    sqg.plot_seq(old_db[old_key], old_key, odr, OLD_INS)
-    old_db.close()
+    seq(name="future-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=FUTURE_PTN.format("cubic"),
+        key_fnc=lambda fn: "cubic",
+        dur=6)
 
-    # (3)
-    rst_glb(OLD_DUR)
-    old_key = OLD_KEY_FMT.format(cc)
-    sqg.FILES[old_key] = OLD_FMT.format(cc)
-    # Pass "cc" as a default parameter to avoid the warning
-    # "cell-var-from-loop".
-    sqg.KEY_FN[old_key] = lambda fn, cc=cc: cc
-    old_db = shelve.open(path.join(exp, DB_FMT.format(old_key)))
-    old_db[old_key] = sqg.get_data(old_db, old_key)
-    sqg.plot_seq(old_db[old_key], old_key, odr, OLD_INS)
-    old_db.close()
+    # (4)
+    seq(name="current-all",
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
+        key_fnc=lambda fn: fn.split("-")[7],
+        dur=1200,
+        flt=(lambda idx, label, ccs=DESIRED_CCS + ["optimal", "packet_only"]:
+             label in ccs))
 
-    # (2) Static buffers. Show that all the TCP variants perform poorly when
-    #     nights/days are short. Start by graphing the basic CC modes by
-    #     themselves, then graph all of the CC modes together.
-    rst_glb(STATIC_DUR)
-    static_key = STATIC_KEY_FMT.format(cc)
-    # Match only the current CC mode.
-    sqg.FILES[static_key] = STATIC_PTN_FMT.format(CHOSEN_STATIC, cc)
-    # Extract the CC mode.
-    sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
-    static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
-    static_db[static_key] = sqg.get_data(static_db, static_key)
-    # Use the same circuit windows for all graphs with short nights and
-    # short days (i.e., (2) - (5)).
-    if days is None:
-        days = copy.deepcopy(static_db[static_key][LINES_KEY])
-    else:
-        static_db[static_key][LINES_KEY] = days
-    sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
-    static_db.close()
+    # (5.1)
+    seq(name="static-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format("*", "cubic"),
+        key_fnc=lambda fn: fn.split("-")[3],
+        dur=1200)
 
+    # (6.1)
+    seq(name="dyn-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", "cubic"),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        dur=1200,
+        ins=DYN_INS,
+        flt=(lambda idx, label, resize_us=DESIRED_RESIZE_US: \
+             idx in resize_us),
+        order=["optimal", "packet only", "static", "25", "75", "125", "150",
+               "175", "225"])
 
+    # (7.1)
+    seq(name="dyn-all",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("3500", "*"),
+        key_fnc=lambda fn: fn.split("-")[7],
+        dur=1200,
+        flt=(lambda idx, label, ccs=DESIRED_CCS + ["optimal", "packet_only"]:
+             label in ccs))
 
+    # (8.1)
+    seq(name="static-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: fn.split("-")[3],
+        dur=1200)
 
-    # The circuit day boundaries.
-    days = None
-    for cc in BASIC_CCS:
-        # (1) Long days, static buffers. Show the cases where TCP ramp up is not
-        #     a problem.
-        #
-
-        # New optical switches, but using long days.
-        rst_glb(NEW_LONG_DUR)
-        new_long_key = NEW_LONG_KEY_FMT.format(cc)
-        sqg.FILES[new_long_key] = NEW_LONG_FMT.format(cc)
-        # Pass "cc" as a default parameter to avoid the warning
-        # "cell-var-from-loop".
-        sqg.KEY_FN[new_long_key] = lambda fn, cc=cc: cc
-        new_long_db = shelve.open(path.join(exp, DB_FMT.format(new_long_key)))
-        new_long_db[new_long_key] = sqg.get_data(new_long_db, new_long_key)
-        sqg.plot_seq(new_long_db[new_long_key], new_long_key, odr, NEW_LONG_INS)
-        new_long_db.close()
-
-        # (2) Static buffers. Show that all the TCP variants perform poorly when
-        #     nights/days are short. Start by graphing the basic CC modes by
-        #     themselves, then graph all of the CC modes together.
-        rst_glb(STATIC_DUR)
-        static_key = STATIC_KEY_FMT.format(cc)
-        # Match only the current CC mode.
-        sqg.FILES[static_key] = STATIC_PTN_FMT.format(CHOSEN_STATIC, cc)
-        # Extract the CC mode.
-        sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
-        static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
-        static_db[static_key] = sqg.get_data(static_db, static_key)
-        # Use the same circuit windows for all graphs with short nights and
-        # short days (i.e., (2) - (5)).
-        if days is None:
-            days = copy.deepcopy(static_db[static_key][LINES_KEY])
-        else:
-            static_db[static_key][LINES_KEY] = days
-        sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
-        static_db.close()
-
-        # (3) reTCP. Show how much improvement reTCP offers with static buffers
-        #     (i.e., on its own).
-        rst_glb(STATIC_DUR)
-        static_key = STATIC_KEY_FMT.format("{}-retcp".format(cc))
-        # Match the current CC mode and reTCP.
-        sqg.FILES[static_key] = [STATIC_PTN_FMT.format(CHOSEN_STATIC, cc),
-                                 STATIC_PTN_FMT.format(CHOSEN_STATIC, "retcp")]
-        # Extract the CC mode.
-        sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
-        static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
-        static_db[static_key] = sqg.get_data(static_db, static_key)
-        # Use the same circuit windows for all graphs with short nights and
-        # short days (i.e., (2) - (5)).
-        assert days is not None, "\"days\" is None!"
-        sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS)
-        static_db.close()
-
-        # (5) reTCP. Show how much improvement reTCP offers with dynamic
-        #     buffers.
-        rst_glb(RESIZE_DUR)
-        resize_key = RESIZE_KEY_FMT.format(
-            "{}-retcp-{}".format(cc, CHOSEN_RESIZE_US))
-        # Match the resize time  us and both the current CC mode and retcp.
-        sqg.FILES[resize_key] = [RESIZE_PTN_FMT.format(CHOSEN_RESIZE_US, cc),
-                                 RESIZE_PTN_FMT.format(
-                                     CHOSEN_RESIZE_US, "retcp")]
-        # Extract the CC mode.
-        sqg.KEY_FN[resize_key] = lambda fn: fn.split("-")[7]
-        resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
-        resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
-        # Use the same circuit windows for all graphs with short nights and
-        # short days (i.e., (2) - (5)).
-        assert days is not None, "\"days\" is None!"
-        resize_db[resize_key][LINES_KEY] = days
-        sqg.plot_seq(resize_db[resize_key], resize_key, odr, RESIZE_INS)
-        resize_db.close()
-
-    # (2) Static buffers. See above. Now, graph all CC modes together.
-    rst_glb(STATIC_DUR)
-    static_key = STATIC_KEY_FMT.format("all")
-    # Match any CC mode.
-    sqg.FILES[static_key] = STATIC_PTN_FMT.format(CHOSEN_STATIC, "*")
-    # Extract the CC mode.
-    sqg.KEY_FN[static_key] = lambda fn: fn.split("-")[7]
-    static_db = shelve.open(path.join(exp, DB_FMT.format(static_key)))
-    static_db[static_key] = sqg.get_data(static_db, static_key)
-    # Use the same circuit windows for all graphs with short nights and
-    # short days (i.e., (2) - (5)).
-    assert days is not None, "\"days\" is None!"
-    static_db[static_key][LINES_KEY] = days
-    sqg.plot_seq(static_db[static_key], static_key, odr, STATIC_INS,
-                 flt=lambda idx, label, ccs=DESIRED_CCS: label in ccs)
-    static_db.close()
-
-    # (4) Dynamic buffers. Show that dynamic buffers help TCP Reno when
-    #     nights/days are short.
-    rst_glb(RESIZE_DUR)
-    resize_key = RESIZE_KEY_FMT.format(RESIZE_CC)
-    # Match any resize time, but only CC mode reno.
-    sqg.FILES[resize_key] = [STATIC_PTN_FMT.format(CHOSEN_STATIC, RESIZE_CC),
-                             RESIZE_PTN_FMT.format("*", RESIZE_CC)]
-    # Extract how long in advance the buffers resize.
-    sqg.KEY_FN[resize_key] = \
-        lambda fn: int(float(fn.split("-")[6]) / pyc.TDF) \
-        if "QUEUE-True" in fn else "static"
-    resize_db = shelve.open(path.join(exp, DB_FMT.format(resize_key)))
-    resize_db[resize_key] = sqg.get_data(resize_db, resize_key)
-    # Use the same circuit windows for all graphs with short nights and short
-    # days (i.e., (2) - (5)).
-    assert days is not None, "\"days\" is None!"
-    resize_db[resize_key][LINES_KEY] = days
-    sqg.plot_seq(resize_db[resize_key],
-                 resize_key,
-                 odr,
-                 RESIZE_INS,
-                 flt=lambda idx, label, resize_us=DESIRED_RESIZE_US: \
-                     idx in resize_us,
-                 order=["optimal", "packet only", "static", "25", "75", "125", "150", "175", "225"])
-    resize_db.close()
+    # (9.1)
+    seq(name="dyn-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        dur=1200,
+        flt=(lambda idx, label, resize_us=DESIRED_RESIZE_US: \
+             idx in resize_us),
+        order=["optimal", "packet only", "static", "25", "75", "125", "150",
+               "175", "225"])
 
 
 if __name__ == "__main__":
