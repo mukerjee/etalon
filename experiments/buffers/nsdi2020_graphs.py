@@ -132,13 +132,13 @@ def main():
     else:
         os.makedirs(odr)
 
-    # # (1)
-    # seq(name="old-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=OLD_PTN.format("cubic"),
-    #     key_fnc=lambda fn: "cubic",
-    #     dur=60000)
+    # (1)
+    seq(name="1_old-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=OLD_PTN.format("cubic"),
+        key_fnc=lambda fn: "cubic",
+        dur=60000)
 
     # (2)
     seq(name="current-{}".format(CHOSEN_TCP),
