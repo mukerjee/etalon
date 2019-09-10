@@ -184,8 +184,8 @@ def main():
         ins=DYN_INS,
         flt=(lambda idx, label, resize_us=DESIRED_RESIZE_US: \
              idx in resize_us),
-        order=["optimal", "packet only", "static", "25", "75", "125", "150",
-               "175", "225"])
+        order=["optimal", "packet only", "static", "25", "75", "100", "125",
+               "150", "175", "225"])
 
     # (7.1)
     seq(name="7_dyn-all",
@@ -214,8 +214,8 @@ def main():
         dur=1200,
         flt=(lambda idx, label, resize_us=DESIRED_RESIZE_US: \
              idx in resize_us),
-        order=["optimal", "packet only", "static", "25", "75", "125", "150",
-               "175", "225"])
+        order=["optimal", "packet only", "static", "25", "75", "100", "125",
+               "150", "175", "225"])
 
 
 if __name__ == "__main__":
