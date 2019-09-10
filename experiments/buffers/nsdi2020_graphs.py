@@ -36,14 +36,14 @@ STATIC_PTN = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
 DYN_PTN = "*-QUEUE-True-{}-{}-*click.txt"
 
 # Inset window bounds.
-DYN_INS = ((620, 800), (50, 275))
+DYN_INS = ((600, 820), (35, 275))
 # CC mode indices to display in static graph.
 DESIRED_CCS = ["optimal", "packet only", "bbr", "cubic", "dctcp", "highspeed",
                "illinois", "scalable", "westwood", "yeah"]
-# Resize time indices to display in resize graph.
-DESIRED_RESIZE_US = [0, 1, 3, 5, 7, 8, 9, 11, 12]
-# Resize time to graph for reTCP.
-CHOSEN_RESIZE_US = int(175 * python_config.TDF)
+# Order of the lines for the dynamic buffer resizing experiments. This is also
+# used to select which lines to plot.
+DYN_ORDER = ["optimal", "packet only", "static", "25", "75", "100", "125",
+             "150", "175", "225"]
 # The TCP variant to use as our baseline.
 CHOSEN_TCP = "cubic"
 # Static buffer size to use.
@@ -78,10 +78,14 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
     """
     print("Plotting: {}".format(name))
     rst_glb(dur)
-    sg.FILES[name] = ptn
-    sg.KEY_FN[name] = key_fnc
-    db = shelve.open(path.join(edr, "{}.db".format(name)))
-    sg.plot_seq(sg.get_data(db, name), name, odr, ins, flt, order)
+    # Names are of the form "<number>_<details>_<specific options>". Experiments
+    # where <details> are the same should be based on the same data. Therefore,
+    # use <details> as the database key.
+    basename = name.split("_")[1]
+    sg.FILES[basename] = ptn
+    sg.KEY_FN[basename] = key_fnc
+    db = shelve.open(path.join(edr, "{}.db".format(basename)))
+    sg.plot_seq(sg.get_data(db, basename), name, odr, ins, flt, order)
     db.close()
 
 
@@ -136,24 +140,24 @@ def main():
     seq(name="1_old-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
-        ptn=OLD_PTN.format("cubic"),
-        key_fnc=lambda fn: "cubic",
+        ptn=OLD_PTN.format(CHOSEN_TCP),
+        key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
         dur=60000)
 
     # (2)
     seq(name="2_current-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
-        ptn=STATIC_PTN.format(CHOSEN_STATIC, "cubic"),
-        key_fnc=lambda fn: "cubic",
+        ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
+        key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_TCP,
         dur=1200)
 
     # (3)
     seq(name="3_future-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
-        ptn=FUTURE_PTN.format("cubic"),
-        key_fnc=lambda fn: "cubic",
+        ptn=FUTURE_PTN.format(CHOSEN_TCP),
+        key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
         dur=6)
 
     # (4)
@@ -163,29 +167,30 @@ def main():
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
-        flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
+        flt=lambda idx, label, ccs=DESIRED_CCS: label in ccs)
 
     # (5.1)
     seq(name="5.1_static-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
-        ptn=STATIC_PTN.format("*", "cubic"),
+        ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
         dur=1200)
 
     # (6.1)
-    seq(name="6.1_dyn-{}".format(CHOSEN_TCP),
-        edr=edr,
-        odr=odr,
-        ptn=DYN_PTN.format("*", "cubic"),
-        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
-                                     / python_config.TDF)),
-        dur=1200,
-        ins=DYN_INS,
-        flt=(lambda idx, label, resize_us=DESIRED_RESIZE_US: \
-             idx in resize_us),
-        order=["optimal", "packet only", "static", "25", "75", "100", "125",
-               "150", "175", "225"])
+    for ins in [None, DYN_INS]:
+        seq(name="6.1_dyn-{}{}".format(
+                CHOSEN_TCP, "_zoom" if ins is not None else ""),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", CHOSEN_TCP),
+            key_fnc=(lambda fn:
+                     int(round(float(fn.split("-")[6]) / python_config.TDF)))
+            dur=1200,
+            ins=ins,
+            flt=(lambda idx, label, order=DYN_ORDER: \
+                 label.strip(" $\mu$s") in order,)
+            order=DYN_ORDER)
 
     # (7.1)
     seq(name="7.1_dyn-all",
@@ -212,10 +217,8 @@ def main():
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
         dur=1200,
-        flt=(lambda idx, label, resize_us=DESIRED_RESIZE_US: \
-             idx in resize_us),
-        order=["optimal", "packet only", "static", "25", "75", "100", "125",
-               "150", "175", "225"])
+        flt=lambda idx, label, order=DYN_ORDER: label.strip(" $\mu$s") in order,
+        order=DYN_ORDER)
 
 
 if __name__ == "__main__":
