@@ -166,7 +166,7 @@ def main():
         flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
 
     # (5.1)
-    seq(name="5_static-{}".format(CHOSEN_TCP),
+    seq(name="5.1_static-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", "cubic"),
@@ -174,7 +174,7 @@ def main():
         dur=1200)
 
     # (6.1)
-    seq(name="6_dyn-{}".format(CHOSEN_TCP),
+    seq(name="6.1_dyn-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "cubic"),
@@ -188,7 +188,7 @@ def main():
                "150", "175", "225"])
 
     # (7.1)
-    seq(name="7_dyn-all",
+    seq(name="7.1_dyn-all",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("3500", "*"),
@@ -197,7 +197,7 @@ def main():
         flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
 
     # (8.1)
-    seq(name="8_static-retcp",
+    seq(name="8.1_static-retcp",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
@@ -205,7 +205,7 @@ def main():
         dur=1200)
 
     # (9.1)
-    seq(name="9_dyn-retcp",
+    seq(name="9.1_dyn-retcp",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
