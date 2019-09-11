@@ -116,7 +116,7 @@ def main():
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
-        key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_TCP,
+        key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
         dur=1200)
 
     # (3)
