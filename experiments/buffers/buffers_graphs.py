@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import copy
 from os import path
 import sys
 # Directory containing this program.
@@ -31,7 +32,7 @@ FILES = {
     'reTCP+resize': '*-QUEUE-True-*-retcp-*-400-3600-click.txt',
 }
 
-KEY_FN = {
+KEY_FNC = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
     'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / pyc.TDF,
     'reTCP': lambda fn: 0,
@@ -39,34 +40,37 @@ KEY_FN = {
 }
 
 
-def get_data(name, files=FILES, key_fn=KEY_FN):
-    if name in db:
-        return db[name]
-    else:
-        data = defaultdict(lambda: defaultdict(dict))
-
-        ptn = path.join(sys.argv[1], files[name])
+def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
+    if key not in db:
+        ptn = path.join(sys.argv[1], files[key])
         fns = glob.glob(ptn)
-        assert len(fns) > 0, "Found no files for pattern: {}".format(ptn)
+        assert fns, "Found no files for pattern: {}".format(ptn)
         print("Found files for pattern: {}".format(ptn))
         for fn in fns:
             print("    {}".format(fn))
 
+        data = defaultdict(lambda: defaultdict(dict))
         for fn in fns:
-            key = key_fn[name](fn.split('/')[-1])
-            print("key: {}".format(key))
+            lbl = key_fnc[key](fn.split('/')[-1])
+            print("label: {}".format(lbl))
             _, lat, _, circ_util, _, _, _ = pl.parse_packet_log(fn)
-            data['lat'][50][key] = [x[1] for x in zip(*lat)[1]]
-            data['lat'][99][key] = [x[1] for x in zip(*lat)[3]]
-            data['circ_util'][key] = circ_util[SR]
+            data['lat'][50][lbl] = [x[1] for x in zip(*lat)[1]]
+            data['lat'][99][lbl] = [x[1] for x in zip(*lat)[3]]
+            data['circ_util'][lbl] = circ_util[SR]
+
         data['keys'] = list(zip(*sorted(data['circ_util'].items()))[0])
         data['lat'][50] = list(zip(*sorted(data['lat'][50].items()))[1])
         data['lat'][99] = list(zip(*sorted(data['lat'][99].items()))[1])
         data['circ_util'] = list(zip(*sorted(data['circ_util'].items()))[1])
-        return dict(data)
+
+        # Store the new data in the database.
+        db[key] = dict(data)
+
+    return copy.deepcopy(db[key])
 
 
-def graph_lat(keys, latencies, fn, y_lab):
+
+def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     x = [keys for i in xrange(len(latencies[0]))]
     y = zip(*latencies)
 
@@ -88,7 +92,7 @@ def graph_lat(keys, latencies, fn, y_lab):
         options.y.ticks.major.options.labelsize = 18
     options.series_options = [DotMap(marker='o', markersize=10, linewidth=5)
                               for i in range(len(x))]
-    options.output_fn = path.join(PROGDIR, 'graphs', '{}_vs_latency.pdf'.format(fn))
+    options.output_fn = path.join(odr, '{}.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
                              else 'Early buffer resizing ($\mu$s)'
     options.y.label.ylabel = '{} latency ($\mu$s)'.format(y_lab)
@@ -156,35 +160,47 @@ def graph_util_vs_latency(utils, latencies, fn):
     plot(x, y, options)
 
 
-if __name__ == '__main__':
+def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
+    # Names are of the form "<number>_<details>_<specific options>". Experiments
+    # where <details> are the same should be based on the same data. Therefore,
+    # use <details> as the database key.
+    basename = name.split("_")[1]
+    db = shelve.open(path.join(edr, "{}.db".format(name)))
+    data = get_data(db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
+    graph_lat(
+        keys=data['keys'],
+        latencies=data['lat'][prc],
+        fn=name,
+        y_lab=ylb,
+        odr=odr)
+    db.close()
+
+
+def main():
     if not path.isdir(sys.argv[1]):
         print 'first arg must be dir'
         sys.exit(-1)
     db = shelve.open(sys.argv[1] + '/buffer_shelve.db')
 
     typ = 'static'
-    db[typ] = get_data(typ)
-    graph_lat(keys=db[typ]['keys'], latencies=db[typ]['lat'][50], fn=typ,
+    data = get_data(db, typ)
+    graph_lat(keys=data['keys'], latencies=data['lat'][50], fn=typ,
               y_lab="Median")
-    graph_circuit_util(db[typ]['circ_util'], typ)
+    graph_circuit_util(data['circ_util'], typ)
 
     typ = 'resize'
-    db[typ] = get_data(typ)
-    graph_lat(keys=db[typ]['keys'],
-              latencies=db[typ]['lat'][50],
-              fn="{}-median".format(typ),
-              y_lab="Median")
-    graph_lat(keys=db[typ]['keys'],
-              latencies=db[typ]['lat'][99],
+    data = get_data(db, typ)
+    graph_lat(keys=data['keys'], latencies=data['lat'][50],
+              fn="{}-median".format(typ), y_lab="Median")
+    graph_lat(keys=data['keys'], latencies=data['lat'][99],
               fn="{}-99".format(typ), y_lab="99th percentile\n")
-    graph_circuit_util([db['static']['circ_util'][2]] + db[typ]['circ_util'],
-                       typ)
+    graph_circuit_util([db['static']['circ_util'][2]] + data['circ_util'], typ)
 
     typ = 'reTCP'
-    db[typ] = get_data(typ)
+    get_data(typ)
 
     typ = 'reTCP+resize'
-    db[typ] = get_data(typ)
+    get_data(typ)
 
     utils = [db[t]['circ_util'] for t in TYPES]
     lat50 = [db[t]['lat'][50] for t in TYPES]
@@ -193,3 +209,7 @@ if __name__ == '__main__':
     graph_util_vs_latency(utils, lat99, '99')
 
     db.close()
+
+
+if __name__ == '__main__':
+    main()
