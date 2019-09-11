@@ -209,8 +209,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     if ins is not None:
         xlm, ylm = ins
         options.inset.show = True
-        options.inset.options.zoom_level = 2.5
-        options.inset.options.corners = [2, 3]
+        options.inset.options.zoom_level = 2
         options.inset.options.marker.options.color = 'black'
         options.inset.options.x.limits = xlm
         options.inset.options.y.limits = ylm
