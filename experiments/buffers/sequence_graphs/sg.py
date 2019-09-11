@@ -5,6 +5,7 @@ import copy
 import glob
 from multiprocessing import Pool
 from os import path
+import shelve
 import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
@@ -16,7 +17,7 @@ sys.path.insert(0, path.join(PROGDIR, '..', '..', '..', 'etc'))
 from dotmap import DotMap
 from simpleplotlib import plot
 
-from parse_logs import get_seq_data
+import parse_logs
 from python_config import TDF, CIRCUIT_BW_Gbps, PACKET_BW_Gbps
 
 # Maps experiment to filename.
@@ -42,58 +43,7 @@ class FileReader(object):
     def __call__(self, fn):
         key = KEY_FN[self.name](fn.split('/')[-1])
         print fn, key
-        return key, get_seq_data(fn)
-
-
-def get_data(db, key):
-    """
-    (Optionally) loads the results for the specified key into the provided
-    database and returns a copy of them.
-    """
-    if key not in db:
-        # data["raw_data"] = A list of pairs, where each pair corresponds to an
-        #     experiment file.
-        # data["raw_data"][i] = A pair of (key value, results).
-        # data["raw_data"][i][1] = A pair of (list, n-tuple).
-        # data["raw_data"][i][1][0] = A list of expected sequence number over
-        #     time.
-        # data["raw_data"][i][1][1] = An n-tuple of the times of circuit up/down
-        #     events.
-        # data["raw_data"][i][1][1][0] = The time at which the first day began.
-
-        ptns = FILES[key]
-        if not isinstance(ptns, list):
-            ptns = [ptns]
-        # For each pattern, extract the matches. Then, flatten them into a
-        # single list.
-        fns = [fn for matches in
-               [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
-               for fn in matches]
-
-        assert fns, "Found no files for patterns: {}".format(ptns)
-        print("Found files for patterns: {}".format(ptns))
-        for fn in fns:
-            print("    {}".format(fn))
-
-        data = defaultdict(dict)
-        p = Pool()
-        data['raw_data'] = dict(p.map(FileReader(key), fns))
-        # Clean up p.
-        p.close()
-        p.join()
-
-        data['raw_data'] = sorted(data['raw_data'].items())
-        data['keys'] = list(zip(*data['raw_data'])[0])
-        data['lines'] = data['raw_data'][0][1][1]
-        data['data'] = [map(lambda x: x / UNITS, f) for f in
-                        zip(*zip(*data['raw_data'])[1])[0]]
-
-        # Store the new data in the database.
-        db[key] = data
-
-    data = copy.deepcopy(db[key])
-    add_optimal(data)
-    return data
+        return key, parse_logs.get_seq_data(fn)
 
 
 def add_optimal(data):
@@ -161,6 +111,57 @@ def add_optimal(data):
     data['data'].insert(0, pkt_only)
     data['keys'].insert(0, "optimal")
     data['data'].insert(0, optimal)
+
+
+def get_data(db, key):
+    """
+    (Optionally) loads the results for the specified key into the provided
+    database and returns a copy of them.
+    """
+    if key not in db:
+        # data["raw_data"] = A list of pairs, where each pair corresponds to an
+        #     experiment file.
+        # data["raw_data"][i] = A pair of (key value, results).
+        # data["raw_data"][i][1] = A pair of (list, n-tuple).
+        # data["raw_data"][i][1][0] = A list of expected sequence number over
+        #     time.
+        # data["raw_data"][i][1][1] = An n-tuple of the times of circuit up/down
+        #     events.
+        # data["raw_data"][i][1][1][0] = The time at which the first day began.
+
+        ptns = FILES[key]
+        if not isinstance(ptns, list):
+            ptns = [ptns]
+        # For each pattern, extract the matches. Then, flatten them into a
+        # single list.
+        fns = [fn for matches in
+               [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
+               for fn in matches]
+
+        assert fns, "Found no files for patterns: {}".format(ptns)
+        print("Found files for patterns: {}".format(ptns))
+        for fn in fns:
+            print("    {}".format(fn))
+
+        data = defaultdict(dict)
+        p = Pool()
+        data['raw_data'] = dict(p.map(FileReader(key), fns))
+        # Clean up p.
+        p.close()
+        p.join()
+
+        data['raw_data'] = sorted(data['raw_data'].items())
+        data['keys'] = list(zip(*data['raw_data'])[0])
+        data['lines'] = data['raw_data'][0][1][1]
+        data['data'] = [map(lambda x: x / UNITS, f) for f in
+                        zip(*zip(*data['raw_data'])[1])[0]]
+
+        # Store the new data in the database.
+        db[key] = data
+
+    data = copy.deepcopy(db[key])
+    add_optimal(data)
+    return data
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
@@ -242,3 +243,42 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
         options.legend.options.labels = real_l
 
     plot(x, y, options)
+
+
+def rst_glb(dur):
+    """ Reset global variables. """
+    # Reset global lookup tables.
+    FILES = {}
+    KEY_FN = {}
+    # Reset experiment duration.
+    parse_logs.DURATION = dur
+    # Do not set sg.DURATION because it get configured automatically based on
+    # the actual circuit timings.
+
+
+def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
+    """ Create a sequence graph.
+
+    name: Name of this experiment, which become the output filename.
+    edr: Experiment dir.
+    odr: Output dir.
+    ptn: Glob pattern for experiment files.
+    key_fnc: Function that takes an experiment data filename returns a legend
+             key.
+    dur: The duration of the experiment, in milliseconds.
+    ins: An inset specification.
+    flt: Function that takes a legend index and label and returns a boolean
+         indicating whether to include that line.
+    order: List of the legend labels in their desired order.
+    """
+    print("Plotting: {}".format(name))
+    rst_glb(dur)
+    # Names are of the form "<number>_<details>_<specific options>". Experiments
+    # where <details> are the same should be based on the same data. Therefore,
+    # use <details> as the database key.
+    basename = name.split("_")[1]
+    FILES[basename] = ptn
+    KEY_FN[basename] = key_fnc
+    db = shelve.open(path.join(edr, "{}.db".format(basename)))
+    plot_seq(get_data(db, basename), name, odr, ins, flt, order)
+    db.close()
