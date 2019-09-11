@@ -168,6 +168,7 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
+    print("Plotting: {}".format(name))
     basename = name.split("_")[1]
     db = shelve.open(path.join(edr, "{}.db".format(name)))
     data = get_data(db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
