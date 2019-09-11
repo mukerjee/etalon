@@ -207,10 +207,12 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     options.vertical_shaded.options.color = 'blue'
 
     if ins is not None:
-        xlm, ylm = ins
         options.inset.show = True
-        options.inset.options.zoom_level = 2
+        options.inset.options.zoom_level = 1.75
+        options.inset.options.corners = (2, 3)
+        options.inset.options.location = "center right"
         options.inset.options.marker.options.color = 'black'
+        xlm, ylm = ins
         options.inset.options.x.limits = xlm
         options.inset.options.y.limits = ylm
 

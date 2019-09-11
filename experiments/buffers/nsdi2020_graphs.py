@@ -140,10 +140,11 @@ def main():
         dur=1200)
 
     # (6.1)
-    for ins in [None, DYN_INS]:
+    # With and without inset.
+    for ins in [DYN_INS, None]:
         sg.seq(
             name="6.1_dyn-{}{}".format(
-                CHOSEN_TCP, "_zoom" if ins is not None else ""),
+                CHOSEN_TCP, "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
