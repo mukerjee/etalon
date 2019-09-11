@@ -3,6 +3,10 @@
 # This program generates graphs for experiments produced by
 # etalon/experiments/buffers/nsdi2020.py.
 
+# Uncomment these lines to use LaTeX font for graphs.
+# import matplotlib
+# matplotlib.rcParams['text.usetex'] = True
+
 import os
 from os import path
 import sys
