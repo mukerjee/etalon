@@ -102,7 +102,7 @@ def main():
 
     # (1)
     sg.seq(
-        name="1_old-{}".format(CHOSEN_TCP),
+        name="1_seq-old-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=OLD_PTN.format(CHOSEN_TCP),
@@ -111,7 +111,7 @@ def main():
 
     # (2)
     sg.seq(
-        name="2_current-{}".format(CHOSEN_TCP),
+        name="2_seq-current-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
@@ -120,7 +120,7 @@ def main():
 
     # (3)
     sg.seq(
-        name="3_future-{}".format(CHOSEN_TCP),
+        name="3_seq-future-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=FUTURE_PTN.format(CHOSEN_TCP),
@@ -129,7 +129,7 @@ def main():
 
     # (4)
     sg.seq(
-        name="4_current-all",
+        name="4_seq-current-all",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
@@ -139,7 +139,7 @@ def main():
 
     # (5.1)
     sg.seq(
-        name="5.1_static-{}".format(CHOSEN_TCP),
+        name="5.1_seq-static-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
@@ -150,7 +150,7 @@ def main():
     # With and without inset.
     for ins in [DYN_INS, None]:
         sg.seq(
-            name="6.1_dyn-{}{}".format(
+            name="6.1_seq-dyn-{}{}".format(
                 CHOSEN_TCP, "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
@@ -165,7 +165,7 @@ def main():
 
     # (7.1)
     sg.seq(
-        name="7.1_dyn-all",
+        name="7.1_seq-dyn-all",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("3500", "*"),
@@ -175,7 +175,7 @@ def main():
 
     # (8.1)
     sg.seq(
-        name="8.1_static-retcp",
+        name="8.1_seq-static-retcp",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
@@ -184,7 +184,7 @@ def main():
 
     # (9.1)
     sg.seq(
-        name="9.1_dyn-retcp",
+        name="9.1_seq-dyn-retcp",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
