@@ -71,6 +71,10 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
 
 
 def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
+    # Sort the data based on the x-values (keys).
+    keys, latencies = zip(
+        *sorted(zip(keys, latencies), key=lambda p: int(p[0])))
+
     x = [keys for i in xrange(len(latencies[0]))]
     y = zip(*latencies)
 
