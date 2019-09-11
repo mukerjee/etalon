@@ -75,8 +75,8 @@ def main():
     #   (7) Dynamic buffers, all TCP variants
     #     (7.1) Sequence
     #     (7.2) Utilization
-    #     (7.3) Latency 50
-    #     (7.4) Latency 99
+    #     (7.3) Latency 50 (needs bar chart, hold off for now)
+    #     (7.4) Latency 99 (needs bar chart, hold off for now)
     #   (8) Static buffers, reTCP
     #     (8.1) Sequence
     #     (8.2) Utilization
@@ -184,6 +184,28 @@ def main():
                  label.strip(" $\mu$s") in order),
             order=DYN_ORDER)
 
+    # (6.3)
+    buffers_graphs.lat(
+        name="6.3_lat-50-dyn-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", CHOSEN_TCP),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        prc=50,
+        ylb="Median")
+
+    # (6.4)
+    buffers_graphs.lat(
+        name="6.4_lat-99-dyn-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", CHOSEN_TCP),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        prc=99,
+        ylb="99th percentile")
+
     # (7.1)
     sg.seq(
         name="7.1_seq-dyn-all",
@@ -203,6 +225,26 @@ def main():
         key_fnc=lambda fn: fn.split("-")[3],
         dur=1200)
 
+    # (8.3)
+    buffers_graphs.lat(
+        name="8.3_lat-50-static-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: fn.split("-")[3],
+        prc=50,
+        ylb="Median")
+
+    # (8.4)
+    buffers_graphs.lat(
+        name="8.4_lat-99-static-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: fn.split("-")[3],
+        prc=99,
+        ylb="99th percentile")
+
     # (9.1)
     sg.seq(
         name="9.1_seq-dyn-retcp",
@@ -214,6 +256,28 @@ def main():
         dur=1200,
         flt=lambda idx, label, order=DYN_ORDER: label.strip(" $\mu$s") in order,
         order=DYN_ORDER)
+
+    # (9.3)
+    buffers_graphs.lat(
+        name="9.3_lat-50-dyn-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        prc=50,
+        ylb="Median")
+
+    # (9.4)
+    buffers_graphs.lat(
+        name="9.4_lat-99-dyn-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        prc=99,
+        ylb="99th percentile")
 
 
 if __name__ == "__main__":
