@@ -189,7 +189,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     # Use 1 column if there are fewer than 4 lines, otherwise use 2 columns.
     options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
-    options.output_fn = path.join(odr, 'seq_%s.pdf' % fn)
+    options.output_fn = path.join(odr, '{}.pdf'.format(fn))
     options.x.label.xlabel = 'Time ($\mu$s)'
     options.y.label.ylabel = 'Expected seq. num.\n($\\times$1000)'
     options.x.label.fontsize = options.y.label.fontsize = 18
