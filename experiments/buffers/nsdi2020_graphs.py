@@ -51,6 +51,9 @@ CHOSEN_STATIC = 16
 
 
 def main():
+    # Note: The numbers below have no correlation with the sections in the
+    #       paper.
+    #
     # Graphs:
     # - Motivation:
     #   (1) Sequence: Long nights/days, static buffers, CUBIC
