@@ -140,7 +140,7 @@ def main():
 
     # (5.1)
     sg.seq(
-        name="5.1_seq-static-{}".format(CHOSEN_TCP),
+        name="5-1_seq-static-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
@@ -149,7 +149,7 @@ def main():
 
     # (5.3)
     buffers_graphs.lat(
-        name="5.3_lat-50-static-{}".format(CHOSEN_TCP),
+        name="5-3_lat-50-static-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
@@ -159,7 +159,7 @@ def main():
 
     # (5.4)
     buffers_graphs.lat(
-        name="5.4_lat-99-static-{}".format(CHOSEN_TCP),
+        name="5-4_lat-99-static-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
@@ -171,7 +171,7 @@ def main():
     # With and without inset.
     for ins in [DYN_INS, None]:
         sg.seq(
-            name="6.1_seq-dyn-{}{}".format(
+            name="6-1_seq-dyn-{}{}".format(
                 CHOSEN_TCP, "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
@@ -186,7 +186,7 @@ def main():
 
     # (6.3)
     buffers_graphs.lat(
-        name="6.3_lat-50-dyn-{}".format(CHOSEN_TCP),
+        name="6-3_lat-50-dyn-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", CHOSEN_TCP),
@@ -197,7 +197,7 @@ def main():
 
     # (6.4)
     buffers_graphs.lat(
-        name="6.4_lat-99-dyn-{}".format(CHOSEN_TCP),
+        name="6-4_lat-99-dyn-{}".format(CHOSEN_TCP),
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", CHOSEN_TCP),
@@ -208,7 +208,7 @@ def main():
 
     # (7.1)
     sg.seq(
-        name="7.1_seq-dyn-all",
+        name="7_seq-dyn-all",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("3500", "*"),
@@ -218,7 +218,7 @@ def main():
 
     # (8.1)
     sg.seq(
-        name="8.1_seq-static-retcp",
+        name="8-1_seq-static-retcp",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
@@ -227,7 +227,7 @@ def main():
 
     # (8.3)
     buffers_graphs.lat(
-        name="8.3_lat-50-static-retcp",
+        name="8-3_lat-50-static-retcp",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
@@ -237,7 +237,7 @@ def main():
 
     # (8.4)
     buffers_graphs.lat(
-        name="8.4_lat-99-static-retcp",
+        name="8-4_lat-99-static-retcp",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
@@ -247,7 +247,7 @@ def main():
 
     # (9.1)
     sg.seq(
-        name="9.1_seq-dyn-retcp",
+        name="9-1_seq-dyn-retcp",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
@@ -259,7 +259,7 @@ def main():
 
     # (9.3)
     buffers_graphs.lat(
-        name="9.3_lat-50-dyn-retcp",
+        name="9-3_lat-50-dyn-retcp",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
@@ -270,7 +270,7 @@ def main():
 
     # (9.4)
     buffers_graphs.lat(
-        name="9.4_lat-99-dyn-retcp",
+        name="9-4_lat-99-dyn-retcp",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
