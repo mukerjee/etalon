@@ -6,7 +6,7 @@ MAINTAINER Matt Mukerjee "mukerjee@cs.cmu.edu"
 RUN apt-get update && apt-get install -y \
         bc inetutils-ping libcurl4-gnutls-dev libgsl-dev libpcap-dev \
         libxmlrpc-core-c3-dev net-tools openssh-server openjdk-8-jdk python \
-        uuid-dev && \
+        tcpdump uuid-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Download pipework.
