@@ -1,20 +1,27 @@
 #!/usr/bin/env python
 
-import sys
-sys.path.insert(0, '..')
-import os
 import glob
+from os import path
+import sys
+# Directory containing this program.
+PROGDIR = path.dirname(path.realpath(__file__))
+# For parse_logs.
+sys.path.insert(0, path.join(PROGDIR, ".."))
 
-from parse_logs import parse_validation_log
+import parse_logs
 
-    
-if __name__ == '__main__':
-    if not os.path.isdir(sys.argv[1]):
-        print 'first arg must be dir'
+
+def main():
+    edr = sys.argv[1]
+    if not path.isdir(edr):
+        print("The first argument must be a directory, but is: {}".format(edr))
         sys.exit(-1)
-    parse_validation_log(
-        sys.argv[1],
-        glob.glob(sys.argv[1] + '/*-validation-no_circuit-*-flowgrind.txt'))
-    parse_validation_log(
-        sys.argv[1],
-        glob.glob(sys.argv[1] + '/*-validation-circuit-*-flowgrind.txt'))
+
+    parse_logs.parse_validation_log(
+        glob.glob(path.join(edr, '*-validation-no_circuit-*-flowgrind.txt'))[0])
+    parse_logs.parse_validation_log(
+        glob.glob(path.join(edr, '*-validation-circuit-*-flowgrind.txt'))[0])
+
+
+if __name__ == '__main__':
+    main()

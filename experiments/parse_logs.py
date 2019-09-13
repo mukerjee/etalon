@@ -349,138 +349,121 @@ def parse_packet_log(fn):
         sum(circuit_bytes.values()), sum(packet_bytes.values())
 
 
-def parse_validation_log(folder, fns):
-    # This is based on my observation of how this function is used.
-    num_fns = len(fns)
-    assert num_fns == 1, "Expected 1 filename, but found: {}".format(num_fns)
-    fn = fns[0]
-    print("parsing: {}".format(fn))
+def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
+    print("Parsing: {}".format(fn))
 
     # Map of flow ID to pair (src rack, dst rack).
     id_to_sr = {}
-    for l in open(fn.split('.txt')[0] + '.config.txt'):
-        l = l.split('-F')[1:]
-        for x in l:
-            id = int(x.strip().split()[0])
-            s = int(x.strip().split('-Hs=10.1.')[1].split('.')[0])
-            r = int(x.strip().split(',d=10.1.')[1].split('.')[0])
-            id_to_sr[id] = (s, r)
+    with open(fn.strip(".txt") + ".config.txt") as f:
+        for line in f:
+            line = line.split('-F')[1:]
+            for flow_cnf in line:
+                flow_cnf = flow_cnf.strip()
+                idx = int(flow_cnf.split()[0])
+                # Extract src rack id.
+                s = int(flow_cnf.split('-Hs=10.1.')[1].split('.')[0])
+                # Extract dst rack id.
+                r = int(flow_cnf.split(',d=10.1.')[1].split('.')[0])
+                id_to_sr[idx] = (s, r)
 
-    # Map of pair (src rack, dst rack) to list of pairs (timestamp, bytes since last
-    # timestamp).
-    out_data = defaultdict(lambda: defaultdict(int))
-    circuit = 'no_circuit' not in fn
-    for line in open(fn):
-        if line[0] == 'S' and (line[1] == ' ' or line[1] == '1'):
-            line = line[1:].strip()
-            id = int(line.split()[0])
-            ts_start = float(line.split()[1])
-            ts_end = float(line.split()[2])
-            curr_tp = float(line.split()[3]) * 1e6
-            curr_bytes = (curr_tp / 8.) * (ts_end - ts_start)
-            out_data[id_to_sr[id]][ts_start] += curr_bytes
-    for sr in out_data:
-        out_data[sr] = sorted(out_data[sr].items())
+    # Map of pair (src rack, dst rack) to a map of window *start* timestamp to
+    # the number of bytes sent during the window beginning with this timestamp.
+    sr_to_tstamps = defaultdict(lambda: defaultdict(int))
+    # Map of emulated src idx (i.e., flow idx) to a map of window *end*
+    # timestamp to the src's CWND at the timestamp (i.e., at the time that the
+    # window ended).
+    flow_to_cwnds = defaultdict(lambda: defaultdict(int))
+    with open(fn) as f:
+        for line in f:
+            # Ignore comment lines, empty lines, and "D" lines.
+            if line[0] == 'S':
+                line = line[1:].strip()
+                splits = line.split()
+                # Flow ID.
+                idx = int(splits[0])
+                # Start timestamp for this window.
+                ts_s_start = float(splits[1])
+                # End timestamp for this window.
+                ts_s_end = float(splits[2])
+                # Throughput for this window.
+                curr_tput_mbps = float(splits[3])
+                # Bits sent during this window. Mb/s -> b. Do not divide by TDF.
+                curr_b = curr_tput_mbps * 1e6  * (ts_s_end - ts_s_start)
+                # Record the bytes sent during this window.
+                sr_to_tstamps[id_to_sr[idx]][ts_s_start] += curr_b
+                # CWND at the end of this window.
+                cwnd = int(splits[12])
+                # Record this flow's cwnd at the end of this window.
+                flow_to_cwnds[idx][ts_s_end] = cwnd
+    # For each (src, dst) rack pair, transform the mapping from timestamp to bytes
+    # into a list of sorted pairs of (timestamp, bytes).
+    sr_to_tstamps = {sr: sorted(tstamps.items())
+                     for sr, tstamps in sr_to_tstamps.items()}
+    # For each flow, transform the mapping from timestamp to cwnd into a list of
+    # sorted pairs of (timestamp, cwnd).
+    flow_to_cwnds = {flow: sorted(cwnds.items())
+                    for flow, cwnds in flow_to_cwnds.items()}
 
-    # Attempt to parse the packet log.
-    # fn_ts = fn.split('/')[-1].split('-validation')[0]
-    # if circuit:
-    #     packet_log_fn = glob.glob(
-    #         folder + '/%s-validation-circuit-*-click.txt' % fn_ts)
-    # else:
-    #     packet_log_fn = glob.glob(
-    #         folder + '/%s-validation-no_circuit-*-click.txt' % fn_ts)
-    # if packet_log_fn:
-    #     print("found packet log")
-    #     out_data = defaultdict(list)
-    #     first_ts = -1
-    #     for msg in msg_from_file(packet_log_fn[0]):
-    #         (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
-    #         if t != 0:
-    #             continue
-    #         bytes = unpack('!H', data[2:4])[0]
-    #         sender = ord(data[14])
-    #         recv = ord(data[18])
-    #         sr = (sender, recv)
-    #         for i in xrange(len(ts)):
-    #             if ord(ts[i]) == 0:
-    #                 break
-    #         ts = (float(ts[:i]) / TDF) * 1000
-    #         if first_ts == -1:
-    #             first_ts = ts
-    #         out_data[sr].append((ts - first_ts, bytes))
-    # else:
-    #     print("did not find packet log")
+    # for sr, tstamps in sr_to_tstamps.items():
+    #     print("sr: {}".format(sr))
+    #     for tstamp in tstamps:
+    #         print("  {}".format(tstamp))
+    # for flow, cwnds in flow_to_cwnds.items():
+    #     print("flow: {}".format(flow))
+    #     for cwnd in cwnds:
+    #         print("  {}".format(cwnd))
 
-    print("done parsing: ".format(fn))
     # Map of pair (src rack, dst rack) to list of throughputs in Gb/s. Each
     # throughput corresponds to the throughput during one bin.
-    tp = defaultdict(list)
-    for sr in out_data:
-        # if packet_log_fn:
-        #     curr = 0
-        #     for i in xrange(0, 2000, bin_size):
-        #         curr_tp = 0
-        #         for j in xrange(curr, len(out_data[sr])):
-        #             ts, bytes = out_data[sr][j]
-        #             if ts >= i and ts < i+bin_size:
-        #                 curr_tp += bytes
-        #             else:
-        #                 curr = j
-        #                 break
-        #         tp[sr].append(curr_tp * (1000. / bin_size) * 8. / 1e9)
-        # else:
-
-        # 2000 is the length of the validation experiment: 2 seconds.
-        for i in xrange(0, 2000, bin_size):
+    sr_to_tputs = defaultdict(list)
+    for sr, tstamps in sr_to_tstamps.items():
+        for win_start_ms in xrange(0, dur_ms, bin_size_ms):
+            win_start_s = win_start_ms / 1e3
+            win_end_s = win_start_s + (bin_size_ms / 1e3)
             # Find all the logs (i.e., numbers of bytes during some window) for
             # the current bin...
-            curr = [b for ts, b in out_data[sr]
-                    if i / 1000. <= ts < (i + bin_size) / 1000.]
-            # ...and sum them up to calculate the total number of bytes sent in this
-            # bin (e.g., if the bin size is 1, then this is the total amount of bytes
-            # logged in 1 ms.
-            bpms = sum(curr)
-            # bytes / ms -> bits / ms -> bits / s -> Gb/s
-            gbps = bpms * 8. / (bin_size / 1000.) / 1e9
-            tp[sr].append(gbps)
-            # print("{} <= {} < {} - curr: {}".format(
-            #     i / 1000., ts, (i + bin_size) / 1000., gbps))
-
-    # for k, v in tp.items():
-    #     print("{}: {}--{}".format(k, len(v), v))
-
-    # tp_avg = defaultdict(list)
-    # for sr in tp:
-    #     for i in xrange(0, 2000, bin_size):
-    #         print("[tp[sr][i]]: {}".format([tp[sr][i]]))
-    #         tp_avg[sr].append(np.average([tp[sr][i]]))
-    # print("tp_avg: {}".format(tp_avg))
+            cur_samples = [b for ts_s, b in tstamps
+                           # E.g., for i = 1 and bin_size = 1, if timestamp is
+                           # between 1 ms and 2 ms.
+                           if win_start_s <= ts_s < win_end_s]
+            # ...and sum them up to calculate the total number of bytes sent in
+            # this bin (e.g., if the bin size is 1, then this is the total
+            # amount of bytes sent in 1 ms).
+            cur_b = sum(cur_samples)
+            gbps = cur_b * (1 / bin_size) * 1e3 / 1e9
+            sr_to_tputs[sr].append((win_start_ms / 1e3, gbps))
 
     means = {}
     stdevs = {}
-    for sr, data in tp.items():
-        # Jump over data from before the flow started?
-        for i, d in enumerate(data):
-            # print(d)
-            if round(d) > 0:
-                # print("break")
+    for sr, tputs in sr_to_tputs.items():
+        # Jump over data from before the flows started.
+        start_idx = 0
+        for _, tput in tputs:
+            if round(tput) > 0:
                 break
-        # print("i: {}".format(i))
-        means[sr] = np.mean(data[i:])
-        stdevs[sr] = np.std(data[i:])
+            start_idx += 1
+        # Extract the tputs from of list of pairs of (window start time, tput).
+        _, tputs = zip(*tputs[start_idx:])
+        means[sr] = np.mean(tputs)
+        stdevs[sr] = np.std(tputs)
 
-    print("Num logs:")
-    for sr, v in tp.items():
-        print("\t Flow {}: {}".format(sr, len(v)))
+    print("Num CWND logs:")
+    for flow, cwnds in flow_to_cwnds.items():
+        print("  Flow {} = {}".format(flow, len(cwnds)))
+    print("Num tput logs:")
+    for sr, tputs in sr_to_tputs.items():
+        print("  (src rack, dst rack): {} = {}".format(sr, len(tputs)))
     print("Means:")
     for sr, mean in means.items():
-        print("\tFlow {}: {} Gb/s".format(sr, mean))
+        print("  (src rack, dst rack): {} = {} Gb/s".format(sr, mean))
     print("Standard deviations:")
     for sr, stdev in stdevs.items():
-        print("\tFlow {}: {} Gb/s".format(sr, stdev))
+        print("  (src rack, dst rack): {} = {} Gb/s".format(sr, stdev))
     print("Mean of means: {} Gb/s".format(np.mean(means.values())))
-    print("Mean of standard deviations: {} Gb/s".format(np.mean(stdevs.values())))
+    print(
+        "Mean of standard deviations: {} Gb/s".format(np.mean(stdevs.values())))
+
+    return sr_to_tputs, flow_to_cwnds
 
 
 def parse_hdfs_logs(folder):
