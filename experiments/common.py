@@ -215,12 +215,10 @@ def flowgrind(settings):
                         flows.append(fl)
                 else:
                     flows.append(f)
-    if "dur" in settings:
-        dur_s = settings["dur"]
-    else:
-        dur_s = FLOWGRIND_DEFAULT_DUR_S
+    dur_s = settings.get("dur", FLOWGRIND_DEFAULT_DUR_S)
+    sample_rate_s = settings.get("sample_rate", FLOWGRIND_DEFAULT_SAMPLE_RATE)
     cmd = '-I -Ts={} -Ys=0 -Gs=q:C:{} -i {} -n {} '.format(
-        dur_s, DEFAULT_REQUEST_SIZE, FLOWGRIND_DEFAULT_SAMPLE_RATE, len(flows))
+        dur_s, DEFAULT_REQUEST_SIZE, sample_rate_s, len(flows))
     for i, f in enumerate(flows):
         cmd += '-F %d -Hs=%s,d=%s ' % \
                (i, get_flowgrind_host(f['src']), get_flowgrind_host(f['dst']))
