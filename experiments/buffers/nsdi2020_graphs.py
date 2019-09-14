@@ -75,8 +75,6 @@ def main():
     #   (7) Dynamic buffers, all TCP variants
     #     (7.1) Sequence
     #     (7.2) Utilization
-    #     (7.3) Latency 50 (needs bar chart, hold off for now)
-    #     (7.4) Latency 99 (needs bar chart, hold off for now)
     #   (8) Static buffers, reTCP
     #     (8.1) Sequence
     #     (8.2) Utilization
@@ -154,7 +152,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
-        xlbl='Buffer size (packets)')
+        xlbl='Static buffer size (packets)')
 
     # (5.3)
     buffers_graphs.lat(
@@ -193,6 +191,16 @@ def main():
                  label.strip(" $\mu$s") in order),
             order=DYN_ORDER)
 
+    # (6.2)
+    buffers_graphs.util(
+        name="6-2_util-dyn-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", CHOSEN_TCP),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        xlbl='Resize time ($\mu$s)')
+
     # (6.3)
     buffers_graphs.lat(
         name="6-3_lat-50-dyn-{}".format(CHOSEN_TCP),
@@ -217,13 +225,23 @@ def main():
 
     # (7.1)
     sg.seq(
-        name="7_seq-dyn-all",
+        name="7-1_seq-dyn-all",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("3500", "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
         flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
+
+    # (7.2)
+    buffers_graphs.util(
+        name="7-2_util-dyn-all",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("3500", "*"),
+        key_fnc=lambda fn: fn.split("-")[7],
+        xlbl='TCP variant',
+        srt=False)
 
     # (8.1)
     sg.seq(
@@ -233,6 +251,15 @@ def main():
         ptn=STATIC_PTN.format("*", "retcp"),
         key_fnc=lambda fn: fn.split("-")[3],
         dur=1200)
+
+    # (8.2)
+    buffers_graphs.util(
+        name="8-2_util-static-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: fn.split("-")[3],
+        xlbl='Static buffer size (packets)')
 
     # (8.3)
     buffers_graphs.lat(
@@ -265,6 +292,16 @@ def main():
         dur=1200,
         flt=lambda idx, label, order=DYN_ORDER: label.strip(" $\mu$s") in order,
         order=DYN_ORDER)
+
+    # (9.2)
+    buffers_graphs.util(
+        name="9-2_util-dyn-retcp",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        xlbl='Resize time ($\mu$s)')
 
     # (9.3)
     buffers_graphs.lat(

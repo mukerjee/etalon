@@ -108,9 +108,11 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     plot(x, y, options)
 
 
-def graph_circuit_util(keys, utils, fn, xlbl, odr=path.join(PROGDIR, "graphs")):
+def graph_circuit_util(keys, utils, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
+                       srt=True):
     # Sort the data based on the x-values (keys).
-    keys, utils = zip(*sorted(zip(keys, utils), key=lambda p: int(p[0])))
+    if srt:
+        keys, utils = zip(*sorted(zip(keys, utils), key=lambda p: int(p[0])))
 
     x = [np.arange(len(utils))]
     y = [map(lambda j: min(j / (0.9 * 1.0/3 * 80) * 100, 100.0), utils)]
@@ -180,14 +182,15 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     db.close()
 
 
-def util(name, edr, odr, ptn, key_fnc, xlbl):
+def util(name, edr, odr, ptn, key_fnc, xlbl, srt=True):
     print("Plotting: {}".format(name))
     basename = name.split("_")[1]
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
     graph_circuit_util(
-        keys=data['keys'], utils=data['circ_util'], fn=name, xlbl=xlbl, odr=odr)
+        keys=data['keys'], utils=data['circ_util'], fn=name, xlbl=xlbl, odr=odr,
+        srt=srt)
 
 
 def main():
