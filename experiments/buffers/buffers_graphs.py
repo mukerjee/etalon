@@ -52,15 +52,15 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
         data = defaultdict(lambda: defaultdict(dict))
         for fn in fns:
             lbl = key_fnc[key](fn.split('/')[-1])
-            _, lat, _, circ_util, _, _, _ = pl.parse_packet_log(fn)
+            _, lat, _, c_tput, _, _, _ = pl.parse_packet_log(fn)
             data['lat'][50][lbl] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][lbl] = [x[1] for x in zip(*lat)[3]]
-            data['circ_util'][lbl] = circ_util[SR]
+            data['circ_tput'][lbl] = c_tput[SR]
 
-        data['keys'] = list(zip(*sorted(data['circ_util'].items()))[0])
+        data['keys'] = list(zip(*sorted(data['circ_tput'].items()))[0])
         data['lat'][50] = list(zip(*sorted(data['lat'][50].items()))[1])
         data['lat'][99] = list(zip(*sorted(data['lat'][99].items()))[1])
-        data['circ_util'] = list(zip(*sorted(data['circ_util'].items()))[1])
+        data['circ_tput'] = list(zip(*sorted(data['circ_tput'].items()))[1])
 
         # Store the new data in the database.
         db[key] = dict(data)
@@ -108,14 +108,23 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     plot(x, y, options)
 
 
-def graph_circuit_util(keys, utils, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
+def graph_circuit_util(keys, tputs, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
                        srt=True):
-    # Sort the data based on the x-values (keys).
     if srt:
-        keys, utils = zip(*sorted(zip(keys, utils), key=lambda p: int(p[0])))
+        # Sort the data based on the x-values (keys).
+        keys, tputs = zip(*sorted(zip(keys, tputs), key=lambda p: int(p[0])))
 
-    x = [np.arange(len(utils))]
-    y = [map(lambda j: min(j / (0.9 * 1.0/3 * 80) * 100, 100.0), utils)]
+    x = [np.arange(len(tputs))]
+    # Convert circuit throughput into utilization.
+    y = [[min(tput / (0.9 * 1./ (pyc.NUM_RACKS - 1) * pyc.CIRCUIT_BW_Gbps) * 100,
+             100.0)
+         for tput in tputs]]
+
+    print("")
+    print("raw util data for: {}".format(fn))
+    print("{}:".format(xlbl))
+    print("    {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(keys, y[0])])))
+    print("")
 
     options = DotMap()
     options.plot_type = 'BAR'
@@ -189,7 +198,7 @@ def util(name, edr, odr, ptn, key_fnc, xlbl, srt=True):
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
     graph_circuit_util(
-        keys=data['keys'], utils=data['circ_util'], fn=name, xlbl=xlbl, odr=odr,
+        keys=data['keys'], tputs=data['circ_tput'], fn=name, xlbl=xlbl, odr=odr,
         srt=srt)
 
 
@@ -203,7 +212,7 @@ def main():
     data = get_data(db, typ)
     graph_lat(keys=data['keys'], latencies=data['lat'][50], fn=typ,
               y_lab="Median")
-    graph_circuit_util(data['circ_util'], typ)
+    graph_circuit_util(data['circ_tput'], typ)
 
     typ = 'resize'
     data = get_data(db, typ)
@@ -211,7 +220,7 @@ def main():
               fn="{}-median".format(typ), y_lab="Median")
     graph_lat(keys=data['keys'], latencies=data['lat'][99],
               fn="{}-99".format(typ), y_lab="99th percentile\n")
-    graph_circuit_util([db['static']['circ_util'][2]] + data['circ_util'], typ)
+    graph_circuit_util([db['static']['circ_tput'][2]] + data['circ_tput'], typ)
 
     typ = 'reTCP'
     get_data(db, typ)
@@ -219,11 +228,11 @@ def main():
     typ = 'reTCP+resize'
     get_data(db, typ)
 
-    utils = [db[t]['circ_util'] for t in TYPES]
+    tputs = [db[t]['circ_tput'] for t in TYPES]
     lat50 = [db[t]['lat'][50] for t in TYPES]
     lat99 = [db[t]['lat'][99] for t in TYPES]
-    graph_util_vs_latency(utils, lat50, '50')
-    graph_util_vs_latency(utils, lat99, '99')
+    graph_util_vs_latency(tputs, lat50, '50')
+    graph_util_vs_latency(tputs, lat99, '99')
 
     db.close()
 

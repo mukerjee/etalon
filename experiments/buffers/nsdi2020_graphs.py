@@ -60,7 +60,9 @@ def main():
     #   (1) Sequence: Long nights/days, static buffers, CUBIC
     #   (2) Sequence: Short nights/days, static buffers, CUBIC
     #   (3) Sequence: Very short nights/days, static buffers, CUBIC
-    #   (4) Sequence: Short nights/days, static buffers, all TCP variants
+    #   (4) Short nights/days, static buffers, all TCP variants
+    #     (4.1) Sequence
+    #     (4.2) Utilization
     # - Contributions:
     #   (5) Static buffers, CUBIC
     #     (5.1) Sequence
@@ -126,15 +128,25 @@ def main():
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
         dur=6)
 
-    # (4)
+    # (4.1)
     sg.seq(
-        name="4_seq-current-all",
+        name="4-1_seq-current-all",
         edr=edr,
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
         flt=lambda idx, label, ccs=DESIRED_CCS: label in ccs)
+
+    # (4.2)
+    buffers_graphs.util(
+        name="4-2_util-current-all",
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
+        key_fnc=lambda fn: fn.split("-")[7],
+        xlbl='TCP variant',
+        srt=False)
 
     # (5.1)
     sg.seq(
