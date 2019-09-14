@@ -305,7 +305,7 @@ def parse_packet_log(fn):
             flow_start[sr] = ts / TDF
 
         if circuit:
-            which_rtt = int((ts - most_recent_circuit_up[sr] - 0.5*RTT) / RTT)
+            which_rtt = int((ts - most_recent_circuit_up[sr] - 0.5 * RTT) / RTT)
             bytes_in_rtt[sr][which_rtt] += bytes
             circuit_bytes[sr] += bytes
         else:
@@ -354,7 +354,6 @@ def parse_packet_log(fn):
 
 def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
     print("Parsing: {}".format(fn))
-
     # Map of flow ID to pair (src rack, dst rack).
     id_to_sr = {}
     with open(fn.strip(".txt") + ".config.txt") as f:
