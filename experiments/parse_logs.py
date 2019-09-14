@@ -67,6 +67,7 @@ def msg_from_file(filename, chunksize=112):
 
 
 def get_seq_data(fn):
+    print("Parsing: {}".format(fn))
     circuit_starts = defaultdict(list)
     circuit_ends = defaultdict(list)
     flows = defaultdict(list)
@@ -264,6 +265,7 @@ def get_seq_data(fn):
 
 
 def parse_packet_log(fn):
+    print("Parsing: {}".format(fn))
     latencies = []
     latencies_circuit = []
     latencies_packet = []
@@ -346,7 +348,6 @@ def parse_packet_log(fn):
         for i, r in sorted(bytes_in_rtt[sr].items()):
             b[sr][i] = (r / max_bytes) * 100
 
-    print fn
     return tp, (lat, latc, latp), p, c, b, \
         sum(circuit_bytes.values()), sum(packet_bytes.values())
 
