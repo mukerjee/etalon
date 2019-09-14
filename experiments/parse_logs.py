@@ -233,6 +233,8 @@ def get_seq_data(fn):
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if not wraparound:
+                # Interpolate based on the data we have. x-values are the times
+                # ([0]), y-values are the data ([1]).
                 chunks.append(np.interp(xrange(DURATION),
                                         zip(*out)[0],
                                         zip(*out)[1]))
