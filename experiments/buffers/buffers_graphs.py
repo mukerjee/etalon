@@ -140,9 +140,13 @@ def graph_circuit_util(keys, tputs, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
     plot(x, y, options)
 
 
-def graph_util_vs_latency(utils, latencies, fn):
-    x = [map(lambda j: min(j / (0.9 * 1.0/7 * 80) * 100, 100.0), u)
-         for u in utils]
+def graph_util_vs_latency(tputs, latencies, fn):
+    x = [map(
+        lambda j: min(
+            j / (0.9 * 1. / (pyc.NUM_RACKS - 1) * pyc.CIRCUIT_BW_Gbps) * 100,
+            100.0),
+        u)
+         for t in tputs]
     y = [zip(*l)[0] for l in latencies]
 
     options = DotMap()
