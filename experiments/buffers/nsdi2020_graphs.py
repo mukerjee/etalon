@@ -148,7 +148,7 @@ def main():
         xlb='TCP variant',
         srt=False,
         xlr=45,
-        lbs=14)
+        lbs=12)
 
     # (5.1)
     sg.seq(
@@ -257,7 +257,7 @@ def main():
         xlb='TCP variant',
         srt=False,
         xlr=45,
-        lbs=14)
+        lbs=12)
 
     # (8.1)
     sg.seq(

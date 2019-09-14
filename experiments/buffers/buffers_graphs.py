@@ -15,7 +15,9 @@ import numpy as np
 
 from collections import defaultdict
 from dotmap import DotMap
+import simpleplotlib
 from simpleplotlib import plot
+simpleplotlib.default_options.rcParams['font.family'] = "Tahoma"
 
 import parse_logs as pl
 import python_config as pyc
@@ -89,10 +91,10 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     options.plot_type = 'LINE'
     options.legend.options.labels = ['all traffic', 'only circuit',
                                      'only packet']
-    options.legend.options.fontsize = 18
-    options.x.label.fontsize = options.y.label.fontsize = 18
+    options.legend.options.fontsize = 20
+    options.x.label.fontsize = options.y.label.fontsize = 20
     options.x.ticks.major.options.labelsize = \
-        options.y.ticks.major.options.labelsize = 18
+        options.y.ticks.major.options.labelsize = 20
     options.series_options = [DotMap(marker='o', markersize=10, linewidth=5)
                               for i in range(len(x))]
     options.output_fn = path.join(odr, '{}.pdf'.format(fn))
@@ -109,7 +111,7 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
 
 
 def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
-                       srt=True, xlr=0, lbs=25):
+                       srt=True, xlr=0, lbs=23):
     """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     if srt:
         # Sort the data based on the x-values (keys).
@@ -129,12 +131,15 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
 
     options = DotMap()
     options.plot_type = 'BAR'
-    options.legend.options.fontsize = 18
+    options.legend.options.fontsize = 20
     options.bar_labels.format_string = '%1.0f'
     options.bar_labels.options.fontsize = lbs
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
+    options.x.label.fontsize = options.y.label.fontsize = 20
     options.x.label.xlabel = xlb
     options.y.label.ylabel = 'Average circuit\nutilization (%)'
+    options.x.ticks.major.options.labelsize = \
+        options.y.ticks.major.options.labelsize = 20
     options.x.ticks.major.labels = DotMap(text=keys)
     options.x.ticks.major.labels.options.rotation = xlr
     options.x.ticks.major.labels.options.rotation_mode = "anchor"
@@ -200,7 +205,7 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     db.close()
 
 
-def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=25):
+def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23):
     """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     print("Plotting: {}".format(name))
     basename = name.split("_")[1]
