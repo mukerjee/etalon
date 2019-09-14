@@ -135,6 +135,7 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
     options.bar_labels.format_string = '%1.0f'
     options.bar_labels.options.fontsize = lbs
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
+    options.y.limits = (0, 100)
     options.x.label.fontsize = options.y.label.fontsize = 20
     options.x.label.xlabel = xlb
     options.y.label.ylabel = 'Average circuit\nutilization (%)'
@@ -145,7 +146,7 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
     options.x.ticks.major.labels.options.rotation_mode = "anchor"
     options.x.ticks.major.labels.options.horizontalalignment = \
         "center" if xlr == 0 else "right"
-    options.y.ticks.major.show = False
+    options.y.ticks.major.show = True
     options.x.ticks.major.show = False
     plot(x, y, options)
 
