@@ -108,8 +108,9 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     plot(x, y, options)
 
 
-def graph_circuit_util(keys, tputs, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
-                       srt=True):
+def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
+                       srt=True, xlr=0, lbs=25):
+    """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     if srt:
         # Sort the data based on the x-values (keys).
         keys, tputs = zip(*sorted(zip(keys, tputs), key=lambda p: int(p[0])))
@@ -122,7 +123,7 @@ def graph_circuit_util(keys, tputs, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
 
     print("")
     print("raw util data for: {}".format(fn))
-    print("{}:".format(xlbl))
+    print("{}:".format(xlb))
     print("    {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(keys, y[0])])))
     print("")
 
@@ -130,11 +131,15 @@ def graph_circuit_util(keys, tputs, fn, xlbl, odr=path.join(PROGDIR, "graphs"),
     options.plot_type = 'BAR'
     options.legend.options.fontsize = 18
     options.bar_labels.format_string = '%1.0f'
-    options.bar_labels.options.fontsize = 25
+    options.bar_labels.options.fontsize = lbs
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
-    options.x.label.xlabel = xlbl
-    options.y.label.ylabel = 'Avg. circuit utilization (%)'
+    options.x.label.xlabel = xlb
+    options.y.label.ylabel = 'Average circuit\nutilization (%)'
     options.x.ticks.major.labels = DotMap(text=keys)
+    options.x.ticks.major.labels.options.rotation = xlr
+    options.x.ticks.major.labels.options.rotation_mode = "anchor"
+    options.x.ticks.major.labels.options.horizontalalignment = \
+        "center" if xlr == 0 else "right"
     options.y.ticks.major.show = False
     options.x.ticks.major.show = False
     plot(x, y, options)
@@ -195,15 +200,16 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     db.close()
 
 
-def util(name, edr, odr, ptn, key_fnc, xlbl, srt=True):
+def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=25):
+    """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     print("Plotting: {}".format(name))
     basename = name.split("_")[1]
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
     graph_circuit_util(
-        keys=data['keys'], tputs=data['circ_tput'], fn=name, xlbl=xlbl, odr=odr,
-        srt=srt)
+        keys=data['keys'], tputs=data['circ_tput'], fn=name, xlb=xlb, odr=odr,
+        srt=srt, xlr=xlr, lbs=lbs)
 
 
 def main():

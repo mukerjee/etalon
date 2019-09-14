@@ -145,8 +145,10 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
-        xlbl='TCP variant',
-        srt=False)
+        xlb='TCP variant',
+        srt=False,
+        xlr=45,
+        lbs=14)
 
     # (5.1)
     sg.seq(
@@ -164,7 +166,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
-        xlbl='Static buffer size (packets)')
+        xlb='Static buffer size (packets)')
 
     # (5.3)
     buffers_graphs.lat(
@@ -211,7 +213,7 @@ def main():
         ptn=DYN_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        xlbl='Resize time ($\mu$s)')
+        xlb='Resize time ($\mu$s)')
 
     # (6.3)
     buffers_graphs.lat(
@@ -252,8 +254,10 @@ def main():
         odr=odr,
         ptn=DYN_PTN.format("3500", "*"),
         key_fnc=lambda fn: fn.split("-")[7],
-        xlbl='TCP variant',
-        srt=False)
+        xlb='TCP variant',
+        srt=False,
+        xlr=45,
+        lbs=14)
 
     # (8.1)
     sg.seq(
@@ -271,7 +275,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
         key_fnc=lambda fn: fn.split("-")[3],
-        xlbl='Static buffer size (packets)')
+        xlb='Static buffer size (packets)')
 
     # (8.3)
     buffers_graphs.lat(
@@ -313,7 +317,7 @@ def main():
         ptn=DYN_PTN.format("*", "retcp"),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        xlbl='Resize time ($\mu$s)')
+        xlb='Resize time ($\mu$s)')
 
     # (9.3)
     buffers_graphs.lat(
