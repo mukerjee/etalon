@@ -52,7 +52,6 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
         data = defaultdict(lambda: defaultdict(dict))
         for fn in fns:
             lbl = key_fnc[key](fn.split('/')[-1])
-            print("label: {}".format(lbl))
             _, lat, _, circ_util, _, _, _ = pl.parse_packet_log(fn)
             data['lat'][50][lbl] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][lbl] = [x[1] for x in zip(*lat)[3]]
@@ -109,23 +108,22 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     plot(x, y, options)
 
 
-def graph_circuit_util(util, fn):
-    x = [np.arange(len(util))]
-    y = [map(lambda j: min(j / (0.9 * 1.0/7 * 80) * 100, 100.0), util)]
+def graph_circuit_util(keys, utils, fn, xlbl, odr=path.join(PROGDIR, "graphs")):
+    # Sort the data based on the x-values (keys).
+    keys, utils = zip(*sorted(zip(keys, utils), key=lambda p: int(p[0])))
+
+    x = [np.arange(len(utils))]
+    y = [map(lambda j: min(j / (0.9 * 1.0/3 * 80) * 100, 100.0), utils)]
 
     options = DotMap()
     options.plot_type = 'BAR'
-    options.legend.options.fontsize = 12
+    options.legend.options.fontsize = 18
     options.bar_labels.format_string = '%1.0f'
     options.bar_labels.options.fontsize = 25
-    options.output_fn = path.join(
-        PROGDIR, 'graphs', '{}_vs_circuit_util.pdf'.format(fn))
-    options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
-                             else 'Early buffer resizing ($\mu$s)'
+    options.output_fn = path.join(odr, "{}.pdf".format(fn))
+    options.x.label.xlabel = xlbl
     options.y.label.ylabel = 'Avg. circuit utilization (%)'
-    options.x.ticks.major.labels = DotMap(
-        text=[4, 8, 16, 32, 64, 128]) if 'static' in fn \
-        else DotMap(text=[0, 200, 400, 600, 800, 1000, 1200, 1400])
+    options.x.ticks.major.labels = DotMap(text=keys)
     options.y.ticks.major.show = False
     options.x.ticks.major.show = False
     plot(x, y, options)
@@ -170,8 +168,9 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     # use <details> as the database key.
     print("Plotting: {}".format(name))
     basename = name.split("_")[1]
-    db = shelve.open(path.join(edr, "{}.db".format(name)))
-    data = get_data(db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
+    db = shelve.open(path.join(edr, "{}.db".format(basename)))
+    data = get_data(
+        db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
     graph_lat(
         keys=data['keys'],
         latencies=data['lat'][prc],
@@ -179,6 +178,16 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
         y_lab=ylb,
         odr=odr)
     db.close()
+
+
+def util(name, edr, odr, ptn, key_fnc, xlbl):
+    print("Plotting: {}".format(name))
+    basename = name.split("_")[1]
+    db = shelve.open(path.join(edr, "{}.db".format(basename)))
+    data = get_data(
+        db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
+    graph_circuit_util(
+        keys=data['keys'], utils=data['circ_util'], fn=name, xlbl=xlbl, odr=odr)
 
 
 def main():
@@ -202,10 +211,10 @@ def main():
     graph_circuit_util([db['static']['circ_util'][2]] + data['circ_util'], typ)
 
     typ = 'reTCP'
-    get_data(typ)
+    get_data(db, typ)
 
     typ = 'reTCP+resize'
-    get_data(typ)
+    get_data(db, typ)
 
     utils = [db[t]['circ_util'] for t in TYPES]
     lat50 = [db[t]['lat'][50] for t in TYPES]

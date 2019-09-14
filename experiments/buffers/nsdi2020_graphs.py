@@ -147,6 +147,15 @@ def main():
         key_fnc=lambda fn: fn.split("-")[3],
         dur=1200)
 
+    # (5.2)
+    buffers_graphs.util(
+        name="5-2_util-static-{}".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=STATIC_PTN.format("*", CHOSEN_TCP),
+        key_fnc=lambda fn: fn.split("-")[3],
+        xlbl='Buffer size (packets)')
+
     # (5.3)
     buffers_graphs.lat(
         name="5-3_lat-50-static-{}".format(CHOSEN_TCP),
