@@ -26,7 +26,6 @@ def main():
         print("--- config:\n{}".format(cnf))
         common.flowgrind(settings={"flows": [{"src": "r1", "dst": "r2"}]})
 
-
     common.finishExperiment()
 
 
