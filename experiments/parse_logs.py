@@ -394,7 +394,7 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
                 # Record the bytes sent during this window.
                 sr_to_tstamps[id_to_sr[idx]][ts_s_start] += curr_b
                 # CWND at the end of this window.
-                cwnd = int(splits[12])
+                cwnd = int(splits[11])
                 # Record this flow's cwnd at the end of this window.
                 flow_to_cwnds[idx][ts_s_end] = cwnd
     # For each (src, dst) rack pair, transform the mapping from timestamp to bytes
