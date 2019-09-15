@@ -449,9 +449,9 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
         means[sr] = np.mean(tputs)
         stdevs[sr] = np.std(tputs)
 
-    print("Num CWND logs:")
-    for flow, cwnds in flow_to_cwnds.items():
-        print("  Flow {} = {}".format(flow, len(cwnds)))
+    # print("Num CWND logs:")
+    # for flow, cwnds in flow_to_cwnds.items():
+    #     print("  Flow {} = {}".format(flow, len(cwnds)))
     print("Num tput logs:")
     for sr, tputs in sr_to_tputs.items():
         print("  (src rack, dst rack): {} = {}".format(sr, len(tputs)))
