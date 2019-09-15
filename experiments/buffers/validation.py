@@ -24,13 +24,7 @@ def main():
                "divert_acks": True}
         click_common.setConfig(cnf)
         print("--- config:\n{}".format(cnf))
-
-        # A ring: 1->2, 2->3, 3->1. Mimics DEFAULT_CIRCUIT_CONFIG.
-        common.flowgrind(settings={
-            "flows": [
-                {"src": "r1", "dst": "r2"},
-                {"src": "r2", "dst": "r3"},
-                {"src": "r3", "dst": "r1"}]})
+        common.flowgrind(settings={"flows": [{"src": "r1", "dst": "r2"}]})
 
 
     common.finishExperiment()
