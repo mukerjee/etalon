@@ -78,7 +78,7 @@ def main():
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
-    maybe(lambda: common.initializeExperiment("flowgrindd", cnfs[0]["cc"]))
+    maybe(lambda: common.initializeExperiment("flowgrindd", cc=cnfs[0]["cc"]))
     # Total number of experiments.
     tot = len(cnfs)
     for cnt, cnf in enumerate(cnfs, start=1):
