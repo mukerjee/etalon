@@ -23,7 +23,7 @@ def main():
         print("--- config:\n{}".format(cnf))
 
         # A ring: 1->2, 2->3, 3->1. Mimics DEFAULT_CIRCUIT_CONFIG.
-        click_common.flowgrind(settings={
+        common.flowgrind(settings={
             "flows": [
                 {"src": "r1", "dst": "r2"},
                 {"src": "r2", "dst": "r3"},
