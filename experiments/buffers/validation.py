@@ -10,14 +10,17 @@ sys.path.insert(0, path.join(PROGDIR, ".."))
 import click_common
 import common
 
+CC = "cubic"
+BUFFER_SIZE = 128
+
 
 def main():
     common.initializeExperiment("flowgrindd")
 
     for typ in ["no_circuit", "circuit", "strobe"]:
         cnf = {"type": typ,
-               "cc": "cubic",
-               "buffer_size": 128,
+               "cc": CC,
+               "buffer_size": BUFFER_SIZE,
                "divert_acks": True}
         click_common.setConfig(cnf)
         print("--- config:\n{}".format(cnf))
