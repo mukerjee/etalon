@@ -5,7 +5,7 @@ import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
 # For python_config.
-sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
+sys.path.insert(0, path.join(PROGDIR, "..", "etc"))
 import time
 
 import common
