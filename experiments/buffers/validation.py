@@ -15,7 +15,7 @@ BUFFER_SIZE = 128
 
 
 def main():
-    common.initializeExperiment("flowgrindd")
+    common.initializeExperiment("flowgrindd", cc=CC)
 
     for typ in ["no_circuit", "circuit", "strobe"]:
         cnf = {"type": typ,
