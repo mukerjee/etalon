@@ -51,14 +51,24 @@ def main():
                       "cc": cc}]
             # (2)
             cnfs += [{"type": "strobe", "buffer_size": 16,
-                      "night_len_us": 0.1 * python_config.TDF,
-                      "day_len_us": 0.9 * python_config.TDF, "cc": cc}]
-        # (3) and (4)
-        cnfs += [dict(cnf, cc=cc)
-                 for cnf in (
-                     buffer_common.gen_static_sweep(mn=2, mx=MAX_STATIC_POW) +
-                     buffer_common.gen_resize_sweep(
-                         mn=0, mx=MAX_RESIZE_US, dl=500))]
+                      "night_len_us": 1 * python_config.TDF,
+                      "day_len_us": 9 * python_config.TDF, "cc": cc}]
+        # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
+        #     for all variants.
+        for exp in xrange(2, MAX_STATIC_POW + 1):
+            if cc in ["cubic", "retcp"] or exp == 4:
+                cnfs += [{"type": "strobe",
+                          "buffer_size": 2**exp,
+                          "cc": cc}]
+        # (4) Only do full sweeps for CUBIC and reTCP, but capture 3500 us for
+        #     all variants.
+        for us in xrange(0, MAX_RESIZE_US + 1, 500):
+            if cc in ["cubic", "retcp"] or us == 3500:
+                cnfs += [{"type": "strobe",
+                          "queue_resize": True,
+                          "buffer_size": 16,
+                          "in_advance": us,
+                          "cc": cc}]
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
         # Enable the hybrid switch's packet log. This should already be enabled
