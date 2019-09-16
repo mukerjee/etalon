@@ -49,6 +49,8 @@ DYN_ORDER = ["optimal", "packet only", "static", "25", "75", "100", "125",
 CHOSEN_TCP = "cubic"
 # Static buffer size to use.
 CHOSEN_STATIC = 16
+# Amount of resizing to use.
+CHOSEN_RESIZE_US = "3500"
 
 
 def main():
@@ -242,7 +244,7 @@ def main():
         name="7-1_seq-dyn-all",
         edr=edr,
         odr=odr,
-        ptn=DYN_PTN.format("3500", "*"),
+        ptn=DYN_PTN.format(CHOSEN_RESIZE_US, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
         flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
@@ -252,7 +254,7 @@ def main():
         name="7-2_util-dyn-all",
         edr=edr,
         odr=odr,
-        ptn=DYN_PTN.format("3500", "*"),
+        ptn=DYN_PTN.format(CHOSEN_RESIZE_US, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         xlb='TCP variant',
         srt=False,
