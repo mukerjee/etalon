@@ -150,7 +150,8 @@ def main():
         xlb='TCP variant',
         srt=False,
         xlr=45,
-        lbs=12)
+        lbs=12,
+        flt=lambda key: key != "retcp")
 
     # (5.1)
     sg.seq(
@@ -259,7 +260,8 @@ def main():
         xlb='TCP variant',
         srt=False,
         xlr=45,
-        lbs=12)
+        lbs=12,
+        flt=lambda key: key != "retcp")
 
     # (8.1)
     sg.seq(

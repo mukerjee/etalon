@@ -111,11 +111,15 @@ def graph_lat(keys, latencies, fn, ylb, odr=path.join(PROGDIR, "graphs")):
 
 
 def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
-                       srt=True, xlr=0, lbs=23):
+                       srt=True, xlr=0, lbs=23, flt=lambda key: True):
     """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     if srt:
         # Sort the data based on the x-values (keys).
         keys, tputs = zip(*sorted(zip(keys, tputs), key=lambda p: int(p[0])))
+
+    # Filter.
+    keys, tputs = zip(
+        *[key, tput for key, tput in zip(keys, tputs) if flt(key)])
 
     x = [np.arange(len(tputs))]
     # Convert circuit throughput into utilization.
@@ -206,16 +210,19 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     db.close()
 
 
-def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23):
-    """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
+def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23,
+         flt=lambda key: True):
+    """
+    srt: sort, xlr: x label rotation (degrees), lbs: bar label fontsize,
+    flt: filter function that takes in a key
+    """
     print("Plotting: {}".format(name))
     basename = name.split("_")[1]
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
     graph_circuit_util(
-        keys=data['keys'], tputs=data['circ_tput'], fn=name, xlb=xlb, odr=odr,
-        srt=srt, xlr=xlr, lbs=lbs)
+        data['keys'], data['circ_tput'], name, xlb, odr, srt, xlr, lbs, flt)
 
 
 def main():
