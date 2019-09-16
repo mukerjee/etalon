@@ -193,7 +193,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     if xlm is not None:
         options.x.limits = xlm
     options.x.label.xlabel = 'Time ($\mu$s)'
-    options.y.label.ylabel = 'Expected seq. num.\n($\\times$1000)'
+    options.y.label.ylabel = 'Expected TCP sequence\nnumber ($\\times$1000)'
     options.x.label.fontsize = options.y.label.fontsize = 18
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 18
