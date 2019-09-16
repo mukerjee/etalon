@@ -38,13 +38,16 @@ DYN_PTN = "*-QUEUE-True-{}-{}-*click.txt"
 
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
-# CC mode indices to display in static graph.
-DESIRED_CCS = ["optimal", "packet only", "bbr", "cubic", "dctcp", "highspeed",
-               "illinois", "scalable", "westwood", "yeah"]
+# Order of the lines for the all TCP variants experiments. This is also used to
+# select which lines to plot.
+ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
+              "illinois", "scalable", "westwood", "yeah", "packet only"]
+# Order of the lines for the static buffers experiments.
+ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
 # used to select which lines to plot.
-DYN_ORDER = ["optimal", "packet only", "static", "25", "75", "100", "125",
-             "150", "175", "225"]
+ORDER_DYN = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
+             "packet only"]
 # The TCP variant to use as our baseline.
 CHOSEN_TCP = "cubic"
 # Static buffer size to use.
@@ -140,7 +143,8 @@ def main():
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
-        flt=lambda idx, label, ccs=DESIRED_CCS: label in ccs)
+        flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
+        order=ORDER_VARS)
 
     # (4.2)
     buffers_graphs.util(
@@ -162,7 +166,8 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
-        dur=1200)
+        dur=1200,
+        order=ORDER_STATIC)
 
     # (5.2)
     buffers_graphs.util(
@@ -205,9 +210,9 @@ def main():
                                          / python_config.TDF)),
             dur=1200,
             ins=ins,
-            flt=(lambda idx, label, order=DYN_ORDER: \
+            flt=(lambda idx, label, order=ORDER_DYN: \
                  label.strip(" $\mu$s") in order),
-            order=DYN_ORDER)
+            order=ORDER_DYN)
 
     # (6.1) With zoom.
     sg.seq(
@@ -219,9 +224,9 @@ def main():
                                      / python_config.TDF)),
         dur=1200,
         ins=ins,
-        flt=(lambda idx, label, order=DYN_ORDER: \
+        flt=(lambda idx, label, order=ORDER_DYN: \
              label.strip(" $\mu$s") in order),
-        order=DYN_ORDER,
+        order=ORDER_DYN,
         xlm=XLM_ZOOM)
 
     # (6.2)
@@ -264,7 +269,8 @@ def main():
         ptn=DYN_PTN.format(CHOSEN_RESIZE_US, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
-        flt=(lambda idx, label, ccs=DESIRED_CCS: label in ccs))
+        flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
+        order=ORDER_VARS)
 
     # (7.2)
     buffers_graphs.util(
@@ -326,8 +332,8 @@ def main():
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
         dur=1200,
-        flt=lambda idx, label, order=DYN_ORDER: label.strip(" $\mu$s") in order,
-        order=DYN_ORDER)
+        flt=lambda idx, label, order=ORDER_DYN: label.strip(" $\mu$s") in order,
+        order=ORDER_DYN)
 
     # (9.2)
     buffers_graphs.util(

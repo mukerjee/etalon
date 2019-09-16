@@ -233,7 +233,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
             idx = 0
             found = False
             for possibility in options.legend.options.labels:
-                if item in possibility:
+                if possibility.startswith(item):
                     found = True
                     break
                 idx += 1
