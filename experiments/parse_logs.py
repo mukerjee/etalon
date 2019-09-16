@@ -222,8 +222,23 @@ def get_seq_data(fn):
                 if ts >= prev_end + timing_offset:
                     if first == -1:
                         first = seq
-                    out.append(((ts - prev_end - timing_offset)*1e6,
-                                seq - first))
+
+                    rel_ts = (ts - prev_end - timing_offset) * 1e6
+                    rel_seq = seq - first
+                    if len(out) > 0 and rel_ts == out[-1][0]:
+                        # Do not add this result if there already exists a value
+                        # for this timestamp.
+                        continue
+                        # print("i: {}".format(i))
+                        # print("rel_ts: {}".format(rel_ts))
+                        # print("ts: {}".format(ts))
+                        # print("prev_end: {}".format(prev_end))
+                        # print("timing_offset: {}".format(timing_offset))
+                        # print("rel_seq: {}".format(rel_seq))
+                        # print("seq: {}".format(seq))
+                        # print("first: {}".format(first))
+
+                    out.append((rel_ts, rel_seq))
                 if ts < curr_end + timing_offset:
                     last = i
             if not out:
@@ -236,13 +251,29 @@ def get_seq_data(fn):
             if not wraparound:
                 # Interpolate based on the data we have. x-values are the times
                 # ([0]), y-values are the data ([1]).
-                chunks.append(np.interp(xrange(DURATION),
-                                        zip(*out)[0],
-                                        zip(*out)[1]))
-        print len(chunks)
+                out = sorted(out, key=lambda a: a[0])
+                xs, ys = zip(*out)
+                diffs = np.diff(xs) > 0
+                if not np.all(diffs):
+                    print("diffs: {}".format(diffs))
+                    print("out:")
+                    for x, y in out:
+                        print("{}: {}".format(x, y))
+                    raise Exception(
+                        "interp() requires x values to be increasing")
+                chunks.append(np.interp(xrange(DURATION), xs, ys))
+
+        print("len(chunks): {}".format(len(chunks)))
+        # List of lists, where each entry corresponds to one timestep and each
+        # subentry corresponds to a sequence number for that timestep.
         unzipped = zip(*chunks)
-        results[f] = [np.average(q) for q in unzipped]
-        print 'bad windows', bad_windows
+        print("len(unzipped[-1]): {}".format(len(unzipped[-1])))
+        # print("unzipped[-1]: {}".format(unzipped[-1]))
+        print("len(unzipped): {}".format(len(unzipped)))
+        # Average the sequence numbers for across each timestep, creating the
+        # final results for this flow.
+        results[f] = [np.average(tstamp_results) for tstamp_results in unzipped]
+        print('bad windows: {}'.format(bad_windows))
 
     print("len(results): {}".format(len(results)))
     results = {k: v for k, v in results.items() if v}
