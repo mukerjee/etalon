@@ -165,7 +165,7 @@ def get_data(db, key):
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
-             ins=None, flt=lambda idx, label: True, order=None):
+             ins=None, flt=lambda idx, label: True, order=None, xlm=None):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
@@ -190,6 +190,8 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
     options.output_fn = path.join(odr, '{}.pdf'.format(fn))
+    if xlm is not None:
+        options.y.limits = xlm
     options.x.label.xlabel = 'Time ($\mu$s)'
     options.y.label.ylabel = 'Expected seq. num.\n($\\times$1000)'
     options.x.label.fontsize = options.y.label.fontsize = 18
@@ -212,9 +214,9 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
         options.inset.options.corners = (2, 3)
         options.inset.options.location = "center right"
         options.inset.options.marker.options.color = 'black'
-        xlm, ylm = ins
-        options.inset.options.x.limits = xlm
-        options.inset.options.y.limits = ylm
+        xlm_ins, ylm_ins = ins
+        options.inset.options.x.limits = xlm_ins
+        options.inset.options.y.limits = ylm_ins
 
     # Pick only the lines that we want.
     if flt is not None:
@@ -257,7 +259,8 @@ def rst_glb(dur):
     # the actual circuit timings.
 
 
-def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
+def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
+        xlm=None):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -271,6 +274,7 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
     flt: Function that takes a legend index and label and returns a boolean
          indicating whether to include that line.
     order: List of the legend labels in their desired order.
+    xlm: x-axis limits
     """
     print("Plotting: {}".format(name))
     rst_glb(dur)
@@ -281,5 +285,5 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None):
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(get_data(db, basename), name, odr, ins, flt, order)
+    plot_seq(get_data(db, basename), name, odr, ins, flt, order, xlm)
     db.close()
