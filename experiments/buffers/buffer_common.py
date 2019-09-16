@@ -7,7 +7,7 @@ def gen_static_sweep(mn, mx):
         'packet_log': True,
         'type': 'strobe',
         'buffer_size': 2**exp
-        } for exp in range(mn, mx + 1)]
+        } for exp in xrange(mn, mx + 1)]
 
 
 def gen_resize_sweep(mn, mx, dl):
