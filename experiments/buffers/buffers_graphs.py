@@ -119,7 +119,7 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
 
     # Filter.
     keys, tputs = zip(
-        *[key, tput for key, tput in zip(keys, tputs) if flt(key)])
+        *[(key, tput) for key, tput in zip(keys, tputs) if flt(key)])
 
     x = [np.arange(len(tputs))]
     # Convert circuit throughput into utilization.
