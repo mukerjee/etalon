@@ -112,7 +112,7 @@ def main():
         odr=odr,
         ptn=OLD_PTN.format(CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=60000)
+        dur=57590)
 
     # (2)
     sg.seq(
@@ -130,7 +130,7 @@ def main():
         odr=odr,
         ptn=FUTURE_PTN.format(CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=60)
+        dur=64)
 
     # (4.1)
     sg.seq(
