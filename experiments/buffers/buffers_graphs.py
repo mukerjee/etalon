@@ -201,12 +201,7 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
-    graph_lat(
-        keys=data['keys'],
-        latencies=data['lat'][prc],
-        fn=name,
-        y_lab=ylb,
-        odr=odr)
+    graph_lat(data['keys'], data['lat'][prc], name, ylb, odr)
     db.close()
 
 
