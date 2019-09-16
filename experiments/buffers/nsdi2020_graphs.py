@@ -28,7 +28,7 @@ import sg
 OLD_PTN = "*-{}-*-20000-180000-click.txt"
 # Matches experiments with a particular CC mode, 0.1 us nights, and 0.9 us days
 # (under TDF).
-FUTURE_PTN = "*-{}-*-2-18-click.txt"
+FUTURE_PTN = "*-{}-*-20-180-click.txt"
 # Matches experiments with static buffers of a particular size, a particular CC
 # mode, 20 us nights, and 180 us days (under TDF).
 STATIC_PTN = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
@@ -128,7 +128,7 @@ def main():
         odr=odr,
         ptn=FUTURE_PTN.format(CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=6)
+        dur=60)
 
     # (4.1)
     sg.seq(
