@@ -71,7 +71,7 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
 
 
 
-def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
+def graph_lat(keys, latencies, fn, ylb, odr=path.join(PROGDIR, "graphs")):
     # Sort the data based on the x-values (keys).
     keys, latencies = zip(
         *sorted(zip(keys, latencies), key=lambda p: int(p[0])))
@@ -81,7 +81,7 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
 
     print("")
     print("raw latency data for: {}".format(fn))
-    print("{}:".format(y_lab.strip("\n")))
+    print("{}:".format(ylb.strip("\n")))
     print("    all: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[0], y[0])])))
     print("    circuit: {}".format(". ".join(["({}: {})".format(a, b) for a, b in zip(x[1], y[1])])))
     print("    packet: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[2], y[2])])))
@@ -100,7 +100,7 @@ def graph_lat(keys, latencies, fn, y_lab, odr=path.join(PROGDIR, "graphs")):
     options.output_fn = path.join(odr, '{}.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
                              else 'Early buffer resizing ($\mu$s)'
-    options.y.label.ylabel = '{} latency ($\mu$s)'.format(y_lab)
+    options.y.label.ylabel = '{} latency ($\mu$s)'.format(ylb)
     options.x.ticks.major.labels = DotMap(
         locations=[4, 8, 16, 32, 64, 128]) if 'static' in fn \
         else DotMap(locations=[0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
@@ -227,15 +227,15 @@ def main():
     typ = 'static'
     data = get_data(db, typ)
     graph_lat(keys=data['keys'], latencies=data['lat'][50], fn=typ,
-              y_lab="Median")
+              ylb="Median")
     graph_circuit_util(data['circ_tput'], typ)
 
     typ = 'resize'
     data = get_data(db, typ)
     graph_lat(keys=data['keys'], latencies=data['lat'][50],
-              fn="{}-median".format(typ), y_lab="Median")
+              fn="{}-median".format(typ), ylb="Median")
     graph_lat(keys=data['keys'], latencies=data['lat'][99],
-              fn="{}-99".format(typ), y_lab="99th percentile\n")
+              fn="{}-99".format(typ), ylb="99th percentile\n")
     graph_circuit_util([db['static']['circ_tput'][2]] + data['circ_tput'], typ)
 
     typ = 'reTCP'
