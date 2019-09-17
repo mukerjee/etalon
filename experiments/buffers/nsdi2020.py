@@ -18,9 +18,9 @@ import python_config
 DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
-# Run buffer resizing experiments up to MAX_RESIZE_US us in advance of circuit
-# start.
-MAX_RESIZE_US = 4500
+RESIZE_US_MIN = 150 * python_config.TDF
+RESIZE_US_MAX = 175 * python_config.TDF
+RESIZE_US_DELTA = 1 * python_config.TDF
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -62,7 +62,7 @@ def main():
                           "cc": cc}]
         # (4) Only do full sweeps for CUBIC and reTCP, but capture 3500 us for
         #     all variants.
-        for us in xrange(0, MAX_RESIZE_US + 1, 500):
+        for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX + 1, RESIZE_US_DELTA):
             if cc in ["cubic", "retcp"] or us == 3500:
                 cnfs += [{"type": "strobe",
                           "queue_resize": True,
