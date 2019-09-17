@@ -18,9 +18,9 @@ import python_config
 DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
-RESIZE_US_MIN = int(round(150 * python_config.TDF))
-RESIZE_US_MAX = int(round(175 * python_config.TDF))
-RESIZE_US_DELTA = int(round(1 * python_config.TDF))
+RESIZE_US_MIN = 0
+RESIZE_US_MAX = 225
+RESIZE_US_DELTA = 25
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -62,13 +62,12 @@ def main():
         #                   "cc": cc}]
         # (4) Only do full sweeps for CUBIC and reTCP, but capture 3500 us for
         #     all variants.
-        for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX + 1, RESIZE_US_DELTA):
-            if cc == "cubic":
-                cnfs += [{"type": "strobe",
-                          "queue_resize": True,
-                          "buffer_size": 16,
-                          "in_advance": us,
-                          "cc": cc}]
+        for us in [50, 100, 125, 150]:
+            cnfs += [{"type": "strobe",
+                      "queue_resize": True,
+                      "buffer_size": 16,
+                      "in_advance": us * python_config.TDF,
+                      "cc": cc}]
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
         # Enable the hybrid switch's packet log. This should already be enabled
