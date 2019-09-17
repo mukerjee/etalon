@@ -95,6 +95,8 @@ def main():
     #     (9.3) Latency 50
     #     (9.4) Latency 99
 
+    assert len(sys.argv) == 2, \
+        "Expected one argument: experiment data directory"
     edr = sys.argv[1]
     if not path.isdir(edr):
         print("The first argument must be a directory, but is: {}".format(edr))
