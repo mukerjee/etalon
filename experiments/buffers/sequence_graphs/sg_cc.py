@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+import os
 from os import path
-import shelve
 import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
@@ -13,37 +13,32 @@ import sg
 
 
 def main():
-    exp = sys.argv[1]
-    if not path.isdir(exp):
-        print("The first argument must be a directory, but is: {}".format(exp))
+    assert len(sys.argv) == 2, \
+        "Expected one argument: experiment data directory"
+    edr = sys.argv[1]
+    if not path.isdir(edr):
+        print("The first argument must be a directory, but is: {}".format(edr))
         sys.exit(-1)
-
-    # Create entries for each CC mode. Keys are of the form "resize-<CC mode>".
-    ccs = python_config.CCS
-    fmt = "resize-{}"
-    for cc in ccs:
-        sg.FILES[fmt.format(cc)] = "*-QUEUE-True-*-{}-*click.txt".format(cc)
-        sg.KEY_FN[fmt.format(cc)] = sg.KEY_FN["resize"]
+    # Specify and create the output directory.
+    odr = path.join(PROGDIR, 'graphs', 'nsdi2020')
+    if path.exists(odr):
+        if not path.isdir(odr):
+            print("Output directory exists and is a file: {}".format(odr))
+            sys.exit(-1)
+    else:
+        os.makedirs(odr)
 
     # Create a graph for each CC mode.
-    lines = None
-    ins = ((2600, 2820), (50, 450))
-    flt = lambda idx, label: idx < 10  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
-    for cc in ccs:
-        # Use a new database for each CC mode to avoid storing everything in
-        # memory at once. This also enables the program to be killed and
-        # restarted partway through without losing progress.
-        db = shelve.open(path.join(exp, "seq_{}_shelve.db".format(cc)))
-        key = fmt.format(cc)
-        cc_data = sg.get_data(db, key)
-        db.close()
-        # Use the same circuit windows for all graphs.
-        if lines is None:
-            lines = cc_data["lines"]
-        else:
-            cc_data["lines"] = lines
-
-        sg.plot_seq(cc_data, key, ins=ins, flt=flt)
+    for cc in python_config.CCS:
+        sg.seq(
+            name="10_seq-dyn-{}".format(cc),
+            edr=edr,
+            odr=odr,
+            ptn="*-QUEUE-True-*-{}-*click.txt".format(cc),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                         / python_config.TDF)),
+            dur=1200,
+            flt=lambda idx, label: idx < 10)  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
 
 
 if __name__ == "__main__":
