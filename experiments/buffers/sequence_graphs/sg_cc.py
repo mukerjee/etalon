@@ -20,7 +20,7 @@ def main():
         print("The first argument must be a directory, but is: {}".format(edr))
         sys.exit(-1)
     # Specify and create the output directory.
-    odr = path.join(PROGDIR, 'graphs', 'nsdi2020')
+    odr = path.join(PROGDIR, "..", "graphs", "nsdi2020")
     if path.exists(odr):
         if not path.isdir(odr):
             print("Output directory exists and is a file: {}".format(odr))
