@@ -57,7 +57,9 @@ CHOSEN_STATIC = 16
 # Amount of resizing to use.
 CHOSEN_RESIZE_US = "3500"
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (790, 850)
+XLM_ZOOM = (790, 900)
+# The y-axis bounds to zoom in on for analyzing circuit teardown.
+YLM_ZOOM = (152, 65)
 
 
 def main():
@@ -231,7 +233,8 @@ def main():
         flt=(lambda idx, label, order=ORDER_DYN: \
              label.strip(" $\mu$s") in order),
         order=ORDER_DYN,
-        xlm=XLM_ZOOM)
+        xlm=XLM_ZOOM,
+        ylm=YLM_ZOOM)
 
     # (6.2)
     buffers_graphs.util(

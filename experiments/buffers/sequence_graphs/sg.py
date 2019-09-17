@@ -167,7 +167,8 @@ def get_data(db, key):
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
-             ins=None, flt=lambda idx, label: True, order=None, xlm=None):
+             ins=None, flt=lambda idx, label: True, order=None, xlm=None,
+             ylm=None):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
@@ -194,6 +195,8 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     options.output_fn = path.join(odr, '{}.pdf'.format(fn))
     if xlm is not None:
         options.x.limits = xlm
+    if ylm is not None:
+        options.y.limits = ylm
     options.x.label.xlabel = 'Time ($\mu$s)'
     options.y.label.ylabel = 'Expected TCP sequence\nnumber ($\\times$1000)'
     options.x.label.fontsize = options.y.label.fontsize = 18
@@ -262,7 +265,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None):
+        xlm=None, ylm=None):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -277,6 +280,7 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
          indicating whether to include that line.
     order: List of the legend labels in their desired order.
     xlm: x-axis limits
+    ylm: y-axis limits
     """
     print("Plotting: {}".format(name))
     rst_glb(dur)
@@ -287,5 +291,5 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(get_data(db, basename), name, odr, ins, flt, order, xlm)
+    plot_seq(get_data(db, basename), name, odr, ins, flt, order, xlm, ylm)
     db.close()
