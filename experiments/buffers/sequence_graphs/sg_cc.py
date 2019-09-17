@@ -13,14 +13,12 @@ import sg
 
 
 def main():
-    assert len(sys.argv) == 2, \
-        "Expected one argument: experiment data directory"
-    edr = sys.argv[1]
+    assert len(sys.argv) == 3, \
+        "Expected one argument: experiment data dir, output dir"
+    edr, odr = sys.argv[1:]
     if not path.isdir(edr):
         print("The first argument must be a directory, but is: {}".format(edr))
         sys.exit(-1)
-    # Specify and create the output directory.
-    odr = path.join(PROGDIR, "..", "graphs", "nsdi2020")
     if path.exists(odr):
         if not path.isdir(odr):
             print("Output directory exists and is a file: {}".format(odr))
