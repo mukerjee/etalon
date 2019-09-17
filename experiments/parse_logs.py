@@ -66,7 +66,7 @@ def msg_from_file(filename, chunksize=112):
                 break
 
 
-def get_seq_data(fn):
+def get_seq_data(fn, chunk_idx=None):
     print("Parsing: {}".format(fn))
     circuit_starts = defaultdict(list)
     circuit_ends = defaultdict(list)
@@ -269,6 +269,13 @@ def get_seq_data(fn):
                 chunks.append(np.interp(xrange(DURATION), xs, ys))
 
         print("len(chunks): {}".format(len(chunks)))
+        if chunk_idx is not None:
+            num_chunks = len(chunks)
+            if chunk_idx > num_chunks:
+                raise Exception("chunk_idx = {}, but len(chunks) = {}".format(
+                    chunk_idx, num_chunks))
+            chunks = [chunks[chunk_idx]]
+            print("chunks: {}".format(chunks))
         # List of lists, where each entry corresponds to one timestep and each
         # subentry corresponds to a sequence number for that timestep.
         unzipped = zip(*chunks)

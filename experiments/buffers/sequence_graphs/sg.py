@@ -39,13 +39,14 @@ NUM_HOSTS = 16.0
 
 
 class FileReader(object):
-    def __init__(self, name):
+    def __init__(self, name, chunk_idx=None):
         self.name = name
+        self.chunk_idx = chunk_idx
 
     def __call__(self, fn):
         key = KEY_FN[self.name](fn.split('/')[-1])
         print fn, key
-        return key, parse_logs.get_seq_data(fn)
+        return key, parse_logs.get_seq_data(fn, self.chunk_idx)
 
 
 def add_optimal(data):
@@ -115,7 +116,7 @@ def add_optimal(data):
     data['data'].insert(0, optimal)
 
 
-def get_data(db, key):
+def get_data(db, key, chunk_idx=None):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns a copy of them.
@@ -147,7 +148,7 @@ def get_data(db, key):
 
         data = defaultdict(dict)
         p = Pool()
-        data['raw_data'] = dict(p.map(FileReader(key), fns))
+        data['raw_data'] = dict(p.map(FileReader(key, chunk_idx), fns))
         # Clean up p.
         p.close()
         p.join()
@@ -265,7 +266,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None):
+        xlm=None, ylm=None, chunk_idx=None):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -291,5 +292,6 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(get_data(db, basename), name, odr, ins, flt, order, xlm, ylm)
+    plot_seq(
+        get_data(db, basename, chunk_idx), name, odr, ins, flt, order, xlm, ylm)
     db.close()

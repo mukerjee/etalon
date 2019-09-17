@@ -60,6 +60,8 @@ CHOSEN_RESIZE_US = "3500"
 XLM_ZOOM = (790, 900)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
 YLM_ZOOM = (152, 65)
+# The chunk to analyze.
+CHUNK_IDX = 1000
 
 
 def main():
@@ -207,8 +209,8 @@ def main():
     # (6.1) With and without inset.
     for ins in [DYN_INS, None]:
         sg.seq(
-            name="6-1_seq-dyn-{}{}".format(
-                CHOSEN_TCP, "_inset" if ins is not None else ""),
+            name="6-1_seq-dyn-{}-chunk{}{}".format(
+                CHOSEN_TCP, CHUNK_IDX, "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
@@ -218,11 +220,12 @@ def main():
             ins=ins,
             flt=(lambda idx, label, order=ORDER_DYN: \
                  label.strip(" $\mu$s") in order),
-            order=ORDER_DYN)
+            order=ORDER_DYN,
+            chunk_idx=CHUNK_IDX)
 
     # (6.1) With zoom.
     sg.seq(
-        name="6-1_seq-dyn-{}_zoom".format(CHOSEN_TCP),
+        name="6-1_seq-dyn-{}-chunk{}_zoom".format(CHOSEN_TCP, CHUNK_IDX),
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", CHOSEN_TCP),
