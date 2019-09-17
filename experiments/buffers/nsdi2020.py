@@ -63,7 +63,7 @@ def main():
         # (4) Only do full sweeps for CUBIC and reTCP, but capture 3500 us for
         #     all variants.
         for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX + 1, RESIZE_US_DELTA):
-            if cc in ["cubic", "retcp"] or us == 3500:
+            if cc == "cubic":
                 cnfs += [{"type": "strobe",
                           "queue_resize": True,
                           "buffer_size": 16,
