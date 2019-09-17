@@ -212,6 +212,8 @@ def get_seq_data(fn):
             if i+2 >= len(circuit_ends[sr]):
                 continue
             next_next_end = circuit_ends[sr][i+2]
+            # A list of pairs where the first element is a relative timestamp
+            # and the second element is a relative sequence number.
             out = []
             first = -1
             timing_offset = 30e-6
@@ -226,9 +228,6 @@ def get_seq_data(fn):
                     rel_ts = (ts - prev_end - timing_offset) * 1e6
                     rel_seq = seq - first
                     if len(out) > 0 and rel_ts == out[-1][0]:
-                        # Do not add this result if there already exists a value
-                        # for this timestamp.
-                        continue
                         # print("i: {}".format(i))
                         # print("rel_ts: {}".format(rel_ts))
                         # print("ts: {}".format(ts))
@@ -237,6 +236,12 @@ def get_seq_data(fn):
                         # print("rel_seq: {}".format(rel_seq))
                         # print("seq: {}".format(seq))
                         # print("first: {}".format(first))
+                        # Do not add this result if there already exists a value
+                        # for this timestamp.
+                        print(("Warning: Dropping ({}, {}) because we already "
+                               "have data for that timestamp!").format(
+                                   rel_ts, rel_seq))
+                        continue
 
                     out.append((rel_ts, rel_seq))
                 if ts < curr_end + timing_offset:
@@ -249,8 +254,7 @@ def get_seq_data(fn):
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if not wraparound:
-                # Interpolate based on the data we have. x-values are the times
-                # ([0]), y-values are the data ([1]).
+                # Sort the data so that it can be used by numpy.interp().
                 out = sorted(out, key=lambda a: a[0])
                 xs, ys = zip(*out)
                 diffs = np.diff(xs) > 0
@@ -258,9 +262,10 @@ def get_seq_data(fn):
                     print("diffs: {}".format(diffs))
                     print("out:")
                     for x, y in out:
-                        print("{}: {}".format(x, y))
+                        print("  {}: {}".format(x, y))
                     raise Exception(
-                        "interp() requires x values to be increasing")
+                        "numpy.interp() requires x values to be increasing")
+                # Interpolate based on the data that we have.
                 chunks.append(np.interp(xrange(DURATION), xs, ys))
 
         print("len(chunks): {}".format(len(chunks)))
