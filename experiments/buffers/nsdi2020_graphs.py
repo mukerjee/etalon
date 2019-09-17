@@ -48,6 +48,8 @@ ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # used to select which lines to plot.
 ORDER_DYN = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
              "packet only"]
+# ORDER_DYN = ["optimal", "150", "152", "154", "156", "158", "160", "162", "164",
+#              "packet only"]
 # The TCP variant to use as our baseline.
 CHOSEN_TCP = "cubic"
 # Static buffer size to use.
