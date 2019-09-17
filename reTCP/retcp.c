@@ -40,10 +40,14 @@ static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
   tcp_reno_cong_avoid(sk, ack, acked);
 
   if (ca->have_circuit && !ca->jumped) {
+    printk(KERN_INFO "circuit start. old cwnd: %d, new cwnd: %d",
+           tp->snd_cwnd, tp->snd_cwnd * jump_up);
     tp->snd_cwnd *= jump_up;
     ca->jumped = 1;
   }
   if (!ca->have_circuit && ca->jumped) {
+    printk(KERN_INFO "circuit end. old cwnd: %d, new cwnd: %d",
+           tp->snd_cwnd, tp->snd_cwnd / jump_down);
     tp->snd_cwnd /= jump_down;
     ca->jumped = 0;
   }
