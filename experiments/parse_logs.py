@@ -272,9 +272,10 @@ def get_seq_data(fn):
         # List of lists, where each entry corresponds to one timestep and each
         # subentry corresponds to a sequence number for that timestep.
         unzipped = zip(*chunks)
-        print("len(unzipped[-1]): {}".format(len(unzipped[-1])))
-        # print("unzipped[-1]: {}".format(unzipped[-1]))
         print("len(unzipped): {}".format(len(unzipped)))
+        if len(unzipped) > 0:
+            print("len(unzipped[-1]): {}".format(len(unzipped[-1])))
+            # print("unzipped[-1]: {}".format(unzipped[-1]))
         # Average the sequence numbers for across each timestep, creating the
         # final results for this flow.
         results[f] = [np.average(tstamp_results) for tstamp_results in unzipped]
