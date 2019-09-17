@@ -15,6 +15,8 @@ sys.path.insert(0, path.join(PROGDIR, '..', '..'))
 sys.path.insert(0, path.join(PROGDIR, '..', '..', '..', 'etc'))
 
 from dotmap import DotMap
+import simpleplotlib
+simpleplotlib.default_options.rcParams['font.family'] = "Tahoma"
 from simpleplotlib import plot
 
 import parse_logs
