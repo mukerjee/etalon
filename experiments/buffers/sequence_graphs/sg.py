@@ -10,13 +10,13 @@ import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
 # For parse_logs.
-sys.path.insert(0, path.join(PROGDIR, '..', '..'))
+sys.path.insert(0, path.join(PROGDIR, "..", ".."))
 # For python_config.
-sys.path.insert(0, path.join(PROGDIR, '..', '..', '..', 'etc'))
+sys.path.insert(0, path.join(PROGDIR, "..", "..", "..", "etc"))
 
 from dotmap import DotMap
 import simpleplotlib
-simpleplotlib.default_options.rcParams['font.family'] = "Tahoma"
+simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 from simpleplotlib import plot
 
 import parse_logs
@@ -24,14 +24,14 @@ from python_config import TDF, CIRCUIT_BW_Gbps, PACKET_BW_Gbps
 
 # Maps experiment to filename.
 FILES = {
-    'static': '*-fixed-*-False-*-reno-*click.txt',
-    'resize': '*-QUEUE-True-*-reno-*click.txt',
+    "static": "*-fixed-*-False-*-reno-*click.txt",
+    "resize": "*-QUEUE-True-*-reno-*click.txt",
 }
 # Maps experiment to a function that convert a filename to an integer key
 # identifying this experiment (i.e., for the legend).
 KEY_FN = {
-    'static': lambda fn: int(fn.split('fixed-')[1].split('-')[0]),
-    'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / TDF,
+    "static": lambda fn: int(fn.split("fixed-")[1].split("-")[0]),
+    "resize": lambda fn: int(fn.split("True-")[1].split("-")[0]) / TDF,
 }
 # Kilo-sequence number
 UNITS = 1000.0
@@ -44,7 +44,7 @@ class FileReader(object):
         self.chunk_idx = chunk_idx
 
     def __call__(self, fn):
-        key = KEY_FN[self.name](fn.split('/')[-1])
+        key = KEY_FN[self.name](fn.split("/")[-1])
         print fn, key
         return key, parse_logs.get_seq_data(fn, self.chunk_idx)
 
@@ -75,7 +75,7 @@ def add_optimal(data):
 
     # Circuit start and end times, of the form:
     #     [<start>, <end>, <start>, <end>, ...]
-    bounds = [int(round(q)) for q in data['lines']]
+    bounds = [int(round(q)) for q in data["lines"]]
     assert len(bounds) % 2 == 0, \
         ("Circuit starts and ends must come in pairs, but the list of them "
          "contains an odd number of elements: {}".format(bounds))
@@ -110,10 +110,10 @@ def add_optimal(data):
         assert optimal[i] != optimal[i + 1], \
             "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
 
-    data['keys'].insert(0, "packet only")
-    data['data'].insert(0, pkt_only)
-    data['keys'].insert(0, "optimal")
-    data['data'].insert(0, optimal)
+    data["keys"].insert(0, "packet only")
+    data["data"].insert(0, pkt_only)
+    data["keys"].insert(0, "optimal")
+    data["data"].insert(0, optimal)
 
 
 def get_data(db, key, chunk_idx=None):
@@ -148,16 +148,16 @@ def get_data(db, key, chunk_idx=None):
 
         data = defaultdict(dict)
         p = Pool()
-        data['raw_data'] = dict(p.map(FileReader(key, chunk_idx), fns))
+        data["raw_data"] = dict(p.map(FileReader(key, chunk_idx), fns))
         # Clean up p.
         p.close()
         p.join()
 
-        data['raw_data'] = sorted(data['raw_data'].items())
-        data['keys'] = list(zip(*data['raw_data'])[0])
-        data['lines'] = data['raw_data'][0][1][1]
-        data['data'] = [map(lambda x: x / UNITS, f) for f in
-                        zip(*zip(*data['raw_data'])[1])[0]]
+        data["raw_data"] = sorted(data["raw_data"].items())
+        data["keys"] = list(zip(*data["raw_data"])[0])
+        data["lines"] = data["raw_data"][0][1][1]
+        data["data"] = [map(lambda x: x / UNITS, f) for f in
+                        zip(*zip(*data["raw_data"])[1])[0]]
 
         # Store the new data in the database.
         db[key] = data
@@ -167,20 +167,20 @@ def get_data(db, key, chunk_idx=None):
     return data
 
 
-def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
+def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
              ylm=None, typ="LINE"):
-    x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
-    y = data['data']
+    x = [xrange(len(data["data"][i])) for i in xrange(len(data["keys"]))]
+    y = data["data"]
 
     # Format the legend labels.
     lls = []
-    for k in data['keys']:
+    for k in data["keys"]:
         try:
-            if 'static' in fn:
-                lls += ['%s packets' % int(k)]
+            if "static" in fn:
+                lls += ["%s packets" % int(k)]
             else:
-                lls += ['%s $\mu$s' % int(k)]
+                lls += ["%s $\mu$s" % int(k)]
         except ValueError:
             lls += [k]
 
@@ -193,33 +193,33 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
     # Use 1 column if there are fewer than 4 lines, otherwise use 2 columns.
     options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
     options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
-    options.output_fn = path.join(odr, '{}.pdf'.format(fn))
+    options.output_fn = path.join(odr, "{}.pdf".format(fn))
     if xlm is not None:
         options.x.limits = xlm
     if ylm is not None:
         options.y.limits = ylm
-    options.x.label.xlabel = 'Time ($\mu$s)'
-    options.y.label.ylabel = 'Expected TCP sequence\nnumber ($\\times$1000)'
+    options.x.label.xlabel = "Time ($\mu$s)"
+    options.y.label.ylabel = "Expected TCP sequence\nnumber ($\\times$1000)"
     options.x.label.fontsize = options.y.label.fontsize = 18
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 18
     options.x.axis.show = options.y.axis.show = True
-    options.x.axis.color = options.y.axis.color = 'black'
-    lines = data['lines']
+    options.x.axis.color = options.y.axis.color = "black"
+    lines = data["lines"]
     options.vertical_lines.lines = lines
     shaded = []
     for i in xrange(0, len(lines), 2):
         shaded.append((lines[i], lines[i+1]))
     options.vertical_shaded.limits = shaded
     options.vertical_shaded.options.alpha = 0.1
-    options.vertical_shaded.options.color = 'blue'
+    options.vertical_shaded.options.color = "blue"
 
     if ins is not None:
         options.inset.show = True
         options.inset.options.zoom_level = 1.75
         options.inset.options.corners = (2, 3)
         options.inset.options.location = "center right"
-        options.inset.options.marker.options.color = 'black'
+        options.inset.options.marker.options.color = "black"
         xlm_ins, ylm_ins = ins
         options.inset.options.x.limits = xlm_ins
         options.inset.options.y.limits = ylm_ins
