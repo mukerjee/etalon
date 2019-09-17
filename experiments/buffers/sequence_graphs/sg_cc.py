@@ -31,7 +31,7 @@ def main():
     # Create a graph for each CC mode.
     for cc in python_config.CCS:
         sg.seq(
-            name="10_seq-dyn-{}".format(cc),
+            name="seq-dyn-{}".format(cc),
             edr=edr,
             odr=odr,
             ptn="*-QUEUE-True-*-{}-*click.txt".format(cc),
