@@ -169,7 +169,7 @@ def get_data(db, key, chunk_idx=None):
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
-             ylm=None):
+             ylm=None, typ="LINE"):
     x = [xrange(len(data['data'][i])) for i in xrange(len(data['keys']))]
     y = data['data']
 
@@ -185,7 +185,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, '..', 'graphs'),
             lls += [k]
 
     options = DotMap()
-    options.plot_type = 'LINE'
+    options.plot_type = typ
     options.legend.options.loc = "center right"
     options.legend.options.bbox_to_anchor = (1.4, 0.5)
     options.legend.options.labels = lls
@@ -293,5 +293,6 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     plot_seq(
-        get_data(db, basename, chunk_idx), name, odr, ins, flt, order, xlm, ylm)
+        get_data(db, basename, chunk_idx), name, odr, ins, flt, order, xlm, ylm,
+        typ="LINE" if chunk_idx is None else "SCATTER")
     db.close()

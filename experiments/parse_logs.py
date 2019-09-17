@@ -274,8 +274,9 @@ def get_seq_data(fn, chunk_idx=None):
             if chunk_idx > num_chunks:
                 raise Exception("chunk_idx = {}, but len(chunks) = {}".format(
                     chunk_idx, num_chunks))
-            chunks = [chunks[chunk_idx]]
-            print("chunks: {}".format(chunks))
+            return chunks[chunk_idx], (out_start, out_end, out_next_start,
+                                       out_next_end, out_next_next_start,
+                                       out_next_next_end)
         # List of lists, where each entry corresponds to one timestep and each
         # subentry corresponds to a sequence number for that timestep.
         unzipped = zip(*chunks)

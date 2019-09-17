@@ -57,9 +57,9 @@ CHOSEN_STATIC = 16
 # Amount of resizing to use.
 CHOSEN_RESIZE_US = "3500"
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (790, 900)
+XLM_ZOOM = (790, 820)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (152, 65)
+YLM_ZOOM = (150, 200)
 # The chunk to analyze.
 CHUNK_IDX = 1000
 
