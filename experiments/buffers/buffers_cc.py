@@ -19,8 +19,6 @@ import python_config
 
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
-# The upper bound on the resize time sweep.
-MAX_RESIZE_US = 0
 # Flowgrind flow duration, in seconds.
 # 1400 us week x 3 + 0.1 (for good measure)
 # DUR_S = 4.3
@@ -33,6 +31,10 @@ DUR_S = 1.3
 # FIXED = "2 3600 1/2/0 400 -1/-1/-1"  # Broken
 # FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"  # Works, but the packet network does not work.
 FIXED = None
+# Control which experimnets are run.
+RESIZE_US_MIN = int(round(0 * python_config.TDF))
+RESIZE_US_MAX = int(round(225 * python_config.TDF))
+RESIZE_US_DELTA = int(round(25 * python_config.TDF))
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -47,7 +49,8 @@ def main():
     ccs = ["cubic"]
     cnfs = []
     for cc in ccs:
-        sweep = buffer_common.gen_resize_sweep(0, MAX_RESIZE_US, 500)
+        sweep = buffer_common.gen_resize_sweep(RESIZE_US_MIN, RESIZE_US_MAX,
+                                               RESIZE_US_DELTA)
         for cnf in sweep:
             cnf["cc"] = cc
             if cc == "dctcp":
