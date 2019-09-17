@@ -18,9 +18,9 @@ import python_config
 DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
-RESIZE_US_MIN = 150 * python_config.TDF
-RESIZE_US_MAX = 175 * python_config.TDF
-RESIZE_US_DELTA = 1 * python_config.TDF
+RESIZE_US_MIN = int(round(150 * python_config.TDF))
+RESIZE_US_MAX = int(round(175 * python_config.TDF))
+RESIZE_US_DELTA = int(round(1 * python_config.TDF))
 
 
 def maybe(fnc, do=not DRY_RUN):
