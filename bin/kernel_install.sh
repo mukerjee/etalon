@@ -36,5 +36,5 @@ git apply $HOME/etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 # Perf needs $PYTHON to be set.
 MAKEFLAGS="-j `nproc`" PYTHON=`which python` fakeroot debian/rules \
-    binary-headers binary-generic binary-perarch
+         binary-headers binary-generic binary-perarch
 sudo dpkg --force-all -i $BUILD_DIR/*.deb
