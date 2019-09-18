@@ -38,3 +38,6 @@ fakeroot debian/rules clean
 MAKEFLAGS="-j `nproc`" PYTHON=`which python` fakeroot debian/rules \
          binary-headers binary-generic binary-perarch
 sudo dpkg --force-all -i $BUILD_DIR/*.deb
+echo "\nGRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 4.15.0-50-generic\"" \
+    | sudo tee -a /etc/default/grub
+sudo update-grub
