@@ -18,9 +18,9 @@ import python_config
 DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
-RESIZE_US_MIN = 150
-RESIZE_US_MAX = 180
-RESIZE_US_DELTA = 2
+RESIZE_US_MIN = 0
+RESIZE_US_MAX = 225
+RESIZE_US_DELTA = 25
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -42,32 +42,33 @@ def main():
     cnfs = []
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
-    for cc in ["reno"]:
-        # if cc in ["cubic"]:
-        #     # (1)
-        #     cnfs += [{"type": "strobe", "buffer_size": 16,
-        #               "night_len_us": 1000. * python_config.TDF,
-        #               "day_len_us": 9000. * python_config.TDF,
-        #               "cc": cc}]
-        #     # (2)
-        #     cnfs += [{"type": "strobe", "buffer_size": 16,
-        #               "night_len_us": 1 * python_config.TDF,
-        #               "day_len_us": 9 * python_config.TDF, "cc": cc}]
-        # # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
-        # #     for all variants.
-        # for exp in xrange(2, MAX_STATIC_POW + 1):
-        #     if cc in ["cubic", "retcp"] or exp == 4:
-        #         cnfs += [{"type": "strobe",
-        #                   "buffer_size": 2**exp,
-        #                   "cc": cc}]
-        # (4) Only do full sweeps for CUBIC and reTCP, but capture 3500 us for
-        #     all variants.
-        for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX, RESIZE_US_DELTA):
-            cnfs += [{"type": "strobe",
-                      "queue_resize": True,
-                      "buffer_size": 16,
-                      "in_advance": us * python_config.TDF,
+    for cc in python_config.CCS:
+        if cc in ["cubic"]:
+            # (1)
+            cnfs += [{"type": "strobe", "buffer_size": 16,
+                      "night_len_us": 1000. * python_config.TDF,
+                      "day_len_us": 9000. * python_config.TDF,
                       "cc": cc}]
+            # (2)
+            cnfs += [{"type": "strobe", "buffer_size": 16,
+                      "night_len_us": 1 * python_config.TDF,
+                      "day_len_us": 9 * python_config.TDF, "cc": cc}]
+        # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
+        #     for all variants.
+        for exp in xrange(2, MAX_STATIC_POW + 1):
+            if cc in ["cubic", "retcp"] or exp == 4:
+                cnfs += [{"type": "strobe",
+                          "buffer_size": 2**exp,
+                          "cc": cc}]
+        # (4) Only do full sweeps for CUBIC and reTCP, but capture 150 us and
+        #     175 us for all variants.
+        for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX + 1, RESIZE_US_DELTA):
+            if cc in ["cubic", "retcp"] or us in [150, 175]:
+                cnfs += [{"type": "strobe",
+                          "queue_resize": True,
+                          "buffer_size": 16,
+                          "in_advance": us * python_config.TDF,
+                          "cc": cc}]
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
         # Enable the hybrid switch's packet log. This should already be enabled
