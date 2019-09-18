@@ -18,9 +18,9 @@ import python_config
 DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
-RESIZE_US_MIN = 0
-RESIZE_US_MAX = 225
-RESIZE_US_DELTA = 25
+RESIZE_US_MIN = 150
+RESIZE_US_MAX = 180
+RESIZE_US_DELTA = 2
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -42,7 +42,7 @@ def main():
     cnfs = []
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
-    for cc in python_config.CCS:
+    for cc in ["reno"]:
         # if cc in ["cubic"]:
         #     # (1)
         #     cnfs += [{"type": "strobe", "buffer_size": 16,
@@ -62,7 +62,7 @@ def main():
         #                   "cc": cc}]
         # (4) Only do full sweeps for CUBIC and reTCP, but capture 3500 us for
         #     all variants.
-        for us in [50, 100, 125, 150]:
+        for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX, RESIZE_US_DELTA):
             cnfs += [{"type": "strobe",
                       "queue_resize": True,
                       "buffer_size": 16,
