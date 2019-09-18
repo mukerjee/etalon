@@ -88,7 +88,8 @@ def main():
     #     (6.3) Latency 50
     #     (6.4) Latency 99
     #   (7) Dynamic buffers, all TCP variants
-    #     (7.1) Sequence
+    #     (7.1.1) Sequence, fixed resize time, varying variant
+    #     (7.1.2) Sequence, fixed variant, varying resize time
     #     (7.2) Utilization
     #   (8) Static buffers, reTCP
     #     (8.1) Sequence
@@ -271,16 +272,29 @@ def main():
         prc=99,
         ylb="99th percentile")
 
-    # (7.1)
-    sg.seq(
-        name="7-1_seq-dyn-all",
-        edr=edr,
-        odr=odr,
-        ptn=DYN_PTN.format(CHOSEN_RESIZE_US, "*"),
-        key_fnc=lambda fn: fn.split("-")[7],
-        dur=1200,
-        flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
-        order=ORDER_VARS)
+    # (7.1.1)
+    for us in [50, 100, 125, 150, 175]:
+        sg.seq(
+            name="7-1_seq-dyn-all-{}us".format(
+                int(round(us * python_config.TDF))),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format(us, "*"),
+            key_fnc=lambda fn: fn.split("-")[7],
+            dur=1200,
+            flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
+            order=ORDER_VARS)
+
+    # (7.1.2)
+    for cc in python_config.CCS:
+        sg.seq(
+            name="7-1_seq-dyn-{}".format(cc),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", cc),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                         / python_config.TDF)),
+            dur=1200)
 
     # (7.2)
     buffers_graphs.util(
