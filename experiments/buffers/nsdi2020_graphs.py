@@ -210,27 +210,34 @@ def main():
     for ins in [DYN_INS, None]:
         for chunk_idx in [CHUNK_IDX, None]:
             for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
-                if ins is None or xlm_zoom is None:
-                    sg.seq(
-                        name="6-1_seq-dyn-{}{}{}{}".format(
-                            CHOSEN_TCP,
-                            ("-chunk{}".format(chunk_idx)
-                             if chunk_idx is not None else ""),
-                            "_inset" if ins is not None else "",
-                            "_zoom" if xlm_zoom is not None else ""),
-                        edr=edr,
-                        odr=odr,
-                        ptn=DYN_PTN.format("*", CHOSEN_TCP),
-                        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
-                                                     / python_config.TDF)),
-                        dur=1200,
-                        ins=ins,
-                        flt=(lambda idx, label, order=ORDER_DYN: \
-                             label.strip(" $\mu$s") in order),
-                        order=ORDER_DYN,
-                        xlm=xlm_zoom,
-                        ylm=ylm_zoom,
-                        chunk_idx=chunk_idx)
+                plt_typs = ["LINE"]
+                if chunk_idx is not None:
+                    # Only make scatter plots for the single-flow graphs.
+                    plt_typs.append("SCATTER")
+                for plt_typ in plt_typs:
+                    if ins is None or xlm_zoom is None:
+                        sg.seq(
+                            name="6-1_seq-dyn-{}{}{}{}_{}".format(
+                                CHOSEN_TCP,
+                                ("-chunk{}".format(chunk_idx)
+                                 if chunk_idx is not None else ""),
+                                "_inset" if ins is not None else "",
+                                "_zoom" if xlm_zoom is not None else "",
+                                plt_typ),
+                            edr=edr,
+                            odr=odr,
+                            ptn=DYN_PTN.format("*", CHOSEN_TCP),
+                            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                                         / python_config.TDF)),
+                            dur=1200,
+                            ins=ins,
+                            flt=(lambda idx, label, order=ORDER_DYN: \
+                                 label.strip(" $\mu$s") in order),
+                            order=ORDER_DYN,
+                            xlm=xlm_zoom,
+                            ylm=ylm_zoom,
+                            chunk_idx=chunk_idx,
+                            plt_typ=plt_typ)
 
     # (6.2)
     buffers_graphs.util(

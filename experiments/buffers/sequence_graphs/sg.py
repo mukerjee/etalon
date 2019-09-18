@@ -266,7 +266,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_idx=None):
+        xlm=None, ylm=None, chunk_idx=None, plt_typ="LINE"):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -297,5 +297,5 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     plot_seq(
         get_data(db, basename, chunk_idx), name, odr, ins, flt, order, xlm, ylm,
-        typ="LINE" if chunk_idx is None else "SCATTER")
+        typ=plt_typ)
     db.close()
