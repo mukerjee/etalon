@@ -89,6 +89,7 @@ def main():
         options.x.log = True
         options.x.axis.show = options.y.axis.show = True
         options.x.axis.color = options.y.axis.color = "black"
+        options.y.limits = (0, max([max(line) for line in ys]) + 4)
 
         plot(xs, ys, options)
 
