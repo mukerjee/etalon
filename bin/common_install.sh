@@ -79,6 +79,7 @@ fi
 # remove "tcp_probe" because it does not work, and drop the ".ko" extension.
 for CC in `ls /lib/modules/$(uname -r)/kernel/net/ipv4 | grep ko | grep tcp | grep -v "tcp_probe" | cut -d"." -f1`; do
     sudo modprobe $CC;
+    echo $CC | sudo tee -a /etc/modules
 done
 
 # Install dependencies.
