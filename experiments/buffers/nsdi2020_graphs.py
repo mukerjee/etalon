@@ -48,9 +48,12 @@ ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # used to select which lines to plot. For coarse-grained experiments.
 ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
                 "packet only"]
-# Same as above. For fine-grained experiments.
-ORDER_DYN_FG = ["optimal", "174", "170", "166", "162", "158", "154", "150",
-                "packet only"]
+# Same as above. For the chosen variant's fine-grained experiments.
+ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
+                      "packet only"]
+# Same as above. For reTCP fine-grained experiments.
+ORDER_DYN_FG_RETCP = ["optimal", "154", "150", "148", "146", "142", "138",
+                      "packet only"]
 # Same as above. For 7.1.2.
 ORDER_712 = ["optimal", "175", "150", "125", "100", "50", "packet only"]
 # The TCP variant to use as our baseline.
@@ -259,9 +262,9 @@ def main():
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
         dur=1200,
-        flt=(lambda idx, label, order=ORDER_DYN_FG: \
+        flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
              label.strip(" $\mu$s") in order),
-        order=ORDER_DYN_FG)
+        order=ORDER_DYN_FG_CHOSEN)
 
     # (6.2)
     buffers_graphs.util(
@@ -394,9 +397,9 @@ def main():
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
         dur=1200,
-        flt=(lambda idx, label, order=ORDER_DYN_FG: \
+        flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
              label.strip(" $\mu$s") in order),
-        order=ORDER_DYN_FG)
+        order=ORDER_DYN_FG_RETCP)
 
     # (9.2)
     buffers_graphs.util(
