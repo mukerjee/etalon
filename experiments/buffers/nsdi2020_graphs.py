@@ -95,7 +95,7 @@ def main():
     #   (7) Dynamic buffers, all TCP variants
     #     (7.1.1) Sequence, fixed resize time, varying variant
     #     (7.1.2) Sequence, fixed variant, varying resize time
-    #     (7.2) Utilization
+    #     (7.2) Utilization, for various resize times.
     #   (8) Static buffers, reTCP
     #     (8.1) Sequence
     #     (8.2) Utilization
@@ -295,17 +295,29 @@ def main():
         prc=99,
         ylb="99th percentile")
 
-    # (7.1.1)
+    # (7.1.1) and (7.2)
     for us in [50, 100, 125, 150, 175]:
+        us_tdf = int(round(us * python_config.TDF))
         sg.seq(
             name="7-1-1_seq-dyn-all-{}us".format(us),
             edr=edr,
             odr=odr,
-            ptn=DYN_PTN.format(int(round(us * python_config.TDF)), "*"),
+            ptn=DYN_PTN.format(us_tdf, "*"),
             key_fnc=lambda fn: fn.split("-")[7],
             dur=1200,
             flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
             order=ORDER_VARS)
+        buffers_graphs.util(
+            name="7-2_util-dyn-all-{}us".format(us),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format(us_tdf, "*"),
+            key_fnc=lambda fn: fn.split("-")[7],
+            xlb='TCP variant',
+            srt=False,
+            xlr=45,
+            lbs=12,
+            flt=lambda key: key != "retcp")
 
     # (7.1.2)
     for cc in python_config.CCS:
@@ -320,19 +332,6 @@ def main():
             flt=(lambda idx, label, order=ORDER_712: \
                  label.strip(" $\mu$s") in order),
             order=ORDER_712)
-
-    # (7.2)
-    buffers_graphs.util(
-        name="7-2_util-dyn-all",
-        edr=edr,
-        odr=odr,
-        ptn=DYN_PTN.format(CHOSEN_RESIZE_US, "*"),
-        key_fnc=lambda fn: fn.split("-")[7],
-        xlb='TCP variant',
-        srt=False,
-        xlr=45,
-        lbs=12,
-        flt=lambda key: key != "retcp")
 
     # (8.1)
     sg.seq(
