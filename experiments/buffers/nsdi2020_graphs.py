@@ -271,7 +271,9 @@ def main():
         ptn=DYN_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        xlb='Resize time ($\mu$s)')
+        xlb='Resize time ($\mu$s)',
+        xlr=45,
+        lbs=12)
 
     # (6.3)
     buffers_graphs.lat(
@@ -404,7 +406,9 @@ def main():
         ptn=DYN_PTN.format("*", "retcp"),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        xlb='Resize time ($\mu$s)')
+        xlb='Resize time ($\mu$s)',
+        xlr=45,
+        lbs=12)
 
     # (9.3)
     buffers_graphs.lat(
