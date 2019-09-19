@@ -297,6 +297,7 @@ def main():
 
     # (7.1.1)
     for us in [50, 100, 125, 150, 175]:
+        us = int(round(us * python_config.TDF))
         sg.seq(
             name="7-1_seq-dyn-all-{}us".format(
                 int(round(us * python_config.TDF))),
@@ -317,7 +318,10 @@ def main():
             ptn=DYN_PTN.format("*", cc),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
-            dur=1200)
+            dur=1200,
+            flt=(lambda idx, label, order=ORDER_712: \
+                 label.strip(" $\mu$s") in order),
+            order=ORDER_712)
 
     # (7.2)
     buffers_graphs.util(
