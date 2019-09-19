@@ -89,7 +89,10 @@ def main():
         options.x.log = True
         options.x.axis.show = options.y.axis.show = True
         options.x.axis.color = options.y.axis.color = "black"
-        options.y.limits = (0, max([max(line) for line in ys]) + 4)
+        # Flip the x-axis.
+        options.x.limits = (max([max(vals) for vals in xs]) * 1.5,
+                            min([min(vals) for vals in xs]) * 0.5)
+        options.y.limits = (0, max([max(vals) for vals in ys]) + 4)
 
         plot(xs, ys, options)
 
