@@ -217,7 +217,7 @@ def main():
     # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
         # With a single flow chunk and in aggregate.
-        for chunk_idx in [CHUNK_IDX, None]:
+        for chunk_idx in [None]:  # [CHUNK_IDX, None]:
             # With and without zooming in.
             for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
                 plt_typs = ["LINE"]
