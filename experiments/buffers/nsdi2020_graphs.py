@@ -297,13 +297,11 @@ def main():
 
     # (7.1.1)
     for us in [50, 100, 125, 150, 175]:
-        us = int(round(us * python_config.TDF))
         sg.seq(
-            name="7-1_seq-dyn-all-{}us".format(
-                int(round(us * python_config.TDF))),
+            name="7-1-1_seq-dyn-all-{}us".format(us),
             edr=edr,
             odr=odr,
-            ptn=DYN_PTN.format(us, "*"),
+            ptn=DYN_PTN.format(int(round(us * python_config.TDF)), "*"),
             key_fnc=lambda fn: fn.split("-")[7],
             dur=1200,
             flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
@@ -312,7 +310,7 @@ def main():
     # (7.1.2)
     for cc in python_config.CCS:
         sg.seq(
-            name="7-1_seq-dyn-{}".format(cc),
+            name="7-1-2_seq-dyn-{}".format(cc),
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", cc),
