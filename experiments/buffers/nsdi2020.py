@@ -18,9 +18,14 @@ import python_config
 DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
-RESIZE_US_MIN = 0
-RESIZE_US_MAX = 225
-RESIZE_US_DELTA = 25
+# Coarse granularity sweep bounds.
+CG_RESIZE_US_MIN = 0
+CG_RESIZE_US_MAX = 225
+CG_RESIZE_US_DELTA = 25
+# Fine granularity sweep bounds.
+FG_RESIZE_US_MIN = 150
+FG_RESIZE_US_MAX = 170
+FG_RESIZE_US_DELTA = 2
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -60,15 +65,27 @@ def main():
                 cnfs += [{"type": "strobe",
                           "buffer_size": 2**exp,
                           "cc": cc}]
-        # (4) Only do full sweeps for CUBIC and reTCP, but capture 150 us and
-        #     175 us for all variants.
-        for us in xrange(RESIZE_US_MIN, RESIZE_US_MAX + 1, RESIZE_US_DELTA):
-            if cc in ["cubic", "retcp"] or us in [150, 175]:
+        # (4) Coarse granularity.
+        for us in xrange(
+                CG_RESIZE_US_MIN, CG_RESIZE_US_MAX + 1, CG_RESIZE_US_DELTA):
+            # Only do full sweeps for CUBIC and reTCP, but capture a handful of
+            # us's for all variants.
+            if cc in ["cubic", "retcp"] or us in [50, 100, 125, 150, 175]:
                 cnfs += [{"type": "strobe",
                           "queue_resize": True,
                           "buffer_size": 16,
                           "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
+        # (4) Fine granularity.
+        for us in xrange(
+                FG_RESIZE_US_MIN, FG_RESIZE_US_MAX + 1, FG_RESIZE_US_DELTA):
+            if cc in ["cubic", "retcp"]:
+                cnfs += [{"type": "strobe",
+                          "queue_resize": True,
+                          "buffer_size": 16,
+                          "in_advance": int(round(us * python_config.TDF)),
+                          "cc": cc}]
+
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
         # Enable the hybrid switch's packet log. This should already be enabled
