@@ -49,8 +49,10 @@ ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
                 "packet only"]
 # Same as above. For fine-grained experiments.
-ORDER_DYN_FG = ["optimal", "150", "154", "158", "162", "166", "170", "174",
+ORDER_DYN_FG = ["optimal", "174", "170", "166", "162", "158", "154", "150",
                 "packet only"]
+# Same as above. For 7.1.2.
+ORDER_712 = ["optimal", "175", "150", "125", "100", "50", "packet only"]
 # The TCP variant to use as our baseline.
 CHOSEN_TCP = "cubic"
 # Static buffer size to use.
@@ -62,7 +64,7 @@ XLM_ZOOM = (790, 820)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
 YLM_ZOOM = (150, 200)
 # The chunk to analyze.
-CHUNK_IDX = 1000
+CHUNK_IDX = 250
 
 
 def main():
