@@ -45,11 +45,12 @@ ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
 # Order of the lines for the static buffers experiments.
 ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
-# used to select which lines to plot.
-ORDER_DYN = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
-             "packet only"]
-# ORDER_DYN = ["optimal", "150", "152", "154", "156", "158", "160", "162", "164",
-#              "packet only"]
+# used to select which lines to plot. For coarse-grained experiments.
+ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
+                "packet only"]
+# Same as above. For fine-grained experiments.
+ORDER_DYN_FG = ["optimal", "150", "154", "158", "162", "166", "170", "174",
+                "packet only"]
 # The TCP variant to use as our baseline.
 CHOSEN_TCP = "cubic"
 # Static buffer size to use.
@@ -82,8 +83,10 @@ def main():
     #     (5.2) Utilization
     #     (5.3) Latency 50
     #     (5.4) Latency 99
-    #   (6) Dynamic buffers, CUBIC.
+    #   (6) Dynamic buffers, CUBIC
     #     (6.1) Sequence
+    #       (6.1.1) Coarse-grained
+    #       (6.1.2) Fine-grained
     #     (6.2) Utilization
     #     (6.3) Latency 50
     #     (6.4) Latency 99
@@ -98,6 +101,8 @@ def main():
     #     (8.4) Latency 99
     #   (9) Dynamic buffers, reTCP
     #     (9.1) Sequence
+    #       (9.1.1) Coarse-grained
+    #       (9.1.2) Fine-grained
     #     (9.2) Utilization
     #     (9.3) Latency 50
     #     (9.4) Latency 99
@@ -207,18 +212,21 @@ def main():
         prc=99,
         ylb="99th percentile")
 
-    # (6.1) With and without inset.
+    # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
+        # With a single flow chunk and in aggregate.
         for chunk_idx in [CHUNK_IDX, None]:
+            # With and without zooming in.
             for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
                 plt_typs = ["LINE"]
                 if chunk_idx is not None:
                     # Only make scatter plots for the single-flow graphs.
                     plt_typs.append("SCATTER")
+                # As line and (optionally) scatter plots.
                 for plt_typ in plt_typs:
                     if ins is None or xlm_zoom is None:
                         sg.seq(
-                            name="6-1_seq-dyn-{}{}{}{}_{}".format(
+                            name="6-1-1_seq-dyn-{}{}{}{}_{}_cg".format(
                                 CHOSEN_TCP,
                                 ("-chunk{}".format(chunk_idx)
                                  if chunk_idx is not None else ""),
@@ -232,13 +240,26 @@ def main():
                                                          / python_config.TDF)),
                             dur=1200,
                             ins=ins,
-                            flt=(lambda idx, label, order=ORDER_DYN: \
+                            flt=(lambda idx, label, order=ORDER_DYN_CG: \
                                  label.strip(" $\mu$s") in order),
-                            order=ORDER_DYN,
+                            order=ORDER_DYN_CG,
                             xlm=xlm_zoom,
                             ylm=ylm_zoom,
                             chunk_idx=chunk_idx,
                             plt_typ=plt_typ)
+
+    # (6.1.2)
+    sg.seq(
+        name="6-1-2_seq-dyn-{}_fg".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", CHOSEN_TCP),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        dur=1200,
+        flt=(lambda idx, label, order=ORDER_DYN_FG: \
+             label.strip(" $\mu$s") in order),
+        order=ORDER_DYN_FG)
 
     # (6.2)
     buffers_graphs.util(
@@ -347,7 +368,7 @@ def main():
         prc=99,
         ylb="99th percentile")
 
-    # (9.1)
+    # (9.1.1)
     sg.seq(
         name="9-1_seq-dyn-retcp",
         edr=edr,
@@ -356,8 +377,21 @@ def main():
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
         dur=1200,
-        flt=lambda idx, label, order=ORDER_DYN: label.strip(" $\mu$s") in order,
-        order=ORDER_DYN)
+        flt=lambda idx, label, order=ORDER_DYN_CG: label.strip(" $\mu$s") in order,
+        order=ORDER_DYN_CG)
+
+    # (9.1.2)
+    sg.seq(
+        name="6-1_seq-dyn-retcp_fg",
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", "retcp"),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        dur=1200,
+        flt=(lambda idx, label, order=ORDER_DYN_FG: \
+             label.strip(" $\mu$s") in order),
+        order=ORDER_DYN_FG)
 
     # (9.2)
     buffers_graphs.util(
