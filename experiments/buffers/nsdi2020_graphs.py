@@ -374,7 +374,7 @@ def main():
 
     # (9.1.1)
     sg.seq(
-        name="9-1_seq-dyn-retcp",
+        name="9-1-1_seq-dyn-retcp_cg",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
@@ -386,7 +386,7 @@ def main():
 
     # (9.1.2)
     sg.seq(
-        name="6-1_seq-dyn-retcp_fg",
+        name="9-1-2_seq-dyn-retcp_fg",
         edr=edr,
         odr=odr,
         ptn=DYN_PTN.format("*", "retcp"),
