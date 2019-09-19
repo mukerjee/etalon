@@ -67,7 +67,7 @@ def main():
                 cnfs += [{"type": "strobe",
                           "queue_resize": True,
                           "buffer_size": 16,
-                          "in_advance": us * python_config.TDF,
+                          "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
@@ -83,8 +83,8 @@ def main():
         # their defaults so that we can automatically calculate the experiment
         # duration, below.
         if "night_len_us" not in cnf:
-            cnf["night_len_us"] = 20 * python_config.TDF
-            cnf["day_len_us"] = 180 * python_config.TDF
+            cnf["night_len_us"] = int(round(20 * python_config.TDF))
+            cnf["day_len_us"] = int(round(180 * python_config.TDF))
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
