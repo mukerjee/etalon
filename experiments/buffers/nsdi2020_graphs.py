@@ -46,7 +46,7 @@ ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
 ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
 # used to select which lines to plot. For coarse-grained experiments.
-ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "25",
+ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
                 "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
 ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
@@ -68,6 +68,9 @@ XLM_ZOOM = (790, 820)
 YLM_ZOOM = (150, 200)
 # The chunk to analyze.
 CHUNK_IDX = 250
+
+CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175, 200, 225]  # 14 bars
+CHOSEN_RETCP_UTIL =  [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175, 200, 225]  # 14 bars
 
 
 def main():
@@ -276,7 +279,8 @@ def main():
                                      / python_config.TDF)),
         xlb='Resize time ($\mu$s)',
         xlr=45,
-        lbs=12)
+        lbs=12,
+        flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen)
 
     # (6.3)
     buffers_graphs.lat(
@@ -411,7 +415,8 @@ def main():
                                      / python_config.TDF)),
         xlb='Resize time ($\mu$s)',
         xlr=45,
-        lbs=12)
+        lbs=12,
+        flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen)
 
     # (9.3)
     buffers_graphs.lat(
