@@ -200,7 +200,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.fontsize = 18
     # Use 1 column if there are fewer than 4 lines, otherwise use 2 columns.
     options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
-    options.series_options = [DotMap(linewidth=2) for i in range(len(x))]
+    options.series_options = [DotMap(linewidth=2) for i in range(len(xs))]
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
     if xlm is not None:
         options.x.limits = xlm
@@ -234,15 +234,15 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
 
     # Pick only the lines that we want.
     if flt is not None:
-        x, y, options.legend.options.labels = zip(
-            *[(a, b, l) for (i, (a, b, l)) in enumerate(
-                zip(x, y, options.legend.options.labels))
+        xs, ys, options.legend.options.labels = zip(
+            *[(x, y, l) for (i, (x, y, l)) in enumerate(
+                zip(xs, ys, options.legend.options.labels))
               if flt(i, l)])
 
     if order is not None:
-        real_x = []
-        real_y = []
-        real_l = []
+        real_xs = []
+        real_ys = []
+        real_ls = []
         for item in order:
             idx = 0
             found = False
@@ -252,14 +252,14 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
                     break
                 idx += 1
             if found:
-                real_x.append(x[idx])
-                real_y.append(y[idx])
-                real_l.append(options.legend.options.labels[idx])
-        x = real_x
-        y = real_y
-        options.legend.options.labels = real_l
+                real_xs.append(xs[idx])
+                real_ys.append(ys[idx])
+                real_ls.append(options.legend.options.labels[idx])
+        xs = real_xs
+        ys = real_ys
+        options.legend.options.labels = real_ls
 
-    plot(x, y, options)
+    plot(xs, ys, options)
 
 
 def rst_glb(dur):
