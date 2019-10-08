@@ -21,6 +21,9 @@ simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 import parse_logs
 import python_config
 
+# True and False mean that the data parsing will be executed using a single
+# thread and multiple threads, respectively.
+SYNC = False
 # Maps experiment to filename.
 FILES = {
     "static": "*-fixed-*-False-*-reno-*click.txt",
@@ -37,14 +40,12 @@ UNITS = 1000.0
 
 
 class FileReader(object):
-    def __init__(self, name, chunk_mode=None):
+    def __init__(self, name):
         self.name = name
-        self.chunk_mode = chunk_mode
 
     def __call__(self, fn):
-        key = KEY_FN[self.name](fn.split("/")[-1])
-        print fn, key
-        return key, parse_logs.get_seq_data(fn, self.chunk_mode)
+        return (KEY_FN[self.name](fn.split("/")[-1]),
+                parse_logs.get_seq_data(fn))
 
 
 def add_optimal(data):
@@ -134,23 +135,34 @@ def get_data(db, key):
         for fn in fns:
             print("    {}".format(fn))
 
-        data = defaultdict(dict)
-        p = Pool()
-        data["raw_data"] = dict(p.map(FileReader(key, chunk_mode), fns))
-        # Clean up p.
-        p.close()
-        p.join()
+        data = collections.defaultdict(dict)
+
+        if SYNC:
+            data["raw_data"] = dict([FileReader(key)(fn) for fn in fns])
+        else:
+            p = multiprocessing.Pool()
+            data["raw_data"] = dict(p.map(FileReader(key), fns))
+            # Clean up p.
+            p.close()
+            p.join()
 
         data["raw_data"] = sorted(data["raw_data"].items())
         data["keys"] = list(zip(*data["raw_data"])[0])
         data["lines"] = data["raw_data"][0][1][1]
         data["data"] = [[y / UNITS for y in f]
                         for f in zip(*zip(*data["raw_data"])[1])[0]]
-        data["best_chunks"] = {
-            flw: (xs, [y / UNITS for y in ys])
-            for flw, (xs, ys) in data["raw_data"][0][1][2].items()}
-        add_optimal(data)
 
+        data["best_chunks"] = {}
+        for line, (_, _, best_chunk_res) in data["raw_data"]:
+            # Pick the flow with the best of the best chunks.
+            best_chunk = ([], [])
+            for maybe_best_chunk in best_chunk_res.values():
+                if len(maybe_best_chunk[0]) > len(best_chunk[0]):
+                    best_chunk = maybe_best_chunk
+            xs, ys = best_chunk
+            data["best_chunks"][line] = (xs, [y / UNITS for y in ys])
+
+        add_optimal(data)
         # Store the new data in the database.
         db[key] = data
     return copy.deepcopy(db[key])
@@ -292,6 +304,6 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(get_data(db, basename, chunk_mode), name, odr, ins, flt, order,
-             xlm, ylm, chunk_mode)
+    plot_seq(get_data(db, basename), name, odr, ins, flt, order, xlm, ylm,
+             chunk_mode)
     db.close()
