@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 
-from collections import defaultdict
+import collections
 import copy
 import glob
-from multiprocessing import Pool
+import multiprocessing
 from os import path
 import shelve
 import sys
@@ -14,13 +14,12 @@ sys.path.insert(0, path.join(PROGDIR, "..", ".."))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "..", "etc"))
 
-from dotmap import DotMap
+import dotmap
 import simpleplotlib
 simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
-from simpleplotlib import plot
 
 import parse_logs
-from python_config import TDF, CIRCUIT_BW_Gbps, PACKET_BW_Gbps
+import python_config
 
 # Maps experiment to filename.
 FILES = {
@@ -31,11 +30,10 @@ FILES = {
 # identifying this experiment (i.e., for the legend).
 KEY_FN = {
     "static": lambda fn: int(fn.split("fixed-")[1].split("-")[0]),
-    "resize": lambda fn: int(fn.split("True-")[1].split("-")[0]) / TDF,
+    "resize": lambda fn: int(fn.split("True-")[1].split("-")[0]) / python_config.TDF,
 }
 # Kilo-sequence number
 UNITS = 1000.0
-NUM_HOSTS = 16.0
 
 
 class FileReader(object):
@@ -61,17 +59,17 @@ def add_optimal(data):
     # Calculate the raw rate of the packet and circuit networks.
     #
     # Constant used to convert Gb/s to the units of the graphs. E.g., using
-    # NUM_HOSTS = 16 and UNITS = KB, our target is KB / us / host:
+    # HOSTS_PER_RACK = 16 and UNITS = KB, our target is KB / us / host:
     #
     #                                 div by    div by
-    #                                NUM_HOSTS  UNITS
+    #                           HOSTS_PER_RACK  UNITS
     #
     #     10**9 b    1 B      1 s     1 rack     1 KB    0.0078125 KB
     #     ------- x  --- x -------- x ------- x ------ = ------------
     #       Gb       8 b   10**6 us   16 host   1000 B    us x host
-    factor = 10**9 / 8. / 10**6 / NUM_HOSTS / UNITS
-    pr_KBpus = PACKET_BW_Gbps * factor
-    cr_KBpus = CIRCUIT_BW_Gbps * factor
+    factor = 10**9 / 8. / 10**6 / python_config.HOSTS_PER_RACK / UNITS
+    pr_KBpus = python_config.PACKET_BW_Gbps * factor
+    cr_KBpus = python_config.CIRCUIT_BW_Gbps * factor
 
     # Circuit start and end times, of the form:
     #     [<start>, <end>, <start>, <end>, ...]
@@ -116,22 +114,12 @@ def add_optimal(data):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key, chunk_mode=None):
+def get_data(db, key):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns a copy of them.
     """
     if key not in db:
-        # data["raw_data"] = A list of pairs, where each pair corresponds to an
-        #     experiment file.
-        # data["raw_data"][i] = A pair of (key value, results).
-        # data["raw_data"][i][1] = A pair of (list, n-tuple).
-        # data["raw_data"][i][1][0] = A list of expected sequence number over
-        #     time.
-        # data["raw_data"][i][1][1] = An n-tuple of the times of circuit up/down
-        #     events.
-        # data["raw_data"][i][1][1][0] = The time at which the first day began.
-
         ptns = FILES[key]
         if not isinstance(ptns, list):
             ptns = [ptns]
@@ -175,7 +163,6 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     # Select the data based on whether we are plotting a single chunk from a
     # single flow or aggregate metrics for all chunks from all flows.
     if chunk_mode:
-        # Arbitrarily select the first flow.
         xs, ys = zip(*data["best_chunks"].values())
     else:
         ys = data["data"]
@@ -192,7 +179,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         except ValueError:
             lls += [k]
 
-    options = DotMap()
+    options = dotmap.DotMap()
     options.plot_type = "SCATTER" if chunk_mode else "LINE"
     options.legend.options.loc = "center right"
     options.legend.options.bbox_to_anchor = (1.4, 0.5)
@@ -200,7 +187,8 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.fontsize = 18
     # Use 1 column if there are fewer than 4 lines, otherwise use 2 columns.
     options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
-    options.series_options = [DotMap(linewidth=2) for i in range(len(xs))]
+    options.series_options = [
+        dotmap.DotMap(linewidth=2) for i in range(len(xs))]
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
     if xlm is not None:
         options.x.limits = xlm
@@ -259,11 +247,12 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         ys = real_ys
         options.legend.options.labels = real_ls
 
-    plot(xs, ys, options)
+    simpleplotlib.plot(xs, ys, options)
 
 
 def rst_glb(dur):
     """ Reset global variables. """
+    global FILES, KEY_FN
     # Reset global lookup tables.
     FILES = {}
     KEY_FN = {}

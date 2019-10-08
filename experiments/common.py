@@ -393,14 +393,14 @@ def launch(phost, image, host_id):
 
     run_cmd = IMAGE_DOCKER_RUN[image]
     run_on_host(phost, run_cmd.format(image=DOCKER_IMAGE, hosts_file=HOSTS_FILE,
-                                      id=my_id, FQDN=FQDN, cpu_set=cpus,
+                                      hid=my_id, FQDN=FQDN, cpu_set=cpus,
                                       cpu_limit=cpu_lim, cmd=my_cmd))
     run_on_host(phost, PIPEWORK.format(ext_if=DATA_EXT_IF, int_if=DATA_INT_IF,
                                        net=DATA_NET, rack=get_phost_id(phost),
-                                       id=host_id))
+                                       hid=host_id))
     if not IMAGE_SKIP_TC[image]:
         run_on_host(phost, TC.format(int_if=DATA_INT_IF,
-                                     id=my_id, rate=DATA_RATE_Gbps_TDF))
+                                     hid=my_id, rate=DATA_RATE_Gbps_TDF))
 
     run_on_host(my_id, SWITCH_PING, timeout_s=600)
     smac = run_on_host(my_id, GET_SWITCH_MAC).strip()
@@ -414,14 +414,14 @@ def launch(phost, image, host_id):
             continue
         for j in xrange(1, HOSTS_PER_RACK + 1):
             dst_id = '%d%d.%s' % (i, j, FQDN)
-            run_on_host(my_id, ARP_POISON.format(id=dst_id, switch_mac=smac))
+            run_on_host(my_id, ARP_POISON.format(hid=dst_id, switch_mac=smac))
 
     run_on_host(phost,
                 PIPEWORK.format(ext_if=CONTROL_EXT_IF, int_if=CONTROL_INT_IF,
                                 net=CONTROL_NET, rack=get_phost_id(phost),
-                                id=host_id))
+                                hid=host_id))
     if not IMAGE_SKIP_TC[image]:
-        run_on_host(phost, TC.format(int_if=CONTROL_INT_IF, id=my_id,
+        run_on_host(phost, TC.format(int_if=CONTROL_INT_IF, hid=my_id,
                                      rate=CONTROL_RATE_Gbps_TDF))
 
 

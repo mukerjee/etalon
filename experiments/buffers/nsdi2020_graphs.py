@@ -50,7 +50,7 @@ ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
                 "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
 ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
-                      "packet only"]
+                       "packet only"]
 # Same as above. For reTCP fine-grained experiments.
 ORDER_DYN_FG_RETCP = ["optimal", "154", "150", "148", "146", "142", "138",
                       "packet only"]
@@ -69,8 +69,8 @@ YLM_ZOOM = (150, 200)
 # Bars to plot on the utilization graphs.
 CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175,
                       200, 225]
-CHOSEN_RETCP_UTIL =  [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175,
-                      200, 225]
+CHOSEN_RETCP_UTIL = [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175,
+                     200, 225]
 
 
 def main():

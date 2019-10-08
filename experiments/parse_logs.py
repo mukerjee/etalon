@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 
-from collections import defaultdict
-import copy
+import collections
 import glob
-import numpy as np
 from os import path
 import socket
 from struct import unpack
@@ -13,47 +11,49 @@ PROGDIR = path.dirname(path.realpath(__file__))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "etc"))
 
-from python_config import CIRCUIT_BW_Gbps_TDF, CIRCUIT_LATENCY_s_TDF, TDF
+import numpy as np
 
-percentiles = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
-RTT = CIRCUIT_LATENCY_s_TDF * 2
+import python_config
+
+PERCENTILES = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
+RTT = python_config.CIRCUIT_LATENCY_s_TDF * 2
 DURATION = 4300
 # 1/1000 seconds.
-bin_size = 1
+BIN_SIZE_MS = 1
 
 
 def parse_flowgrind_config(fn):
-    flows = defaultdict(list)
+    flows = collections.defaultdict(list)
     sizes = {}
-    for l in open(fn.split('.txt')[0] + '.config.txt'):
-        l = l.split('-F')[1:]
+    for l in open(fn.split(".txt")[0] + ".config.txt"):
+        l = l.split("-F")[1:]
         for x in l:
-            id = int(x.strip().split()[0])
-            bytes = int(x.strip().split('-Gs=q:C:')[1].split()[0])
-            sizes[id] = bytes
+            hid = int(x.strip().split()[0])
+            byts = int(x.strip().split("-Gs=q:C:")[1].split()[0])
+            sizes[hid] = byts
     for l in open(fn):
-        if 'seed' in l:
-            id = int(l[4:].strip().split()[0])
-            rack = int(l.split('/')[0].split()[-1].split('.')[2])
-            flows[id].append(rack)
-            if l.split(":")[0][-1] == 'S':
-                time = float(l.split('duration = ')[1].split('/')[0]) * 1000000
-                tp = float(l.split('through = ')[1].split('/')[0]) / 1000.
+        if "seed" in l:
+            hid = int(l[4:].strip().split()[0])
+            rack = int(l.split("/")[0].split()[-1].split(".")[2])
+            flows[hid].append(rack)
+            if l.split(":")[0][-1] == "S":
+                time = float(l.split("duration = ")[1].split("/")[0]) * 1000000
+                tp = float(l.split("through = ")[1].split("/")[0]) / 1000.
             else:
-                flows[id].append(time)
-                flows[id].append(tp)
-                flows[id].append(sizes[id])
+                flows[hid].append(time)
+                flows[hid].append(tp)
+                flows[hid].append(sizes[hid])
 
     for f in flows.keys():
-        if flows[f][3] == float('inf'):
+        if flows[f][3] == float("inf"):
             del flows[f]
     tps = [f[3] for f in flows.values()]
     durs = [f[2] for f in flows.values()]
-    bytes = [f[4] for f in flows.values()]
+    byts = [f[4] for f in flows.values()]
 
-    print len(tps), len(durs), len(bytes)
+    print len(tps), len(durs), len(byts)
 
-    return tps, durs, bytes
+    return tps, durs, byts
 
 
 def msg_from_file(filename, chunksize=112):
@@ -66,17 +66,17 @@ def msg_from_file(filename, chunksize=112):
                 break
 
 
-def get_seq_data(fn, chunk_mode=False):
+def get_seq_data(fn):
     print("Parsing: {}".format(fn))
-    circuit_starts = defaultdict(list)
-    circuit_ends = defaultdict(list)
-    flows = defaultdict(list)
-    seen = defaultdict(list)
+    circuit_starts = collections.defaultdict(list)
+    circuit_ends = collections.defaultdict(list)
+    flows = collections.defaultdict(list)
+    seen = collections.defaultdict(list)
     for msg in msg_from_file(fn):
         # type (int), timestamp (char[32]), latency (int), src (int), dst (int),
         # data (char[64])
-        (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
-        ip_bytes = unpack('!H', data[2:4])[0]
+        (t, ts, _, src, dst, data) = unpack("i32siii64s", msg)
+        ip_bytes = unpack("!H", data[2:4])[0]
         sender = socket.inet_ntoa(data[12:16])
         recv = socket.inet_ntoa(data[16:20])
         proto = ord(data[9])
@@ -86,16 +86,18 @@ def get_seq_data(fn, chunk_mode=False):
         seq = 0
         thl = 0
         if proto == 6:  # TCP
-            sport = unpack('!H', data[ihl:ihl+2])[0]
-            dport = unpack('!H', data[ihl+2:ihl+4])[0]
-            seq = unpack('!I', data[ihl+4:ihl+8])[0]
+            sport = unpack("!H", data[ihl:ihl+2])[0]
+            dport = unpack("!H", data[ihl+2:ihl+4])[0]
+            seq = unpack("!I", data[ihl+4:ihl+8])[0]
             thl = (ord(data[ihl+12]) >> 4) * 4
-        bytes = ip_bytes - ihl - thl
+        byts = ip_bytes - ihl - thl
 
-        for i in xrange(len(ts)):
-            if ord(ts[i]) == 0:
+        i = 0
+        for a in xrange(len(ts)):
+            if ord(ts[a]) == 0:
                 break
-        ts = float(ts[:i]) / TDF
+            i += 1
+        ts = float(ts[:i]) / python_config.TDF
 
         if t == 1 or t == 2:  # starting or closing
             sr = (src, dst)
@@ -109,7 +111,7 @@ def get_seq_data(fn, chunk_mode=False):
 
         flow = (sender, recv, proto, sport, dport)
         if not flows[flow]:
-            flows[flow].append((ts, seq, bytes))
+            flows[flow].append((ts, seq, byts))
         else:
             last_ts, last_seq, last_bytes = flows[flow][-1]
             if abs(last_seq + last_bytes - seq) < 2:
@@ -119,15 +121,15 @@ def get_seq_data(fn, chunk_mode=False):
                     for prev_seen in seen[flow]:
                         prev_seq = prev_seen[1]
                         prev_bytes = prev_seen[2]
-                        if abs(seq + bytes - prev_seq) < 2:
+                        if abs(seq + byts - prev_seq) < 2:
                             seq = prev_seq
-                            bytes = prev_bytes
+                            byts = prev_bytes
                             seen[flow].remove(prev_seen)
                             updated = True
                             break
-                flows[flow].append((ts, seq, bytes))
+                flows[flow].append((ts, seq, byts))
             else:
-                seen[flow].append((ts, seq, bytes))
+                seen[flow].append((ts, seq, byts))
 
     day_lens = []
     week_lens = []
@@ -142,7 +144,7 @@ def get_seq_data(fn, chunk_mode=False):
         prev_end = circuit_ends[sr][i-1]
         curr = circuit_starts[sr][i]
         curr_end = circuit_ends[sr][i]
-        next = circuit_starts[sr][i+1]
+        nxt = circuit_starts[sr][i+1]
         if i+1 >= len(circuit_ends[sr]):
             continue
         next_end = circuit_ends[sr][i+1]
@@ -151,10 +153,10 @@ def get_seq_data(fn, chunk_mode=False):
             continue
         next_next_end = circuit_ends[sr][i+2]
         day_lens.append((curr_end - curr)*1e6)
-        week_lens.append((next - curr)*1e6)
+        week_lens.append((nxt - curr)*1e6)
         starts.append((curr - prev_end)*1e6)
         ends.append((curr_end - prev_end)*1e6)
-        next_starts.append((next - prev_end)*1e6)
+        next_starts.append((nxt - prev_end)*1e6)
         next_ends.append((next_end - prev_end)*1e6)
         next_next_starts.append((next_next - prev_end)*1e6)
         next_next_ends.append((next_next_end - prev_end)*1e6)
@@ -166,8 +168,8 @@ def get_seq_data(fn, chunk_mode=False):
     out_next_next_end = np.average(next_next_ends[5:-5])
     day_lens = day_lens[5:-5]
     week_lens = week_lens[5:-5]
-    print 'circuit day avg and std dev', np.average(day_lens), np.std(day_lens)
-    print 'week avg and std dev', np.average(week_lens), np.std(week_lens)
+    print "circuit day avg and std dev", np.average(day_lens), np.std(day_lens)
+    print "week avg and std dev", np.average(week_lens), np.std(week_lens)
     print out_start, out_end, out_next_start, out_next_end
 
     if len(circuit_starts[sr]) < 50:
@@ -184,19 +186,18 @@ def get_seq_data(fn, chunk_mode=False):
                                        ts_end + 0.002, 0.002)
         circuit_ends[sr] = np.arange(ts_start, ts_end + 0.004, 0.002)
 
-    print len(flows)
+    print("Found {} flows".format(len(flows)))
     results = {}
-
     for f in flows.keys():
-        if '10.1.2.' in f[0]:
+        if "10.1.2." in f[0]:
             continue
-        print f
+        print("Parsing flow: {}".format(f))
 
         chunks = []
         # A pair (xs, ys) for the chunk in this flow with the most datapoints.
         best_chunk = ([], [])
         last = 0
-        print "circuit starts: {}".format(len(circuit_starts[sr]))
+        print "Circuit starts: {}".format(len(circuit_starts[sr]))
         bad_windows = 0
         first_ts = flows[f][0][0]
         last_ts = flows[f][-1][0]
@@ -208,7 +209,7 @@ def get_seq_data(fn, chunk_mode=False):
                 continue
             if curr > last_ts:
                 continue
-            next = circuit_starts[sr][i+1]
+            nxt = circuit_starts[sr][i+1]
             if i+1 >= len(circuit_ends[sr]):
                 continue
             next_end = circuit_ends[sr][i+1]
@@ -221,8 +222,8 @@ def get_seq_data(fn, chunk_mode=False):
             out = []
             first = -1
             timing_offset = 30e-6
-            for i in xrange(last, len(flows[f])):
-                (ts, seq, _) = flows[f][i]
+            for a in xrange(last, len(flows[f])):
+                (ts, seq, _) = flows[f][a]
                 if ts > next_next_end + timing_offset:
                     break
                 if ts >= prev_end + timing_offset:
@@ -231,7 +232,7 @@ def get_seq_data(fn, chunk_mode=False):
 
                     rel_ts = (ts - prev_end - timing_offset) * 1e6
                     rel_seq = seq - first
-                    if len(out) > 0 and rel_ts == out[-1][0]:
+                    if out and rel_ts == out[-1][0]:
                         # print("i: {}".format(i))
                         # print("rel_ts: {}".format(rel_ts))
                         # print("ts: {}".format(ts))
@@ -249,7 +250,7 @@ def get_seq_data(fn, chunk_mode=False):
 
                     out.append((rel_ts, rel_seq))
                 if ts < curr_end + timing_offset:
-                    last = i
+                    last = a
             if not out:
                 bad_windows += 1
                 out = [(0, 0), (DURATION, 0)]
@@ -277,38 +278,39 @@ def get_seq_data(fn, chunk_mode=False):
                 if num_pts > len(best_chunk[0]):
                     best_chunk = (xs, ys)
 
-
-        print("len(chunks): {}".format(len(chunks)))
-        # List of lists, where each entry corresponds to one timestep and each
-        # subentry corresponds to a sequence number for that timestep.
+        # List of lists, where each sublist corresponds to one timestep and each
+        # entry of each sublist corresponds to a sequence number for that
+        # timestep.
         unzipped = zip(*chunks)
-        print("len(unzipped): {}".format(len(unzipped)))
-        if len(unzipped) > 0:
-            print("len(unzipped[-1]): {}".format(len(unzipped[-1])))
-            # print("unzipped[-1]: {}".format(unzipped[-1]))
         # Average the sequence numbers for across each timestep, creating the
         # final results for this flow.
         results[f] = (
             [np.average(tstamp_results) for tstamp_results in unzipped],
             best_chunk)
-        print('bad windows: {}'.format(bad_windows))
 
-    print("len(results): {}".format(len(results)))
-    results = {k: v for k, v in results.items() if v}
-    print("len(results): {}".format(len(results)))
-    print("results:")
+        print("Chunks for this flow: {}".format(len(chunks)))
+        print("Timestamps for this flow: {}".format(len(unzipped)))
+        print("Bad windows for this flow: {}".format(bad_windows))
+
+    old_len = len(results)
+    # Remove flows that have no datapoints.
+    results = {flw: flw_res for flw, flw_res in results.items() if flw_res[0]}
+    len_delta = old_len - len(results)
+    if len_delta:
+        print("Warning: {} flows were filtered out!".format(len_delta))
+
+    print("Flows for which we have results:")
     for k in results.keys():
         print("\t{}".format(k))
 
+    # Extract the best chunk results.
+    best_chunks = {flw: best_chunk for flw, (_, best_chunk) in results.items()}
     # Turn a list of lists of results for each flow into a list of lists of
     # results for all flows at one timestep.
-    best_chunks = {key : chunk for key, (_, chunk) in results.items()}
     unzipped = zip(*[r for r, _ in results.values()])
-    print("len(unzipped): {}".format(len(unzipped)))
-    print("len(unzipped[0]): {}".format(len(unzipped[0])))
-    print("unzipped[-1]: {}".format(unzipped[-1]))
     # Average the results of all flows at each timestep. So, the output is
-    # really: For each timestep, what's the average sequence number of all flows.
+    # really: For each timestep, what's the average sequence number of all
+    # flows.
     results = [np.average(q) for q in unzipped]
     return results, (out_start, out_end, out_next_start,
                      out_next_end, out_next_next_start,
@@ -320,66 +322,68 @@ def parse_packet_log(fn):
     latencies = []
     latencies_circuit = []
     latencies_packet = []
-    throughputs = defaultdict(int)
-    circuit_bytes = defaultdict(int)
-    packet_bytes = defaultdict(int)
+    throughputs = collections.defaultdict(int)
+    circuit_bytes = collections.defaultdict(int)
+    packet_bytes = collections.defaultdict(int)
     flow_start = {}
     flow_end = {}
-    number_circuit_ups = defaultdict(int)
-    circuit_starts = defaultdict(list)
-    most_recent_circuit_up = defaultdict(int)
-    bytes_in_rtt = defaultdict(lambda: defaultdict(int))
+    number_circuit_ups = collections.defaultdict(int)
+    circuit_starts = collections.defaultdict(list)
+    most_recent_circuit_up = collections.defaultdict(int)
+    bytes_in_rtt = collections.defaultdict(lambda: collections.defaultdict(int))
     for msg in msg_from_file(fn):
-        (t, ts, lat, src, dst, data) = unpack('i32siii64s', msg)
-        bytes = unpack('!H', data[2:4])[0]
+        (t, ts, lat, src, dst, data) = unpack("i32siii64s", msg)
+        byts = unpack("!H", data[2:4])[0]
         circuit = ord(data[1]) & 0x1
         sender = ord(data[14])
         recv = ord(data[18])
-        for i in xrange(len(ts)):
-            if ord(ts[i]) == 0:
+        i = 0
+        for a in xrange(len(ts)):
+            if ord(ts[a]) == 0:
                 break
+            i += 1
         ts = float(ts[:i])
         if t == 1 or t == 2:  # starting or closing
             sr = (src, dst)
             if t == 1:  # starting
                 most_recent_circuit_up[sr] = ts
             if t == 2:  # closing
-                circuit_starts[sr].append(ts / TDF)
+                circuit_starts[sr].append(ts / python_config.TDF)
                 number_circuit_ups[sr] += 1
             continue
 
         latency = float(lat)
         sr = (sender, recv)
-        if bytes < 100:
+        if byts < 100:
             continue
         if sr not in flow_start:
-            flow_start[sr] = ts / TDF
+            flow_start[sr] = ts / python_config.TDF
 
         if circuit:
             which_rtt = int((ts - most_recent_circuit_up[sr] - 0.5 * RTT) / RTT)
-            bytes_in_rtt[sr][which_rtt] += bytes
-            circuit_bytes[sr] += bytes
+            bytes_in_rtt[sr][which_rtt] += byts
+            circuit_bytes[sr] += byts
         else:
-            packet_bytes[sr] += bytes
+            packet_bytes[sr] += byts
 
-        throughputs[sr] += bytes
-        flow_end[sr] = ts / TDF
-        if bytes > 1000:
+        throughputs[sr] += byts
+        flow_end[sr] = ts / python_config.TDF
+        if byts > 1000:
             latencies.append(latency)
             if circuit:
                 latencies_circuit.append(latency)
             else:
                 latencies_packet.append(latency)
-    lat = zip(percentiles, map(lambda x: np.percentile(latencies, x),
-                               percentiles))
-    latc = [(p, 0) for p in percentiles]
+    lat = zip(PERCENTILES, map(lambda x: np.percentile(latencies, x),
+                               PERCENTILES))
+    latc = [(p, 0) for p in PERCENTILES]
     if latencies_circuit:
-        latc = zip(percentiles, map(lambda x: np.percentile(
-            latencies_circuit, x), percentiles))
-    latp = zip(percentiles, map(lambda x: np.percentile(latencies_packet, x),
-                                percentiles))
+        latc = zip(PERCENTILES, map(lambda x: np.percentile(
+            latencies_circuit, x), PERCENTILES))
+    latp = zip(PERCENTILES, map(lambda x: np.percentile(latencies_packet, x),
+                                PERCENTILES))
     tp = {}
-    b = defaultdict(dict)
+    b = collections.defaultdict(dict)
     p = {}
     c = {}
     for sr in flow_start:
@@ -395,7 +399,7 @@ def parse_packet_log(fn):
         for ts in circuit_starts[sr]:
             if ts >= flow_start[sr] and ts <= flow_end[sr]:
                 n += 1
-        max_bytes = n * RTT * (CIRCUIT_BW_Gbps_TDF * 1e9 / 8.)
+        max_bytes = n * RTT * (python_config.CIRCUIT_BW_Gbps_TDF * 1e9 / 8.)
         for i, r in sorted(bytes_in_rtt[sr].items()):
             b[sr][i] = (r / max_bytes) * 100
 
@@ -409,27 +413,29 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
     id_to_sr = {}
     with open(fn.strip(".txt") + ".config.txt") as f:
         for line in f:
-            line = line.split('-F')[1:]
+            line = line.split("-F")[1:]
             for flow_cnf in line:
                 flow_cnf = flow_cnf.strip()
                 idx = int(flow_cnf.split()[0])
                 # Extract src rack id.
-                s = int(flow_cnf.split('-Hs=10.1.')[1].split('.')[0])
+                s = int(flow_cnf.split("-Hs=10.1.")[1].split(".")[0])
                 # Extract dst rack id.
-                r = int(flow_cnf.split(',d=10.1.')[1].split('.')[0])
+                r = int(flow_cnf.split(",d=10.1.")[1].split(".")[0])
                 id_to_sr[idx] = (s, r)
 
     # Map of pair (src rack, dst rack) to a map of window *start* timestamp to
     # the number of bytes sent during the window beginning with this timestamp.
-    sr_to_tstamps = defaultdict(lambda: defaultdict(int))
+    sr_to_tstamps = collections.defaultdict(
+        lambda: collections.defaultdict(int))
     # Map of emulated src idx (i.e., flow idx) to a map of window *end*
     # timestamp to the src's CWND at the timestamp (i.e., at the time that the
     # window ended).
-    flow_to_cwnds = defaultdict(lambda: defaultdict(int))
+    flow_to_cwnds = collections.defaultdict(
+        lambda: collections.defaultdict(int))
     with open(fn) as f:
         for line in f:
             # Ignore comment lines, empty lines, and "D" lines.
-            if line[0] == 'S':
+            if line[0] == "S":
                 line = line[1:].strip()
                 splits = line.split()
                 # Flow ID.
@@ -448,27 +454,18 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
                 cwnd = int(splits[11])
                 # Record this flow's cwnd at the end of this window.
                 flow_to_cwnds[idx][ts_s_end] = cwnd
-    # For each (src, dst) rack pair, transform the mapping from timestamp to bytes
-    # into a list of sorted pairs of (timestamp, bytes).
+    # For each (src, dst) rack pair, transform the mapping from timestamp to
+    # bytes into a list of sorted pairs of (timestamp, bytes).
     sr_to_tstamps = {sr: sorted(tstamps.items())
                      for sr, tstamps in sr_to_tstamps.items()}
     # For each flow, transform the mapping from timestamp to cwnd into a list of
     # sorted pairs of (timestamp, cwnd).
-    flow_to_cwnds = {flow: sorted(cwnds.items())
-                    for flow, cwnds in flow_to_cwnds.items()}
-
-    # for sr, tstamps in sr_to_tstamps.items():
-    #     print("sr: {}".format(sr))
-    #     for tstamp in tstamps:
-    #         print("  {}".format(tstamp))
-    # for flow, cwnds in flow_to_cwnds.items():
-    #     print("flow: {}".format(flow))
-    #     for cwnd in cwnds:
-    #         print("  {}".format(cwnd))
+    flow_to_cwnds = {flw: sorted(cwnds.items())
+                     for flw, cwnds in flow_to_cwnds.items()}
 
     # Map of pair (src rack, dst rack) to list of throughputs in Gb/s. Each
     # throughput corresponds to the throughput during one bin.
-    sr_to_tputs = defaultdict(list)
+    sr_to_tputs = collections.defaultdict(list)
     for sr, tstamps in sr_to_tstamps.items():
         for win_start_ms in xrange(0, dur_ms, bin_size_ms):
             win_start_s = win_start_ms / 1e3
@@ -476,14 +473,14 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
             # Find all the logs (i.e., numbers of bytes during some window) for
             # the current bin...
             cur_samples = [b for ts_s, b in tstamps
-                           # E.g., for i = 1 and bin_size = 1, if timestamp is
-                           # between 1 ms and 2 ms.
+                           # E.g., for i = 1 and BIN_SIZE_MS = 1, if timestamp
+                           # is between 1 ms and 2 ms.
                            if win_start_s <= ts_s < win_end_s]
             # ...and sum them up to calculate the total number of bytes sent in
             # this bin (e.g., if the bin size is 1, then this is the total
             # amount of bytes sent in 1 ms).
             cur_b = sum(cur_samples)
-            gbps = cur_b * (1 / bin_size) * 1e3 / 1e9
+            gbps = cur_b * (1 / BIN_SIZE_MS) * 1e3 / 1e9
             sr_to_tputs[sr].append((win_start_ms / 1e3, gbps))
 
     means = {}
@@ -500,9 +497,6 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
         means[sr] = np.mean(tputs)
         stdevs[sr] = np.std(tputs)
 
-    # print("Num CWND logs:")
-    # for flow, cwnds in flow_to_cwnds.items():
-    #     print("  Flow {} = {}".format(flow, len(cwnds)))
     print("Num tput logs:")
     for sr, tputs in sr_to_tputs.items():
         print("  (src rack, dst rack): {} = {}".format(sr, len(tputs)))
@@ -523,32 +517,33 @@ def parse_hdfs_logs(folder):
     data = []
     durations = []
 
-    fn = folder + '/*-logs/hadoop*-datanode*.log'
+    fn = folder + "/*-logs/hadoop*-datanode*.log"
     print fn
     logs = glob.glob(fn)
 
     for log in logs:
         for line in open(log):
-            if 'clienttrace' in line and 'HDFS_WRITE' in line:
-                bytes = int(line.split('bytes: ')[1].split()[0][:-1])
-                if bytes > 1024 * 1024 * 99:
-                    duration = (float(line.split(
-                        "duration(ns): ")[1].split()[0]) * 1e-6) / TDF
-                    data.append((bytes / 1024. / 1024., duration))
+            if "clienttrace" in line and "HDFS_WRITE" in line:
+                byts = int(line.split("bytes: ")[1].split()[0][:-1])
+                if byts > 1024 * 1024 * 99:
+                    duration = ((float(line.split(
+                        "duration(ns): ")[1].split()[0]) * 1e-6) /
+                                python_config.TDF)
+                    data.append((byts / 1024. / 1024., duration))
 
     durations = sorted(zip(*data)[1])
     return durations
 
 
 def parse_hdfs_throughput(folder):
-    fn = folder + '/report/dfsioe/hadoop/bench.log'
+    fn = folder + "/report/dfsioe/hadoop/bench.log"
     logs = glob.glob(fn)
 
     for log in logs:
         for line in open(log):
-            if 'Number of files' in line:
-                num_files = int(line.split('files: ')[1])
-            if 'Throughput mb/sec:' in line:
+            if "Number of files" in line:
+                num_files = int(line.split("files: ")[1])
+            if "Throughput mb/sec:" in line:
                 # divide by number of replicas
-                return (float(line.split('mb/sec:')[1]) *
-                        num_files * 8 / 1024.) * TDF / 2.
+                return (float(line.split("mb/sec:")[1]) *
+                        num_files * 8 / 1024.) * python_config.TDF / 2.

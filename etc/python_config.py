@@ -1,9 +1,9 @@
 
+import os
 import time
 import sys
-import os
 
-from collections import defaultdict
+import collections
 
 NUM_RACKS = 3
 HOSTS_PER_RACK = 16
@@ -110,26 +110,27 @@ DOCKER_SAVE = 'sudo docker save -o {img} etalon && sudo chown ' \
               '`whoami` {img}'.format(img=DOCKER_LOCAL_IMAGE_PATH)
 DOCKER_REMOTE_IMAGE_PATH = '/etalon/vhost/etalon.img'
 DOCKER_LOAD = 'sudo docker load -i %s' % DOCKER_REMOTE_IMAGE_PATH
-DOCKER_RUN = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
+DOCKER_RUN = 'sudo docker run -d -h h{hid}.{FQDN} -v ' \
              '{hosts_file}:/etc/hosts:ro ' \
-             '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
-             '--sysctl net.core.somaxconn=2048 --sysctl net.ipv4.tcp_max_syn_backlog=2048 '\
+             '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{hid} '\
+             '--sysctl net.core.somaxconn=2048 '\
+             '--sysctl net.ipv4.tcp_max_syn_backlog=2048 '\
              '{image} {cmd}'
-DOCKER_RUN_HDFS = 'sudo docker run -d -h h{id}.{FQDN} -v ' \
+DOCKER_RUN_HDFS = 'sudo docker run -d -h h{hid}.{FQDN} -v ' \
                   '{hosts_file}:/etc/hosts:ro ' \
                   '--mount=type=tmpfs,tmpfs-size=10G,destination=' \
                   '/usr/local/hadoop/hadoop_data/hdfs ' \
                   '--mount=type=tmpfs,tmpfs-size=128M,destination=' \
                   '/usr/local/hadoop/hadoop_data/hdfs-nn ' \
                   '--ulimit nofile=262144:262144 ' \
-                  '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{id} '\
+                  '--cpuset-cpus={cpu_set} -c {cpu_limit} --name=h{hid} '\
                   '{image} {cmd}'
-PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{id} ' \
-           '10.{net}.{rack}.{id}/16'
-TC = 'sudo pipework tc h{id} qdisc add dev {int_if} root netem rate {rate}gbit'
+PIPEWORK = 'sudo pipework {ext_if} -i {int_if} h{rack}{hid} ' \
+           '10.{net}.{rack}.{hid}/16'
+TC = 'sudo pipework tc h{hid} qdisc add dev {int_if} root netem rate {rate}gbit'
 SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
-ARP_POISON = 'arp -s h{id} {switch_mac}'
+ARP_POISON = 'arp -s h{hid} {switch_mac}'
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
 SCP_TO = 'scp -r -o StrictHostKeyChecking=no %s %s:%s'
@@ -144,19 +145,19 @@ SLAVES_FILE = '/etalon/vhost/config/hadoop_config/slaves'
 DFSIOE = '/root/HiBench/bin/workloads/micro/dfsioe/hadoop/run_write.sh'
 
 # image commands
-IMAGE_CPU = defaultdict(lambda: CPU_LIMIT, {
+IMAGE_CPU = collections.defaultdict(lambda: CPU_LIMIT, {
     'HDFS': (CPU_COUNT - 1) * 100,
     'reHDFS': (CPU_COUNT - 1) * 100,
 })
 
-IMAGE_SKIP_TC = defaultdict(lambda: False, {
+IMAGE_SKIP_TC = collections.defaultdict(lambda: False, {
     'HDFS': True,
     'HDFS_adu': True,
     'reHDFS': True,
     'reHDFS_adu': True,
 })
 
-IMAGE_NUM_HOSTS = defaultdict(lambda: HOSTS_PER_RACK, {
+IMAGE_NUM_HOSTS = collections.defaultdict(lambda: HOSTS_PER_RACK, {
     'HDFS': 1,
     'HDFS_adu': 1,
     'reHDFS': 1,
@@ -164,15 +165,17 @@ IMAGE_NUM_HOSTS = defaultdict(lambda: HOSTS_PER_RACK, {
 })
 
 IMAGE_SETUP = {
-    'flowgrindd': defaultdict(lambda: 'flowgrindd'),
-    'flowgrindd_adu': defaultdict(lambda: 'flowgrindd_adu'),
-    'HDFS': defaultdict(lambda: 'HDFS', {'h11': 'HDFS_nn'}),
-    'HDFS_adu': defaultdict(lambda: 'HDFS_adu', {'h11': 'HDFS_nn_adu'}),
-    'reHDFS': defaultdict(lambda: 'reHDFS', {'h11': 'reHDFS_nn'}),
-    'reHDFS_adu': defaultdict(lambda: 'reHDFS_adu', {'h11': 'reHDFS_nn_adu'}),
+    'flowgrindd': collections.defaultdict(lambda: 'flowgrindd'),
+    'flowgrindd_adu': collections.defaultdict(lambda: 'flowgrindd_adu'),
+    'HDFS': collections.defaultdict(lambda: 'HDFS', {'h11': 'HDFS_nn'}),
+    'HDFS_adu': collections.defaultdict(
+        lambda: 'HDFS_adu', {'h11': 'HDFS_nn_adu'}),
+    'reHDFS': collections.defaultdict(lambda: 'reHDFS', {'h11': 'reHDFS_nn'}),
+    'reHDFS_adu': collections.defaultdict(
+        lambda: 'reHDFS_adu', {'h11': 'reHDFS_nn_adu'}),
 }
 
-IMAGE_DOCKER_RUN = defaultdict(lambda: DOCKER_RUN, {
+IMAGE_DOCKER_RUN = collections.defaultdict(lambda: DOCKER_RUN, {
     'HDFS': DOCKER_RUN_HDFS,
     'HDFS_adu': DOCKER_RUN_HDFS,
     'reHDFS': DOCKER_RUN_HDFS,
@@ -271,16 +274,15 @@ IMAGE_CMD = {
                      'sleep infinity"',
 }
 
-
 # All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
 CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
        "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
        "westwood", "yeah"]
-# CCS = ["reno"]
 
 # The default CC mode.
 DEFAULT_CC = "reno"
+
 
 # host1 --> apt105.apt.emulab.net
 def handle_to_machine(h):
@@ -298,8 +300,7 @@ def get_phost_from_host(h):
         return h
     elif h[0] == 'h':
         return 'host%s' % h[1:2]
-    else:
-        return 'host%s' % h[0]
+    return 'host%s' % h[0]
 
 
 # host3 --> 3
@@ -308,26 +309,25 @@ def get_phost_id(phost):
 
 
 # 3 --> host3
-def get_phost_from_id(id):
-    return 'host%d' % (id)
+def get_phost_from_id(hid):
+    return 'host%d' % (hid)
 
 
 # (3, 7) --> h37
-def get_host_from_rack_and_id(r, id):
-    return 'h%d%d' % (r, id)
+def get_host_from_rack_and_id(r, hid):
+    return 'h%d%d' % (r, hid)
 
 
 # (3, 7) --> h37.etalon.local
-def get_hostname_from_rack_and_id(r, id):
-    return 'h%d%d.%s' % (r, id, FQDN)
+def get_hostname_from_rack_and_id(r, hid):
+    return 'h%d%d.%s' % (r, hid, FQDN)
 
 
 # host3 --> (100, 3); h37 --> (3, 7); h315 --> (3, 15)
 def get_rack_and_id_from_host(h):
     if 'host' in h:
         return (PHOST_IP, get_phost_id(h))
-    else:
-        return int(h[1]), int(h[2:])
+    return int(h[1]), int(h[2:])
 
 
 # (host3, CONTROL_NET) --> 10.2.100.3; (h37, DATA_NET) --> 10.1.3.7
@@ -354,14 +354,14 @@ def gen_hosts_file(fn):
     fp = open(fn, 'w')
     fp.write('127.0.0.1\tlocalhost\n')
     fp.write('%s\tswitch\n' % (SWITCH_DATA_IP))
-    fp.write('10.{net}.{rack}.{id}\tnn.{fqdn}\th{rack}{id}.{fqdn}\n'.format(
-        net=DATA_NET, rack=1, id=1, fqdn=FQDN))
+    fp.write('10.{net}.{rack}.{hid}\tnn.{fqdn}\th{rack}{hid}.{fqdn}\n'.format(
+        net=DATA_NET, rack=1, hid=1, fqdn=FQDN))
     for r in xrange(1, NUM_RACKS+1):
-        for id in xrange(1, HOSTS_PER_RACK+1):
-            if r == 1 and id == 1:
+        for hid in xrange(1, HOSTS_PER_RACK+1):
+            if r == 1 and hid == 1:
                 continue
-            fp.write('10.{net}.{rack}.{id}\th{rack}{id}.{fqdn}\n'.format(
-                     net=DATA_NET, rack=r, id=id, fqdn=FQDN))
+            fp.write('10.{net}.{rack}.{hid}\th{rack}{hid}.{fqdn}\n'.format(
+                net=DATA_NET, rack=r, hid=hid, fqdn=FQDN))
     fp.close()
 
 
@@ -371,5 +371,5 @@ def gen_slaves_file(fn):
     fp = open(fn, 'w')
     num_hosts = IMAGE_NUM_HOSTS['HDFS']
     for r in xrange(1, NUM_RACKS+1):
-        for id in xrange(1, num_hosts+1):
-            fp.write('h{r}{id}.{fqdn}\n'.format(r=r, id=id, fqdn=FQDN))
+        for hid in xrange(1, num_hosts+1):
+            fp.write('h{r}{hid}.{fqdn}\n'.format(r=r, hid=hid, fqdn=FQDN))
