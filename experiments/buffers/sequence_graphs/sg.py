@@ -152,15 +152,31 @@ def get_data(db, key):
         data["data"] = [[y / UNITS for y in f]
                         for f in zip(*zip(*data["raw_data"])[1])[0]]
 
-        data["best_chunks"] = {}
-        for line, (_, _, best_chunk_res) in data["raw_data"]:
-            # Pick the flow with the best of the best chunks.
-            best_chunk = ([], [])
-            for maybe_best_chunk in best_chunk_res.values():
-                if len(maybe_best_chunk[0]) > len(best_chunk[0]):
-                    best_chunk = maybe_best_chunk
-            xs, ys = best_chunk
-            data["best_chunks"][line] = (xs, [y / UNITS for y in ys])
+        # Convert the results for each set of original chunk data.
+        data["chunks_orig"] = {}
+        # Look through each line.
+        for line, (_, _, chunks_orig_all) in data["raw_data"]:
+            data["chunks_orig"][line] = {}
+            # Look through each flow in this line.
+            for flw, chunks_orig in chunks_orig_all.items():
+                data["chunks_orig"][line][flw] = []
+                # Look through each chunk in this flow.
+                for chunk_orig in chunks_orig:
+                    xs, ys = chunk_orig
+                    data["chunks_orig"][line][flw].append(
+                        (xs, [y / UNITS for y in ys]))
+
+        # Select the best chunk for each line.
+        data["chunks_best"] = {}
+        # Look through each line.
+        for line, chunks_orig_all in data["chunks_orig"].items():
+            data["chunks_best"][line] = ([], [])
+            # Look through flow in this line.
+            for chunks_orig in chunks_orig_all.values():
+                # Look through each chunk in this flow.
+                for chunk_orig in chunks_orig:
+                    if len(chunk_orig[0]) > len(data["chunks_best"][line][0]):
+                        data["chunks_best"][line] = chunk_orig
 
         add_optimal(data)
         # Store the new data in the database.
@@ -175,7 +191,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     # Select the data based on whether we are plotting a single chunk from a
     # single flow or aggregate metrics for all chunks from all flows.
     if chunk_mode:
-        xs, ys = zip(*data["best_chunks"].values())
+        xs, ys = zip(*data["chunks_best"].values())
     else:
         ys = data["data"]
         xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
