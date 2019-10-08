@@ -66,7 +66,7 @@ def msg_from_file(filename, chunksize=112):
                 break
 
 
-def get_seq_data(fn, chunk_idx=None):
+def get_seq_data(fn, chunk_mode=False):
     print("Parsing: {}".format(fn))
     circuit_starts = defaultdict(list)
     circuit_ends = defaultdict(list)
@@ -185,12 +185,16 @@ def get_seq_data(fn, chunk_idx=None):
         circuit_ends[sr] = np.arange(ts_start, ts_end + 0.004, 0.002)
 
     print len(flows)
-    results = defaultdict(list)
+    results = {}
+
     for f in flows.keys():
         if '10.1.2.' in f[0]:
             continue
         print f
+
         chunks = []
+        # A pair (xs, ys) for the chunk in this flow with the most datapoints.
+        best_chunk = ([], [])
         last = 0
         print "circuit starts: {}".format(len(circuit_starts[sr]))
         bad_windows = 0
@@ -268,15 +272,13 @@ def get_seq_data(fn, chunk_idx=None):
                 # Interpolate based on the data that we have.
                 chunks.append(np.interp(xrange(DURATION), xs, ys))
 
+                # Track which chunk has the most points.
+                num_pts = len(xs)
+                if num_pts > len(best_chunk[0]):
+                    best_chunk = (xs, ys)
+
+
         print("len(chunks): {}".format(len(chunks)))
-        if chunk_idx is not None:
-            num_chunks = len(chunks)
-            if chunk_idx > num_chunks:
-                raise Exception("chunk_idx = {}, but len(chunks) = {}".format(
-                    chunk_idx, num_chunks))
-            return chunks[chunk_idx], (out_start, out_end, out_next_start,
-                                       out_next_end, out_next_next_start,
-                                       out_next_next_end)
         # List of lists, where each entry corresponds to one timestep and each
         # subentry corresponds to a sequence number for that timestep.
         unzipped = zip(*chunks)
@@ -286,7 +288,9 @@ def get_seq_data(fn, chunk_idx=None):
             # print("unzipped[-1]: {}".format(unzipped[-1]))
         # Average the sequence numbers for across each timestep, creating the
         # final results for this flow.
-        results[f] = [np.average(tstamp_results) for tstamp_results in unzipped]
+        results[f] = (
+            [np.average(tstamp_results) for tstamp_results in unzipped],
+            best_chunk)
         print('bad windows: {}'.format(bad_windows))
 
     print("len(results): {}".format(len(results)))
@@ -298,15 +302,17 @@ def get_seq_data(fn, chunk_idx=None):
 
     # Turn a list of lists of results for each flow into a list of lists of
     # results for all flows at one timestep.
-    unzipped = zip(*results.values())
+    best_chunks = {key : chunk for key, (_, chunk) in results.items()}
+    unzipped = zip(*[r for r, _ in results.values()])
     print("len(unzipped): {}".format(len(unzipped)))
     print("len(unzipped[0]): {}".format(len(unzipped[0])))
     print("unzipped[-1]: {}".format(unzipped[-1]))
     # Average the results of all flows at each timestep. So, the output is
     # really: For each timestep, what's the average sequence number of all flows.
     results = [np.average(q) for q in unzipped]
-    return results, (out_start, out_end, out_next_start, out_next_end,
-                     out_next_next_start, out_next_next_end)
+    return results, (out_start, out_end, out_next_start,
+                     out_next_end, out_next_next_start,
+                     out_next_next_end), best_chunks
 
 
 def parse_packet_log(fn):

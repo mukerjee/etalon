@@ -222,39 +222,30 @@ def main():
 
     # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
-        # With a single flow chunk and in aggregate.
-        for chunk_idx in [None]:  # [CHUNK_IDX, None]:
+        # Both aggregate and single-chunk results.
+        for chunk_mode in [False, True]:
             # With and without zooming in.
             for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
-                plt_typs = ["LINE"]
-                if chunk_idx is not None:
-                    # Only make scatter plots for the single-flow graphs.
-                    plt_typs.append("SCATTER")
-                # As line and (optionally) scatter plots.
-                for plt_typ in plt_typs:
-                    if ins is None or xlm_zoom is None:
-                        sg.seq(
-                            name="6-1-1_seq-dyn-{}{}{}{}_{}_cg".format(
-                                CHOSEN_TCP,
-                                ("-chunk{}".format(chunk_idx)
-                                 if chunk_idx is not None else ""),
-                                "_inset" if ins is not None else "",
-                                "_zoom" if xlm_zoom is not None else "",
-                                plt_typ),
-                            edr=edr,
-                            odr=odr,
-                            ptn=DYN_PTN.format("*", CHOSEN_TCP),
-                            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
-                                                         / python_config.TDF)),
-                            dur=1200,
-                            ins=ins,
-                            flt=(lambda idx, label, order=ORDER_DYN_CG: \
-                                 label.strip(" $\mu$s") in order),
-                            order=ORDER_DYN_CG,
-                            xlm=xlm_zoom,
-                            ylm=ylm_zoom,
-                            chunk_idx=chunk_idx,
-                            plt_typ=plt_typ)
+                if ins is None or xlm_zoom is None:
+                    sg.seq(
+                        name="6-1-1_seq-dyn-{}{}{}{}_cg".format(
+                            CHOSEN_TCP,
+                            "_inset" if ins is not None else "",
+                            "_zoom" if xlm_zoom is not None else "",
+                            "_chunk" if chunk_mode else ""),
+                        edr=edr,
+                        odr=odr,
+                        ptn=DYN_PTN.format("*", CHOSEN_TCP),
+                        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                                     / python_config.TDF)),
+                        dur=1200,
+                        ins=ins,
+                        flt=(lambda idx, label, order=ORDER_DYN_CG: \
+                             label.strip(" $\mu$s") in order),
+                        order=ORDER_DYN_CG,
+                        xlm=xlm_zoom,
+                        ylm=ylm_zoom,
+                        chunk_mode=chunk_mode)
 
     # (6.1.2)
     sg.seq(

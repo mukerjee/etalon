@@ -39,14 +39,14 @@ NUM_HOSTS = 16.0
 
 
 class FileReader(object):
-    def __init__(self, name, chunk_idx=None):
+    def __init__(self, name, chunk_mode=None):
         self.name = name
-        self.chunk_idx = chunk_idx
+        self.chunk_mode = chunk_mode
 
     def __call__(self, fn):
         key = KEY_FN[self.name](fn.split("/")[-1])
         print fn, key
-        return key, parse_logs.get_seq_data(fn, self.chunk_idx)
+        return key, parse_logs.get_seq_data(fn, self.chunk_mode)
 
 
 def add_optimal(data):
@@ -116,7 +116,7 @@ def add_optimal(data):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key, chunk_idx=None):
+def get_data(db, key, chunk_mode=None):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns a copy of them.
@@ -148,7 +148,7 @@ def get_data(db, key, chunk_idx=None):
 
         data = defaultdict(dict)
         p = Pool()
-        data["raw_data"] = dict(p.map(FileReader(key, chunk_idx), fns))
+        data["raw_data"] = dict(p.map(FileReader(key, chunk_mode), fns))
         # Clean up p.
         p.close()
         p.join()
@@ -156,22 +156,30 @@ def get_data(db, key, chunk_idx=None):
         data["raw_data"] = sorted(data["raw_data"].items())
         data["keys"] = list(zip(*data["raw_data"])[0])
         data["lines"] = data["raw_data"][0][1][1]
-        data["data"] = [map(lambda x: x / UNITS, f) for f in
-                        zip(*zip(*data["raw_data"])[1])[0]]
+        data["data"] = [[y / UNITS for y in f]
+                        for f in zip(*zip(*data["raw_data"])[1])[0]]
+        data["best_chunks"] = {
+            flw: (xs, [y / UNITS for y in ys])
+            for flw, (xs, ys) in data["raw_data"][0][1][2].items()}
+        add_optimal(data)
 
         # Store the new data in the database.
         db[key] = data
-
-    data = copy.deepcopy(db[key])
-    add_optimal(data)
-    return data
+    return copy.deepcopy(db[key])
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
-             ylm=None, typ="LINE"):
-    x = [xrange(len(data["data"][i])) for i in xrange(len(data["keys"]))]
-    y = data["data"]
+             ylm=None, chunk_mode=False):
+
+    # Select the data based on whether we are plotting a single chunk from a
+    # single flow or aggregate metrics for all chunks from all flows.
+    if chunk_mode:
+        # Arbitrarily select the first flow.
+        xs, ys = zip(*data["best_chunks"].values())
+    else:
+        ys = data["data"]
+        xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
 
     # Format the legend labels.
     lls = []
@@ -185,7 +193,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
             lls += [k]
 
     options = DotMap()
-    options.plot_type = typ
+    options.plot_type = "SCATTER" if chunk_mode else "LINE"
     options.legend.options.loc = "center right"
     options.legend.options.bbox_to_anchor = (1.4, 0.5)
     options.legend.options.labels = lls
@@ -266,7 +274,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_idx=None, plt_typ="LINE"):
+        xlm=None, ylm=None, chunk_mode=False):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -295,7 +303,6 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(
-        get_data(db, basename, chunk_idx), name, odr, ins, flt, order, xlm, ylm,
-        typ=plt_typ)
+    plot_seq(get_data(db, basename, chunk_mode), name, odr, ins, flt, order,
+             xlm, ylm, chunk_mode)
     db.close()
