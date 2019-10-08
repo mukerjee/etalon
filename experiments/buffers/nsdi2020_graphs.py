@@ -66,11 +66,11 @@ CHOSEN_RESIZE_US = "3500"
 XLM_ZOOM = (790, 820)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
 YLM_ZOOM = (150, 200)
-# The chunk to analyze.
-CHUNK_IDX = 250
-
-CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175, 200, 225]  # 14 bars
-CHOSEN_RETCP_UTIL =  [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175, 200, 225]  # 14 bars
+# Bars to plot on the utilization graphs.
+CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175,
+                      200, 225]
+CHOSEN_RETCP_UTIL =  [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175,
+                      200, 225]
 
 
 def main():
