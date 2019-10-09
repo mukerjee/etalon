@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import collections
-import copy
 import glob
 import multiprocessing
 from os import path
@@ -37,6 +36,10 @@ KEY_FN = {
 }
 # Kilo-sequence number
 UNITS = 1000.0
+# Control which chunk to select.
+CHUNKS_BEST = True
+FLOW = 0
+CHUNK = 10
 
 
 class FileReader(object):
@@ -118,7 +121,7 @@ def add_optimal(data):
 def get_data(db, key):
     """
     (Optionally) loads the results for the specified key into the provided
-    database and returns a copy of them.
+    database and returns them.
     """
     if key not in db:
         ptns = FILES[key]
@@ -181,7 +184,21 @@ def get_data(db, key):
         add_optimal(data)
         # Store the new data in the database.
         db[key] = data
-    return copy.deepcopy(db[key])
+
+    chunks_selected_key = "chunks_selected_flow{}_chunk{}".format(FLOW, CHUNK)
+    # Do not factor database items into temporary variables to eleminate
+    # unnecesary data copies.
+    if chunks_selected_key not in db[key]:
+        # Select a particular chunk for each line. Store the results in the
+        # database under a unique key so that we can change the selected flow
+        # and chunk without reparsing the data.
+        db[key][chunks_selected_key] = {}
+        # Look through each line.
+        for line in db[key]["chunks_orig"].keys():
+            flow_key = db[key]["chunks_orig"][line].keys()[FLOW]
+            db[key][chunks_selected_key][line] = \
+                db[key]["chunks_orig"][line][flow_key][CHUNK]
+    return db[key]
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
@@ -191,7 +208,9 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     # Select the data based on whether we are plotting a single chunk from a
     # single flow or aggregate metrics for all chunks from all flows.
     if chunk_mode:
-        xs, ys = zip(*data["chunks_best"].values())
+        key = "chunks_best" if CHUNKS_BEST else \
+            "chunks_selected_flow{}_chunk{}".format(FLOW, CHUNK)
+        xs, ys = zip(*data[key].values())
     else:
         ys = data["data"]
         xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
