@@ -65,7 +65,7 @@ CHOSEN_RESIZE_US = "3500"
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
 XLM_ZOOM = (790, 820)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (150, 200)
+YLM_ZOOM = (825, 1400)
 # Bars to plot on the utilization graphs.
 CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175,
                       200, 225]
