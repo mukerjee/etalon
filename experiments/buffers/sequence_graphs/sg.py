@@ -37,7 +37,7 @@ KEY_FN = {
 # Kilo-sequence number
 UNITS = 1000.0
 # Control which chunk to select.
-CHUNKS_BEST = True
+CHUNKS_BEST = False
 FLOW = 0
 CHUNK = 10
 
