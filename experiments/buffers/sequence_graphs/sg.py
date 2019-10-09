@@ -118,7 +118,7 @@ def add_optimal(data):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key):
+def get_data(db, key, chunk_mode=False):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
@@ -185,19 +185,21 @@ def get_data(db, key):
         # Store the new data in the database.
         db[key] = data
 
-    chunks_selected_key = "chunks_selected_flow{}_chunk{}".format(FLOW, CHUNK)
-    # Do not factor database items into temporary variables to eleminate
-    # unnecesary data copies.
-    if chunks_selected_key not in db[key]:
-        # Select a particular chunk for each line. Store the results in the
-        # database under a unique key so that we can change the selected flow
-        # and chunk without reparsing the data.
-        db[key][chunks_selected_key] = {}
-        # Look through each line.
-        for line in db[key]["chunks_orig"].keys():
-            flow_key = db[key]["chunks_orig"][line].keys()[FLOW]
-            db[key][chunks_selected_key][line] = \
-                db[key]["chunks_orig"][line][flow_key][CHUNK]
+    if chunk_mode:
+        chunks_selected_key = "chunks_selected_flow{}_chunk{}".format(
+            FLOW, CHUNK)
+        # Do not factor database items into temporary variables to eleminate
+        # unnecesary data copies.
+        if chunks_selected_key not in db[key]:
+            # Select a particular chunk for each line. Store the results in the
+            # database under a unique key so that we can change the selected
+            # flow and chunk without reparsing the data.
+            db[key][chunks_selected_key] = {}
+            # Look through each line.
+            for line in db[key]["chunks_orig"].keys():
+                flow_key = db[key]["chunks_orig"][line].keys()[FLOW]
+                db[key][chunks_selected_key][line] = \
+                    db[key]["chunks_orig"][line][flow_key][CHUNK]
     return db[key]
 
 
@@ -341,6 +343,6 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(get_data(db, basename), name, odr, ins, flt, order, xlm, ylm,
-             chunk_mode)
+    plot_seq(get_data(db, basename, chunk_mode), name, odr, ins, flt, order,
+             xlm, ylm, chunk_mode)
     db.close()
