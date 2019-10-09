@@ -327,6 +327,8 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     xlm: x-axis limits
     ylm: y-axis limits
     """
+    global FILES, KEY_FN
+
     print("Plotting: {}".format(name))
     rst_glb(dur)
     # Names are of the form "<number>_<details>_<specific options>". Experiments
