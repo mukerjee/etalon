@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import copy
 from os import path
 import sys
 # Directory containing this program.
@@ -65,10 +64,8 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
         data['circ_tput'] = list(zip(*sorted(data['circ_tput'].items()))[1])
 
         # Store the new data in the database.
-        db[key] = dict(data)
-
-    return copy.deepcopy(db[key])
-
+        db[key] = data
+    return db[key]
 
 
 def graph_lat(keys, latencies, fn, ylb, odr=path.join(PROGDIR, "graphs")):
@@ -201,8 +198,8 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
-    graph_lat(data['keys'], data['lat'][prc], name, ylb, odr)
     db.close()
+    graph_lat(data['keys'], data['lat'][prc], name, ylb, odr)
 
 
 def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23,
@@ -216,6 +213,7 @@ def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23,
     db = shelve.open(path.join(edr, "{}.db".format(basename)))
     data = get_data(
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
+    db.close()
     graph_circuit_util(
         data['keys'], data['circ_tput'], name, xlb, odr, srt, xlr, lbs, flt)
 
