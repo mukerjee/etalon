@@ -348,7 +348,12 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
         basename = name
     FILES[basename] = ptn
     KEY_FN[basename] = key_fnc
-    db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    plot_seq(get_data(db, basename, chunk_mode), name, odr, ins, flt, order,
-             xlm, ylm, chunk_mode)
+    db = shelve.open(path.join(edr, "{}.db".format(basename)), protocol=2,
+                     writeback=True)
+    # Do not inline this in plot_seq() to that we can close the database and
+    # persist the data before starting the plotting process. This is a good idea
+    # in case there is a bug in the plotting code that causes a crash before the
+    # database is closed (i.e., we can avoid parsing the data again).
+    data = get_data(db, basename, chunk_mode)
     db.close()
+    plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
