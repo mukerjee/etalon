@@ -185,22 +185,28 @@ def get_data(db, key, chunk_mode=False):
         # Store the new data in the database.
         db[key] = data
 
+    data = db[key]
     if chunk_mode:
         chunks_selected_key = "chunks_selected_flow{}_chunk{}".format(
             FLOW, CHUNK)
         # Do not factor database items into temporary variables to eleminate
         # unnecesary data copies.
-        if chunks_selected_key not in db[key]:
+        if chunks_selected_key not in data:
             # Select a particular chunk for each line. Store the results in the
             # database under a unique key so that we can change the selected
             # flow and chunk without reparsing the data.
-            db[key][chunks_selected_key] = {}
+            chunks_selected_data = {}
             # Look through each line.
-            for line in db[key]["chunks_orig"].keys():
-                flow_key = db[key]["chunks_orig"][line].keys()[FLOW]
-                db[key][chunks_selected_key][line] = \
-                    db[key]["chunks_orig"][line][flow_key][CHUNK]
-    return db[key]
+            for line in data["chunks_orig"].keys():
+                flow_key = data["chunks_orig"][line].keys()[FLOW]
+                chunks_selected_data[line] = \
+                    data["chunks_orig"][line][flow_key][CHUNK]
+
+            # Minimize writing to the database by updating "data" and the
+            # database separately.
+            data[chunks_selected_key] = chunks_selected_data
+            db[key][chunks_selected_key] = chunks_selected_data
+    return data
 
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
