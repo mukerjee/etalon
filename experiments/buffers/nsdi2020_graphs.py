@@ -229,7 +229,7 @@ def main():
     # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
         # Both aggregate and single-chunk results.
-        for chunk_mode in [False, True]:
+        for chunk_mode in [None, 10]:
             # With and without zooming in.
             for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
                 if ins is None or xlm_zoom is None:
@@ -238,7 +238,7 @@ def main():
                             CHOSEN_TCP,
                             "_inset" if ins is not None else "",
                             "_zoom" if xlm_zoom is not None else "",
-                            "_chunk" if chunk_mode else ""),
+                            "_chunk{}".format(chunk_mode) if chunk_mode is not None else ""),
                         edr=edr,
                         odr=odr,
                         ptn=DYN_PTN.format("*", CHOSEN_TCP),
@@ -252,6 +252,19 @@ def main():
                         xlm=xlm_zoom,
                         ylm=ylm_zoom,
                         chunk_mode=chunk_mode)
+
+    # (6.1.3)
+    for dyn_us in DYNS_TO_EXAMINE:
+        sg.seq(
+            name="6-1-3_seq-dyn-{}-{}_chunk_cg".format(CHOSEN_TCP, dyn_us),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format(dyn_us * python_config.TDF, CHOSEN_TCP),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                         / python_config.TDF)),
+            dur=1200,
+            flt=lambda idx, label: idx % 9 == 0,
+            chunk_mode=10)
 
     # (6.1.2)
     sg.seq(

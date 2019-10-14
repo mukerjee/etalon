@@ -36,10 +36,6 @@ KEY_FN = {
 }
 # Kilo-sequence number
 UNITS = 1000.0
-# Control which chunk to select.
-CHUNKS_BEST = False
-FLOW = 0
-CHUNK = 10
 
 
 class FileReader(object):
@@ -118,7 +114,7 @@ def add_optimal(data):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key, chunk_mode=False):
+def get_data(db, key, chunk_mode=None):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
@@ -184,24 +180,20 @@ def get_data(db, key, chunk_mode=False):
         add_optimal(data)
         # Store the new data in the database.
         db[key] = data
-
     data = db[key]
-    if chunk_mode:
-        chunks_selected_key = "chunks_selected_flow{}_chunk{}".format(
-            FLOW, CHUNK)
-        # Do not factor database items into temporary variables to eleminate
-        # unnecesary data copies.
+
+    if chunk_mode is not None and chunk_mode != "best":
+        # Select a particular chunk for each line. Store the results in the
+        # database under a unique key so that we can change the selected chunk
+        # without reparsing the data.
+        chunks_selected_key = "chunks_selected_chunk{}".format(chunk_mode)
         if chunks_selected_key not in data:
-            # Select a particular chunk for each line. Store the results in the
-            # database under a unique key so that we can change the selected
-            # flow and chunk without reparsing the data.
             chunks_selected_data = {}
             # Look through each line.
-            for line in data["chunks_orig"].keys():
-                flow_key = data["chunks_orig"][line].keys()[FLOW]
-                chunks_selected_data[line] = \
-                    data["chunks_orig"][line][flow_key][CHUNK]
-
+            for line, chunks_orig_all in data["chunks_orig"].items():
+                chunks_selected_data[line] = {}
+                for flw, chunks_orig in chunks_orig_all.items():
+                    chunks_selected_data[line][flw] = chunks_orig[chunk_mode]
             # Minimize writing to the database by updating "data" and the
             # database separately.
             data[chunks_selected_key] = chunks_selected_data
@@ -211,31 +203,44 @@ def get_data(db, key, chunk_mode=False):
 
 def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
-             ylm=None, chunk_mode=False):
-
-    # Select the data based on whether we are plotting a single chunk from a
-    # single flow or aggregate metrics for all chunks from all flows.
-    if chunk_mode:
-        key = "chunks_best" if CHUNKS_BEST else \
-            "chunks_selected_flow{}_chunk{}".format(FLOW, CHUNK)
-        xs, ys = zip(*data[key].values())
-    else:
+             ylm=None, chunk_mode=None):
+    use_legend = True
+    if chunk_mode is None:
+        # Plot aggregate metrics for all chunks from all flows in each
+        # experiment.
         ys = data["data"]
         xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
+    elif chunk_mode == "best":
+        # Plot the best chunk from any flow in each experiment.
+        xs, ys = zip(*data["chunks_best"].values())
+    else:
+        # Plot a specific chunk from all flows in a single experiment. Do not
+        # use a legend because each line will correspond to a separate flow
+        # instead of a separate experiment.
+        use_legend = False
+        exps_data = data["chunks_selected_chunk{}".format(chunk_mode)]
+        assert len(exps_data) == 1, \
+            ("There should be exactly one experiment when running "
+             "chunk_mode={}").format(chunk_mode)
+        # Do .values()[0] because we assume that, if we are here, there will is
+        # only a single experiment (see above).
+        xs, ys = zip(*exps_data.values()[0].values())
+
 
     # Format the legend labels.
     lls = []
-    for k in data["keys"]:
-        try:
-            if "static" in fn:
-                lls += ["%s packets" % int(k)]
-            else:
-                lls += ["%s $\mu$s" % int(k)]
-        except ValueError:
-            lls += [k]
+    if use_legend:
+        for k in data["keys"]:
+            try:
+                if "static" in fn:
+                    lls += ["%s packets" % int(k)]
+                else:
+                    lls += ["%s $\mu$s" % int(k)]
+            except ValueError:
+                lls += [k]
 
     options = dotmap.DotMap()
-    options.plot_type = "SCATTER" if chunk_mode else "LINE"
+    options.plot_type = "SCATTER" if chunk_mode is not None else "LINE"
     options.legend.options.loc = "center right"
     options.legend.options.bbox_to_anchor = (1.4, 0.5)
     options.legend.options.labels = lls
@@ -318,7 +323,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_mode=False):
+        xlm=None, ylm=None, chunk_mode=None):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
