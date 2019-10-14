@@ -204,40 +204,46 @@ def get_data(db, key, chunk_mode=None):
 def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
              ylm=None, chunk_mode=None):
-    use_legend = True
     if chunk_mode is None:
         # Plot aggregate metrics for all chunks from all flows in each
         # experiment.
         ys = data["data"]
         xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
-    elif chunk_mode == "best":
-        # Plot the best chunk from any flow in each experiment.
-        xs, ys = zip(*data["chunks_best"].values())
+        keys = data["keys"]
     else:
-        # Plot a specific chunk from all flows in a single experiment. Do not
-        # use a legend because each line will correspond to a separate flow
-        # instead of a separate experiment.
-        use_legend = False
-        exps_data = data["chunks_selected_chunk{}".format(chunk_mode)]
-        assert len(exps_data) == 1, \
-            ("There should be exactly one experiment when running "
-             "chunk_mode={}").format(chunk_mode)
-        # Do .values()[0] because we assume that, if we are here, there will is
-        # only a single experiment (see above).
-        xs, ys = zip(*exps_data.values()[0].values())
-
+        # Include the "optimal" and "packet only" lines.
+        lines = data["data"][0:2]
+        if chunk_mode == "best":
+            # Plot the best chunk from any flow in each experiment.
+            lines.extend(data["chunks_best"].values())
+            keys = data["keys"]
+        else:
+            # Plot a specific chunk from all flows in a single experiment. Do
+            # not use a legend because each line will correspond to a separate
+            # flow instead of a separate experiment.
+            exps_data = data["chunks_selected_chunk{}".format(chunk_mode)]
+            assert len(exps_data) == 1, \
+                ("There should be exactly one experiment when running "
+                 "chunk_mode={}").format(chunk_mode)
+            # Do .values()[0] because we assume that, if we are here, there will
+            # is only a single experiment (see above).
+            lines.extend(exps_data.values()[0].values())
+            # The legend is "optimal", "packet only", and a bunch of "flow"
+            # labels.
+            keys = data["keys"][0:2] + (["flow"] * (len(lines) - 2))
+        xs, ys = zip(*lines)
 
     # Format the legend labels.
     lls = []
-    if use_legend:
-        for k in data["keys"]:
-            try:
-                if "static" in fn:
-                    lls += ["%s packets" % int(k)]
-                else:
-                    lls += ["%s $\mu$s" % int(k)]
-            except ValueError:
-                lls += [k]
+    for k in keys:
+        try:
+            k_int = int(k)
+            if "static" in fn:
+                lls += ["%s packets" % k_int]
+            else:
+                lls += ["%s $\mu$s" % k_int]
+        except ValueError:
+            lls += [k]
 
     options = dotmap.DotMap()
     options.plot_type = "SCATTER" if chunk_mode is not None else "LINE"
