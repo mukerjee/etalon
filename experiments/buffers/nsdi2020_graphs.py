@@ -228,30 +228,26 @@ def main():
 
     # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
-        # Both aggregate and single-chunk results.
-        for chunk_mode in [None, 10]:
-            # With and without zooming in.
-            for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
-                if ins is None or xlm_zoom is None:
-                    sg.seq(
-                        name="6-1-1_seq-dyn-{}{}{}{}_cg".format(
-                            CHOSEN_TCP,
-                            "_inset" if ins is not None else "",
-                            "_zoom" if xlm_zoom is not None else "",
-                            "_chunk{}".format(chunk_mode) if chunk_mode is not None else ""),
-                        edr=edr,
-                        odr=odr,
-                        ptn=DYN_PTN.format("*", CHOSEN_TCP),
-                        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
-                                                     / python_config.TDF)),
-                        dur=1200,
-                        ins=ins,
-                        flt=(lambda idx, label, order=ORDER_DYN_CG: \
-                             label.strip(" $\mu$s") in order),
-                        order=ORDER_DYN_CG,
-                        xlm=xlm_zoom,
-                        ylm=ylm_zoom,
-                        chunk_mode=chunk_mode)
+        # With and without zooming in.
+        for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
+            if ins is None or xlm_zoom is None:
+                sg.seq(
+                    name="6-1-1_seq-dyn-{}{}{}_cg".format(
+                        CHOSEN_TCP,
+                        "_inset" if ins is not None else "",
+                        "_zoom" if xlm_zoom is not None else ""),
+                    edr=edr,
+                    odr=odr,
+                    ptn=DYN_PTN.format("*", CHOSEN_TCP),
+                    key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                                 / python_config.TDF)),
+                    dur=1200,
+                    ins=ins,
+                    flt=(lambda idx, label, order=ORDER_DYN_CG: \
+                         label.strip(" $\mu$s") in order),
+                    order=ORDER_DYN_CG,
+                    xlm=xlm_zoom,
+                    ylm=ylm_zoom)
 
     # (6.1.3)
     for dyn_us in DYNS_TO_EXAMINE:
