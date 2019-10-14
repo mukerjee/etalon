@@ -36,8 +36,6 @@ STATIC_PTN = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
 # particular CC mode.
 DYN_PTN = "*-QUEUE-True-{}-{}-*click.txt"
 
-# Inset window bounds.
-DYN_INS = ((600, 820), (35, 275))
 # Order of the lines for the all TCP variants experiments. This is also used to
 # select which lines to plot.
 ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
@@ -51,26 +49,32 @@ ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
 # Same as above. For the chosen variant's fine-grained experiments.
 ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
                        "packet only"]
-# Same as above. For reTCP fine-grained experiments.
+# Same as above. For reTCP's fine-grained experiments.
 ORDER_DYN_FG_RETCP = ["optimal", "154", "150", "148", "146", "142", "138",
                       "packet only"]
-# Same as above. For 7.1.2.
-ORDER_712 = ["optimal", "175", "150", "125", "100", "50", "packet only"]
-# The TCP variant to use as our baseline.
-CHOSEN_TCP = "cubic"
-# Static buffer size to use.
-CHOSEN_STATIC = 16
-# Amount of resizing to use.
-CHOSEN_RESIZE_US = "3500"
-# The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (790, 820)
-# The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (200, 400)
+# The different amounts of dynamic buffer resizing to plot in the multi-variant
+# graphs.
+CHOSEN_DYN_USS = [50, 100, 125, 150, 175]
+# The order of the lines in the single-variant, multi-resizing experiments.
+ORDER_DYN_USS = (["optimal"] +
+                 list(reversed([str(us) for us in CHOSEN_DYN_USS])) +
+                 ["packet only"])
 # Bars to plot on the utilization graphs.
 CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175,
                       200, 225]
 CHOSEN_RETCP_UTIL = [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175,
                      200, 225]
+# The TCP variant to use as our baseline.
+CHOSEN_TCP = "cubic"
+# Static buffer size to use.
+CHOSEN_STATIC = 16
+# Inset window bounds.
+DYN_INS = ((600, 820), (35, 275))
+# The x-axis bounds to zoom in on for analyzing circuit teardown.
+XLM_ZOOM = (790, 820)
+# The y-axis bounds to zoom in on for analyzing circuit teardown.
+YLM_ZOOM = (200, 400)
+DYNS_TO_EXAMINE = [125, 175]
 
 
 def main():
@@ -95,12 +99,14 @@ def main():
     #     (6.1) Sequence
     #       (6.1.1) Coarse-grained
     #       (6.1.2) Fine-grained
+    #       (6.1.3) For one experiment, look at all flows in detail.
     #     (6.2) Utilization
     #     (6.3) Latency 50
     #     (6.4) Latency 99
     #   (7) Dynamic buffers, all TCP variants
-    #     (7.1.1) Sequence, fixed resize time, varying variant
-    #     (7.1.2) Sequence, fixed variant, varying resize time
+    #     (7.1) Sequence
+    #       (7.1.1) Fixed resize time, varying variant
+    #       (7.1.2) Fixed variant, varying resize time
     #     (7.2) Utilization, for various resize times.
     #   (8) Static buffers, reTCP
     #     (8.1) Sequence
@@ -296,7 +302,7 @@ def main():
         ylb="99th percentile")
 
     # (7.1.1) and (7.2)
-    for us in [50, 100, 125, 150, 175]:
+    for us in CHOSEN_DYN_USS:
         us_tdf = int(round(us * python_config.TDF))
         sg.seq(
             name="7-1-1_seq-dyn-all-{}us".format(us),
@@ -329,9 +335,9 @@ def main():
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
             dur=1200,
-            flt=(lambda idx, label, order=ORDER_712: \
+            flt=(lambda idx, label, order=ORDER_DYN_USS: \
                  label.strip(" $\mu$s") in order),
-            order=ORDER_712)
+            order=ORDER_DYN_USS)
 
     # (8.1)
     sg.seq(
