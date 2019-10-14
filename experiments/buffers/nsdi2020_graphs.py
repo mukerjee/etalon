@@ -99,7 +99,7 @@ def main():
     #     (6.1) Sequence
     #       (6.1.1) Coarse-grained
     #       (6.1.2) Fine-grained
-    #       (6.1.3) For one experiment, look at all flows in detail.
+    #       (6.1.3) For one experiment, look at all flows in detail
     #     (6.2) Utilization
     #     (6.3) Latency 50
     #     (6.4) Latency 99
@@ -107,7 +107,7 @@ def main():
     #     (7.1) Sequence
     #       (7.1.1) Fixed resize time, varying variant
     #       (7.1.2) Fixed variant, varying resize time
-    #     (7.2) Utilization, for various resize times.
+    #     (7.2) Utilization, for various resize times
     #   (8) Static buffers, reTCP
     #     (8.1) Sequence
     #     (8.2) Utilization
@@ -249,6 +249,19 @@ def main():
                     xlm=xlm_zoom,
                     ylm=ylm_zoom)
 
+    # (6.1.2)
+    sg.seq(
+        name="6-1-2_seq-dyn-{}_fg".format(CHOSEN_TCP),
+        edr=edr,
+        odr=odr,
+        ptn=DYN_PTN.format("*", CHOSEN_TCP),
+        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                     / python_config.TDF)),
+        dur=1200,
+        flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
+             label.strip(" $\mu$s") in order),
+        order=ORDER_DYN_FG_CHOSEN)
+
     # (6.1.3)
     for dyn_us in DYNS_TO_EXAMINE:
         sg.seq(
@@ -262,19 +275,6 @@ def main():
             dur=1200,
             flt=lambda idx, label: idx % 9 == 0,
             chunk_mode=10)
-
-    # (6.1.2)
-    sg.seq(
-        name="6-1-2_seq-dyn-{}_fg".format(CHOSEN_TCP),
-        edr=edr,
-        odr=odr,
-        ptn=DYN_PTN.format("*", CHOSEN_TCP),
-        key_fnc=lambda fn: int(round(float(fn.split("-")[6])
-                                     / python_config.TDF)),
-        dur=1200,
-        flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
-             label.strip(" $\mu$s") in order),
-        order=ORDER_DYN_FG_CHOSEN)
 
     # (6.2)
     buffers_graphs.util(
