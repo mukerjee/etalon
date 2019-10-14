@@ -255,7 +255,8 @@ def main():
             name="6-1-3_seq-dyn-{}-{}_chunk_cg".format(CHOSEN_TCP, dyn_us),
             edr=edr,
             odr=odr,
-            ptn=DYN_PTN.format(dyn_us * python_config.TDF, CHOSEN_TCP),
+            ptn=DYN_PTN.format(
+                int(round(dyn_us * python_config.TDF)), CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
             dur=1200,
