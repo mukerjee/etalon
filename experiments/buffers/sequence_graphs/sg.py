@@ -151,9 +151,8 @@ def get_data(db, key, chunk_mode=None):
         data["data"] = [[y / UNITS for y in f]
                         for f in zip(*zip(*data["raw_data"])[1])[0]]
 
-        # Convert the results for each set of original chunk data.
-        data["chunks_orig"] = {}
-        # Look through each line.
+        # Convert the results for each set of original chunk data. Look through
+        # each line.
         for line, (_, _, chunks_orig_all) in data["raw_data"]:
             data["chunks_orig"][line] = {}
             # Look through each flow in this line.
@@ -165,9 +164,7 @@ def get_data(db, key, chunk_mode=None):
                     data["chunks_orig"][line][flw].append(
                         (xs, [y / UNITS for y in ys]))
 
-        # Select the best chunk for each line.
-        data["chunks_best"] = {}
-        # Look through each line.
+        # Select the best chunk for each line. Look through each line.
         for line, chunks_orig_all in data["chunks_orig"].items():
             data["chunks_best"][line] = ([], [])
             # Look through flow in this line.
