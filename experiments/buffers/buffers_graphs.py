@@ -18,9 +18,8 @@ import simpleplotlib
 from simpleplotlib import plot
 simpleplotlib.default_options.rcParams['font.family'] = "Tahoma"
 
-import parse_logs as pl
-import python_config as pyc
-
+import parse_logs
+import python_config
 
 SR = (1, 2)
 
@@ -35,9 +34,11 @@ FILES = {
 
 KEY_FNC = {
     'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
-    'resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / pyc.TDF,
+    'resize': lambda fn: (int(fn.split('True-')[1].split('-')[0])
+                          / python_config.TDF),
     'reTCP': lambda fn: 0,
-    'reTCP+resize': lambda fn: int(fn.split('True-')[1].split('-')[0]) / pyc.TDF,
+    'reTCP+resize': lambda fn: (int(fn.split('True-')[1].split('-')[0])
+                                / python_config.TDF),
 }
 
 
@@ -53,7 +54,7 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
         data = defaultdict(lambda: defaultdict(dict))
         for fn in fns:
             lbl = key_fnc[key](fn.split('/')[-1])
-            _, lat, _, c_tput, _, _, _ = pl.parse_packet_log(fn)
+            _, lat, _, c_tput, _, _, _ = parse_logs.parse_packet_log(fn)
             data['lat'][50][lbl] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][lbl] = [x[1] for x in zip(*lat)[3]]
             data['circ_tput'][lbl] = c_tput[SR]
@@ -120,9 +121,11 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
 
     x = [np.arange(len(tputs))]
     # Convert circuit throughput into utilization.
-    y = [[min(tput / (0.9 * 1./ (pyc.NUM_RACKS - 1) * pyc.CIRCUIT_BW_Gbps) * 100,
-             100.0)
-         for tput in tputs]]
+    y = [[min(
+        tput / (0.9 * 1. / (python_config.NUM_RACKS - 1)
+                * python_config.CIRCUIT_BW_Gbps) * 100,
+        100.0)
+          for tput in tputs]]
 
     print("")
     print("raw util data for: {}".format(fn))
@@ -155,7 +158,8 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
 def graph_util_vs_latency(tputs, latencies, fn):
     x = [map(
         lambda j: min(
-            j / (0.9 * 1. / (pyc.NUM_RACKS - 1) * pyc.CIRCUIT_BW_Gbps) * 100,
+            j / (0.9 * 1. / (python_config.NUM_RACKS - 1)
+                 * python_config.CIRCUIT_BW_Gbps) * 100,
             100.0),
         u)
          for t in tputs]
