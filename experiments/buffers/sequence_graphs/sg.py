@@ -119,7 +119,8 @@ def get_data(db, key, chunk_mode=None):
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
     """
-    if key not in db:
+    data = db.get(key, None)
+    if data is None:
         ptns = FILES[key]
         if not isinstance(ptns, list):
             ptns = [ptns]
@@ -179,7 +180,6 @@ def get_data(db, key, chunk_mode=None):
         add_optimal(data)
         # Store the new data in the database.
         db[key] = data
-    data = db[key]
 
     if chunk_mode is not None and chunk_mode != "best":
         # Select a particular chunk for each line. Store the results in the
