@@ -392,13 +392,11 @@ print '   -> GetIPAddress(IP dst)'
 # the first pattern. Packets that match the second pattern are forwarded out
 # port 1, which is connected to the downstream elements.
 print '   -> pc :: IPClassifier(dst host $DEVNAME:ip icmp echo, -)[1] '
-
 # Only diverts ACKs if set to 1 (meaning that packets should be sent our port
 # 1). Used in validation. Normally, acks are passed through to port 0 (set by
 # the "0" parameter). When connecting elements together, since we do not specify
 # a port to connect to the next element, by default port 0 is used.
 print '   -> divert_acks :: Switch(0)'
-
 # Set the time at which the packet hits this element.
 print '   -> st :: SetTimestamp(FIRST true) '
 if log_pos == "before":
@@ -407,7 +405,6 @@ if log_pos == "before":
 print '   -> in_classify%s' % (str(list(xrange(NUM_RACKS))))
 # The hybrid switch itself.
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
-
 if log_pos == "after":
     add_log()
 # ECE marking (for reTCP). The name is required so that RunSchedule can call
@@ -421,7 +418,6 @@ print '   -> ecn :: MarkIPCE(FORCE true)'
 print '   -> arp_q '
 print '   -> out'
 print
-
 # Used in validation. Port 1 is connected to a different path. Packets normally
 # go out port 0. Setting the element's "switch" handler to 1 forwards packets
 # out port 1 instead.
@@ -429,15 +425,14 @@ print 'divert_acks[1] ' \
     '-> acks :: IPClassifier(tcp ack and len < 100, -)[1] -> st'
 print 'acks -> arp_q'
 print
-
 # Connect ARP replies to the ARPQuerier.
 print 'arp_c[1] -> [1]arp_q'
 # Connect ARP requests to the ARPResponder.
 print 'arp_c[2] -> arp_r -> out'
 print
-
 # ping responder. pc[0] is ICMP echo packets.
 print 'pc -> ICMPPingResponder -> arp_q'
+
 ######################
 # End Main Connections
 ######################
