@@ -19,9 +19,9 @@ DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
-CG_RESIZE_US_MIN = 0
-CG_RESIZE_US_MAX = 225
-CG_RESIZE_US_DELTA = 25
+CG_RESIZE_US_MIN = 125
+CG_RESIZE_US_MAX = 175
+CG_RESIZE_US_DELTA = 50
 # Fine granularity sweep bounds.
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
@@ -48,43 +48,43 @@ def main():
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
-        if cc in ["cubic"]:
-            # (1)
-            cnfs += [{"type": "strobe", "buffer_size": 16,
-                      "night_len_us": 1000. * python_config.TDF,
-                      "day_len_us": 9000. * python_config.TDF,
-                      "cc": cc}]
-            # (2)
-            cnfs += [{"type": "strobe", "buffer_size": 16,
-                      "night_len_us": 1 * python_config.TDF,
-                      "day_len_us": 9 * python_config.TDF, "cc": cc}]
-        # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
-        #     for all variants.
-        for exp in xrange(2, MAX_STATIC_POW + 1):
-            if cc in ["cubic", "retcp"] or exp == 4:
-                cnfs += [{"type": "strobe",
-                          "buffer_size": 2**exp,
-                          "cc": cc}]
+        # if cc in ["cubic"]:
+        #     # (1)
+        #     cnfs += [{"type": "strobe", "buffer_size": 16,
+        #               "night_len_us": 1000. * python_config.TDF,
+        #               "day_len_us": 9000. * python_config.TDF,
+        #               "cc": cc}]
+        #     # (2)
+        #     cnfs += [{"type": "strobe", "buffer_size": 16,
+        #               "night_len_us": 1 * python_config.TDF,
+        #               "day_len_us": 9 * python_config.TDF, "cc": cc}]
+        # # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
+        # #     for all variants.
+        # for exp in xrange(2, MAX_STATIC_POW + 1):
+        #     if cc in ["cubic", "retcp"] or exp == 4:
+        #         cnfs += [{"type": "strobe",
+        #                   "buffer_size": 2**exp,
+        #                   "cc": cc}]
         # (4) Coarse granularity.
         for us in xrange(
                 CG_RESIZE_US_MIN, CG_RESIZE_US_MAX + 1, CG_RESIZE_US_DELTA):
             # Only do full sweeps for CUBIC and reTCP, but capture a handful of
             # us's for all variants.
-            if cc in ["cubic", "retcp"] or us in [50, 100, 125, 150, 175]:
+            if cc in ["cubic"]:  # , "retcp"] or us in [50, 100, 125, 150, 175]:
                 cnfs += [{"type": "strobe",
                           "queue_resize": True,
                           "buffer_size": 16,
                           "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
-        # (4) Fine granularity.
-        for us in xrange(
-                FG_RESIZE_US_MIN, FG_RESIZE_US_MAX + 1, FG_RESIZE_US_DELTA):
-            if cc in ["cubic", "retcp"]:
-                cnfs += [{"type": "strobe",
-                          "queue_resize": True,
-                          "buffer_size": 16,
-                          "in_advance": int(round(us * python_config.TDF)),
-                          "cc": cc}]
+        # # (4) Fine granularity.
+        # for us in xrange(
+        #         FG_RESIZE_US_MIN, FG_RESIZE_US_MAX + 1, FG_RESIZE_US_DELTA):
+        #     if cc in ["cubic", "retcp"]:
+        #         cnfs += [{"type": "strobe",
+        #                   "queue_resize": True,
+        #                   "buffer_size": 16,
+        #                   "in_advance": int(round(us * python_config.TDF)),
+        #                   "cc": cc}]
 
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
