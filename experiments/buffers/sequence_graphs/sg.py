@@ -14,6 +14,7 @@ sys.path.insert(0, path.join(PROGDIR, "..", ".."))
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "..", "etc"))
 
 import dotmap
+from matplotlib import pyplot
 import simpleplotlib
 simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 
@@ -364,3 +365,4 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     data = get_data(db, basename, chunk_mode)
     db.close()
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
+    pyplot.close()

@@ -208,6 +208,7 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
         db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
     db.close()
     graph_lat(data['keys'], data['lat'][prc], name, ylb, odr)
+    pyplot.close()
 
 
 def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23,
@@ -224,6 +225,7 @@ def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23,
     db.close()
     graph_circuit_util(
         data['keys'], data['circ_tput'], name, xlb, odr, srt, xlr, lbs, flt)
+    pyplot.close()
 
 
 def main():
