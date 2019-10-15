@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import collections
 from os import path
 import sys
 # Directory containing this program.
@@ -12,7 +13,6 @@ import shelve
 import glob
 import numpy as np
 
-from collections import defaultdict
 from dotmap import DotMap
 import simpleplotlib
 from simpleplotlib import plot
@@ -51,7 +51,7 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
         for fn in fns:
             print("    {}".format(fn))
 
-        data = defaultdict(lambda: defaultdict(dict))
+        data = collections.defaultdict(lambda: collections.defaultdict(dict))
         for fn in fns:
             lbl = key_fnc[key](fn.split('/')[-1])
             _, lat, _, c_tput, _, _, _ = parse_logs.parse_packet_log(fn)
@@ -65,7 +65,7 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
         data['circ_tput'] = list(zip(*sorted(data['circ_tput'].items()))[1])
 
         # Store the new data in the database.
-        db[key] = data
+        db[key] = dict(data)
     return db[key]
 
 
