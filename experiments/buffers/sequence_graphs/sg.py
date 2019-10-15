@@ -135,7 +135,6 @@ def get_data(db, key, chunk_mode=None):
             print("    {}".format(fn))
 
         data = collections.defaultdict(dict)
-
         if SYNC:
             data["raw_data"] = dict([FileReader(key)(fn) for fn in fns])
         else:
