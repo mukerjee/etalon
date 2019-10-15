@@ -13,15 +13,15 @@ import shelve
 import glob
 import numpy as np
 
-from dotmap import DotMap
+import dotmap
+from matplotlib import pyplot
 import simpleplotlib
-from simpleplotlib import plot
 simpleplotlib.default_options.rcParams['font.family'] = "Tahoma"
 
 import parse_logs
 import python_config
 
-SR = (1, 2)
+FLW = (1, 2)
 
 TYPES = ['static', 'resize', 'reTCP', 'reTCP+resize']
 
@@ -57,7 +57,7 @@ def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
             _, lat, _, c_tput, _, _, _ = parse_logs.parse_packet_log(fn)
             data['lat'][50][lbl] = [x[1] for x in zip(*lat)[1]]
             data['lat'][99][lbl] = [x[1] for x in zip(*lat)[3]]
-            data['circ_tput'][lbl] = c_tput[SR]
+            data['circ_tput'][lbl] = c_tput[FLW]
 
         data['keys'] = list(zip(*sorted(data['circ_tput'].items()))[0])
         data['lat'][50] = list(zip(*sorted(data['lat'][50].items()))[1])
@@ -85,7 +85,7 @@ def graph_lat(keys, latencies, fn, ylb, odr=path.join(PROGDIR, "graphs")):
     print("    packet: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[2], y[2])])))
     print("")
 
-    options = DotMap()
+    options = dotmap.DotMap()
     options.plot_type = 'LINE'
     options.legend.options.labels = ['all traffic', 'only circuit',
                                      'only packet']
@@ -93,19 +93,21 @@ def graph_lat(keys, latencies, fn, ylb, odr=path.join(PROGDIR, "graphs")):
     options.x.label.fontsize = options.y.label.fontsize = 20
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 20
-    options.series_options = [DotMap(marker='o', markersize=10, linewidth=5)
-                              for i in range(len(x))]
+    options.series_options = [
+        dotmap.DotMap(marker='o', markersize=10, linewidth=5)
+        for i in range(len(x))]
     options.output_fn = path.join(odr, '{}.pdf'.format(fn))
     options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
                              else 'Early buffer resizing ($\mu$s)'
     options.y.label.ylabel = '{} latency ($\mu$s)'.format(ylb)
-    options.x.ticks.major.labels = DotMap(
-        locations=[4, 8, 16, 32, 64, 128]) if 'static' in fn \
-        else DotMap(locations=[0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
-    options.y.ticks.major.labels = DotMap(
+    options.x.ticks.major.labels = \
+        dotmap.DotMap(locations=[4, 8, 16, 32, 64, 128]) \
+        if 'static' in fn else \
+        dotmap.DotMap(locations=[0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
+    options.y.ticks.major.labels = dotmap.DotMap(
         locations=[0, 50, 100, 150, 200, 250, 300, 350])
     options.y.limits = [0, 350]
-    plot(x, y, options)
+    simpleplotlib.plot(x, y, options)
 
 
 def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
@@ -133,7 +135,7 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
     print("    {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(keys, y[0])])))
     print("")
 
-    options = DotMap()
+    options = dotmap.DotMap()
     options.plot_type = 'BAR'
     options.legend.options.fontsize = 20
     options.bar_labels.format_string = '%1.0f'
@@ -145,14 +147,14 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
     options.y.label.ylabel = 'Average circuit\nutilization (%)'
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 20
-    options.x.ticks.major.labels = DotMap(text=keys)
+    options.x.ticks.major.labels = dotmap.DotMap(text=keys)
     options.x.ticks.major.labels.options.rotation = xlr
     options.x.ticks.major.labels.options.rotation_mode = "anchor"
     options.x.ticks.major.labels.options.horizontalalignment = \
         "center" if xlr == 0 else "right"
     options.y.ticks.major.show = True
     options.x.ticks.major.show = False
-    plot(x, y, options)
+    simpleplotlib.plot(x, y, options)
 
 
 def graph_util_vs_latency(tputs, latencies, fn):
@@ -165,15 +167,16 @@ def graph_util_vs_latency(tputs, latencies, fn):
          for t in tputs]
     y = [zip(*l)[0] for l in latencies]
 
-    options = DotMap()
+    options = dotmap.DotMap()
     options.plot_type = 'LINE'
     options.legend.options.labels = ['Static buffers (vary size)',
                                      'Dynamic buffers (vary $\\tau$)',
                                      'reTCP',
                                      'reTCP + dynamic buffers (vary $\\tau$)']
     options.legend.options.fontsize = 19
-    options.series_options = [DotMap(marker='o', markersize=10, linewidth=5)
-                              for i in range(len(x))]
+    options.series_options = [
+        dotmap.DotMap(marker='o', markersize=10, linewidth=5)
+        for i in range(len(x))]
     options.series_options[2].marker = 'x'
     options.series_options[2].s = 100
     del options.series_options[2].markersize
@@ -186,11 +189,12 @@ def graph_util_vs_latency(tputs, latencies, fn):
     options.y.label.ylabel = '99th percent. latency ($\mu$s)' if '99' in fn \
                              else 'Median latency ($\mu$s)'
     options.y.limits = [0, 1000] if '99' in fn else [0, 600]
-    options.y.ticks.major.labels = DotMap(
-        locations=[0, 200, 400, 600, 800, 1000]) if '99' in fn else \
-        DotMap(locations=[0, 100, 200, 300, 400, 500, 600])
+    options.y.ticks.major.labels = \
+        dotmap.DotMap(locations=[0, 200, 400, 600, 800, 1000]) \
+        if '99' in fn else \
+        dotmap.DotMap(locations=[0, 100, 200, 300, 400, 500, 600])
 
-    plot(x, y, options)
+    simpleplotlib.plot(x, y, options)
 
 
 def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
