@@ -12,6 +12,17 @@ from python_config import DATA_EXT_IF, NUM_RACKS, HOSTS_PER_RACK, \
     PACKET_LATENCY_s_TDF, RECONFIG_DELAY_us, TDF, CLICK_PORT, \
     get_data_ip_from_host, get_phost_from_id, get_host_from_rack_and_id
 
+log_poss = ["before", "after"]
+assert len(sys.argv) == 2, \
+    "Expected one argument: <log position: {}>".format(log_poss)
+log_pos = sys.argv[1]
+assert log_pos in log_poss, \
+    "Log position must be one of {}, but is: {}".format(log_poss, log_pos)
+
+def add_log():
+    """ Insert an HSLog element. This function must be called exactly once. """
+    # The name is required so that RunSchedule can call its handlers.
+    print '   -> hsl :: HSLog($NUM_RACKS)'
 
 print
 print '// For more information, see etalon/bin/gen-switch.py.'
@@ -390,14 +401,15 @@ print '   -> divert_acks :: Switch(0)'
 
 # Set the time at which the packet hits this element.
 print '   -> st :: SetTimestamp(FIRST true) '
+if log_pos == "before":
+    add_log()
 # Split the packet stream based on rack.
 print '   -> in_classify%s' % (str(list(xrange(NUM_RACKS))))
 # The hybrid switch itself.
 print '   => hybrid_switch%s' % (str(list(xrange(NUM_RACKS))))
 
-# Packet logging. The name is required so that RunSchedule can call its
-# handlers.
-print '   -> hsl :: HSLog($NUM_RACKS)'
+if log_pos == "after":
+    add_log()
 # ECE marking (for reTCP). The name is required so that RunSchedule can call
 # its handler.
 print '   -> ecem :: ECEMark($NUM_RACKS)'
