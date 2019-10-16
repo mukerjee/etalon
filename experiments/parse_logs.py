@@ -257,11 +257,10 @@ def get_seq_data(fn, log_pos="after"):
                 # This if the end of the third circuit in this chunk, i.e., the
                 # end of the chunk.
                 nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
-                last = 0
                 first = -1
-                for a in xrange(last, len(flows[f])):
-                    ts, seq, _ = flows[f][a]
-                    if ts > nxt_nxt_end + timing_offset:
+                for idx in xrange(last, len(flows[f])):
+                    ts, seq, _ = flows[f][idx]
+                    if ts >= nxt_nxt_end + timing_offset:
                         # The timestamp is too late, so we drop this datapoint.
                         # We are done with the current chunk.
                         break
@@ -282,14 +281,14 @@ def get_seq_data(fn, log_pos="after"):
                             continue
 
                         out.append((rel_ts, rel_seq))
+
+                        # This is the latest timestamp we have seen in the
+                        # current chunk.
+                        last = idx
                     else:
                         # The timestamp too early, so we drop this datapoint, We
                         # are before the current chunk.
                         pass
-                    if ts < cur_end + timing_offset:
-                        # This is the latest timestamp we have seen in the
-                        # current chunk.
-                        last = a
             if not out:
                 # No data for this chunk.
                 bad_chunks += 1
