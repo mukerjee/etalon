@@ -40,12 +40,13 @@ UNITS = 1000.0
 
 
 class FileReader(object):
-    def __init__(self, name):
+    def __init__(self, name, log_pos="after"):
         self.name = name
+        self.log_pos = log_pos
 
     def __call__(self, fn):
         return (KEY_FN[self.name](fn.split("/")[-1]),
-                parse_logs.get_seq_data(fn))
+                parse_logs.get_seq_data(fn, self.log_pos))
 
 
 def add_optimal(data):
@@ -115,7 +116,7 @@ def add_optimal(data):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key, chunk_mode=None):
+def get_data(db, key, chunk_mode=None, log_pos="after"):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
@@ -138,10 +139,11 @@ def get_data(db, key, chunk_mode=None):
 
         data = collections.defaultdict(dict)
         if SYNC:
-            data["raw_data"] = dict([FileReader(key)(fn) for fn in fns])
+            data["raw_data"] = dict(
+                [FileReader(key, log_pos)(fn) for fn in fns])
         else:
             p = multiprocessing.Pool()
-            data["raw_data"] = dict(p.map(FileReader(key), fns))
+            data["raw_data"] = dict(p.map(FileReader(key, log_pos), fns))
             # Clean up p.
             p.close()
             p.join()
@@ -326,7 +328,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_mode=None):
+        xlm=None, ylm=None, chunk_mode=None, log_pos="after"):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -362,7 +364,7 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     # persist the data before starting the plotting process. This is a good idea
     # in case there is a bug in the plotting code that causes a crash before the
     # database is closed (i.e., we can avoid parsing the data again).
-    data = get_data(db, basename, chunk_mode)
+    data = get_data(db, basename, chunk_mode, log_pos)
     db.close()
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
     pyplot.close()

@@ -66,7 +66,11 @@ def msg_from_file(filename, chunksize=112):
                 break
 
 
-def get_seq_data(fn):
+def get_seq_data(fn, log_pos="after"):
+    log_poss = ["before", "after"]
+    assert log_pos in log_poss, \
+        "Log position must be one of {}, but is: {}".format(log_poss, log_pos)
+
     print("Parsing: {}".format(fn))
     circuit_starts = collections.defaultdict(list)
     circuit_ends = collections.defaultdict(list)
@@ -187,6 +191,8 @@ def get_seq_data(fn):
         circuit_ends[sr] = np.arange(ts_start, ts_end + 0.004, 0.002)
 
     print("Found {} flows".format(len(flows)))
+    timing_offset = python_config.CIRCUIT_LATENCY_s \
+        if log_pos == "after" else 0
     results = {}
     for f in flows.keys():
         if "10.1.2." in f[0]:
