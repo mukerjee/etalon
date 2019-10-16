@@ -273,7 +273,7 @@ def main():
                 flt=None,
                 xlm=xlm_zoom,
                 ylm=ylm_zoom,
-                chunk_mode=10)
+                chunk_mode=100)
 
     # (6.2)
     buffers_graphs.util(
