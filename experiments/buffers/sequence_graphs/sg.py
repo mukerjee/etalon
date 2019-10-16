@@ -271,11 +271,8 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options = dotmap.DotMap()
     options.plot_type = "SCATTER" if chunk_mode is not None else "LINE"
     options.legend.options.loc = "center right"
-    options.legend.options.bbox_to_anchor = (1.4, 0.5)
     options.legend.options.labels = lls
     options.legend.options.fontsize = 18
-    # Use 1 column if there are fewer than 4 lines, otherwise use 2 columns.
-    options.legend.options.ncol = 1  # if len(data["data"]) < 4 else 2
     options.series_options = [
         dotmap.DotMap(linewidth=2) for i in range(len(xs))]
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
@@ -315,6 +312,9 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
             *[(x, y, l) for (i, (x, y, l)) in enumerate(
                 zip(xs, ys, options.legend.options.labels))
               if flt(i, l)])
+    # Use 1 column if there are 10 or fewer lines, otherwise use 2 columns.
+    options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
+        (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
 
     if order is not None:
         real_xs = []
