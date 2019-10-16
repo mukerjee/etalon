@@ -49,7 +49,7 @@ class FileReader(object):
                 parse_logs.get_seq_data(fn, self.log_pos))
 
 
-def add_optimal(data):
+def add_optimal(data, chunk_mode=None):
     """
     Adds the calculated baselines (optimal and packet-only) to the provided data
     dictionary.
@@ -70,6 +70,12 @@ def add_optimal(data):
     #     ------- x  --- x -------- x ------- x ------ = ------------
     #       Gb       8 b   10**6 us   16 host   1000 B    us x host
     factor = 10**9 / 8. / 10**6 / python_config.HOSTS_PER_RACK / UNITS
+
+    # if chunk_mode is not None and chunk_mode != "best":
+    #     # If we are looking at all of the flows in one chunk, then our optimal
+    #     # should be for all of the flows.
+    #     factor = factor * python_config.HOSTS_PER_RACK
+
     pr_KBpus = python_config.PACKET_BW_Gbps * factor
     cr_KBpus = python_config.CIRCUIT_BW_Gbps * factor
 
