@@ -105,12 +105,13 @@ def get_seq_data(fn, log_pos="after"):
             i += 1
         ts = float(ts[:i]) / python_config.TDF
 
-        if t == 1 or t == 2:  # starting or closing
+        if t == 1 or t == 2:
+            # Start or end of a circuit.
             sr_racks = (src, dst)
             if t == 1:
                 # Circuit start.
                 circuit_starts[sr_racks].append(ts)
-            if t == 2:
+            elif t == 2:
                 # Circuit end.
                 if not circuit_starts[sr_racks]:
                     # If we do not have any circuit starts yet, then skip this
@@ -121,17 +122,29 @@ def get_seq_data(fn, log_pos="after"):
 
         flow = (sender, recv, proto, sport, dport)
         if not flows[flow]:
+            # First timestamp for this flow.
             flows[flow].append((ts, seq, byts))
         else:
+            # Extract previous datapoint.
             last_ts, last_seq, last_bytes = flows[flow][-1]
+
+            # Check whether the current sequence number equals the last sequence
+            # number plus the number of data bytes in the last packet (i.e.,
+            # check that this actually is the next packet, in case the log
+            # messages are out of order).
             if abs(last_seq + last_bytes - seq) < 2:
+                # Yes, it is the next packet.
                 updated = True
                 while updated:
                     updated = False
+                    # Look over unmatched packets until we find one that...?
                     for prev_seen in seen[flow]:
-                        prev_seq = prev_seen[1]
-                        prev_bytes = prev_seen[2]
+                        _, prev_seq, prev_bytes = prev_seen
+                        # Check if this earlier packet actually came immediately
+                        # before the current packet.
                         if abs(seq + byts - prev_seq) < 2:
+                            # Change the current seq and byts. Does this have
+                            # something to do with packet reordering?
                             seq = prev_seq
                             byts = prev_bytes
                             seen[flow].remove(prev_seen)
@@ -139,6 +152,7 @@ def get_seq_data(fn, log_pos="after"):
                             break
                 flows[flow].append((ts, seq, byts))
             else:
+                # No, it is not the next packet. Save it for later.
                 seen[flow].append((ts, seq, byts))
 
     # Validate the circuit starts and ends.
@@ -159,54 +173,68 @@ def get_seq_data(fn, log_pos="after"):
             ends = ends[:num_starts]
             circuit_ends[sr_racks] = ends
 
-        # Reset after modifying.
+        # Reread after modifying.
         starts = circuit_starts[sr_racks]
         ends = circuit_ends[sr_racks]
         num_starts = len(starts)
+        # Check that all circuit durations are positive.
         diffs = np.asarray([ends[i] - starts[i] for i in xrange(num_starts)])
         assert (diffs > 0).all(), \
             ("Not all circuits have positive duration (i.e., there are "
              "mismatched starts and ends)!")
 
-    day_lens = []
-    week_lens = []
+    # Calculate stats about the days and weeks.
     starts = []
     ends = []
-    next_starts = []
-    next_ends = []
-    next_next_starts = []
-    next_next_ends = []
-    for i in xrange(1, len(circuit_starts[SR_RACKS])-2):
+    nxt_starts = []
+    nxt_ends = []
+    nxt_nxt_starts = []
+    nxt_nxt_ends = []
+    day_lens = []
+    week_lens = []
+    for i in xrange(1, len(circuit_starts[SR_RACKS]) - 2):
+        # Use the end of the previous circuit as the relative starting point.
         prev_end = circuit_ends[SR_RACKS][i-1]
-        curr = circuit_starts[SR_RACKS][i]
+
+        curr_start = circuit_starts[SR_RACKS][i]
         cur_end = circuit_ends[SR_RACKS][i]
-        nxt = circuit_starts[SR_RACKS][i+1]
-        if i+1 >= len(circuit_ends[SR_RACKS]):
-            continue
-        next_end = circuit_ends[SR_RACKS][i+1]
-        next_next = circuit_starts[SR_RACKS][i+2]
-        if i+2 >= len(circuit_ends[SR_RACKS]):
-            continue
-        next_next_end = circuit_ends[SR_RACKS][i+2]
-        day_lens.append((cur_end - curr)*1e6)
-        week_lens.append((nxt - curr)*1e6)
-        starts.append((curr - prev_end)*1e6)
-        ends.append((cur_end - prev_end)*1e6)
-        next_starts.append((nxt - prev_end)*1e6)
-        next_ends.append((next_end - prev_end)*1e6)
-        next_next_starts.append((next_next - prev_end)*1e6)
-        next_next_ends.append((next_next_end - prev_end)*1e6)
-    out_start = np.average(starts[5:-5])
-    out_end = np.average(ends[5:-5])
-    out_next_start = np.average(next_starts[5:-5])
-    out_next_end = np.average(next_ends[5:-5])
-    out_next_next_start = np.average(next_next_starts[5:-5])
-    out_next_next_end = np.average(next_next_ends[5:-5])
+
+        nxt_start = circuit_starts[SR_RACKS][i + 1]
+        nxt_end = circuit_ends[SR_RACKS][i + 1]
+
+        nxt_nxt_start = circuit_starts[SR_RACKS][i + 2]
+        nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
+
+        starts.append((curr_start - prev_end) * 1e6)
+        ends.append((cur_end - prev_end) * 1e6)
+
+        nxt_starts.append((nxt_start - prev_end) * 1e6)
+        nxt_ends.append((nxt_end - prev_end) * 1e6)
+
+        nxt_nxt_starts.append((nxt_nxt_start - prev_end) * 1e6)
+        nxt_nxt_ends.append((nxt_nxt_end - prev_end) * 1e6)
+
+        day_lens.append((cur_end - curr_start) * 1e6)
+        week_lens.append((nxt_start - curr_start) * 1e6)
+    # Compute average start/end times and day/week lengths. Remove the first and
+    # last five datapoints.
+    start_avg = np.average(starts[5:-5])
+    end_avg = np.average(ends[5:-5])
+
+    nxt_start_avg = np.average(nxt_starts[5:-5])
+    nxt_end_avg = np.average(nxt_ends[5:-5])
+
+    nxt_nxt_start_avg = np.average(nxt_nxt_starts[5:-5])
+    nxt_nxt_end_avg = np.average(nxt_nxt_ends[5:-5])
+
     day_lens = day_lens[5:-5]
     week_lens = week_lens[5:-5]
-    print "circuit day avg and std dev", np.average(day_lens), np.std(day_lens)
-    print "week avg and std dev", np.average(week_lens), np.std(week_lens)
-    print out_start, out_end, out_next_start, out_next_end
+    print("day avg: {}, std dev: {}".format(
+        np.average(day_lens), np.std(day_lens)))
+    print("week avg: {}, std dev: {}".format(
+        np.average(week_lens), np.std(week_lens)))
+    print(start_avg, end_avg, nxt_start_avg, nxt_end_avg, nxt_nxt_start_avg,
+          nxt_nxt_end_avg)
 
     print("Found {} flows".format(len(flows)))
     timing_offset = python_config.CIRCUIT_LATENCY_s \
@@ -218,17 +246,16 @@ def get_seq_data(fn, log_pos="after"):
             # to rack 2).
             continue
         print("Parsing flow: {}".format(f))
-
-        # Interpolated chunks for this flow.
-        chunks_interp = []
-        # Original (uninterpolated) chunks for this flow.
-        chunks_orig = []
-
         # We already validated that there are the same number of starts and
         # ends.
         print("Circuit starts/ends: {}".format(len(circuit_starts[SR_RACKS])))
 
-        last = 0
+        # Interpolated and uninterpolated (i.e., original) chunks for this flow.
+        chunks_interp = []
+        chunks_orig = []
+        # The idx of the last datapoint in the previous chunk.
+        last_idx = 0
+        # The number chunks with no data (i.e., bad chunks).
         bad_chunks = 0
         first_ts = flows[f][0][0]
         last_ts = flows[f][-1][0]
@@ -257,8 +284,8 @@ def get_seq_data(fn, log_pos="after"):
                 # This if the end of the third circuit in this chunk, i.e., the
                 # end of the chunk.
                 nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
-                first = -1
-                for idx in xrange(last, len(flows[f])):
+                first_seq = -1
+                for idx in xrange(last_idx, len(flows[f])):
                     ts, seq, _ = flows[f][idx]
                     if ts >= nxt_nxt_end + timing_offset:
                         # The timestamp is too late, so we drop this datapoint.
@@ -266,11 +293,10 @@ def get_seq_data(fn, log_pos="after"):
                         break
                     elif ts >= prev_end + timing_offset:
                         # The timestamp is in the valid range.
-                        if first == -1:
-                            first = seq
-
+                        if first_seq == -1:
+                            first_seq = seq
                         rel_ts = (ts - prev_end - timing_offset) * 1e6
-                        rel_seq = seq - first
+                        rel_seq = seq - first_seq
                         if out and rel_ts == out[-1][0]:
                             # Do not add this result if there already exists a
                             # value for this timestamp.
@@ -279,12 +305,10 @@ def get_seq_data(fn, log_pos="after"):
                                    "timestamp!").format(
                                        rel_ts, rel_seq))
                             continue
-
                         out.append((rel_ts, rel_seq))
-
                         # This is the latest timestamp we have seen in the
                         # current chunk.
-                        last = idx
+                        last_idx = idx
                     else:
                         # The timestamp too early, so we drop this datapoint, We
                         # are before the current chunk.
@@ -327,17 +351,16 @@ def get_seq_data(fn, log_pos="after"):
         results[f] = (
             [np.average(tstamp_results) for tstamp_results in unzipped],
             chunks_orig)
-
         print("Chunks for this flow: {}".format(len(chunks_interp)))
         print("Timestamps for this flow: {}".format(len(unzipped)))
         print("Bad chunks for this flow: {}".format(bad_chunks))
 
-    old_len = len(results)
-    # Remove flows that have no datapoints.
-    results = {flw: flw_res for flw, flw_res in results.items() if flw_res[0]}
-    len_delta = old_len - len(results)
-    if len_delta:
-        print("Warning: {} flows were filtered out!".format(len_delta))
+    # # Remove flows that have no datapoints.
+    # old_len = len(results)
+    # results = {flw: flw_res for flw, flw_res in results.items() if flw_res[0]}
+    # len_delta = old_len - len(results)
+    # if len_delta:
+    #     print("Warning: {} flows were filtered out!".format(len_delta))
 
     print("Flows for which we have results:")
     for k in results.keys():
@@ -353,9 +376,8 @@ def get_seq_data(fn, log_pos="after"):
     # really: For each timestep, what's the average sequence number of all
     # flows.
     results = [np.average(q) for q in unzipped]
-    return results, (out_start, out_end, out_next_start,
-                     out_next_end, out_next_next_start,
-                     out_next_next_end), chunks_orig_all
+    return results, (start_avg, end_avg, nxt_start_avg, nxt_end_avg,
+                     nxt_nxt_start_avg, nxt_nxt_end_avg), chunks_orig_all
 
 
 def parse_packet_log(fn):

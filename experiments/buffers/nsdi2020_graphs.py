@@ -44,7 +44,7 @@ ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
 ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
 # used to select which lines to plot. For coarse-grained experiments.
-ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
+ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "0",
                 "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
 ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
