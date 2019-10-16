@@ -20,6 +20,8 @@ RTT = python_config.CIRCUIT_LATENCY_s_TDF * 2
 DURATION = 4300
 # 1/1000 seconds.
 BIN_SIZE_MS = 1
+# The rack pair to examine when parsing sequence logs. Rack 1 to rack 2.
+SR_RACKS = (1, 2)
 
 
 def parse_flowgrind_config(fn):
@@ -104,13 +106,17 @@ def get_seq_data(fn, log_pos="after"):
         ts = float(ts[:i]) / python_config.TDF
 
         if t == 1 or t == 2:  # starting or closing
-            sr = (src, dst)
-            if t == 1:  # starting
-                circuit_starts[sr].append(ts)
-            if t == 2:  # closing
-                if not circuit_starts[sr]:
+            sr_racks = (src, dst)
+            if t == 1:
+                # Circuit start.
+                circuit_starts[sr_racks].append(ts)
+            if t == 2:
+                # Circuit end.
+                if not circuit_starts[sr_racks]:
+                    # If we do not have any circuit starts yet, then skip this
+                    # circuit end.
                     continue
-                circuit_ends[sr].append(ts)
+                circuit_ends[sr_racks].append(ts)
             continue
 
         flow = (sender, recv, proto, sport, dport)
@@ -135,6 +141,33 @@ def get_seq_data(fn, log_pos="after"):
             else:
                 seen[flow].append((ts, seq, byts))
 
+    # Validate the circuit starts and ends.
+    for sr_racks in circuit_starts.keys():
+        starts = circuit_starts[sr_racks]
+        ends = circuit_ends[sr_racks]
+        num_starts = len(starts)
+        num_ends = len(ends)
+
+        if num_starts > num_ends:
+            print("For {}, discarding {} circuit start!".format(
+                sr_racks, num_starts - num_ends))
+            starts = starts[:num_ends]
+            circuit_starts[sr_racks] = starts
+        elif num_ends > num_starts:
+            print("For {}, discarding {} circuit end!".format(
+                sr_racks, num_ends - num_starts))
+            ends = ends[:num_starts]
+            circuit_ends[sr_racks] = ends
+
+        # Reset after modifying.
+        starts = circuit_starts[sr_racks]
+        ends = circuit_ends[sr_racks]
+        num_starts = len(starts)
+        diffs = np.asarray([ends[i] - starts[i] for i in xrange(num_starts)])
+        assert (diffs > 0).all(), \
+            ("Not all circuits have positive duration (i.e., there are "
+             "mismatched starts and ends)!")
+
     day_lens = []
     week_lens = []
     starts = []
@@ -143,23 +176,22 @@ def get_seq_data(fn, log_pos="after"):
     next_ends = []
     next_next_starts = []
     next_next_ends = []
-    sr = (1, 2)
-    for i in xrange(1, len(circuit_starts[sr])-2):
-        prev_end = circuit_ends[sr][i-1]
-        curr = circuit_starts[sr][i]
-        curr_end = circuit_ends[sr][i]
-        nxt = circuit_starts[sr][i+1]
-        if i+1 >= len(circuit_ends[sr]):
+    for i in xrange(1, len(circuit_starts[SR_RACKS])-2):
+        prev_end = circuit_ends[SR_RACKS][i-1]
+        curr = circuit_starts[SR_RACKS][i]
+        cur_end = circuit_ends[SR_RACKS][i]
+        nxt = circuit_starts[SR_RACKS][i+1]
+        if i+1 >= len(circuit_ends[SR_RACKS]):
             continue
-        next_end = circuit_ends[sr][i+1]
-        next_next = circuit_starts[sr][i+2]
-        if i+2 >= len(circuit_ends[sr]):
+        next_end = circuit_ends[SR_RACKS][i+1]
+        next_next = circuit_starts[SR_RACKS][i+2]
+        if i+2 >= len(circuit_ends[SR_RACKS]):
             continue
-        next_next_end = circuit_ends[sr][i+2]
-        day_lens.append((curr_end - curr)*1e6)
+        next_next_end = circuit_ends[SR_RACKS][i+2]
+        day_lens.append((cur_end - curr)*1e6)
         week_lens.append((nxt - curr)*1e6)
         starts.append((curr - prev_end)*1e6)
-        ends.append((curr_end - prev_end)*1e6)
+        ends.append((cur_end - prev_end)*1e6)
         next_starts.append((nxt - prev_end)*1e6)
         next_ends.append((next_end - prev_end)*1e6)
         next_next_starts.append((next_next - prev_end)*1e6)
@@ -176,26 +208,14 @@ def get_seq_data(fn, log_pos="after"):
     print "week avg and std dev", np.average(week_lens), np.std(week_lens)
     print out_start, out_end, out_next_start, out_next_end
 
-    if len(circuit_starts[sr]) < 50:
-        ts_start = flows.values()[0][0][0]
-        ts_end = flows.values()[0][-1][0]
-        for f in flows:
-            fstart = flows[f][0][0]
-            fend = flows[f][-1][0]
-            if fstart < ts_start:
-                ts_start = fstart
-            if fend > ts_end:
-                ts_end = fend
-        circuit_starts[sr] = np.arange(ts_start - 0.002,
-                                       ts_end + 0.002, 0.002)
-        circuit_ends[sr] = np.arange(ts_start, ts_end + 0.004, 0.002)
-
     print("Found {} flows".format(len(flows)))
     timing_offset = python_config.CIRCUIT_LATENCY_s \
         if log_pos == "after" else 0
     results = {}
     for f in flows.keys():
         if "10.1.2." in f[0]:
+            # Skip the reverse flows (i.e., we only care about flows from rack 1
+            # to rack 2).
             continue
         print("Parsing flow: {}".format(f))
 
@@ -203,70 +223,87 @@ def get_seq_data(fn, log_pos="after"):
         chunks_interp = []
         # Original (uninterpolated) chunks for this flow.
         chunks_orig = []
+
+        # We already validated that there are the same number of starts and
+        # ends.
+        print("Circuit starts/ends: {}".format(len(circuit_starts[SR_RACKS])))
+
         last = 0
-        print "Circuit starts: {}".format(len(circuit_starts[sr]))
-        bad_windows = 0
+        bad_chunks = 0
         first_ts = flows[f][0][0]
         last_ts = flows[f][-1][0]
-        for i in xrange(1, len(circuit_starts[sr])-2):
-            prev_end = circuit_ends[sr][i-1]
-            curr = circuit_starts[sr][i]
-            curr_end = circuit_ends[sr][i]
-            if curr_end < first_ts:
-                continue
-            if curr > last_ts:
-                continue
-            nxt = circuit_starts[sr][i+1]
-            if i+1 >= len(circuit_ends[sr]):
-                continue
-            next_end = circuit_ends[sr][i+1]
-            next_next = circuit_starts[sr][i+2]
-            if i+2 >= len(circuit_ends[sr]):
-                continue
-            next_next_end = circuit_ends[sr][i+2]
+        for i in xrange(1, len(circuit_starts[SR_RACKS]) - 2, 3):
+            prev_end = circuit_ends[SR_RACKS][i - 1]
+            cur_start = circuit_starts[SR_RACKS][i]
+            cur_end = circuit_ends[SR_RACKS][i]
+            skip_parsing = False
+            if cur_end < first_ts:
+                # The end of current chunk is later than the first timestamp, so
+                # we skip this chunk.
+                skip_parsing = True
+            if cur_start > last_ts:
+                # The start of the current chunk is later than the last
+                # timestamp, so we skip this chunk.
+                skip_parsing = True
+            if i + 2 >= len(circuit_ends[SR_RACKS]):
+                # There are fewer than two chunks after the current chunk, so we
+                # skip this chunk.
+                skip_parsing = True
+
             # A list of pairs where the first element is a relative timestamp
             # and the second element is a relative sequence number.
             out = []
-            first = -1
-            timing_offset = 30e-6
-            for a in xrange(last, len(flows[f])):
-                (ts, seq, _) = flows[f][a]
-                if ts > next_next_end + timing_offset:
-                    break
-                if ts >= prev_end + timing_offset:
-                    if first == -1:
-                        first = seq
+            if not skip_parsing:
+                # This if the end of the third circuit in this chunk, i.e., the
+                # end of the chunk.
+                nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
+                last = 0
+                first = -1
+                for a in xrange(last, len(flows[f])):
+                    ts, seq, _ = flows[f][a]
+                    if ts > nxt_nxt_end + timing_offset:
+                        # The timestamp is too late, so we drop this datapoint.
+                        # We are done with the current chunk.
+                        break
+                    elif ts >= prev_end + timing_offset:
+                        # The timestamp is in the valid range.
+                        if first == -1:
+                            first = seq
 
-                    rel_ts = (ts - prev_end - timing_offset) * 1e6
-                    rel_seq = seq - first
-                    if out and rel_ts == out[-1][0]:
-                        # print("i: {}".format(i))
-                        # print("rel_ts: {}".format(rel_ts))
-                        # print("ts: {}".format(ts))
-                        # print("prev_end: {}".format(prev_end))
-                        # print("timing_offset: {}".format(timing_offset))
-                        # print("rel_seq: {}".format(rel_seq))
-                        # print("seq: {}".format(seq))
-                        # print("first: {}".format(first))
-                        # Do not add this result if there already exists a value
-                        # for this timestamp.
-                        print(("Warning: Dropping ({}, {}) because we already "
-                               "have data for that timestamp!").format(
-                                   rel_ts, rel_seq))
-                        continue
+                        rel_ts = (ts - prev_end - timing_offset) * 1e6
+                        rel_seq = seq - first
+                        if out and rel_ts == out[-1][0]:
+                            # Do not add this result if there already exists a
+                            # value for this timestamp.
+                            print(("Warning: Dropping datapoint ({}, {}) "
+                                   "because we already have data for that "
+                                   "timestamp!").format(
+                                       rel_ts, rel_seq))
+                            continue
 
-                    out.append((rel_ts, rel_seq))
-                if ts < curr_end + timing_offset:
-                    last = a
+                        out.append((rel_ts, rel_seq))
+                    else:
+                        # The timestamp too early, so we drop this datapoint, We
+                        # are before the current chunk.
+                        pass
+                    if ts < cur_end + timing_offset:
+                        # This is the latest timestamp we have seen in the
+                        # current chunk.
+                        last = a
             if not out:
-                bad_windows += 1
+                # No data for this chunk.
+                bad_chunks += 1
                 out = [(0, 0), (DURATION, 0)]
+
             wraparound = False
-            for ts, seq in out:
+            for _, seq in out:
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
-            if not wraparound:
-                # Sort the data so that it can be used by numpy.interp().
+            if wraparound:
+                print("Warning: Wraparound detected. Dropping results!")
+            else:
+                # This is valid data, so we will store it. Sort the data so that
+                # it can be used by numpy.interp().
                 out = sorted(out, key=lambda a: a[0])
                 xs, ys = zip(*out)
                 diffs = np.diff(xs) > 0
@@ -279,7 +316,6 @@ def get_seq_data(fn, log_pos="after"):
                         "numpy.interp() requires x values to be increasing")
                 # Interpolate based on the data that we have.
                 chunks_interp.append(np.interp(xrange(DURATION), xs, ys))
-
                 # Also record the original (uninterpolated) chunk data.
                 chunks_orig.append((xs, ys))
 
@@ -295,7 +331,7 @@ def get_seq_data(fn, log_pos="after"):
 
         print("Chunks for this flow: {}".format(len(chunks_interp)))
         print("Timestamps for this flow: {}".format(len(unzipped)))
-        print("Bad windows for this flow: {}".format(bad_windows))
+        print("Bad chunks for this flow: {}".format(bad_chunks))
 
     old_len = len(results)
     # Remove flows that have no datapoints.
@@ -350,12 +386,12 @@ def parse_packet_log(fn):
             i += 1
         ts = float(ts[:i])
         if t == 1 or t == 2:  # starting or closing
-            sr = (src, dst)
+            sr_racks = (src, dst)
             if t == 1:  # starting
-                most_recent_circuit_up[sr] = ts
+                most_recent_circuit_up[sr_racks] = ts
             if t == 2:  # closing
-                circuit_starts[sr].append(ts / python_config.TDF)
-                number_circuit_ups[sr] += 1
+                circuit_starts[sr_racks].append(ts / python_config.TDF)
+                number_circuit_ups[sr_racks] += 1
             continue
 
         latency = float(lat)

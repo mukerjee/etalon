@@ -157,6 +157,21 @@ def get_data(db, key, chunk_mode=None, log_pos="after"):
         # Convert the results for each set of original chunk data. Look through
         # each line.
         for line, (_, _, chunks_orig_all) in data["raw_data"]:
+            # Check whether all flows have the same number of chunks. Extract
+            # the number of chunks per flow.
+            num_chunks = {flw: len(chunks_orig)
+                          for flw, chunks_orig in chunks_orig_all.items()}
+            # Use the number of chunks in the first flow as the target.
+            target_num = num_chunks.values()[0]
+            all_same = True
+            # Check if any flows have a different number of chunks than the
+            # target.
+            for num in num_chunks.values():
+                all_same = all_same and (num == target_num)
+            if not all_same:
+                print(("Warning: The flows in line \"{}\" have differing "
+                       "numbers of chunks:\n  {}").format(line, num_chunks))
+
             data["chunks_orig"][line] = {}
             # Look through each flow in this line.
             for flw, chunks_orig in chunks_orig_all.items():
@@ -211,7 +226,8 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         keys = data["keys"]
     else:
         # Include the "optimal" and "packet only" lines.
-        lines = data["data"][0:2]
+        lines = [
+            ([x for x in xrange(len(ys))], ys) for ys in data["data"][0:2]]
         if chunk_mode == "best":
             # Plot the best chunk from any flow in each experiment.
             lines.extend(data["chunks_best"].values())
@@ -226,10 +242,18 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
                  "chunk_mode={}").format(chunk_mode)
             # Do .values()[0] because we assume that, if we are here, there will
             # is only a single experiment (see above).
-            lines.extend(exps_data.values()[0].values())
-            # The legend is "optimal", "packet only", and a bunch of "flow"
-            # labels.
-            keys = data["keys"][0:2] + (["flow"] * (len(lines) - 2))
+            flw_keys = []
+            # Extracts a flow's src ID.
+            get_src_id = lambda f: int(f.split(".")[-1])
+            # Sort the results by the flow src ID, then split the flows and
+            # their results.
+            flws, flw_lines = zip(*sorted(
+                exps_data.values()[0].items(),
+                key=lambda p: get_src_id(p[0][0])))
+            lines.extend(flw_lines)
+            # Convert each of the flows from a src flow ID.
+            keys = (data["keys"][0:2] +
+                    ["flow {}".format(get_src_id(flw[0])) for flw in flws])
         xs, ys = zip(*lines)
 
     # Format the legend labels.
