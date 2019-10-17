@@ -128,39 +128,41 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             continue
 
         flow = (sender, recv, proto, sport, dport)
-        if not flows[flow]:
-            # First timestamp for this flow.
-            flows[flow].append((ts, seq, byts))
-        else:
-            # Extract previous datapoint.
-            last_ts, last_seq, last_bytes = flows[flow][-1]
+        flows[flow].append((ts, seq, byts))
 
-            # Check whether the current sequence number equals the last sequence
-            # number plus the number of data bytes in the last packet (i.e.,
-            # check that this actually is the next packet, in case the log
-            # messages are out of order).
-            if abs(last_seq + last_bytes - seq) < 2:
-                # Yes, it is the next packet.
-                updated = True
-                while updated:
-                    updated = False
-                    # Look over unmatched packets until we find one that...?
-                    for prev_seen in seen[flow]:
-                        _, prev_seq, prev_bytes = prev_seen
-                        # Check if this earlier packet actually came immediately
-                        # before the current packet.
-                        if abs(seq + byts - prev_seq) < 2:
-                            # Change the current seq and byts. Does this have
-                            # something to do with packet reordering?
-                            seq = prev_seq
-                            byts = prev_bytes
-                            seen[flow].remove(prev_seen)
-                            updated = True
-                            break
-                flows[flow].append((ts, seq, byts))
-            else:
-                # No, it is not the next packet. Save it for later.
-                seen[flow].append((ts, seq, byts))
+        # if not flows[flow]:
+        #     # First timestamp for this flow.
+        #     flows[flow].append((ts, seq, byts))
+        # else:
+        #     # Extract previous datapoint.
+        #     last_ts, last_seq, last_bytes = flows[flow][-1]
+
+        #     # Check whether the current sequence number equals the last sequence
+        #     # number plus the number of data bytes in the last packet (i.e.,
+        #     # check that this actually is the next packet, in case the log
+        #     # messages are out of order).
+        #     if abs(last_seq + last_bytes - seq) < 2:
+        #         # Yes, it is the next packet.
+        #         updated = True
+        #         while updated:
+        #             updated = False
+        #             # Look over unmatched packets until we find one that...?
+        #             for prev_seen in seen[flow]:
+        #                 _, prev_seq, prev_bytes = prev_seen
+        #                 # Check if this earlier packet actually came immediately
+        #                 # before the current packet.
+        #                 if abs(seq + byts - prev_seq) < 2:
+        #                     # Change the current seq and byts. Does this have
+        #                     # something to do with packet reordering?
+        #                     seq = prev_seq
+        #                     byts = prev_bytes
+        #                     seen[flow].remove(prev_seen)
+        #                     updated = True
+        #                     break
+        #         flows[flow].append((ts, seq, byts))
+        #     else:
+        #         # No, it is not the next packet. Save it for later.
+        #         seen[flow].append((ts, seq, byts))
 
     # Validate the circuit starts and ends.
     for sr_racks in circuit_starts.keys():
