@@ -74,7 +74,10 @@ DYN_INS = ((600, 820), (35, 275))
 XLM_ZOOM = (0, 600)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
 YLM_ZOOM = (0, 600)
-DYNS_TO_EXAMINE = [0, 125, 175]
+# Dynamic buffer resizing experiments to analyze using chunk mode.
+DYNS_TO_EXAMINE = [125, 175]
+# The default length to use when reading individual packet log messages.
+DEFAULT_MSG_LEN = 116
 
 
 def main():
@@ -121,8 +124,10 @@ def main():
     #     (9.3) Latency 50
     #     (9.4) Latency 99
 
-    assert len(sys.argv) == 2, \
-        "Expected one argument: experiment data directory"
+    num_args = len(sys.argv)
+    assert num_args == 2 or num_args == 3, \
+        ("Expected either one or two arguments: experiment data directory "
+         "[log message size (bytes)]")
     edr = sys.argv[1]
     if not path.isdir(edr):
         print("The first argument must be a directory, but is: {}".format(edr))
@@ -135,6 +140,19 @@ def main():
             sys.exit(-1)
     else:
         os.makedirs(odr)
+    # Parse the log message length.
+    if num_args == 3:
+        try:
+            msg_len = int(sys.argv[2])
+        except ValueError:
+            print("Log message length must be an int, but is: {}".format(
+                sys.argv[2]))
+            sys.exit(-1)
+        assert msg_len > 0, \
+            ("Log message length must be greater than 0, but is: "
+             "{}").format(msg_len)
+    else:
+        msg_len = DEFAULT_MSG_LEN
 
     # (1)
     sg.seq(
@@ -273,7 +291,9 @@ def main():
                 flt=None,
                 xlm=xlm_zoom,
                 ylm=ylm_zoom,
-                chunk_mode=100)
+                chunk_mode=500,
+                log_pos="before",
+                msg_len=msg_len)
 
     # (6.2)
     buffers_graphs.util(

@@ -40,13 +40,14 @@ UNITS = 1000.0
 
 
 class FileReader(object):
-    def __init__(self, name, log_pos="after"):
+    def __init__(self, name, log_pos="after", msg_len=112):
         self.name = name
         self.log_pos = log_pos
+        self.msg_len = msg_len
 
     def __call__(self, fn):
         return (KEY_FN[self.name](fn.split("/")[-1]),
-                parse_logs.get_seq_data(fn, self.log_pos))
+                parse_logs.get_seq_data(fn, self.log_pos, self.msg_len))
 
 
 def add_optimal(data, chunk_mode=None):
@@ -122,7 +123,7 @@ def add_optimal(data, chunk_mode=None):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key, chunk_mode=None, log_pos="after"):
+def get_data(db, key, chunk_mode=None, log_pos="after", msg_len=112):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
@@ -146,10 +147,11 @@ def get_data(db, key, chunk_mode=None, log_pos="after"):
         data = collections.defaultdict(dict)
         if SYNC:
             data["raw_data"] = dict(
-                [FileReader(key, log_pos)(fn) for fn in fns])
+                [FileReader(key, log_pos, msg_len)(fn) for fn in fns])
         else:
             p = multiprocessing.Pool()
-            data["raw_data"] = dict(p.map(FileReader(key, log_pos), fns))
+            data["raw_data"] = dict(
+                p.map(FileReader(key, log_pos, msg_len), fns))
             # Clean up p.
             p.close()
             p.join()
@@ -358,7 +360,7 @@ def rst_glb(dur):
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_mode=None, log_pos="after"):
+        xlm=None, ylm=None, chunk_mode=None, log_pos="after", msg_len=112):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -374,6 +376,9 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     order: List of the legend labels in their desired order.
     xlm: x-axis limits
     ylm: y-axis limits
+    chunk_mode: None, "best", or an integer
+    log_pos: "before" or "after" the hybrid switch
+    msg_len: The length of each HSLog message
     """
     global FILES, KEY_FN
 
@@ -394,7 +399,7 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     # persist the data before starting the plotting process. This is a good idea
     # in case there is a bug in the plotting code that causes a crash before the
     # database is closed (i.e., we can avoid parsing the data again).
-    data = get_data(db, basename, chunk_mode, log_pos)
+    data = get_data(db, basename, chunk_mode, log_pos, msg_len)
     db.close()
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
     pyplot.close()

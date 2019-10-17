@@ -58,7 +58,7 @@ def parse_flowgrind_config(fn):
     return tps, durs, byts
 
 
-def msg_from_file(filename, chunksize=112):
+def msg_from_file(filename, chunksize):
     with open(filename, "rb") as f:
         while True:
             chunk = f.read(chunksize)
@@ -68,7 +68,7 @@ def msg_from_file(filename, chunksize=112):
                 break
 
 
-def get_seq_data(fn, log_pos="after"):
+def get_seq_data(fn, log_pos="after", msg_len=112):
     log_poss = ["before", "after"]
     assert log_pos in log_poss, \
         "Log position must be one of {}, but is: {}".format(log_poss, log_pos)
@@ -78,11 +78,18 @@ def get_seq_data(fn, log_pos="after"):
     circuit_ends = collections.defaultdict(list)
     flows = collections.defaultdict(list)
     seen = collections.defaultdict(list)
-    for msg in msg_from_file(fn):
-        # type (int), timestamp (char[32]), latency (int), src (int), dst (int),
-        # data (char[64])
-        (t, ts, _, src, dst, data) = unpack("i32siii64s", msg)
+    for msg in msg_from_file(fn, msg_len):
+        if msg_len == 112:
+            # type (int), timestamp (char[32]), latency (int), src (int),
+            # dst (int), data (char[64])
+            t, ts, _, src, dst, data = unpack("i32siii64s", msg)
+        elif msg_len == 116:
+            # type (int), timestamp (char[32]), latency (int), src (int),
+            # dst (int), VOQ length (int), data (char[64])
+            t, ts, _, src, dst, voq_len, data = unpack("i32siiii64s", msg)
+
         ip_bytes = unpack("!H", data[2:4])[0]
+
         sender = socket.inet_ntoa(data[12:16])
         recv = socket.inet_ntoa(data[16:20])
         proto = ord(data[9])
@@ -394,7 +401,7 @@ def parse_packet_log(fn):
     circuit_starts = collections.defaultdict(list)
     most_recent_circuit_up = collections.defaultdict(int)
     bytes_in_rtt = collections.defaultdict(lambda: collections.defaultdict(int))
-    for msg in msg_from_file(fn):
+    for msg in msg_from_file(fn, chunksize=112):
         (t, ts, lat, src, dst, data) = unpack("i32siii64s", msg)
         byts = unpack("!H", data[2:4])[0]
         circuit = ord(data[1]) & 0x1
