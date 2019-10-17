@@ -288,7 +288,7 @@ def main():
                 key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                              / python_config.TDF)),
                 dur=1200,
-                flt=None,
+                flt=None,  # lambda idx, label: idx < 3,
                 xlm=xlm_zoom,
                 ylm=ylm_zoom,
                 chunk_mode=500,
