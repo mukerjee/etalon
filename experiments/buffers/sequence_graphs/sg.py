@@ -324,6 +324,13 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
         (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
 
+    if chunk_mode is not None:
+        # Set point sizes for scatter plot. Do this after filtering so that we
+        # have an accurate count of the number of series.
+        for idx in range(len(xs)):
+            options.series_options[idx].s = 2
+            options.series_options[idx].edgecolors = "none"
+
     if order is not None:
         real_xs = []
         real_ys = []
