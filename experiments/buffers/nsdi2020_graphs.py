@@ -75,7 +75,7 @@ XLM_ZOOM = (0, 600)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
 YLM_ZOOM = (0, 600)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
-DYNS_TO_EXAMINE = [125, 175]
+DYNS_TO_EXAMINE = [0, 125, 175]
 # The default length to use when reading individual packet log messages.
 DEFAULT_MSG_LEN = 116
 
@@ -292,7 +292,7 @@ def main():
                 xlm=xlm_zoom,
                 ylm=ylm_zoom,
                 chunk_mode=500,
-                log_pos="before",
+                log_pos="after",
                 msg_len=msg_len)
 
     # (6.2)
