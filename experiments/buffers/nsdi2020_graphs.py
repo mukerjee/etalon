@@ -44,7 +44,7 @@ ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
 ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
 # used to select which lines to plot. For coarse-grained experiments.
-ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "0",
+ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
                 "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
 ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
@@ -71,10 +71,10 @@ CHOSEN_STATIC = 16
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (790, 820)
+XLM_ZOOM = (0, 600)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (200, 400)
-DYNS_TO_EXAMINE = [125, 175]
+YLM_ZOOM = (0, 600)
+DYNS_TO_EXAMINE = [0, 125, 175]
 
 
 def main():
