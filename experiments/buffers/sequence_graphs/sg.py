@@ -288,7 +288,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
             lls += [k]
 
     options = dotmap.DotMap()
-    options.plot_type = "SCATTER" if chunk_mode is not None else "LINE"
+    options.plot_type = "LINE" if chunk_mode is None else "SCATTER"
     options.legend.options.loc = "center right"
     options.legend.options.labels = lls
     options.legend.options.fontsize = 18
