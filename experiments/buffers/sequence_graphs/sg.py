@@ -186,13 +186,13 @@ def get_data(db, key, chunk_mode=None, log_pos="after", msg_len=112):
                 data["chunks_orig"][line][flw] = []
                 # Look through each chunk in this flow.
                 for chunk_orig in chunks_orig:
-                    xs, ys = chunk_orig
+                    xs, ys, voq_lens = chunk_orig
                     data["chunks_orig"][line][flw].append(
-                        (xs, [y / UNITS for y in ys]))
+                        (xs, [y / UNITS for y in ys], voq_lens))
 
         # Select the best chunk for each line. Look through each line.
         for line, chunks_orig_all in data["chunks_orig"].items():
-            data["chunks_best"][line] = ([], [])
+            data["chunks_best"][line] = ([], [], [])
             # Look through flow in this line.
             for chunks_orig in chunks_orig_all.values():
                 # Look through each chunk in this flow.
@@ -226,6 +226,7 @@ def get_data(db, key, chunk_mode=None, log_pos="after", msg_len=112):
 def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
              ylm=None, chunk_mode=None):
+    voq_lens_all = None
     if chunk_mode is None:
         # Plot aggregate metrics for all chunks from all flows in each
         # experiment.
@@ -248,17 +249,27 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
             assert len(exps_data) == 1, \
                 ("There should be exactly one experiment when running "
                  "chunk_mode={}").format(chunk_mode)
-            # Do .values()[0] because we assume that, if we are here, there will
-            # is only a single experiment (see above).
-            flw_keys = []
             # Extracts a flow's src ID.
             get_src_id = lambda f: int(f.split(".")[-1])
             # Sort the results by the flow src ID, then split the flows and
-            # their results.
+            # their results. Do ".values()[0]" because we assume that, if we are
+            # here, there will is only a single experiment (see above).
             flws, flw_lines = zip(*sorted(
                 exps_data.values()[0].items(),
                 key=lambda p: get_src_id(p[0][0])))
+
+            # Extract xs and VOQ lengths and turn them into single-point pairs.
+            voq_lens_all = [zip(xs, voq_lens) for xs, _, voq_lens in flw_lines]
+            # Flatten the per-flow VOQ length results into one master list.
+            voq_lens_all = [pair for voq_lens_flw in voq_lens_all for pair in voq_lens_flw]
+            # Sort the VOQ length results by x value.
+            voq_lens_all = sorted(voq_lens_all, key=lambda val: val[0])
+            voq_lens_all = zip(*voq_lens_all)
+
+            # Remove the VOQ lengths from the results.
+            flw_lines = [(xs, ys) for xs, ys, _ in flw_lines]
             lines.extend(flw_lines)
+
             # Convert each of the flows from a src flow ID.
             keys = (data["keys"][0:2] +
                     ["flow {}".format(get_src_id(flw[0])) for flw in flws])
@@ -281,8 +292,6 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.loc = "center right"
     options.legend.options.labels = lls
     options.legend.options.fontsize = 18
-    options.series_options = [
-        dotmap.DotMap(linewidth=2) for i in range(len(xs))]
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
     if xlm is not None:
         options.x.limits = xlm
@@ -323,13 +332,20 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     # Use 1 column if there are 10 or fewer lines, otherwise use 2 columns.
     options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
         (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
+    if voq_lens_all is not None:
+        # If we are going to plot a second y-axis, then shift the legend to the
+        # right.
+        offset_x, offset_y = options.legend.options.bbox_to_anchor
+        options.legend.options.bbox_to_anchor = (offset_x + 0.1, offset_y)
 
-    if chunk_mode is not None:
-        # Set point sizes for scatter plot. Do this after filtering so that we
-        # have an accurate count of the number of series.
-        for idx in range(len(xs)):
-            options.series_options[idx].s = 4
-            options.series_options[idx].edgecolors = "none"
+    # Set series options. Do this after filtering so that we have an accurate
+    # count of the number of series.
+    if chunk_mode is None:
+        options.series_options = [
+            dotmap.DotMap(linewidth=2) for _ in xrange(len(xs))]
+    else:
+        options.series_options = [
+            dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(xs))]
 
     if order is not None:
         real_xs = []
@@ -352,6 +368,34 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         options.legend.options.labels = real_ls
 
     simpleplotlib.plot(xs, ys, options)
+
+    if voq_lens_all is not None:
+        # Modify the active figure instance to include a totally separate line
+        # on a second y-axis. We cannot use simpleplotlib's built-in y2
+        # functionality because we are not plotting a y2 line for each y
+        # line...we want only one y2 line.
+        options2 = simpleplotlib.default_options.copy()
+        options2.output_fn = options.output_fn
+        options2.plot_type = "LINE"
+        options2.series2_options = [
+            dotmap.DotMap(linewidth=2, color="black", alpha=0.5)]
+        options2.x.margin = options2.y2.margin = \
+            simpleplotlib.default_options.x.margin
+        options2.y2.axis.color = options.y.axis.color
+        options2.y2.label.fontsize = \
+            options.y.label.fontsize
+        options2.y2.label.ylabel = "VOQ length (packets)"
+        options2.y2.ticks.major.options.labelsize = \
+                options.y.ticks.major.options.labelsize
+
+        ax2 = pyplot.gca().twinx()
+        voq_xs, voq_ys = voq_lens_all
+        simpleplotlib.plot_data(
+            ax2, [voq_xs], [voq_ys], options2, options2.series2_options)
+        simpleplotlib.apply_options_to_axis(ax2.xaxis, voq_xs, options2.x)
+        simpleplotlib.apply_options_to_axis(ax2.yaxis, voq_ys, options2.y2)
+        # Overwrite the original graph.
+        pyplot.savefig(options2["output_fn"], bbox_inches="tight", pad_inches=0)
 
 
 def rst_glb(dur):

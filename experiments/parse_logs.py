@@ -83,6 +83,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             # type (int), timestamp (char[32]), latency (int), src (int),
             # dst (int), data (char[64])
             t, ts, _, src, dst, data = unpack("i32siii64s", msg)
+            voq_len = 0
         elif msg_len == 116:
             # type (int), timestamp (char[32]), latency (int), src (int),
             # dst (int), VOQ length (int), data (char[64])
@@ -128,7 +129,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             continue
 
         flow = (sender, recv, proto, sport, dport)
-        flows[flow].append((ts, seq, byts))
+        flows[flow].append((ts, seq, byts, voq_len))
 
         # if not flows[flow]:
         #     # First timestamp for this flow.
@@ -295,7 +296,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                 nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
                 first_seq = -1
                 for idx in xrange(last_idx, len(flows[f])):
-                    ts, seq, _ = flows[f][idx]
+                    ts, seq, _, voq_len = flows[f][idx]
                     if ts >= nxt_nxt_end + timing_offset:
                         # The timestamp is too late, so we drop this datapoint.
                         # We are done with the current chunk.
@@ -314,7 +315,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                                    "timestamp!").format(
                                        rel_ts, rel_seq))
                             continue
-                        out.append((rel_ts, rel_seq))
+                        out.append((rel_ts, rel_seq, voq_len))
                         # This is the latest timestamp we have seen in the
                         # current chunk.
                         last_idx = idx
@@ -325,10 +326,10 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             if not out:
                 # No data for this chunk.
                 bad_chunks += 1
-                out = [(0, 0), (DURATION, 0)]
+                out = [(0, 0, 0), (DURATION, 0, 0)]
 
             wraparound = False
-            for _, seq in out:
+            for _, seq,_ in out:
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if wraparound:
@@ -337,7 +338,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                 # This is valid data, so we will store it. Sort the data so that
                 # it can be used by numpy.interp().
                 out = sorted(out, key=lambda a: a[0])
-                xs, ys = zip(*out)
+                xs, ys, voq_lens = zip(*out)
                 diffs = np.diff(xs) > 0
                 if not np.all(diffs):
                     print("diffs: {}".format(diffs))
@@ -349,7 +350,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                 # Interpolate based on the data that we have.
                 chunks_interp.append(np.interp(xrange(DURATION), xs, ys))
                 # Also record the original (uninterpolated) chunk data.
-                chunks_orig.append((xs, ys))
+                chunks_orig.append((xs, ys, voq_lens))
 
         # List of lists, where each sublist corresponds to one timestep and each
         # entry of each sublist corresponds to a sequence number for that
