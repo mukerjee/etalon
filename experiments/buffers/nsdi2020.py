@@ -19,9 +19,9 @@ DRY_RUN = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
-CG_RESIZE_US_MIN = 125
-CG_RESIZE_US_MAX = 175
-CG_RESIZE_US_DELTA = 50
+CG_RESIZE_US_MIN = 0
+CG_RESIZE_US_MAX = 225
+CG_RESIZE_US_DELTA = 25
 # Fine granularity sweep bounds.
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
