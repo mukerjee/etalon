@@ -101,7 +101,7 @@ def main():
         # duration, below.
         if "night_len_us" not in cnf:
             cnf["night_len_us"] = int(round(20 * python_config.TDF))
-            cnf["day_len_us"] = int(round(180 * python_config.TDF))
+            cnf["day_len_us"] = int(round(2000 * python_config.TDF))
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
