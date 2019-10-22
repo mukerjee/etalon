@@ -20,8 +20,8 @@ DRY_RUN = False
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
 CG_RESIZE_US_MIN = 0
-CG_RESIZE_US_MAX = 2000
-CG_RESIZE_US_DELTA = 200
+CG_RESIZE_US_MAX = 225
+CG_RESIZE_US_DELTA = 25
 # Fine granularity sweep bounds.
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
@@ -101,7 +101,7 @@ def main():
         # duration, below.
         if "night_len_us" not in cnf:
             cnf["night_len_us"] = int(round(20 * python_config.TDF))
-            cnf["day_len_us"] = int(round(2000 * python_config.TDF))
+            cnf["day_len_us"] = int(round(180 * python_config.TDF))
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
