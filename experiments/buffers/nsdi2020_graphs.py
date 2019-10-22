@@ -78,6 +78,8 @@ YLM_ZOOM = (0, 15000)
 DYNS_TO_EXAMINE = [0, 200, 1000, 2000]
 # The default length to use when reading individual packet log messages.
 DEFAULT_MSG_LEN = 116
+# Duration for normal experiments.
+DUR = 12120
 
 
 def main():
@@ -171,7 +173,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=1200,
+        dur=DUR,
         msg_len=msg_len)
 
     # (3)
@@ -191,7 +193,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
         key_fnc=lambda fn: fn.split("-")[7],
-        dur=1200,
+        dur=DUR,
         flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
         order=ORDER_VARS,
         msg_len=msg_len)
@@ -216,7 +218,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
-        dur=1200,
+        dur=DUR,
         order=ORDER_STATIC,
         msg_len=msg_len)
 
@@ -277,7 +279,7 @@ def main():
         ptn=DYN_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        dur=1200,
+        dur=DUR,
         flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
              label.strip(" $\mu$s") in order),
         order=ORDER_DYN_FG_CHOSEN,
@@ -348,7 +350,7 @@ def main():
             odr=odr,
             ptn=DYN_PTN.format(us_tdf, "*"),
             key_fnc=lambda fn: fn.split("-")[7],
-            dur=1200,
+            dur=DUR,
             flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
             order=ORDER_VARS,
             msg_len=msg_len)
@@ -373,7 +375,7 @@ def main():
             ptn=DYN_PTN.format("*", cc),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
-            dur=1200,
+            dur=DUR,
             flt=(lambda idx, label, order=ORDER_DYN_USS: \
                  label.strip(" $\mu$s") in order),
             order=ORDER_DYN_USS,
@@ -386,7 +388,7 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
         key_fnc=lambda fn: fn.split("-")[3],
-        dur=1200,
+        dur=DUR,
         msg_len=msg_len)
 
     # (8.2)
@@ -426,7 +428,7 @@ def main():
         ptn=DYN_PTN.format("*", "retcp"),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        dur=1200,
+        dur=DUR,
         flt=lambda idx, label, order=ORDER_DYN_CG: label.strip(" $\mu$s") in order,
         order=ORDER_DYN_CG)
 
@@ -438,7 +440,7 @@ def main():
         ptn=DYN_PTN.format("*", "retcp"),
         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                      / python_config.TDF)),
-        dur=1200,
+        dur=DUR,
         flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
              label.strip(" $\mu$s") in order),
         order=ORDER_DYN_FG_RETCP,
