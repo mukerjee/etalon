@@ -161,7 +161,8 @@ def main():
         odr=odr,
         ptn=OLD_PTN.format(CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=57590)
+        dur=57590,
+        msg_len=msg_len)
 
     # (2)
     sg.seq(
@@ -170,7 +171,8 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=1200)
+        dur=1200,
+        msg_len=msg_len)
 
     # (3)
     sg.seq(
@@ -179,7 +181,8 @@ def main():
         odr=odr,
         ptn=FUTURE_PTN.format(CHOSEN_TCP),
         key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-        dur=64)
+        dur=64,
+        msg_len=msg_len)
 
     # (4.1)
     sg.seq(
@@ -190,7 +193,8 @@ def main():
         key_fnc=lambda fn: fn.split("-")[7],
         dur=1200,
         flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
-        order=ORDER_VARS)
+        order=ORDER_VARS,
+        msg_len=msg_len)
 
     # (4.2)
     buffers_graphs.util(
@@ -213,7 +217,8 @@ def main():
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
         dur=1200,
-        order=ORDER_STATIC)
+        order=ORDER_STATIC,
+        msg_len=msg_len)
 
     # (5.2)
     buffers_graphs.util(
@@ -232,7 +237,8 @@ def main():
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
         prc=50,
-        ylb="Median")
+        ylb="Median",
+        msg_len=msg_len)
 
     # (5.4)
     buffers_graphs.lat(
@@ -242,7 +248,8 @@ def main():
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
         prc=99,
-        ylb="99th percentile")
+        ylb="99th percentile",
+        msg_len=msg_len)
 
     # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
@@ -259,7 +266,8 @@ def main():
             ins=ins,
             flt=(lambda idx, label, order=ORDER_DYN_CG: \
                  label.strip(" $\mu$s") in order),
-            order=ORDER_DYN_CG)
+            order=ORDER_DYN_CG,
+            msg_len=msg_len)
 
     # (6.1.2)
     sg.seq(
@@ -272,7 +280,8 @@ def main():
         dur=1200,
         flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
              label.strip(" $\mu$s") in order),
-        order=ORDER_DYN_FG_CHOSEN)
+        order=ORDER_DYN_FG_CHOSEN,
+        msg_len=msg_len)
 
     # (6.1.3)
     for dyn_us in DYNS_TO_EXAMINE:
@@ -341,7 +350,8 @@ def main():
             key_fnc=lambda fn: fn.split("-")[7],
             dur=1200,
             flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
-            order=ORDER_VARS)
+            order=ORDER_VARS,
+            msg_len=msg_len)
         buffers_graphs.util(
             name="7-2_util-dyn-all-{}us".format(us),
             edr=edr,
@@ -366,7 +376,8 @@ def main():
             dur=1200,
             flt=(lambda idx, label, order=ORDER_DYN_USS: \
                  label.strip(" $\mu$s") in order),
-            order=ORDER_DYN_USS)
+            order=ORDER_DYN_USS,
+            msg_len=msg_len)
 
     # (8.1)
     sg.seq(
@@ -375,7 +386,8 @@ def main():
         odr=odr,
         ptn=STATIC_PTN.format("*", "retcp"),
         key_fnc=lambda fn: fn.split("-")[3],
-        dur=1200)
+        dur=1200,
+        msg_len=msg_len)
 
     # (8.2)
     buffers_graphs.util(
@@ -429,7 +441,8 @@ def main():
         dur=1200,
         flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
              label.strip(" $\mu$s") in order),
-        order=ORDER_DYN_FG_RETCP)
+        order=ORDER_DYN_FG_RETCP,
+        msg_len=msg_len)
 
     # (9.2)
     buffers_graphs.util(
