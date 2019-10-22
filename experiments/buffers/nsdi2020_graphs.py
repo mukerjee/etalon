@@ -239,8 +239,7 @@ def main():
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
         prc=50,
-        ylb="Median",
-        msg_len=msg_len)
+        ylb="Median")
 
     # (5.4)
     buffers_graphs.lat(
@@ -250,8 +249,7 @@ def main():
         ptn=STATIC_PTN.format("*", CHOSEN_TCP),
         key_fnc=lambda fn: fn.split("-")[3],
         prc=99,
-        ylb="99th percentile",
-        msg_len=msg_len)
+        ylb="99th percentile")
 
     # (6.1.1) With and without inset.
     for ins in [DYN_INS, None]:
