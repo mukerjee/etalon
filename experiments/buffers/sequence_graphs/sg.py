@@ -258,12 +258,16 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
                 exps_data.values()[0].items(),
                 key=lambda p: get_src_id(p[0][0])))
 
-            # Extract xs and VOQ lengths and turn them into single-point pairs.
+            # Combine the separate VOQ length results. This assumes that all of
+            # the flows were sent from the same rack to the same rack. Start by
+            # extracting the xs and VOQ lengths for each flow and turning them
+            # into single-point pairs.
             voq_lens_all = [zip(xs, voq_lens) for xs, _, voq_lens in flw_lines]
             # Flatten the per-flow VOQ length results into one master list.
             voq_lens_all = [pair for voq_lens_flw in voq_lens_all for pair in voq_lens_flw]
-            # Sort the VOQ length results by x value.
+            # Sort the VOQ length results by their x-values.
             voq_lens_all = sorted(voq_lens_all, key=lambda val: val[0])
+            # Split the xs and ys into separate lists.
             voq_lens_all = zip(*voq_lens_all)
 
             # Remove the VOQ lengths from the results.
@@ -292,6 +296,14 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.loc = "center right"
     options.legend.options.labels = lls
     options.legend.options.fontsize = 18
+    # Use 1 column if there are 10 or fewer lines, otherwise use 2 columns.
+    options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
+        (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
+    if voq_lens_all is not None:
+        # If we are going to plot a second y-axis, then shift the legend to the
+        # right.
+        offset_x, offset_y = options.legend.options.bbox_to_anchor
+        options.legend.options.bbox_to_anchor = (offset_x + 0.1, offset_y)
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
     if xlm is not None:
         options.x.limits = xlm
@@ -312,8 +324,8 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.vertical_shaded.limits = shaded
     options.vertical_shaded.options.alpha = 0.1
     options.vertical_shaded.options.color = "blue"
-
     if ins is not None:
+        # Enable an inset.
         options.inset.show = True
         options.inset.options.zoom_level = 1.75
         options.inset.options.corners = (2, 3)
@@ -323,31 +335,14 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         options.inset.options.x.limits = xlm_ins
         options.inset.options.y.limits = ylm_ins
 
-    # Pick only the lines that we want.
     if flt is not None:
+        # Pick only the lines that we want.
         xs, ys, options.legend.options.labels = zip(
             *[(x, y, l) for (i, (x, y, l)) in enumerate(
                 zip(xs, ys, options.legend.options.labels))
               if flt(i, l)])
-    # Use 1 column if there are 10 or fewer lines, otherwise use 2 columns.
-    options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
-        (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
-    if voq_lens_all is not None:
-        # If we are going to plot a second y-axis, then shift the legend to the
-        # right.
-        offset_x, offset_y = options.legend.options.bbox_to_anchor
-        options.legend.options.bbox_to_anchor = (offset_x + 0.1, offset_y)
-
-    # Set series options. Do this after filtering so that we have an accurate
-    # count of the number of series.
-    if chunk_mode is None:
-        options.series_options = [
-            dotmap.DotMap(linewidth=2) for _ in xrange(len(xs))]
-    else:
-        options.series_options = [
-            dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(xs))]
-
     if order is not None:
+        # Reorder the lines.
         real_xs = []
         real_ys = []
         real_ls = []
@@ -367,18 +362,28 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         ys = real_ys
         options.legend.options.labels = real_ls
 
+    # Set series options. Do this after filtering so that we have an accurate
+    # count of the number of series.
+    if chunk_mode is None:
+        options.series_options = [
+            dotmap.DotMap(linewidth=2) for _ in xrange(len(xs))]
+    else:
+        options.series_options = [
+            dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(xs))]
+
     simpleplotlib.plot(xs, ys, options)
 
     if voq_lens_all is not None:
-        # Modify the active figure instance to include a totally separate line
-        # on a second y-axis. We cannot use simpleplotlib's built-in y2
-        # functionality because we are not plotting a y2 line for each y
-        # line...we want only one y2 line.
+        # Plot the VOQ length on a second y-axis. Modify the active figure
+        # instance to include a totally separate line on a second y-axis. We
+        # cannot use simpleplotlib's built-in y2 functionality because we are
+        # not plotting a y2 line for each y line...we want only one y2 line.
         options2 = simpleplotlib.default_options.copy()
         options2.output_fn = options.output_fn
         options2.plot_type = "LINE"
         options2.series2_options = [
-            dotmap.DotMap(linewidth=2, color="black", alpha=0.5)]
+            dotmap.DotMap(linewidth=1, color="black", alpha=0.5)]
+        options2.x.limits = options.x.limits
         options2.x.margin = options2.y2.margin = \
             simpleplotlib.default_options.x.margin
         options2.y2.axis.color = options.y.axis.color
