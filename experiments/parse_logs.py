@@ -105,13 +105,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             seq = unpack("!I", data[ihl+4:ihl+8])[0]
             thl = (ord(data[ihl+12]) >> 4) * 4
         byts = ip_bytes - ihl - thl
-
-        i = 0
-        for a in xrange(len(ts)):
-            if ord(ts[a]) == 0:
-                break
-            i += 1
-        ts = float(ts[:i]) / python_config.TDF
+        ts = float(ts[:20].strip('\x00')) / python_config.TDF
 
         if t == 1 or t == 2:
             # Start or end of a circuit.
@@ -410,12 +404,7 @@ def parse_packet_log(fn):
         circuit = ord(data[1]) & 0x1
         sender = ord(data[14])
         recv = ord(data[18])
-        i = 0
-        for a in xrange(len(ts)):
-            if ord(ts[a]) == 0:
-                break
-            i += 1
-        ts = float(ts[:i])
+        ts = float(ts[:20].strip("\x00"))
         if t == 1 or t == 2:  # starting or closing
             sr_racks = (src, dst)
             if t == 1:  # starting
