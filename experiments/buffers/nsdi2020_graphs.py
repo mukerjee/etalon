@@ -75,7 +75,7 @@ XLM_ZOOM = (4000, 8120)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
 YLM_ZOOM = (0, 15000)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
-DYNS_TO_EXAMINE = [0, 75, 125, 175]
+DYNS_TO_EXAMINE = [0, 200, 1000, 2000]
 # The default length to use when reading individual packet log messages.
 DEFAULT_MSG_LEN = 116
 
