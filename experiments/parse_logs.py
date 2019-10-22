@@ -246,8 +246,8 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
     results = {}
     for f in flows.keys():
         if "10.1.2." in f[0]:
-            # Skip the reverse flows (i.e., we only care about flows from rack 1
-            # to rack 2).
+            # Skip the reverse flows (i.e., the ACKs, we only care about the
+            # data packets).
             continue
         print("Parsing flow: {}".format(f))
         # We already validated that there are the same number of starts and
@@ -267,19 +267,12 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             prev_end = circuit_ends[SR_RACKS][i - 1]
             cur_start = circuit_starts[SR_RACKS][i]
             cur_end = circuit_ends[SR_RACKS][i]
-            skip_parsing = False
-            if cur_end < first_ts:
-                # The end of current chunk is later than the first timestamp, so
-                # we skip this chunk.
-                skip_parsing = True
-            if cur_start > last_ts:
-                # The start of the current chunk is later than the last
-                # timestamp, so we skip this chunk.
-                skip_parsing = True
-            if i + 2 >= len(circuit_ends[SR_RACKS]):
-                # There are fewer than two chunks after the current chunk, so we
-                # skip this chunk.
-                skip_parsing = True
+            # We skip the current chunk if the end of the current chunk is
+            # earlier than the first timestamp, or the start of the current
+            # chunk is later than the last timestamp, or there are fewer than
+            # two chunks after the current chunk.
+            skip_parsing = cur_end < first_ts or cur_start > last_ts or \
+                i + 2 >= len(circuit_ends[SR_RACKS])
 
             # A list of pairs where the first element is a relative timestamp
             # and the second element is a relative sequence number.
