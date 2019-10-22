@@ -20,8 +20,8 @@ DRY_RUN = False
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
 CG_RESIZE_US_MIN = 0
-CG_RESIZE_US_MAX = 225
-CG_RESIZE_US_DELTA = 25
+CG_RESIZE_US_MAX = 2000
+CG_RESIZE_US_DELTA = 200
 # Fine granularity sweep bounds.
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
