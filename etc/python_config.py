@@ -274,6 +274,9 @@ IMAGE_CMD = {
                      'sleep infinity"',
 }
 
+# Run tcpdump and filter for TCP packets.
+TCPDUMP = "sudo tcpdump -w {} -s 68 -n -i {} tcp"
+
 # All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
 CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",

@@ -1,6 +1,7 @@
 
 import datetime
 import glob
+import multiprocessing
 import os
 from os import path
 import socket
@@ -32,7 +33,7 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     get_phost_from_id, DID_BUILD_FN, gen_hosts_file, HOSTS_FILE, \
     IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, gen_slaves_file, SLAVES_FILE, \
     get_hostname_from_rack_and_id, get_rack_and_id_from_host, DEFAULT_CC, \
-    FLOWGRIND_DEFAULT_DUR_S, FLOWGRIND_DEFAULT_SAMPLE_RATE
+    FLOWGRIND_DEFAULT_DUR_S, FLOWGRIND_DEFAULT_SAMPLE_RATE, TCPDUMP
 
 CURRENT_CC = None
 START_TIME = None
@@ -196,6 +197,57 @@ def gen_big_and_small_flows(seed=92611, rings=1):
     return flows
 
 
+class Tcpdump(object):
+    """ Represents a tcpdump trace running on a remote host. """
+
+    def __init__(self, host):
+        """ Starts recording a tcpdump trace on the specified host. """
+        assert host in PHYSICAL_NODES, \
+            ("tcpdump must be run on the physical hosts, but the specified "
+             "host is not physical: {}").format(host)
+        # The remote host.
+        self.host = host
+        # The path to the remote and (eventually) local file in which to store
+        # the trace results.
+        self.flp = "/tmp/{}-tcpdump-{}.pcap".format(TIMESTAMP, host)
+        # Encapsulate the running trace in a Process so that we can kill it
+        # whenever we please.
+        self.prc = multiprocessing.Process(
+            target=self.__run, args=(host, self.flp))
+        self.prc.start()
+
+
+    def __run(self):
+        """ Starts recording a tcpdump trace. """
+        run_on_host(self.host, cmd=TCPDUMP.format(self.flp, DATA_EXT_IF))
+
+
+    def kill(self):
+        """
+        Stops the tcpdump trace, retrieves the remote pcap file, and marks it
+        for inclusion in the results TAR file.
+        """
+        self.prc.terminate()
+        runWriteFile(SCP % (self.host, self.flp, self.flp), None)
+        EXPERIMENTS.append(self.flp)
+
+
+def tcpdump_start_all():
+    """
+    Start a remote tcpdump trace on all physical nodes. Returns a list of
+    Tcpdump objects running the remote traces.
+    """
+    return [Tcpdump(host) for host in PHYSICAL_NODES]
+
+
+def tcpdump_kill_all(tcpdumps):
+    """
+    Stops the tcpdump traces being collected by the specified Process objects.
+    """
+    for tcpdump in tcpdumps:
+        tcpdump.kill()
+
+
 def flowgrind(settings):
     flows = []
     if 'big_and_small' in settings:
@@ -232,7 +284,9 @@ def flowgrind(settings):
     EXPERIMENTS.append(fg_config)
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
+    tcpdumps = tcpdump_start_all()
     runWriteFile(cmd, fn)
+    tcpdump_kill_all(tcpdumps)
     save_counters(click_common.FN_FORMAT % ('flowgrind.counters'))
 
 
