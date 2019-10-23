@@ -132,7 +132,7 @@ SWITCH_PING = 'ping switch -c1'
 GET_SWITCH_MAC = "arp | grep switch | tr -s ' ' | cut -d' ' -f3"
 ARP_POISON = 'arp -s h{hid} {switch_mac}'
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
-SCP = 'scp -r -o StrictHostKeyChecking=no root@%s:%s %s'
+SCP = 'scp -r -o StrictHostKeyChecking=no %s@%s:%s %s'
 SCP_TO = 'scp -r -o StrictHostKeyChecking=no %s %s:%s'
 
 # temporary files
@@ -274,8 +274,15 @@ IMAGE_CMD = {
                      'sleep infinity"',
 }
 
-# Run tcpdump and filter for TCP packets.
-TCPDUMP = "sudo tcpdump -w {} -s 68 -n -i {} tcp"
+# Run tcpdump, and filter for TCP packets. This captures only the first 100
+# bytes of each packet.
+TCPDUMP = "sudo tcpdump -w {} -s 100 -n -i {} tcp"
+
+# Forcibly remove a file or directory.
+RM = "rm -rf {}"
+
+# Get the current user.
+WHOAMI = "whoami"
 
 # All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
