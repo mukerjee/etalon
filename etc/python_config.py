@@ -284,6 +284,10 @@ RM = "rm -rf {}"
 # Get the current user.
 WHOAMI = "whoami"
 
+DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
+DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
+NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
+
 # All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control
 CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
