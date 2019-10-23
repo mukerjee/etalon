@@ -44,8 +44,10 @@ ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
 ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
 # used to select which lines to plot. For coarse-grained experiments.
-ORDER_DYN_CG = ["optimal", "1400", "1200", "1000", "800", "600", "400", "200",
-                "0", "packet only"]
+ORDER_DYN_CG = ["optimal", "200", "175", "150", "125", "100", "75", "50", "0",
+                "packet only"]
+# ORDER_DYN_CG = ["optimal", "2000", "1600", "1400", "1000", "600", "400", "200", "0",
+#                 "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
 ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
                        "packet only"]
@@ -71,15 +73,19 @@ CHOSEN_STATIC = 16
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (4000, 8120)
+XLM_ZOOM = (360, 800)
+# XLM_ZOOM = (4000, 8120)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (0, 15000)
+YLM_ZOOM = (0, 2000)
+# YLM_ZOOM = (0, 15000)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
-DYNS_TO_EXAMINE = [0, 200, 1000, 2000]
+DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
+# DYNS_TO_EXAMINE = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
 # The default length to use when reading individual packet log messages.
 DEFAULT_MSG_LEN = 116
 # Duration for normal experiments.
-DUR = 12120
+DUR = 1200
+# DUR = 12120
 
 
 def main():
@@ -262,7 +268,7 @@ def main():
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
-            dur=12120,
+            dur=DUR,
             ins=ins,
             flt=(lambda idx, label, order=ORDER_DYN_CG: \
                  label.strip(" $\mu$s") in order),
@@ -296,12 +302,12 @@ def main():
                     int(round(dyn_us * python_config.TDF)), CHOSEN_TCP),
                 key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                              / python_config.TDF)),
-                dur=12120,
+                dur=DUR,
                 flt=None,  # lambda idx, label: idx < 3,
                 xlm=xlm_zoom,
                 ylm=ylm_zoom,
                 chunk_mode=500,
-                log_pos="after",
+                log_pos="before",
                 msg_len=msg_len)
 
     # (6.2)
