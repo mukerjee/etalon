@@ -221,8 +221,9 @@ class Tcpdump(object):
             "{}-tcpdump-{}.pcap".format(fln_fmt[:-7], self.host))
         # Start the tcpdump trace, running in the background.
         run_on_host(self.host,
-                    cmd=("{} &".format(TCPDUMP).format(
-                        filepath=self.flp_rem, interface=DATA_EXT_IF)))
+                    cmd=(TCPDUMP.format(
+                        filepath=self.flp_rem, interface=DATA_EXT_IF)),
+                    async=True)
 
     def finish(self):
         """
@@ -234,7 +235,7 @@ class Tcpdump(object):
         run_on_host(self.host,
                     cmd=KILL.format(
                         signal=2,
-                        process="`{}`".format(PGREP.format("tcpdump"))))
+                        process="`{}`".format(PGREP.format(program="tcpdump"))))
         # Copy the remote trace file to the local directory.
         flp_lcl = path.basename(self.flp_rem)
         runWriteFile(cmd=SCP % (self.usr, self.host, self.flp_rem, flp_lcl), fn=None)
@@ -432,10 +433,11 @@ def push_docker_image():
     print 'done...'
 
 
-def run_on_host(host, cmd, timeout_s=0):
+def run_on_host(host, cmd, timeout_s=0, async=False):
     print("host: {} , cmd: {}".format(host, cmd))
     if host in PHYSICAL_NODES:
-        func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run_fully
+        node = RPYC_CONNECTIONS[get_phost_from_host(host)].root
+        func = node.run if async else node.run_fully
     else:
         if 'arp' in cmd or 'ping' in cmd:
             func = lambda c: RPYC_CONNECTIONS[
