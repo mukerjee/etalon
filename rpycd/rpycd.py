@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import datetime
-import shlex
+import multiprocessing
 import subprocess
 import sys
 # For python_config.
@@ -30,16 +30,11 @@ class EtalonService(rpyc.Service):
     def exposed_run(self, cmd):
         """
         Run a command on the physical host, but do not wait for the command to
-        complete.
+        complete. Note: Any errors or output from the command are hidden.
         """
         self.log("Launching cmd: {}".format(cmd))
-        try:
-            subprocess.Popen(shlex.split(cmd), shell=True)
-        except Exception as exp:
-            # TODO: Log exp.child_traceback.
-            self.log("Failed cmd: {} , output: Error , exception: {}".format(
-                cmd, exp))
-            raise exp
+        multiprocessing.Process(target=lambda : self.exposed_run_fully(cmd)).start()
+        self.log("Launched cmd: {}".format(cmd))
 
     def exposed_run_fully(self, cmd):
         """ Run a command to completion on the physical host. """
