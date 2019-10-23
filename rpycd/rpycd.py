@@ -1,22 +1,24 @@
 #!/usr/bin/env python
 
 import datetime
+import shlex
 import subprocess
 import sys
+# For python_config.
+sys.path.insert(0, '/etalon/etc')
 import time
 
 import rpyc
 from rpyc.utils import server
 
-sys.path.insert(0, '/etalon/etc')
 import python_config
 
 
 class EtalonService(rpyc.Service):
 
     def log(self, msg):
-        with open("/tmp/rpycd.log", "a+") as erf:
-            erf.write("{}: {}\n".format(
+        with open("/tmp/rpycd.log", "a+") as lgf:
+            lgf.write("{}: {}\n".format(
                 datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"), msg))
 
     def on_connect(self, conn):
@@ -25,67 +27,84 @@ class EtalonService(rpyc.Service):
                 python_config.SWITCH_CONTROL_IP), \
                 "rpyc connection not from switch"
 
-    def run(self, cmd, check_rc=True):
-        try:
-            self.log("Running cmd: {}".format(cmd))
-            output = subprocess.check_output(cmd, shell=True)
-            # For prettiness, only print a newline if there was some output.
-            self.log("Finished cmd: {} , output:{}".format(
-                cmd, "\n{}".format(output.strip()) if output != "" else ""))
-            return output
-        except subprocess.CalledProcessError as exp:
-            if check_rc:
-                self.log(
-                    ("cmd: {} , output: Error\nreturncode: "
-                     "{}\noutput:\n{}").format(cmd, exp.returncode, exp.output))
-                raise exp
-
-    def exposed_run_host(self, my_id, my_cmd):
-        """ Run on a container. """
-        return self.run(python_config.DOCKER_EXEC.format(id=my_id, cmd=my_cmd))
-
-    def exposed_ns_run(self, my_id, my_cmd, timeout_s=0, interval_s=0):
+    def exposed_run(self, cmd):
         """
-        Run on the physical host but in a container's namespace. If "timeout_s"
-        is greater than 0, then attempt "my_cmd" every "interval_s" seconds
-        until it suceeds, or until "timeout_s" seconds have elapsed.
+        Run a command on the physical host, but do not wait for the command to
+        complete.
+        """
+        self.log("Launching cmd: {}".format(cmd))
+        try:
+            subprocess.Popen(shlex.split(cmd))
+        except Exception as exp:
+            # TODO: Log exp.child_traceback.
+            self.log("Failed cmd: {} , output: Error , exception: {}".format(
+                cmd, exp))
+            raise exp
+
+    def exposed_run_fully(self, cmd):
+        """ Run a command to completion on the physical host. """
+        self.log("Running cmd: {}".format(cmd))
+        try:
+            out = subprocess.check_output(cmd, shell=True)
+            out_msg = "\n{}".format(out.strip()) if out != "" else ""
+            return out
+        except subprocess.CalledProcessError as exp:
+            # TODO: Log exp.child_traceback.
+            out_msg = "Error , returncode: {} , exception output:\n{}".format(
+                exp.returncode, exp.output)
+            raise exp
+        finally:
+            self.log("Finished cmd: {} , output: {}".format(cmd, out_msg))
+
+    def exposed_run_fully_host(self, hid, cmd):
+        """ Run a command to completion in a host container. """
+        return self.exposed_run_fully(
+            cmd=python_config.DOCKER_EXEC.format(id=hid, cmd=cmd))
+
+    def exposed_run_fully_host_ns(self, hid, cmd, timeout_s=0, interval_s=0):
+        """
+        Run a command to completion on the physical host but in a container's
+        namespace. If "timeout_s" is greater than 0, then attempt the command
+        every "interval_s" seconds until it suceeds or "timeout_s" seconds have
+        elapsed.
         """
         assert timeout_s >= 0, \
             "\"timeout_s\" must be >= 0, but is: {}".format(timeout_s)
         assert interval_s >= 0, \
             "\"interval_s\" must be >= 0, but is: {}".format(interval_s)
 
-        my_pid = self.run(cmd=python_config.DOCKER_GET_PID.format(
-            id=my_id)).split()[0].strip()
-        full_cmd = python_config.NS_RUN.format(pid=my_pid, cmd=my_cmd)
+        once = False
+        count = 0
         start_s = time.time()
         current_s = start_s
         end_s = start_s + timeout_s
-        once = False
-        count = 0
         while (not once) or (current_s - start_s < timeout_s):
             once = True
             try:
-                return self.run(full_cmd)
+                # First, get the Docker container's PID, then run the command in
+                # the container's namespace.
+                return self.exposed_run_fully(python_config.NS_RUN.format(
+                    pid=self.exposed_run_fully(
+                        cmd=python_config.DOCKER_GET_PID.format(
+                            id=hid)).split()[0].strip(),
+                    cmd=cmd))
             except subprocess.CalledProcessError:
                 count += 1
                 self.log(("Will try command \"{}\" on host \"{}\" again "
                           "(attempt #{}) in {} second(s).").format(
-                              my_cmd, my_id, count + 1, interval_s))
+                              cmd, hid, count + 1, interval_s))
             if current_s + interval_s > end_s:
                 # If there is at least one interval remaining, then sleep for
-                # interval_s seconds.
+                # "interval_s" seconds.
                 time.sleep(interval_s)
             current_s = time.time()
+
+        # If we are here, then the command never completed successfully.
         msg = ("Command \"{}\" on host \"{}\" did not complete successfully "
                "after {} attempt(s) in {} seconds!").format(
-                   my_cmd, my_id, count, timeout_s)
+                   cmd, hid, count, timeout_s)
         self.log(msg)
         raise RuntimeError(msg)
-
-    def exposed_run(self, cmd):
-        """ Run on a physical host. """
-        return self.run(cmd)
 
 
 if __name__ == '__main__':

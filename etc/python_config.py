@@ -134,6 +134,23 @@ ARP_POISON = 'arp -s h{hid} {switch_mac}'
 SET_CC = 'sudo sysctl -w net.ipv4.tcp_congestion_control={cc}'
 SCP = 'scp -r -o StrictHostKeyChecking=no %s@%s:%s %s'
 SCP_TO = 'scp -r -o StrictHostKeyChecking=no %s %s:%s'
+# Run tcpdump, and filter for TCP packets. This captures only the first 100
+# bytes of each packet.
+TCPDUMP = "sudo tcpdump -w {filepath} -s 100 -n -i {interface} tcp"
+# Forcibly remove a file or directory.
+RM = "rm -rf {filepath}"
+# Get the current user.
+WHOAMI = "whoami"
+# Run a command in a docker container.
+DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
+# Get the PID of a docker container.
+DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
+# Run a command in a container's namespace.
+NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
+# Return the PIDs of processes with a certain name.
+PGREP = "ps -e | pgrep {program}"
+# Send a signal to a process.
+KILL = "sudo kill -{signal} {process}"
 
 # temporary files
 DID_BUILD_FN = '/tmp/docker_built'
@@ -273,22 +290,6 @@ IMAGE_CMD = {
                      'historyserver && '
                      'sleep infinity"',
 }
-
-# Run tcpdump, and filter for TCP packets. This captures only the first 100
-# bytes of each packet. The "-G" option rotates the output file every "time"
-# seconds, and the "-W 1" option quits tcpdump after one such rotation. This
-# gives the effect of only running tcpdump for "time" seconds.
-TCPDUMP = "sudo tcpdump -G {time_s} -W 1 -w {filepath} -s 100 -n -i {interface} tcp"
-
-# Forcibly remove a file or directory.
-RM = "rm -rf {}"
-
-# Get the current user.
-WHOAMI = "whoami"
-
-DOCKER_EXEC = 'sudo docker exec -t h{id} {cmd}'
-DOCKER_GET_PID = "sudo docker inspect --format '{{{{.State.Pid}}}}' h{id}"
-NS_RUN = 'sudo nsenter -t {pid} -n {cmd}'
 
 # All available CC mode. Found by:
 #     sudo sysctl net.ipv4.tcp_available_congestion_control

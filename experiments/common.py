@@ -1,7 +1,6 @@
 
 import datetime
 import glob
-import multiprocessing
 import os
 from os import path
 import socket
@@ -33,7 +32,8 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     get_phost_from_id, DID_BUILD_FN, gen_hosts_file, HOSTS_FILE, \
     IMAGE_DOCKER_RUN, REMOVE_HOSTS_FILE, gen_slaves_file, SLAVES_FILE, \
     get_hostname_from_rack_and_id, get_rack_and_id_from_host, DEFAULT_CC, \
-    FLOWGRIND_DEFAULT_DUR_S, FLOWGRIND_DEFAULT_SAMPLE_RATE, TCPDUMP, RM, WHOAMI
+    FLOWGRIND_DEFAULT_DUR_S, FLOWGRIND_DEFAULT_SAMPLE_RATE, TCPDUMP, RM, \
+    WHOAMI, PGREP, KILL
 
 CURRENT_CC = None
 START_TIME = None
@@ -200,12 +200,12 @@ def gen_big_and_small_flows(seed=92611, rings=1):
 class Tcpdump(object):
     """ Represents a tcpdump trace running on a remote host. """
 
-    def __init__(self, host, fln_fmt, time_s):
+    def __init__(self, host, fln_fmt):
         """
-        Records a tcpdump trace on "host" for "time_s" seconds. Uses "fln_fmt"
-        to format the output filename. "fln_fmt" should be unique to each
-        experiment.
+        Records a tcpdump trace on a remote host. Uses "fln_fmt" to format the
+        output filename. "fln_fmt" should be unique to each experiment.
         """
+        assert host != "", "Tcpdump class has not been tested with localhost."
         assert host in PHYSICAL_NODES, \
             ("tcpdump must be run on the physical hosts, but the specified "
              "host is not physical: {}").format(host)
@@ -219,45 +219,38 @@ class Tcpdump(object):
         self.flp_rem = path.join(
             "/home", self.usr,
             "{}-tcpdump-{}.pcap".format(fln_fmt[:-7], self.host))
-        print("Starting tcpdump on host: {}".format(self.host))
-        # Encapsulate the running trace in a Process so that we can do other
-        # things while it is running.
-        self.prc = multiprocessing.Process(target=self.__run, args=(time_s,))
-        self.prc.start()
-
-    def __run(self, time_s):
-        """ Records a remote tcpdump trace for "time_s" seconds. """
-        run_on_host(
-            self.host, cmd=TCPDUMP.format(
-                time_s=time_s,
-                filepath=self.flp_rem, interface=DATA_EXT_IF))
+        # Start the tcpdump trace, running in the background.
+        run_on_host(self.host,
+                    cmd=("{} &".format(TCPDUMP).format(
+                        filepath=self.flp_rem, interface=DATA_EXT_IF)))
 
     def finish(self):
         """
-        Waits for the remote tcpdump trace to finish, retrieves the remote pcap
-        file, removes it from the remote host, and marks it for inclusion in the
-        results TAR file.
+        Kills the remote tcpdump trace, retrieves the remote pcap file, removes
+        it from the remote host, and marks it for inclusion in the results TAR
+        file.
         """
-        print("Finishing tcpdump on host: {}".format(self.host))
-        # Wait for the remote trace to finish.
-        self.prc.join()
+        # Sent a SIGINT signal to the tcpdump process.
+        run_on_host(self.host,
+                    cmd=KILL.format(
+                        signal=2,
+                        process="`{}`".format(PGREP.format("tcpdump"))))
         # Copy the remote trace file to the local directory.
         flp_lcl = path.basename(self.flp_rem)
         runWriteFile(cmd=SCP % (self.usr, self.host, self.flp_rem, flp_lcl), fn=None)
         # Remove the remote trace file.
-        # run_on_host(self.host, cmd=RM.format(self.flp_rem))
+        run_on_host(self.host, cmd=RM.format(filepath=self.flp_rem))
         # Mark the local trace file for inclusion in the results TAR file.
-        EXPERIMENTS.append(self.flp_rem)
+        EXPERIMENTS.append(flp_lcl)
 
 
-def tcpdump_start(fln_fmt, time_s):
+def tcpdump_start(fln_fmt):
     """
     Start a remote tcpdump trace on all physical nodes. Returns a list of
     Tcpdump objects running the remote traces. Uses "fln_fmt" to format the
-    output filenames. "fln_fmt" should be unique to each experiment. The trace
-    will run for "time_s" seconds.
+    output filenames. "fln_fmt" should be unique to each experiment.
     """
-    return [Tcpdump(host, fln_fmt, time_s) for host in PHYSICAL_NODES if host]
+    return [Tcpdump(host, fln_fmt) for host in PHYSICAL_NODES if host]
 
 
 def tcpdump_finish(tcpdumps):
@@ -306,7 +299,7 @@ def flowgrind(settings):
     print fn
     # Configure the tcpdump traces to run for 5% longer than the experiment to
     # make sure that we capture all packets.
-    tcpdumps = tcpdump_start(click_common.FN_FORMAT, time_s=dur_s * 1.05)
+    tcpdumps = tcpdump_start(click_common.FN_FORMAT)
     time.sleep(2)
     runWriteFile(cmd, fn)
     tcpdump_finish(tcpdumps)
@@ -444,16 +437,16 @@ def push_docker_image():
 def run_on_host(host, cmd, timeout_s=0):
     print("host: {} , cmd: {}".format(host, cmd))
     if host in PHYSICAL_NODES:
-        func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run
+        func = RPYC_CONNECTIONS[get_phost_from_host(host)].root.run_fully
     else:
         if 'arp' in cmd or 'ping' in cmd:
             func = lambda c: RPYC_CONNECTIONS[
-                get_phost_from_host(host)].root.ns_run(host, c, timeout_s, interval_s=1)
+                get_phost_from_host(host)].root.run_fully_ns(host, c, timeout_s, interval_s=1)
         else:
             if host[0] == 'h':
                 host = host[1:]
             func = lambda c: RPYC_CONNECTIONS[
-                get_phost_from_host(host)].root.run_host(host, c)
+                get_phost_from_host(host)].root.run_fully_host(host, c)
     return func(cmd)
 
 
