@@ -275,8 +275,10 @@ IMAGE_CMD = {
 }
 
 # Run tcpdump, and filter for TCP packets. This captures only the first 100
-# bytes of each packet.
-TCPDUMP = "sudo tcpdump -w {} -s 100 -n -i {} tcp"
+# bytes of each packet. The "-G" option rotates the output file every "time"
+# seconds, and the "-W 1" option quits tcpdump after one such rotation. This
+# gives the effect of only running tcpdump for "time" seconds.
+TCPDUMP = "sudo tcpdump -G {time_s} -W 1 -w {filepath} -s 100 -n -i {interface} tcp"
 
 # Forcibly remove a file or directory.
 RM = "rm -rf {}"

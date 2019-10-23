@@ -200,10 +200,10 @@ def gen_big_and_small_flows(seed=92611, rings=1):
 class Tcpdump(object):
     """ Represents a tcpdump trace running on a remote host. """
 
-    def __init__(self, host, fln_fmt):
+    def __init__(self, host, fln_fmt, time_s):
         """
-        Starts recording a tcpdump trace on the specified host. Uses "fln_fmt"
-        to format the output filenames. "fln_fmt" should be unique to each
+        Records a tcpdump trace on "host" for "time_s" seconds. Uses "fln_fmt"
+        to format the output filename. "fln_fmt" should be unique to each
         experiment.
         """
         assert host in PHYSICAL_NODES, \
@@ -220,47 +220,52 @@ class Tcpdump(object):
             "/home", self.usr,
             "{}-tcpdump-{}.pcap".format(fln_fmt[:-7], self.host))
         print("Starting tcpdump on host: {}".format(self.host))
-        # Encapsulate the running trace in a Process so that we can kill it
-        # whenever we please.
-        self.prc = multiprocessing.Process(target=self.__run)
+        # Encapsulate the running trace in a Process so that we can do other
+        # things while it is running.
+        self.prc = multiprocessing.Process(target=self.__run, args=(time_s,))
         self.prc.start()
 
+    def __run(self, time_s):
+        """ Records a remote tcpdump trace for "time_s" seconds. """
+        run_on_host(
+            self.host, cmd=TCPDUMP.format(
+                time_s=time_s,
+                filepath=self.flp_rem, interface=DATA_EXT_IF))
 
-    def __run(self):
-        """ Starts recording a tcpdump trace. """
-        run_on_host(self.host, cmd=TCPDUMP.format(self.flp_rem, DATA_EXT_IF))
-
-
-    def kill(self):
+    def finish(self):
         """
-        Stops the tcpdump trace, retrieves the remote pcap file, marks it
-        for inclusion in the results TAR file, and removes it from the remote
-        host.
+        Waits for the remote tcpdump trace to finish, retrieves the remote pcap
+        file, removes it from the remote host, and marks it for inclusion in the
+        results TAR file.
         """
         print("Finishing tcpdump on host: {}".format(self.host))
-        self.prc.terminate()
-        # Copy the trace files to the local directory.
+        # Wait for the remote trace to finish.
+        self.prc.join()
+        # Copy the remote trace file to the local directory.
         flp_lcl = path.basename(self.flp_rem)
         runWriteFile(cmd=SCP % (self.usr, self.host, self.flp_rem, flp_lcl), fn=None)
+        # Remove the remote trace file.
+        # run_on_host(self.host, cmd=RM.format(self.flp_rem))
+        # Mark the local trace file for inclusion in the results TAR file.
         EXPERIMENTS.append(self.flp_rem)
-        run_on_host(self.host, cmd=RM.format(self.flp_rem))
 
 
-def tcpdump_start_all(fln_fmt):
+def tcpdump_start(fln_fmt, time_s):
     """
     Start a remote tcpdump trace on all physical nodes. Returns a list of
     Tcpdump objects running the remote traces. Uses "fln_fmt" to format the
-    output filenames. "fln_fmt" should be unique to each experiment.
+    output filenames. "fln_fmt" should be unique to each experiment. The trace
+    will run for "time_s" seconds.
     """
-    return [Tcpdump(host, fln_fmt) for host in PHYSICAL_NODES if host]
+    return [Tcpdump(host, fln_fmt, time_s) for host in PHYSICAL_NODES if host]
 
 
-def tcpdump_kill_all(tcpdumps):
+def tcpdump_finish(tcpdumps):
     """
     Stops the tcpdump traces being collected by the specified Process objects.
     """
     for tcpdump in tcpdumps:
-        tcpdump.kill()
+        tcpdump.finish()
 
 
 def flowgrind(settings):
@@ -299,10 +304,12 @@ def flowgrind(settings):
     EXPERIMENTS.append(fg_config)
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
-    tcpdumps = tcpdump_start_all(click_common.FN_FORMAT)
+    # Configure the tcpdump traces to run for 5% longer than the experiment to
+    # make sure that we capture all packets.
+    tcpdumps = tcpdump_start(click_common.FN_FORMAT, time_s=dur_s * 1.05)
     time.sleep(2)
     runWriteFile(cmd, fn)
-    tcpdump_kill_all(tcpdumps)
+    tcpdump_finish(tcpdumps)
     save_counters(click_common.FN_FORMAT % ('flowgrind.counters'))
 
 
