@@ -34,7 +34,7 @@ class EtalonService(rpyc.Service):
         """
         self.log("Launching cmd: {}".format(cmd))
         try:
-            subprocess.Popen(shlex.split(cmd))
+            subprocess.Popen(shlex.split(cmd), shell=True)
         except Exception as exp:
             # TODO: Log exp.child_traceback.
             self.log("Failed cmd: {} , output: Error , exception: {}".format(

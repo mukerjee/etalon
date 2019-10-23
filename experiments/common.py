@@ -297,8 +297,6 @@ def flowgrind(settings):
     EXPERIMENTS.append(fg_config)
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
-    # Configure the tcpdump traces to run for 5% longer than the experiment to
-    # make sure that we capture all packets.
     tcpdumps = tcpdump_start(click_common.FN_FORMAT)
     time.sleep(2)
     runWriteFile(cmd, fn)
@@ -441,7 +439,8 @@ def run_on_host(host, cmd, timeout_s=0):
     else:
         if 'arp' in cmd or 'ping' in cmd:
             func = lambda c: RPYC_CONNECTIONS[
-                get_phost_from_host(host)].root.run_fully_ns(host, c, timeout_s, interval_s=1)
+                get_phost_from_host(host)].root.run_fully_host_ns(
+                    host, c, timeout_s, interval_s=1)
         else:
             if host[0] == 'h':
                 host = host[1:]
