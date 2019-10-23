@@ -296,14 +296,6 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.loc = "center right"
     options.legend.options.labels = lls
     options.legend.options.fontsize = 18
-    # Use 1 column if there are 10 or fewer lines, otherwise use 2 columns.
-    options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
-        (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
-    if voq_lens_all is not None:
-        # If we are going to plot a second y-axis, then shift the legend to the
-        # right.
-        offset_x, offset_y = options.legend.options.bbox_to_anchor
-        options.legend.options.bbox_to_anchor = (offset_x + 0.1, offset_y)
     options.output_fn = path.join(odr, "{}.pdf".format(fn))
     if xlm is not None:
         options.x.limits = xlm
@@ -370,6 +362,16 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     else:
         options.series_options = [
             dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(xs))]
+    # Set legend options. Do this after filtering so that we have an accurate
+    # count of the number of series. Use 1 column if there are 10 or fewer
+    # lines, otherwise use 2 columns.
+    options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
+        (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
+    if voq_lens_all is not None:
+        # If we are going to plot a second y-axis, then shift the legend to the
+        # right.
+        offset_x, offset_y = options.legend.options.bbox_to_anchor
+        options.legend.options.bbox_to_anchor = (offset_x + 0.1, offset_y)
 
     simpleplotlib.plot(xs, ys, options)
 
