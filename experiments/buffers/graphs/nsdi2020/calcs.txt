@@ -25,7 +25,9 @@ dyn lat99 penalty = 70us / 50%
 
 static 64 lat99 penalty = 118 / 85%
 
-dyn util improvement vs static 32
+dyn util improvement vs static 32 = 97.7146108203 / 72.648150984 = 1.345
+
+dyn util improvement vs static 16 = 97.7146108203 / 48.8989357379 = 1.998
 
 
 
