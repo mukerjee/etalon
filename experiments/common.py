@@ -283,7 +283,7 @@ def flowgrind(settings):
                     flows.append(f)
     dur_s = settings.get("dur", FLOWGRIND_DEFAULT_DUR_S)
     sample_rate_s = settings.get("sample_rate", FLOWGRIND_DEFAULT_SAMPLE_RATE)
-    cmd = '-I -Ts={} -Ys=0 -Gs=q:C:{} -i {} -n {} '.format(
+    cmd = '-I -Ts={} -O b=TCP_NODELAY -Ys=0 -Gs=q:C:{} -i {} -n {} '.format(
         dur_s, DEFAULT_REQUEST_SIZE, sample_rate_s, len(flows))
     for i, f in enumerate(flows):
         cmd += '-F %d -Hs=%s,d=%s ' % \

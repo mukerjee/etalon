@@ -202,7 +202,7 @@ IMAGE_DOCKER_RUN = collections.defaultdict(lambda: DOCKER_RUN, {
 IMAGE_CMD = {
     'flowgrindd': '"pipework --wait -i eth1 && pipework --wait -i eth2 && '
                   'LD_PRELOAD=libVT.so taskset -c {cpu} '
-                  'flowgrindd -d -c {cpu}"',
+                  'flowgrindd -d -d -d -d -d -d -c {cpu}"',
 
     'flowgrindd_adu': '"pipework --wait -i eth1 && pipework --wait -i eth2 && '
                       'LD_PRELOAD=libVT.so:libADU.so taskset -c {cpu} '
