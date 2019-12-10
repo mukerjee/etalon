@@ -85,7 +85,6 @@ DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
 DEFAULT_MSG_LEN = 116
 # Duration for normal experiments.
 DUR = 1200
-# DUR = 12120
 
 
 def main():
