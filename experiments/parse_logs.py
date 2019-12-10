@@ -295,9 +295,12 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                         break
                     elif ts >= prev_end + timing_offset:
                         # The timestamp is in the valid range.
+                        rel_ts = (ts - prev_end - timing_offset) * 1e6
                         if first_seq == -1:
                             first_seq = seq
-                        rel_ts = (ts - prev_end - timing_offset) * 1e6
+                            # print("first seq num in circuit {}: {}".format(
+                            #     i, first_seq))
+                            # print("rel_ts: {}".format(rel_ts))
                         rel_seq = seq - first_seq
                         if out and rel_ts == out[-1][0]:
                             # Do not add this result if there already exists a
