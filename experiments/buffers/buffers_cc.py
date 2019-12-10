@@ -32,8 +32,8 @@ DUR_S = 1.3
 # FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"  # Works, but the packet network does not work.
 FIXED = None
 # Control which experimnets are run.
-RESIZE_US_MIN = 0
-RESIZE_US_MAX = 225
+RESIZE_US_MIN = 100
+RESIZE_US_MAX = 100
 RESIZE_US_DELTA = 25
 
 
