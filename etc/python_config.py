@@ -296,6 +296,7 @@ IMAGE_CMD = {
 CCS = ["reno", "cubic", "retcp", "dctcp", "bbr", "bic", "cdg", "highspeed",
        "htcp", "hybla", "illinois", "lp", "nv", "scalable", "vegas", "veno",
        "westwood", "yeah"]
+# CCS = ["reno"]
 
 # The default CC mode.
 DEFAULT_CC = "reno"
