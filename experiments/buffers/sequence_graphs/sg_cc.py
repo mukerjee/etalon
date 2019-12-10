@@ -27,7 +27,7 @@ def main():
         os.makedirs(odr)
 
     # Create a graph for each CC mode.
-    for cc in python_config.CCS:
+    for cc in ["cubic"]:
         sg.seq(
             name="seq-dyn-{}".format(cc),
             edr=edr,
@@ -36,7 +36,8 @@ def main():
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
             dur=1200,
-            flt=lambda idx, label: idx < 10)  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
+            msg_len=116)
+            # flt=lambda idx, label: idx < 10)  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
 
 
 if __name__ == "__main__":
