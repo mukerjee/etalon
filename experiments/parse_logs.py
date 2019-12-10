@@ -88,6 +88,10 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             # type (int), timestamp (char[32]), latency (int), src (int),
             # dst (int), VOQ length (int), data (char[64])
             t, ts, _, src, dst, voq_len, data = unpack("i32siiii64s", msg)
+        else:
+            raise Exception(
+                "Message length must be either 112 or 116, but is: {}".format(
+                    msg_len))
 
         ip_bytes = unpack("!H", data[2:4])[0]
 
