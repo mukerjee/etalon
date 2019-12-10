@@ -32,9 +32,9 @@ DUR_S = 1.3
 # FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"  # Works, but the packet network does not work.
 FIXED = None
 # Control which experimnets are run.
-RESIZE_US_MIN = int(round(0 * python_config.TDF))
-RESIZE_US_MAX = int(round(225 * python_config.TDF))
-RESIZE_US_DELTA = int(round(25 * python_config.TDF))
+RESIZE_US_MIN = 0
+RESIZE_US_MAX = 225
+RESIZE_US_DELTA = 25
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -49,8 +49,11 @@ def main():
     ccs = ["cubic"]
     cnfs = []
     for cc in ccs:
-        sweep = buffer_common.gen_resize_sweep(RESIZE_US_MIN, RESIZE_US_MAX,
-                                               RESIZE_US_DELTA)
+        sweep = buffer_common.gen_resize_sweep(
+            int(round(RESIZE_US_MIN * python_config.TDF)),
+            int(round(RESIZE_US_MAX * python_config.TDF)),
+            int(round(RESIZE_US_DELTA * python_config.TDF)))
+
         for cnf in sweep:
             cnf["cc"] = cc
             if cc == "dctcp":
