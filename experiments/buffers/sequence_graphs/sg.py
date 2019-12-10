@@ -46,7 +46,7 @@ class FileReader(object):
         self.msg_len = msg_len
 
     def __call__(self, fn):
-        return (KEY_FN[self.name](fn.split("/")[-1]),
+        return (KEY_FN[self.name](path.basename(fn)),
                 parse_logs.get_seq_data(fn, self.log_pos, self.msg_len))
 
 
