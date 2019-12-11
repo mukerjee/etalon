@@ -151,14 +151,10 @@ def disableSolstice():
 
 
 def disableCircuit():
-    disableSolstice()
-    off_sched = '1 20000 %s' % (('-1/' * NUM_RACKS)[:-1])
-    clickWriteHandler('runner', 'setSchedule', off_sched)
-    time.sleep(0.1)
+    setFixedSchedule('1 20000 %s' % (('-1/' * NUM_RACKS)[:-1]))
 
 
 def setStrobeSchedule(night_len_us=20, day_len_us=180):
-    disableSolstice()
     # Configuration that turns off all the circuit links. Remove trailing '/'.
     off_config = ('-1/' * NUM_RACKS)[:-1]
     # Day len, day config, night len, off config
@@ -175,18 +171,13 @@ def setStrobeSchedule(night_len_us=20, day_len_us=180):
         # Remove trailing '/'.
         day_config = day_config[:-1]
         schedule += config_s % (day_len_us, day_config, night_len_us, off_config)
-
     # Remove trailing space.
     schedule = schedule[:-1]
-    clickWriteHandler('runner', 'setSchedule', schedule)
-    time.sleep(0.1)
+    setFixedSchedule(schedule)
 
 
 def setCircuitSchedule(configuration):
-    disableSolstice()
-    schedule = '1 %d %s' % (20 * TDF * 10 * 10, configuration)
-    clickWriteHandler('runner', 'setSchedule', schedule)
-    time.sleep(0.1)
+    setFixedSchedule('1 %d %s' % (20 * TDF * 10 * 10, configuration))
 
 
 def setFixedSchedule(schedule):
