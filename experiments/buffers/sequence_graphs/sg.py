@@ -23,7 +23,7 @@ import python_config
 
 # True and False mean that the data parsing will be executed using a single
 # thread and multiple threads, respectively.
-SYNC = True
+SYNC = False
 # Maps experiment to filename.
 FILES = {
     "static": "*-fixed-*-False-*-reno-*click.txt",
