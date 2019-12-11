@@ -20,17 +20,13 @@ import python_config
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
 # Flowgrind flow duration, in seconds.
-# 1400 us week x 3 + 0.1 (for good measure)
-# DUR_S = 4.3
-# 400 us week * 3 + 0.1 (for good measure)
-DUR_S = 1.3
-# Fixed schedule: 180 us circuit day, 20 us circuit night, 2000 us pause, 20 us
-# circuit night.
-# FIXED = "2 3600 1/2/0 40800 -1/-1/-1"  # Broken
-# FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 400 -1/-1/-1"  # Works
-# FIXED = "2 3600 1/2/0 400 -1/-1/-1"  # Broken
-# FIXED = "4 3600 1/2/0 400 -1/-1/-1 3600 2/0/1 20400 -1/-1/-1"  # Works, but the packet network does not work.
-FIXED = None
+# (week length (in us) x 3 + 100 us (for good measure)) x (1 s / 1000000 us) * 1000
+DUR_S = 4.54
+# This schedule mimics an 8-rack cluster where each rack gets a circuit to every
+# other rack for 180us. Values are the srcs, indices are the dsts. E.g., 1/2/0
+# means that 1->0, 2->1, and 0->2.
+FIXED = "4 25200 1/2/0 400 -1/-1/-1 3600 2/0/1 400 -1/-1/-1"
+# FIXED = None
 # Control which experimnets are run.
 RESIZE_US_MIN = 100
 RESIZE_US_MAX = 100
