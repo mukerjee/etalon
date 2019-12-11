@@ -39,7 +39,7 @@ FIXED = ("14 "
 # FIXED = None
 # Control which experimnets are run.
 RESIZE_US_MIN = 0
-RESIZE_US_MAX = 1400
+RESIZE_US_MAX = 1200
 RESIZE_US_DELTA = 100
 
 
