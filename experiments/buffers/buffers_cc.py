@@ -80,7 +80,7 @@ def main():
         print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
         maybe(lambda: common.flowgrind(
             settings={"flows": [{"src": "r1", "dst": "r2"}], "dur": DUR_S}))
-    maybe(lambda: common.finishExperiment())
+    maybe(common.finishExperiment)
 
 
 if __name__ == "__main__":
