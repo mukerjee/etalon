@@ -319,7 +319,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     if ins is not None:
         # Enable an inset.
         options.inset.show = True
-        options.inset.options.zoom_level = 1.75
+        options.inset.options.zoom_level = 4
         options.inset.options.corners = (2, 3)
         options.inset.options.location = "center right"
         options.inset.options.marker.options.color = "black"
