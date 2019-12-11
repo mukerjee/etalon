@@ -383,8 +383,9 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         options2 = simpleplotlib.default_options.copy()
         options2.output_fn = options.output_fn
         options2.plot_type = "LINE"
-        options2.series2_options = [
-            dotmap.DotMap(linewidth=1, color="black", alpha=0.5)]
+        options2.series2_options = [dotmap.DotMap(
+            linewidth=1, color="black", alpha=0.5, marker="o",
+            markeredgecolor="none", markersize=3)]
         options2.x.limits = options.x.limits
         options2.x.margin = options2.y2.margin = \
             simpleplotlib.default_options.x.margin
