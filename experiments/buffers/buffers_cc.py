@@ -21,7 +21,7 @@ import python_config
 DRY_RUN = False
 # Flowgrind flow duration, in seconds.
 # (week length (in us) x 3 + 100 us (for good measure)) x (1 s / 1e6 us) * 1e3
-DUR_S = 4.9
+DUR_S = 4.3
 # This schedule mimics an eight-rack cluster where each rack gets a circuit to
 # every other rack for 180us. Values are the srcs, indices are the dsts. E.g.,
 # 1/2/0 means that 1->0, 2->1, and 0->2. Day/night pairs 1-6 are the "other"
