@@ -28,9 +28,9 @@ DUR_S = 4.54
 FIXED = "4 25200 1/2/0 400 -1/-1/-1 3600 2/0/1 400 -1/-1/-1"
 # FIXED = None
 # Control which experimnets are run.
-RESIZE_US_MIN = 100
-RESIZE_US_MAX = 100
-RESIZE_US_DELTA = 25
+RESIZE_US_MIN = 0
+RESIZE_US_MAX = 1300
+RESIZE_US_DELTA = 100
 
 
 def maybe(fnc, do=not DRY_RUN):
