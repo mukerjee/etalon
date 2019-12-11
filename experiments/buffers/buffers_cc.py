@@ -20,7 +20,7 @@ import python_config
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
 # Flowgrind flow duration, in seconds.
-# (week length (in us) x 3 + 100 us (for good measure)) x (1 s / 1000000 us) * 1000
+# (week length (in us) x 3 + 100 us (for good measure)) x (1 s / 1e6 us) * 1e3
 DUR_S = 4.54
 # This schedule mimics an 8-rack cluster where each rack gets a circuit to every
 # other rack for 180us. Values are the srcs, indices are the dsts. E.g., 1/2/0
