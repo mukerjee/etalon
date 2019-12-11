@@ -35,9 +35,11 @@ def main():
             ptn="*-QUEUE-True-*-{}-*click.txt".format(cc),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
-            dur=1200,
-            msg_len=116)
-            # flt=lambda idx, label: idx < 10)  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
+            dur=4440,
+            # chunk_mode=100,
+            msg_len=116,
+            log_pos="before",
+            flt=lambda idx, label: idx < 10)  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
 
 
 if __name__ == "__main__":
