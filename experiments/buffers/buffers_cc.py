@@ -22,19 +22,20 @@ DRY_RUN = False
 # Flowgrind flow duration, in seconds.
 # (week length (in us) x 3 + 100 us (for good measure)) x (1 s / 1e6 us) * 1e3
 DUR_S = 4.9
-# This schedule mimics an 8-rack cluster where each rack gets a circuit to every
-# other rack for 180us. Values are the srcs, indices are the dsts. E.g., 1/2/0
-# means that 1->0, 2->1, and 0->2. Day/night pairs 1-7 are the "other" circuits.
-# 8 is the circuit that our test flow will traverse.
-FIXED = ("8 "
+# This schedule mimics an eight-rack cluster where each rack gets a circuit to
+# every other rack for 180us. Values are the srcs, indices are the dsts. E.g.,
+# 1/2/0 means that 1->0, 2->1, and 0->2. Day/night pairs 1-6 are the "other"
+# circuits. 7 is the circuit that our test flow will traverse. There are only
+# seven configurations total for an eight-rack cluster because we do not need a
+# configuration where each of the racks connects to itself.
+FIXED = ("14 "
          "3600 1/2/0 400 -1/-1/-1 "  # 1
          "3600 1/2/0 400 -1/-1/-1 "  # 2
          "3600 1/2/0 400 -1/-1/-1 "  # 3
          "3600 1/2/0 400 -1/-1/-1 "  # 4
          "3600 1/2/0 400 -1/-1/-1 "  # 5
          "3600 1/2/0 400 -1/-1/-1 "  # 6
-         "3600 1/2/0 400 -1/-1/-1 "  # 7
-         "3600 2/0/1 400 -1/-1/-1")  # 8
+         "3600 2/0/1 400 -1/-1/-1")  # 7
 # FIXED = None
 # Control which experimnets are run.
 RESIZE_US_MIN = 0
