@@ -88,34 +88,43 @@ def add_optimal(data, chunk_mode=None):
          "contains an odd number of elements: {}".format(bounds))
     print("circuit bounds: {}".format(bounds))
 
-    # Each entry is the maximum amount of data that could have been sent by that
-    # time.
+    # Validate the reconfiguration delay.
+    rcf_us = python_config.RECONFIG_DELAY_us
+    assert rcf_us == round(rcf_us), \
+        "The reconfiguration delay must be an integer, but is: {}".format(
+            rcf_us)
+    rcf_us = int(rcf_us)
+
+    # Each entry is the maximum amount of data that could have been sent up to
+    # the beginning of that time unit.
     optimal = []
     for state in xrange(0, len(bounds), 2):
+        # Reconfiguration.
+        last = optimal[-1] if optimal else 0
+        optimal += [last] * rcf_us
         # Circuit night.
         if state == 0:
             # 0 to first day start.
-            optimal = [pr_KBpus * us for us in xrange(bounds[state])]
+            optimal += [pr_KBpus * us for us in xrange(
+                1, bounds[state] - (2 * rcf_us) + 1)]
         else:
             # Previous day end to current day start.
-            optimal += [
-                optimal[-1] + pr_KBpus * us
-                for us in xrange(1, bounds[state] - bounds[state - 1] + 1)]
-        # Current day start to current day end.
-        optimal += [
-            optimal[-1] + cr_KBpus * us
-            for us in xrange(1, bounds[state + 1] - bounds[state] + 1)]
-
-    # Bytes sent if we only used the packet network.
+            optimal += [optimal[-1] + pr_KBpus * us for us in xrange(
+                1, bounds[state] - bounds[state - 1] - (2 * rcf_us) + 1)]
+        # Reconfiguration.
+        optimal += [optimal[-1]] * rcf_us
+        # Circuit day. Current day start to current day end.
+        optimal += [optimal[-1] + cr_KBpus * us for us in xrange(
+            1, bounds[state + 1] - bounds[state] + 1)]
+    # Bytes sent if we only used the packet network. (Note that, in this case,
+    # there are no reconfigurations.)
     pkt_only = [pr_KBpus * us for us in xrange(0, bounds[-1])]
 
-    # Verify that in optimal, no two adjacent elements are equal.
-    for i in xrange(bounds[-1] - 1):
+    # Verify that in pkt_only, no two adjacent elements are equal.
+    for i in xrange(len(pkt_only) - 1):
         assert pkt_only[i] != pkt_only[i + 1], \
             "pkt_only[{}] == pkt_only[{}] == {}".format(
                 i, i + 1, pkt_only[i])
-        assert optimal[i] != optimal[i + 1], \
-            "optimal[{}] == optimal[{}] == {}".format(i, i + 1, optimal[i])
 
     data["keys"].insert(0, "packet only")
     data["data"].insert(0, pkt_only)
