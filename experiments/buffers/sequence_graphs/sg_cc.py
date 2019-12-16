@@ -26,20 +26,21 @@ def main():
     else:
         os.makedirs(odr)
 
-    # Create a graph for each CC mode.
-    for cc in ["cubic"]:
+    # Create a graph for each TCP variant.
+    for var in ["cubic"]:
         sg.seq(
-            name="seq-dyn-{}".format(cc),
+            name="seq-static-{}".format(var),
             edr=edr,
             odr=odr,
-            ptn="*-QUEUE-True-*-{}-*click.txt".format(cc),
-            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
-                                         / python_config.TDF)),
-            dur=4440,
+            ptn="*-fixed-128-QUEUE-False-*-{}-*click.txt".format(var),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[3]))),
+            dur=4200,
             # chunk_mode=100,
             msg_len=116,
-            log_pos="before",
-            flt=lambda idx, label: idx < 10)  # in [0, 2, 3, 4, 5, 6, 7, 8, 9, 17]
+            log_pos="after",
+            # ins=((2780, 2960), (200, 340)),
+            flt=lambda idx, label: idx < 7)
+            #flt=lambda idx, label: idx in [0, 1, 10, 11, 12, 13, 14])
 
 
 if __name__ == "__main__":

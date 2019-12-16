@@ -23,46 +23,39 @@ import python_config
 
 # True and False mean that the data parsing will be executed using a single
 # thread and multiple threads, respectively.
-SYNC = False
-# Maps experiment to filename.
-FILES = {
-    "static": "*-fixed-*-False-*-reno-*click.txt",
-    "resize": "*-QUEUE-True-*-reno-*click.txt",
-}
-# Maps experiment to a function that convert a filename to an integer key
-# identifying this experiment (i.e., for the legend).
-KEY_FN = {
-    "static": lambda fn: int(fn.split("fixed-")[1].split("-")[0]),
-    "resize": lambda fn: int(fn.split("True-")[1].split("-")[0]) / python_config.TDF,
-}
+SYNC = True
 # Kilo-sequence number
 UNITS = 1000.0
 
 
 class FileReader(object):
-    def __init__(self, name, log_pos="after", msg_len=112):
-        self.name = name
+    def __init__(self, dur, key_fnc, chunk_mode=False, log_pos="after",
+                 msg_len=112):
+        self.dur = dur
+        self.key_fnc = key_fnc
+        self.chunk_mode = chunk_mode
         self.log_pos = log_pos
         self.msg_len = msg_len
 
-    def __call__(self, fn):
-        return (KEY_FN[self.name](path.basename(fn)),
-                parse_logs.get_seq_data(fn, self.log_pos, self.msg_len))
+    def __call__(self, fln):
+        # Returns tuple (key, results).
+        return (self.key_fnc(path.basename(fln)), parse_logs.get_seq_data(
+            fln, self.dur, self.chunk_mode, self.log_pos, self.msg_len))
 
 
-def add_optimal(data, chunk_mode=None):
+def add_optimal(data):
     """
     Adds the calculated baselines (optimal and packet-only) to the provided data
-    dictionary.
+    dictionary. Recall that sequence numbers are in terms of bytes, and that
+    during reconfigurations, both the packet and circuit networks are offline.
     """
-    # Compute optimal sequence numbers. Recall that sequence numbers are in
-    # terms of bytes, so we use bytes in some of the below comments.
     print("Computing optimal...")
 
     # Calculate the raw rate of the packet and circuit networks.
     #
-    # Constant used to convert Gb/s to the units of the graphs. E.g., using
-    # HOSTS_PER_RACK = 16 and UNITS = KB, our target is KB / us / host:
+    # "factor" is a constant used to convert Gb/s to the units of the graphs.
+    # E.g., using HOSTS_PER_RACK = 16 and UNITS = KB, our target is
+    # KB / us / host:
     #
     #                                 div by    div by
     #                           HOSTS_PER_RACK  UNITS
@@ -71,12 +64,6 @@ def add_optimal(data, chunk_mode=None):
     #     ------- x  --- x -------- x ------- x ------ = ------------
     #       Gb       8 b   10**6 us   16 host   1000 B    us x host
     factor = 10**9 / 8. / 10**6 / python_config.HOSTS_PER_RACK / UNITS
-
-    # if chunk_mode is not None and chunk_mode != "best":
-    #     # If we are looking at all of the flows in one chunk, then our optimal
-    #     # should be for all of the flows.
-    #     factor = factor * python_config.HOSTS_PER_RACK
-
     pr_KBpus = python_config.PACKET_BW_Gbps * factor
     cr_KBpus = python_config.CIRCUIT_BW_Gbps * factor
 
@@ -132,38 +119,43 @@ def add_optimal(data, chunk_mode=None):
     data["data"].insert(0, optimal)
 
 
-def get_data(db, key, chunk_mode=None, log_pos="after", msg_len=112):
+def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None, log_pos="after",
+             msg_len=112):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
     """
-    data = db.get(key, None)
+    # Open results database file.
+    rdb = shelve.open(rdb_filepath, protocol=2, writeback=True)
+    data = rdb.get(key, None)
+
     if data is None:
-        ptns = FILES[key]
-        if not isinstance(ptns, list):
-            ptns = [ptns]
         # For each pattern, extract the matches. Then, flatten them into a
         # single list.
-        fns = [fn for matches in
-               [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
-               for fn in matches]
-
-        assert fns, "Found no files for patterns: {}".format(ptns)
+        flns = [fln for matches in
+                [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
+                for fln in matches]
+        assert flns, "Found no files for patterns: {}".format(ptns)
         print("Found files for patterns: {}".format(ptns))
-        for fn in fns:
-            print("    {}".format(fn))
+        for fln in flns:
+            print("    {}".format(fln))
 
         data = collections.defaultdict(dict)
         if SYNC:
+            # Single-threaded mode.
             data["raw_data"] = dict(
-                [FileReader(key, log_pos, msg_len)(fn) for fn in fns])
+                [FileReader(dur, key_fnc, chunk_mode is not None, log_pos,
+                            msg_len)(fln)
+                 for fln in flns])
         else:
-            p = multiprocessing.Pool()
-            data["raw_data"] = dict(
-                p.map(FileReader(key, log_pos, msg_len), fns))
-            # Clean up p.
-            p.close()
-            p.join()
+            # Multithreaded mode.
+            pool = multiprocessing.Pool()
+            data["raw_data"] = dict(pool.map(
+                FileReader(dur, key_fnc, chunk_mode is not None, log_pos,
+                           msg_len), flns))
+            # Clean up pool.
+            pool.close()
+            pool.join()
 
         data["raw_data"] = sorted(data["raw_data"].items())
         data["keys"] = list(zip(*data["raw_data"])[0])
@@ -209,9 +201,8 @@ def get_data(db, key, chunk_mode=None, log_pos="after", msg_len=112):
                     if len(chunk_orig[0]) > len(data["chunks_best"][line][0]):
                         data["chunks_best"][line] = chunk_orig
 
-        add_optimal(data)
         # Store the new data in the database.
-        db[key] = data
+        rdb[key] = data
 
     if chunk_mode is not None and chunk_mode != "best":
         # Select a particular chunk for each line. Store the results in the
@@ -228,11 +219,13 @@ def get_data(db, key, chunk_mode=None, log_pos="after", msg_len=112):
             # Minimize writing to the database by updating "data" and the
             # database separately.
             data[chunks_selected_key] = chunks_selected_data
-            db[key][chunks_selected_key] = chunks_selected_data
+            rdb[key][chunks_selected_key] = chunks_selected_data
+
+    rdb.close()
     return data
 
 
-def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
+def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
              ylm=None, chunk_mode=None):
     voq_lens_all = None
@@ -293,7 +286,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     for k in keys:
         try:
             k_int = int(k)
-            if "static" in fn:
+            if "static" in fln:
                 lls += ["%s packets" % k_int]
             else:
                 lls += ["%s $\mu$s" % k_int]
@@ -305,7 +298,7 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
     options.legend.options.loc = "center right"
     options.legend.options.labels = lls
     options.legend.options.fontsize = 18
-    options.output_fn = path.join(odr, "{}.pdf".format(fn))
+    options.output_fn = path.join(odr, "{}.pdf".format(fln))
     if xlm is not None:
         options.x.limits = xlm
     if ylm is not None:
@@ -415,18 +408,6 @@ def plot_seq(data, fn, odr=path.join(PROGDIR, "..", "graphs"),
         pyplot.savefig(options2["output_fn"], bbox_inches="tight", pad_inches=0)
 
 
-def rst_glb(dur):
-    """ Reset global variables. """
-    global FILES, KEY_FN
-    # Reset global lookup tables.
-    FILES = {}
-    KEY_FN = {}
-    # Reset experiment duration.
-    parse_logs.DURATION = dur
-    # Do not set sg.DURATION because it get configured automatically based on
-    # the actual circuit timings.
-
-
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
         xlm=None, ylm=None, chunk_mode=None, log_pos="after", msg_len=112):
     """ Create a sequence graph.
@@ -448,10 +429,8 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     log_pos: "before" or "after" the hybrid switch
     msg_len: The length of each HSLog message
     """
-    global FILES, KEY_FN
-
     print("Plotting: {}".format(name))
-    rst_glb(dur)
+    parse_logs.DURATION = dur
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
@@ -459,15 +438,16 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
         basename = name.split("_")[1]
     else:
         basename = name
-    FILES[basename] = ptn
-    KEY_FN[basename] = key_fnc
-    db = shelve.open(path.join(edr, "{}.db".format(basename)), protocol=2,
-                     writeback=True)
-    # Do not inline this in plot_seq() to that we can close the database and
-    # persist the data before starting the plotting process. This is a good idea
-    # in case there is a bug in the plotting code that causes a crash before the
-    # database is closed (i.e., we can avoid parsing the data again).
-    data = get_data(db, basename, chunk_mode, log_pos, msg_len)
-    db.close()
+
+    # If we are in chunk mode, then the parsing is slightly different and we use
+    # a separate results database file.
+    rdb_fln_ptn = "{}"
+    if chunk_mode is not None:
+        rdb_fln_ptn += "_chunk"
+    rdb_fln_ptn += ".db"
+
+    data = get_data(path.join(edr, rdb_fln_ptn.format(basename)), basename,
+                    [ptn], dur, key_fnc, chunk_mode, log_pos, msg_len)
+    add_optimal(data)
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
     pyplot.close()

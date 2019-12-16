@@ -17,23 +17,22 @@ import python_config
 
 PERCENTILES = [25, 50, 75, 99, 99.9, 99.99, 99.999, 100]
 RTT = python_config.CIRCUIT_LATENCY_s_TDF * 2
-DURATION = 4300
 # 1/1000 seconds.
 BIN_SIZE_MS = 1
 # The rack pair to examine when parsing sequence logs. Rack 1 to rack 2.
 SR_RACKS = (1, 2)
 
 
-def parse_flowgrind_config(fn):
+def parse_flowgrind_config(fln):
     flows = collections.defaultdict(list)
     sizes = {}
-    for l in open(fn.split(".txt")[0] + ".config.txt"):
+    for l in open(fln.split(".txt")[0] + ".config.txt"):
         l = l.split("-F")[1:]
         for x in l:
             hid = int(x.strip().split()[0])
             byts = int(x.strip().split("-Gs=q:C:")[1].split()[0])
             sizes[hid] = byts
-    for l in open(fn):
+    for l in open(fln):
         if "seed" in l:
             hid = int(l[4:].strip().split()[0])
             rack = int(l.split("/")[0].split()[-1].split(".")[2])
@@ -53,7 +52,7 @@ def parse_flowgrind_config(fn):
     durs = [f[2] for f in flows.values()]
     byts = [f[4] for f in flows.values()]
 
-    print len(tps), len(durs), len(byts)
+    print(len(tps), len(durs), len(byts))
 
     return tps, durs, byts
 
@@ -68,17 +67,17 @@ def msg_from_file(filename, chunksize):
                 break
 
 
-def get_seq_data(fn, log_pos="after", msg_len=112):
+def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
     log_poss = ["before", "after"]
     assert log_pos in log_poss, \
         "Log position must be one of {}, but is: {}".format(log_poss, log_pos)
 
-    print("Parsing: {}".format(fn))
+    print("Parsing: {}".format(fln))
     circuit_starts = collections.defaultdict(list)
     circuit_ends = collections.defaultdict(list)
     flows = collections.defaultdict(list)
     seen = collections.defaultdict(list)
-    for msg in msg_from_file(fn, msg_len):
+    for msg in msg_from_file(fln, msg_len):
         if msg_len == 112:
             # type (int), timestamp (char[32]), latency (int), src (int),
             # dst (int), data (char[64])
@@ -127,42 +126,43 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             continue
 
         flow = (sender, recv, proto, sport, dport)
-        # flows[flow].append((ts, seq, byts, voq_len))
-
-        if not flows[flow]:
-            # First timestamp for this flow.
+        if chunk_mode:
             flows[flow].append((ts, seq, byts, voq_len))
         else:
-            # Extract previous datapoint.
-            last_ts, last_seq, last_bytes, last_voq_len = flows[flow][-1]
-
-            # Check whether the current sequence number equals the last sequence
-            # number plus the number of data bytes in the last packet (i.e.,
-            # check that this actually is the next packet, in case the log
-            # messages are out of order).
-            if abs(last_seq + last_bytes - seq) < 2:
-                # Yes, it is the next packet.
-                updated = True
-                while updated:
-                    updated = False
-                    # Look over unmatched packets until we find one that...?
-                    for prev_seen in seen[flow]:
-                        _, prev_seq, prev_bytes, prev_voq_len = prev_seen
-                        # Check if this earlier packet actually came immediately
-                        # before the current packet.
-                        if abs(seq + byts - prev_seq) < 2:
-                            # Change the current seq, byts, and voq_len. Does
-                            # this have something to do with packet reordering?
-                            seq = prev_seq
-                            byts = prev_bytes
-                            voq_len = prev_voq_len
-                            seen[flow].remove(prev_seen)
-                            updated = True
-                            break
+            if not flows[flow]:
+                # First timestamp for this flow.
                 flows[flow].append((ts, seq, byts, voq_len))
             else:
-                # No, it is not the next packet. Save it for later.
-                seen[flow].append((ts, seq, byts, voq_len))
+                # Extract previous datapoint.
+                _, last_seq, last_bytes, _ = flows[flow][-1]
+
+                # Check whether the current sequence number equals the last sequence
+                # number plus the number of data bytes in the last packet (i.e.,
+                # check that this actually is the next packet, in case the log
+                # messages are out of order).
+                if abs(last_seq + last_bytes - seq) < 2:
+                    # Yes, it is the next packet.
+                    updated = True
+                    while updated:
+                        updated = False
+                        # Look over unmatched packets until we find one that...?
+                        for prev_seen in seen[flow]:
+                            _, prev_seq, prev_bytes, prev_voq_len = prev_seen
+                            # Check if this earlier packet actually came immediately
+                            # before the current packet.
+                            if abs(seq + byts - prev_seq) < 2:
+                                # Change the current seq, byts, and voq_len. Does
+                                # this have something to do with packet reordering?
+                                seq = prev_seq
+                                byts = prev_bytes
+                                voq_len = prev_voq_len
+                                seen[flow].remove(prev_seen)
+                                updated = True
+                                break
+                    flows[flow].append((ts, seq, byts, voq_len))
+                else:
+                    # No, it is not the next packet. Save it for later.
+                    seen[flow].append((ts, seq, byts, voq_len))
 
     # Validate the circuit starts and ends.
     for sr_racks in circuit_starts.keys():
@@ -321,10 +321,10 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
             if not out:
                 # No data for this chunk.
                 bad_chunks += 1
-                out = [(0, 0, 0), (DURATION, 0, 0)]
+                out = [(0, 0, 0), (dur, 0, 0)]
 
             wraparound = False
-            for _, seq,_ in out:
+            for _, seq, _ in out:
                 if seq < -1e8 or seq > 1e8:
                     wraparound = True
             if wraparound:
@@ -343,7 +343,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                     raise Exception(
                         "numpy.interp() requires x values to be increasing")
                 # Interpolate based on the data that we have.
-                chunks_interp.append(np.interp(xrange(DURATION), xs, ys))
+                chunks_interp.append(np.interp(xrange(dur), xs, ys))
                 # Also record the original (uninterpolated) chunk data.
                 chunks_orig.append((xs, ys, voq_lens))
 
@@ -369,7 +369,7 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
 
     print("Flows for which we have results:")
     for k in results.keys():
-        print("\t{}".format(k))
+        print("    {}".format(k))
 
     # Extract the chunk results.
     chunks_orig_all = {
@@ -385,8 +385,8 @@ def get_seq_data(fn, log_pos="after", msg_len=112):
                      nxt_nxt_start_avg, nxt_nxt_end_avg), chunks_orig_all
 
 
-def parse_packet_log(fn):
-    print("Parsing: {}".format(fn))
+def parse_packet_log(fln):
+    print("Parsing: {}".format(fln))
     latencies = []
     latencies_circuit = []
     latencies_packet = []
@@ -399,7 +399,7 @@ def parse_packet_log(fn):
     circuit_starts = collections.defaultdict(list)
     most_recent_circuit_up = collections.defaultdict(int)
     bytes_in_rtt = collections.defaultdict(lambda: collections.defaultdict(int))
-    for msg in msg_from_file(fn, chunksize=112):
+    for msg in msg_from_file(fln, chunksize=112):
         (t, ts, lat, src, dst, data) = unpack("i32siii64s", msg)
         byts = unpack("!H", data[2:4])[0]
         circuit = ord(data[1]) & 0x1
@@ -437,14 +437,14 @@ def parse_packet_log(fn):
                 latencies_circuit.append(latency)
             else:
                 latencies_packet.append(latency)
-    lat = zip(PERCENTILES, map(lambda x: np.percentile(latencies, x),
-                               PERCENTILES))
+    lat = [(perc, np.percentile(latencies, perc)) for perc in PERCENTILES]
     latc = [(p, 0) for p in PERCENTILES]
     if latencies_circuit:
-        latc = zip(PERCENTILES, map(lambda x: np.percentile(
-            latencies_circuit, x), PERCENTILES))
-    latp = zip(PERCENTILES, map(lambda x: np.percentile(latencies_packet, x),
-                                PERCENTILES))
+        latc = [(perc, np.percentile(latencies_circuit, perc))
+                for perc in PERCENTILES]
+    latp = [(perc, np.percentile(latencies_packet, perc))
+            for perc in PERCENTILES]
+
     tp = {}
     b = collections.defaultdict(dict)
     p = {}
@@ -470,11 +470,11 @@ def parse_packet_log(fn):
         sum(circuit_bytes.values()), sum(packet_bytes.values())
 
 
-def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
-    print("Parsing: {}".format(fn))
+def parse_validation_log(fln, dur_ms=1300, bin_size_ms=1):
+    print("Parsing: {}".format(fln))
     # Map of flow ID to pair (src rack, dst rack).
     id_to_sr = {}
-    with open(fn.strip(".txt") + ".config.txt") as f:
+    with open(fln.strip(".txt") + ".config.txt") as f:
         for line in f:
             line = line.split("-F")[1:]
             for flow_cnf in line:
@@ -495,7 +495,7 @@ def parse_validation_log(fn, dur_ms=1300, bin_size_ms=1):
     # window ended).
     flow_to_cwnds = collections.defaultdict(
         lambda: collections.defaultdict(int))
-    with open(fn) as f:
+    with open(fln) as f:
         for line in f:
             # Ignore comment lines, empty lines, and "D" lines.
             if line[0] == "S":
@@ -580,9 +580,9 @@ def parse_hdfs_logs(folder):
     data = []
     durations = []
 
-    fn = folder + "/*-logs/hadoop*-datanode*.log"
-    print fn
-    logs = glob.glob(fn)
+    fln = folder + "/*-logs/hadoop*-datanode*.log"
+    print(fln)
+    logs = glob.glob(fln)
 
     for log in logs:
         for line in open(log):
@@ -599,8 +599,8 @@ def parse_hdfs_logs(folder):
 
 
 def parse_hdfs_throughput(folder):
-    fn = folder + "/report/dfsioe/hadoop/bench.log"
-    logs = glob.glob(fn)
+    fln = folder + "/report/dfsioe/hadoop/bench.log"
+    logs = glob.glob(fln)
 
     for log in logs:
         for line in open(log):
