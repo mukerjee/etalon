@@ -23,7 +23,7 @@ import python_config
 
 # True and False mean that the data parsing will be executed using a single
 # thread and multiple threads, respectively.
-SYNC = True
+SYNC = False
 # Kilo-sequence number
 UNITS = 1000.0
 
