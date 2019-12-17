@@ -76,6 +76,9 @@ if echo $NEW_HOSTNAME | grep -q switch; then
     sudo sed -i "s/10\.$DATA_NET\./10\.$CONTROL_NET\./g" /etc/hosts
 fi
 
+# Disable unattended upgrades.
+sudo sed -i "s/1/0/g" /etc/apt/apt.conf.d/20auto-upgrades
+
 # To find the list of installable TCP congestion control modules, get the list
 # of IPv4 kernel modules, find the actual module files, find the TCP modules,
 # remove "tcp_probe" because it does not work, and drop the ".ko" extension.
