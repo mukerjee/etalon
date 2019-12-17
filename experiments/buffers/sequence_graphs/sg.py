@@ -28,19 +28,22 @@ SYNC = False
 UNITS = 1000.0
 
 
-class FileReader(object):
-    def __init__(self, dur, key_fnc, chunk_mode=False, log_pos="after",
+class FileReaderArgs(object):
+    def __init__(self, dur, key, fln, chunk_mode=False, log_pos="after",
                  msg_len=112):
         self.dur = dur
-        self.key_fnc = key_fnc
+        self.key = key
+        self.fln = fln
         self.chunk_mode = chunk_mode
         self.log_pos = log_pos
         self.msg_len = msg_len
 
-    def __call__(self, fln):
+
+class FileReader(object):
+    def __call__(self, args):
         # Returns tuple (key, results).
-        return (self.key_fnc(path.basename(fln)), parse_logs.get_seq_data(
-            fln, self.dur, self.chunk_mode, self.log_pos, self.msg_len))
+        return (args.key, parse_logs.get_seq_data(
+            args.fln, args.dur, args.chunk_mode, args.log_pos, args.msg_len))
 
 
 def add_optimal(data):
@@ -144,15 +147,17 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None, log_pos="af
         if SYNC:
             # Single-threaded mode.
             data["raw_data"] = dict(
-                [FileReader(dur, key_fnc, chunk_mode is not None, log_pos,
-                            msg_len)(fln)
+                [FileReader()(FileReaderArgs(dur, key_fnc(path.basename(fln)),
+                                             fln, chunk_mode is not None,
+                                             log_pos, msg_len))
                  for fln in flns])
         else:
-            # Multithreaded mode.
             pool = multiprocessing.Pool()
             data["raw_data"] = dict(pool.map(
-                FileReader(dur, key_fnc, chunk_mode is not None, log_pos,
-                           msg_len), flns))
+                FileReader(), [FileReaderArgs(dur, key_fnc(path.basename(fln)),
+                                              fln, chunk_mode is not None,
+                                              log_pos, msg_len)
+                               for fln in flns]))
             # Clean up pool.
             pool.close()
             pool.join()
