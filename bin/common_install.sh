@@ -93,7 +93,7 @@ sudo apt install -y git linuxptp python-pip
 sudo -H pip install numpy rpyc
 
 # Install development/debugging tools.
-sudo apt install -y emacs gdb iperf3 iptables mstflint tcpdump tmux pylint
+sudo apt install -y emacs gdb iperf3 iptables mstflint tcpdump tmux pylint tree
 
 # Install Mellanox OFED.
 # https://docs.mellanox.com/display/MLNXOFEDv461000/Introduction
