@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -o errexit
+
 # Generate hybrid switch definition.
 /etalon/bin/gen-switch.py after > /tmp/hybrid-switch.click
 # Clear allocated hugepages, in case the previous run crashed and did not

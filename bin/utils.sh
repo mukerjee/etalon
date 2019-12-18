@@ -1,6 +1,8 @@
 #!/bin/bash
 #
-# Common utility functions for setup scripts.
+# Common utility functions for the testbed setup scripts.
+
+set -o errexit
 
 function hostname_validate {
     NEW_HOSTNAME="$1"

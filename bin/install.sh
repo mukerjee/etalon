@@ -3,7 +3,7 @@
 # Set up an Etalon testbed machine.
 #
 # The first argument is the machine name (e.g., "host1", "switch", etc.). The
-# second is whether to reboot automatically ("yes" or "no").
+# second argument is whether to reboot automatically ("yes" or "no").
 
 set -o errexit
 
@@ -134,8 +134,8 @@ rm -fv "$GET_DOCKER"
 
 # Install PTP.
 echo "Setting up PTP..."
-printf "[enp68s0]\n" | sudo tee -a /etc/linuxptp/ptp4l.conf
-sudo sed -i "/(PTP) service/a Requires=network.target\nAfter=network.target" \
+printf "[enp68s0]\\n" | sudo tee -a /etc/linuxptp/ptp4l.conf
+sudo sed -i "/(PTP) service/a Requires=network.target\\nAfter=network.target" \
     /lib/systemd/system/ptp4l.service
 sudo sed -i "s/ -i eth0//" /lib/systemd/system/ptp4l.service
 sudo sed -i "s/-w -s eth0/-c enp68s0 -s CLOCK_REALTIME -w/" \
