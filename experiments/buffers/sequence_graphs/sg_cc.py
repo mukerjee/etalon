@@ -29,18 +29,19 @@ def main():
     # Create a graph for each TCP variant.
     for var in ["cubic"]:
         sg.seq(
-            name="seq-static-{}".format(var),
+            name="seq-dyn-{}".format(var),
             edr=edr,
             odr=odr,
-            ptn="*-fixed-128-QUEUE-False-*-{}-*click.txt".format(var),
-            key_fnc=lambda fn: int(round(float(fn.split("-")[3]))),
-            dur=4200,
+            ptn="*-QUEUE-True-*-{}-*click.txt".format(var),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+                                         / python_config.TDF)),
+            dur=1200,
             # chunk_mode=100,
             msg_len=116,
-            log_pos="after",
+            log_pos="after")
             # ins=((2780, 2960), (200, 340)),
-            flt=lambda idx, label: idx < 7)
-            #flt=lambda idx, label: idx in [0, 1, 10, 11, 12, 13, 14])
+            #flt=lambda idx, label: idx < 10)
+            # flt=lambda idx, label: idx in [0, 1, 3, 4, 5, 6, 7, 8, 9, 10])
 
 
 if __name__ == "__main__":
