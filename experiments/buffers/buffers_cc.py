@@ -21,26 +21,32 @@ import python_config
 DRY_RUN = False
 # Flowgrind flow duration, in seconds.
 # (week length (in us) x 3 + 100 us (for good measure)) x (1 s / 1e6 us) * 1e3
-DUR_S = 4.3
+DUR_S = 1.3
 # This schedule mimics an eight-rack cluster where each rack gets a circuit to
 # every other rack for 180us. Values are the srcs, indices are the dsts. E.g.,
 # 1/2/0 means that 1->0, 2->1, and 0->2. Day/night pairs 1-6 are the "other"
 # circuits. 7 is the circuit that our test flow will traverse. There are only
 # seven configurations total for an eight-rack cluster because we do not need a
 # configuration where each of the racks connects to itself.
-FIXED = ("14 "
+# FIXED = ("14 "
+#          "3600 1/2/0 400 -1/-1/-1 "  # 1
+#          "3600 1/2/0 400 -1/-1/-1 "  # 2
+#          "3600 1/2/0 400 -1/-1/-1 "  # 3
+#          "3600 1/2/0 400 -1/-1/-1 "  # 4
+#          "3600 1/2/0 400 -1/-1/-1 "  # 5
+#          "3600 1/2/0 400 -1/-1/-1 "  # 6
+#          "3600 2/0/1 400 -1/-1/-1")  # 7
+FIXED = ("4 "
          "3600 1/2/0 400 -1/-1/-1 "  # 1
-         "3600 1/2/0 400 -1/-1/-1 "  # 2
-         "3600 1/2/0 400 -1/-1/-1 "  # 3
-         "3600 1/2/0 400 -1/-1/-1 "  # 4
-         "3600 1/2/0 400 -1/-1/-1 "  # 5
-         "3600 1/2/0 400 -1/-1/-1 "  # 6
-         "3600 2/0/1 400 -1/-1/-1")  # 7
+         "3600 2/0/1 400 -1/-1/-1")  # 2
 # FIXED = None
 # Control which experimnets are run.
 RESIZE_US_MIN = 0
-RESIZE_US_MAX = 1200
-RESIZE_US_DELTA = 100
+RESIZE_US_MAX = 225
+RESIZE_US_DELTA = 25
+# RESIZE_US_MIN = 0
+# RESIZE_US_MAX = 1200
+# RESIZE_US_DELTA = 100
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -56,6 +62,7 @@ def main():
     ccs = ["cubic"]
     cnfs = []
     for cc in ccs:
+        # sweep = buffer_common.gen_static_sweep(4, 12)
         sweep = buffer_common.gen_resize_sweep(
             int(round(RESIZE_US_MIN * python_config.TDF)),
             int(round(RESIZE_US_MAX * python_config.TDF)),
