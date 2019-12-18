@@ -27,7 +27,9 @@ sudo ln -sfv $HOME/etalon /
 # Always run tuning on boot.
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | \
     crontab -
-sudo rm -fv /var/run/crond.reboot
+(crontab -l 2>/dev/null; \
+ echo "@reboot sleep 60 && /etalon/bin/retcp_install.sh") | crontab -
+# sudo rm -fv /var/run/crond.reboot
 
 # Change the hostname.
 OLD_HOSTNAME=`hostname`
@@ -129,11 +131,3 @@ sudo systemctl enable phc2sys.service
 if systemctl list-unit-files | grep ntp.service; then
     sudo systemctl disable ntp.service
 fi
-
-# Install reTCP.
-cd /etalon/reTCP/
-make -j `nproc`
-sudo cp -fv retcp.ko /lib/modules/`uname -r`
-sudo depmod
-sudo modprobe retcp
-echo "retcp" | sudo tee -a /etc/modules
