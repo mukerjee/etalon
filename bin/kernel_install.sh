@@ -35,7 +35,7 @@ git clone \
 # Apply the patch, compile and install.
 cd "$SRC_DIR"
 git checkout Ubuntu-4.15.0-50.54
-git apply "$HOME/etalon/reTCP/kernel-patch.patch"
+git apply /etalon/reTCP/kernel-patch.patch
 fakeroot debian/rules clean
 # Perf needs $PYTHON to be set.
 MAKEFLAGS="-j $(nproc)" PYTHON=$(command -v python) fakeroot debian/rules \
