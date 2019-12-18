@@ -9,8 +9,8 @@ set -o errexit
 NEW_HOSTNAME=$1
 
 # Validate.
-if [ ! -d "$HOME/etalon" ]; then
-    echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
+if [ ! -d /etalon ]; then
+    echo "Error: Etalon repo not located at \"/etalon\"!"
     exit 1
 fi
 source /etalon/bin/utils.sh

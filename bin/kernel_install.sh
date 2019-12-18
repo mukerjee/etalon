@@ -9,10 +9,11 @@ BUILD_DIR=$HOME/build
 SRC_DIR=$BUILD_DIR/ubuntu-$UBUNTU_VERSION_SUPPORTED
 
 # Validate.
-if [ ! -d "$HOME/etalon" ]; then
-    echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
+if [ ! -d /etalon ]; then
+    echo "Error: Etalon repo not located at \"/etalon\"!"
     exit 1
 fi
+source /etalon/bin/utils.sh
 ubuntu_validate_codename $UBUNTU_VERSION_SUPPORTED
 
 # Prepare the build directory.
