@@ -17,8 +17,8 @@ function ubuntu_validate_version {
     # Check that the Ubuntu version is correct.
     UBUNTU_VERSION_CURRENT="$(lsb_release -ds | grep -oP "Ubuntu \\K([0-9]+\\.[0-9]+)")"
     if [ "$UBUNTU_VERSION_CURRENT" != "$UBUNTU_VERSION_SUPPORTED" ]; then
-        echo "Ubuntu version must be $SUPPORTED_VERSION, but is:" \
-             "$UBUNTU_VERSION"
+        echo "Ubuntu version must be $UBUNTU_VERSION_SUPPORTED, but is:" \
+             "$UBUNTU_VERSION_CURRENT"
         exit
     fi
 }
@@ -27,8 +27,8 @@ function ubuntu_validate_codename {
     UBUNTU_VERSION_SUPPORTED="$1"
     # Check that the Ubuntu version is correct.
     UBUNTU_VERSION_CURRENT="$(lsb_release -cs)"
-    if [ "$UBUNTU_VERSION_CURRENT" != "$UBUNTU_SUPPORTED_VERSION" ]; then
-        echo "Ubuntu version must be $SUPPORTED_VERSION, but is:" \
+    if [ "$UBUNTU_VERSION_CURRENT" != "$UBUNTU_VERSION_SUPPORTED" ]; then
+        echo "Ubuntu version must be $UBUNTU_VERSION_SUPPORTED, but is:" \
              "$UBUNTU_VERSION_CURRENT"
         exit
     fi
