@@ -17,12 +17,12 @@ if [ ! -d "$HOME/etalon" ]; then
     echo "Error: Etalon repo not located at \"$HOME/etalon\"!"
     exit 1
 fi
-if [[ $REBOOT =~ ^(yes|no)$ ]]; then
+if [[ ! $REBOOT =~ ^(yes|no)$ ]]; then
     echo "The second parameter must be either \"yes\" or \"no\", but is: " \
          "$REBOOT"
     exit 1
 fi
-source /etalon/bin/utils.sh
+source "$HOME/etalon/bin/utils.sh"
 hostname_validate "$NEW_HOSTNAME"
 ubuntu_validate_version "$UBUNTU_VERSION_SUPPORTED"
 
