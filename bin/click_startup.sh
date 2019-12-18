@@ -15,5 +15,5 @@ sudo rm -rfv /dev/hugepages/* /mnt/huge/*
 # http://dpdk-guide.gitlab.io/dpdk-guide/tuning/memory.html
 # http://dpdk.org/doc/guides/nics/mlx4.html
 sudo nice -n -20 \
-     click --dpdk -l 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39 -n 4 -- \
-         /tmp/hybrid-switch.click
+     click --dpdk -l 1,3,5,7,9,11,13,15,17,19,21,23,25,27,29,31,33,35,37,39 \
+     -n 4 -- /tmp/hybrid-switch.click
