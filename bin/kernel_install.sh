@@ -41,7 +41,7 @@ fakeroot debian/rules clean
 # Perf needs $PYTHON to be set.
 MAKEFLAGS="-j $(nproc)" PYTHON=$(command -v python) fakeroot debian/rules \
          binary-headers binary-generic binary-perarch
-sudo dpkg --force-all -i "$BUILD_DIR/*.deb"
+sudo dpkg --force-all -i "$BUILD_DIR"/*.deb
 printf "\\nGRUB_DEFAULT=\"Advanced options for Ubuntu>Ubuntu, with Linux 4.15.0-50-generic\"\\n" \
     | sudo tee -a /etc/default/grub
 sudo update-grub
