@@ -31,10 +31,8 @@ sudo rm -rfv /etalon
 sudo ln -sfv "$HOME/etalon" /
 
 # Always run tuning on boot.
-(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh") | \
+(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh && /etalon/bin/retcp_install.sh") | \
     crontab -
-(crontab -l 2>/dev/null; \
- echo "@reboot sleep 60 && /etalon/bin/retcp_install.sh") | crontab -
 # sudo rm -fv /var/run/crond.reboot
 
 # Change the hostname.
