@@ -30,8 +30,13 @@ ubuntu_validate_version "$UBUNTU_VERSION_SUPPORTED"
 sudo rm -rfv /etalon
 sudo ln -sfv "$HOME/etalon" /
 
-# Always run tuning on boot.
-(crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh && /etalon/bin/retcp_install.sh") | \
+# On boot, run tuning and install reTCP. Preserve preexisting crontab entries.
+if crontab -l; then
+    OLD_CRONTAB=$(crontab -l)
+else
+    OLD_CRONTAB=""
+fi
+(echo "$OLD_CRONTAB"; echo "@reboot sleep 60 && /etalon/bin/tune.sh && /etalon/bin/retcp_install.sh") | \
     crontab -
 if ! crontab -l | grep tune.sh; then
     echo "Error adding entry to crontab!"
