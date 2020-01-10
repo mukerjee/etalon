@@ -33,6 +33,10 @@ sudo ln -sfv "$HOME/etalon" /
 # Always run tuning on boot.
 (crontab -l 2>/dev/null; echo "@reboot sleep 60 && /etalon/bin/tune.sh && /etalon/bin/retcp_install.sh") | \
     crontab -
+if ! crontab -l | grep tune.sh; then
+    echo "Error adding entry to crontab!"
+    exit 1
+fi
 
 # Change the hostname.
 OLD_HOSTNAME=$(hostname)
