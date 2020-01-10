@@ -3,7 +3,7 @@
 set -o errexit
 
 # Generate hybrid switch definition.
-/etalon/bin/gen-switch.py after > /tmp/hybrid-switch.click
+/etalon/bin/gen_switch.py after > /tmp/hybrid-switch.click
 # Clear allocated hugepages, in case the previous run crashed and did not
 # deallocate them. (Not sure if this is actually necessary.)
 sudo rm -rfv /dev/hugepages/* /mnt/huge/*
