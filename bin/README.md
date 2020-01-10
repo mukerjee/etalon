@@ -5,7 +5,8 @@ Various runables:
 - `arp_clear.sh`: Clears the ARP table.
 
 - `arp_poison.sh`: Sets all physical host ARP entries to the switch host's MAC
-  address.
+  address, causing packets destined for the other physical hosts to be sent to
+  the switch host instead.
 
 - `click_startup.sh`: Launches the hybrid switch.
 
@@ -31,7 +32,7 @@ Various runables:
   executed directly.
 
 - `s`: Logs into a physical host via SSH using its handle (e.g., `./s host1`
-  will log into `host1`). Assumes `../etc/handles` is configured properly.
+  will log into `host1`). Assumes that `../etc/handles` is configured properly.
 
 - `switch_install.sh`: A helper script that configures an Etalon switch host.
   Executed by `install.sh`. Should not be executed directly.
@@ -43,9 +44,9 @@ Various runables:
    `../etc/handles` is configured properly.
 
 - `tune.sh`: A helper script that sets IP addresses, does some tuning, and
-  generates a proper `/etc/hosts` file. Configured by `install.sh` to run
-  automatically on boot. Assumes that hosts have hostnames "host1", "host2",
-  etc. and that the switch has hostname "switch".
+  generates a proper `/etc/hosts` file. Assumes that hosts have hostnames
+  "host1", "host2", etc. and that the switch has hostname "switch". Configured
+  by `install.sh` to run automatically on boot.
 
 - `utils.sh`: Utility functions used by the other scripts.
 
