@@ -108,7 +108,12 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
             seq = unpack("!I", data[ihl+4:ihl+8])[0]
             thl = (ord(data[ihl+12]) >> 4) * 4
         byts = ip_bytes - ihl - thl
-        ts = float(ts[:20].strip('\x00')) / python_config.TDF
+
+        for i in xrange(len(ts)):
+            if ord(ts[i]) == 0:
+                break;
+        ts = float(ts[:i]) / python_config.TDF
+        # ts = float(ts[:20].strip('\x00')) / python_config.TDF
 
         if t == 1 or t == 2:
             # Start or end of a circuit.
@@ -166,28 +171,28 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
 
     # Validate the circuit starts and ends.
     for sr_racks in circuit_starts.keys():
-        starts = circuit_starts[sr_racks]
-        ends = circuit_ends[sr_racks]
-        num_starts = len(starts)
-        num_ends = len(ends)
+        num_starts = len(circuit_starts[sr_racks])
+        num_ends = len(circuit_ends[sr_racks])
 
         if num_starts > num_ends:
             print("For {}, discarding {} circuit start!".format(
                 sr_racks, num_starts - num_ends))
-            starts = starts[:num_ends]
-            circuit_starts[sr_racks] = starts
+            circuit_starts[sr_racks] = circuit_starts[sr_racks][:num_ends]
         elif num_ends > num_starts:
             print("For {}, discarding {} circuit end!".format(
                 sr_racks, num_ends - num_starts))
-            ends = ends[:num_starts]
-            circuit_ends[sr_racks] = ends
+            circuit_ends[sr_racks] = circuit_ends[sr_racks][:num_starts]
 
-        # Reread after modifying.
-        starts = circuit_starts[sr_racks]
-        ends = circuit_ends[sr_racks]
-        num_starts = len(starts)
+        # Recompute after modifying.
+        num_starts = len(circuit_starts[sr_racks])
+        num_ends = len(circuit_ends[sr_racks])
+        # Verify that there are the same number of starts and ends.
+        assert num_starts == num_ends, \
+            "Differing numbers of circuit starts ({}) and ends ({})!".format(
+                num_starts, num_ends)
         # Check that all circuit durations are positive.
-        diffs = np.asarray([ends[i] - starts[i] for i in xrange(num_starts)])
+        diffs = (np.asarray(circuit_ends[sr_racks]) -
+                 np.asarray(circuit_starts[sr_racks]))
         assert (diffs > 0).all(), \
             ("Not all circuits have positive duration (i.e., there are "
              "mismatched starts and ends)!")
@@ -227,23 +232,23 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
         week_lens.append((nxt_start - curr_start) * 1e6)
     # Compute average start/end times and day/week lengths. Remove the first and
     # last five datapoints.
-    start_avg = np.average(starts[5:-5])
-    end_avg = np.average(ends[5:-5])
-
-    nxt_start_avg = np.average(nxt_starts[5:-5])
-    nxt_end_avg = np.average(nxt_ends[5:-5])
-
-    nxt_nxt_start_avg = np.average(nxt_nxt_starts[5:-5])
-    nxt_nxt_end_avg = np.average(nxt_nxt_ends[5:-5])
-
+    starts_avg = np.average(starts[5:-5])
+    ends_avg = np.average(ends[5:-5])
+    nxt_starts_avg = np.average(nxt_starts[5:-5])
+    nxt_ends_avg = np.average(nxt_ends[5:-5])
+    nxt_nxt_starts_avg = np.average(nxt_nxt_starts[5:-5])
+    nxt_nxt_ends_avg = np.average(nxt_nxt_ends[5:-5])
     day_lens = day_lens[5:-5]
     week_lens = week_lens[5:-5]
     print("day avg: {}, std dev: {}".format(
         np.average(day_lens), np.std(day_lens)))
     print("week avg: {}, std dev: {}".format(
         np.average(week_lens), np.std(week_lens)))
-    print(start_avg, end_avg, nxt_start_avg, nxt_end_avg, nxt_nxt_start_avg,
-          nxt_nxt_end_avg)
+    print(("starts avg: {}, ends avg: {}, nxt_starts avg: {}, "
+           "nxt_ends avg: {}, nxt_nxt_starts avg: {}, "
+           "nxt_nxt_ends avg: {}").format(
+               starts_avg, ends_avg, nxt_starts_avg, nxt_ends_avg,
+               nxt_nxt_starts_avg, nxt_nxt_ends_avg))
 
     print("Found {} flows".format(len(flows)))
     timing_offset = python_config.CIRCUIT_LATENCY_s \
@@ -311,13 +316,14 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
                                        rel_ts, rel_seq))
                             continue
                         out.append((rel_ts, rel_seq, voq_len))
-                        # This is the latest timestamp we have seen in the
-                        # current chunk.
-                        last_idx = idx
                     else:
                         # The timestamp too early, so we drop this datapoint, We
                         # are before the current chunk.
                         pass
+                    if ts < cur_end + timing_offset:
+                        # This is the latest timestamp we have seen in the
+                        # current chunk.
+                        last_idx = idx
             if not out:
                 # No data for this chunk.
                 bad_chunks += 1
@@ -381,8 +387,8 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
     # really: For each timestep, what's the average sequence number of all
     # flows.
     results = [np.average(q) for q in unzipped]
-    return results, (start_avg, end_avg, nxt_start_avg, nxt_end_avg,
-                     nxt_nxt_start_avg, nxt_nxt_end_avg), chunks_orig_all
+    return results, (starts_avg, ends_avg, nxt_starts_avg, nxt_ends_avg,
+                     nxt_nxt_starts_avg, nxt_nxt_ends_avg), chunks_orig_all
 
 
 def parse_packet_log(fln):
