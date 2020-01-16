@@ -210,7 +210,7 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
         # Use the end of the previous circuit as the relative starting point.
         prev_end = circuit_ends[SR_RACKS][i-1]
 
-        curr_start = circuit_starts[SR_RACKS][i]
+        cur_start = circuit_starts[SR_RACKS][i]
         cur_end = circuit_ends[SR_RACKS][i]
 
         nxt_start = circuit_starts[SR_RACKS][i + 1]
@@ -219,7 +219,7 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
         nxt_nxt_start = circuit_starts[SR_RACKS][i + 2]
         nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
 
-        starts.append((curr_start - prev_end) * 1e6)
+        starts.append((cur_start - prev_end) * 1e6)
         ends.append((cur_end - prev_end) * 1e6)
 
         nxt_starts.append((nxt_start - prev_end) * 1e6)
@@ -228,8 +228,8 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
         nxt_nxt_starts.append((nxt_nxt_start - prev_end) * 1e6)
         nxt_nxt_ends.append((nxt_nxt_end - prev_end) * 1e6)
 
-        day_lens.append((cur_end - curr_start) * 1e6)
-        week_lens.append((nxt_start - curr_start) * 1e6)
+        day_lens.append((cur_end - cur_start) * 1e6)
+        week_lens.append((nxt_start - cur_start) * 1e6)
     # Compute average start/end times and day/week lengths. Remove the first and
     # last five datapoints.
     starts_avg = np.average(starts[5:-5])
@@ -269,7 +269,7 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
         chunks_orig = []
         # The idx of the last datapoint in the previous chunk.
         last_idx = 0
-        # The number chunks with no data (i.e., bad chunks).
+        # The number of chunks with no data (i.e., bad chunks).
         bad_chunks = 0
         first_ts = flows[f][0][0]
         last_ts = flows[f][-1][0]
@@ -277,33 +277,34 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
             prev_end = circuit_ends[SR_RACKS][i - 1]
             cur_start = circuit_starts[SR_RACKS][i]
             cur_end = circuit_ends[SR_RACKS][i]
-            # We skip the current chunk if the end of the current chunk is
-            # earlier than the first timestamp, or the start of the current
-            # chunk is later than the last timestamp, or there are fewer than
-            # two chunks after the current chunk.
-            skip_parsing = cur_end < first_ts or cur_start > last_ts or \
-                i + 2 >= len(circuit_ends[SR_RACKS])
+            nxt_nxt_end = circuit_ends[SR_RACKS][i+2]
 
-            # A list of pairs where the first element is a relative timestamp
-            # and the second element is a relative sequence number.
-            out = []
-            if not skip_parsing:
-                # This if the end of the third circuit in this chunk, i.e., the
-                # end of the chunk.
-                nxt_nxt_end = circuit_ends[SR_RACKS][i + 2]
+            # We skip the current chunk if the end of the current circuit is
+            # earlier than the first timestamp, or the start of the current
+            # circuit is later than the last timestamp, or there are fewer than
+            # two circuits after the current circuit.
+            if not ((cur_end < first_ts) or
+                    (cur_start > last_ts) or
+                    (i + 1 >= len(circuit_ends[SR_RACKS])) or
+                    (i + 2 >= len(circuit_ends[SR_RACKS]))):
+                # A list of pairs where the first element is a relative
+                # timestamp and the second element is a relative sequence
+                # number.
+                out = []
+                # The first (absolute) sequence number in this flow.
                 first_seq = -1
                 for idx in xrange(last_idx, len(flows[f])):
                     ts, seq, _, voq_len = flows[f][idx]
-                    if ts >= nxt_nxt_end + timing_offset:
-                        # The timestamp is too late, so we drop this datapoint.
-                        # We are done with the current chunk.
+                    if ts > nxt_nxt_end + timing_offset:
+                        # The timestamp is too late, so we drop this
+                        # datapoint. We are done with the current chunk.
                         break
                     elif ts >= prev_end + timing_offset:
                         # The timestamp is in the valid range.
                         rel_ts = (ts - prev_end - timing_offset) * 1e6
                         if first_seq == -1:
                             first_seq = seq
-                            # print("first seq num in circuit {}: {}".format(
+                            # print("First seq num in circuit {}: {}".format(
                             #     i, first_seq))
                             # print("rel_ts: {}".format(rel_ts))
                         rel_seq = seq - first_seq
@@ -317,41 +318,41 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
                             continue
                         out.append((rel_ts, rel_seq, voq_len))
                     else:
-                        # The timestamp too early, so we drop this datapoint, We
-                        # are before the current chunk.
+                        # The timestamp is too early, so we drop this
+                        # datapoint. We are before the current chunk.
                         pass
-                    if ts < cur_end + timing_offset:
-                        # This is the latest timestamp we have seen in the
-                        # current chunk.
-                        last_idx = idx
-            if not out:
-                # No data for this chunk.
-                bad_chunks += 1
-                out = [(0, 0, 0), (dur, 0, 0)]
 
-            wraparound = False
-            for _, seq, _ in out:
-                if seq < -1e8 or seq > 1e8:
-                    wraparound = True
-            if wraparound:
-                print("Warning: Wraparound detected. Dropping results!")
-            else:
-                # This is valid data, so we will store it. Sort the data so that
-                # it can be used by numpy.interp().
-                out = sorted(out, key=lambda a: a[0])
-                xs, ys, voq_lens = zip(*out)
-                diffs = np.diff(xs) > 0
-                if not np.all(diffs):
-                    print("diffs: {}".format(diffs))
-                    print("out:")
-                    for x, y in out:
-                        print("  {}: {}".format(x, y))
-                    raise Exception(
-                        "numpy.interp() requires x values to be increasing")
-                # Interpolate based on the data that we have.
-                chunks_interp.append(np.interp(xrange(dur), xs, ys))
-                # Also record the original (uninterpolated) chunk data.
-                chunks_orig.append((xs, ys, voq_lens))
+                    if ts < cur_end + timing_offset:
+                        # The timestamp is the latest timestamp we have seen, so
+                        # record its idx so that we avoid doing duplicate work.
+                        last_idx = idx
+                if not out:
+                    # No data for this chunk.
+                    bad_chunks += 1
+                    out = [(0, 0, 0), (dur, 0, 0)]
+                wraparound = False
+                for _, seq, _ in out:
+                    if seq < -1e8 or seq > 1e8:
+                        wraparound = True
+                if wraparound:
+                    print("Warning: Wraparound detected. Dropping results!")
+                else:
+                    # This is valid data, so we will store it. Sort the data so
+                    # that it can be used by numpy.interp().
+                    out = sorted(out, key=lambda a: a[0])
+                    xs, ys, voq_lens = zip(*out)
+                    diffs = np.diff(xs) > 0
+                    if not np.all(diffs):
+                        print("diffs: {}".format(diffs))
+                        print("out:")
+                        for x, y in out:
+                            print("  {}: {}".format(x, y))
+                        raise Exception(
+                            "numpy.interp() requires x values to be increasing")
+                    # Interpolate based on the data that we have.
+                    chunks_interp.append(np.interp(xrange(dur), xs, ys))
+                    # Also record the original (uninterpolated) chunk data.
+                    chunks_orig.append((xs, ys, voq_lens))
 
         # List of lists, where each sublist corresponds to one timestep and each
         # entry of each sublist corresponds to a sequence number for that
@@ -514,11 +515,11 @@ def parse_validation_log(fln, dur_ms=1300, bin_size_ms=1):
                 # End timestamp for this window.
                 ts_s_end = float(splits[2])
                 # Throughput for this window.
-                curr_tput_mbps = float(splits[3])
+                cur_tput_mbps = float(splits[3])
                 # Bits sent during this window. Mb/s -> b. Do not divide by TDF.
-                curr_b = curr_tput_mbps * 1e6  * (ts_s_end - ts_s_start)
+                cur_b = cur_tput_mbps * 1e6  * (ts_s_end - ts_s_start)
                 # Record the bytes sent during this window.
-                sr_to_tstamps[id_to_sr[idx]][ts_s_start] += curr_b
+                sr_to_tstamps[id_to_sr[idx]][ts_s_start] += cur_b
                 # CWND at the end of this window.
                 cwnd = int(splits[11])
                 # Record this flow's cwnd at the end of this window.
