@@ -35,8 +35,13 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
     FLOWGRIND_DEFAULT_DUR_S, FLOWGRIND_DEFAULT_SAMPLE_RATE, TCPDUMP, RM, \
     WHOAMI, PGREP, KILL
 
+# The last CC mode set by setCC().
 CURRENT_CC = None
+# The time of the last call to initializeExperiment().
 START_TIME = None
+# The type of experiment specified in the last call to initializeExperiment()
+# (e.g., "flowgrindd").
+IMAGE = None
 
 
 ##
@@ -512,6 +517,8 @@ def launch_rack(phost, image, sync=True):
 
 
 def launch_all_racks(image, sync=True):
+    assert image is not None
+
     gen_hosts_file(HOSTS_FILE)
     for phost in PHYSICAL_NODES[1:]:
         try:
@@ -529,9 +536,10 @@ def launch_all_racks(image, sync=True):
         if sync:
             launch_rack(phost, image, sync)
         else:
-            ts.append(threading.Thread(target=launch_rack, args=(phost, image, sync)))
+            ts.append(threading.Thread(
+                target=launch_rack, args=(phost, image, sync)))
             ts[-1].start()
-    map(lambda t: t.join(), ts)
+    [t.join() for t in ts]
 
     num_hosts = IMAGE_NUM_HOSTS[image]
     for r in xrange(1, NUM_RACKS + 1):
