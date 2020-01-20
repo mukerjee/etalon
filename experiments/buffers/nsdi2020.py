@@ -20,13 +20,13 @@ TCPDUMP = False
 # If True, then racks will be launched in serial.
 SYNC = False
 # The number of racks to mimic when creating the strobe schedule.
-NUM_RACKS_FAKE = 3
+NUM_RACKS_FAKE = 50
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
 CG_RESIZE_US_MIN = 0
-CG_RESIZE_US_MAX = 225
-CG_RESIZE_US_DELTA = 25
+CG_RESIZE_US_MAX = 10000
+CG_RESIZE_US_DELTA = 1000
 # Fine granularity sweep bounds.
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
