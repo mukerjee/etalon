@@ -37,6 +37,9 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
 
 CURRENT_CC = None
 START_TIME = None
+# If True, then racks will be launched in serial.
+SYNC = True
+
 
 ##
 # Experiment commands
@@ -79,7 +82,7 @@ def initializeExperiment(image, cc=DEFAULT_CC):
         print '--- skipping (delete %s to force update)...' % (DID_BUILD_FN)
 
     print '--- launching containers...'
-    launch_all_racks(image, blocking=False)
+    launch_all_racks(image, sync=SYNC)
     print '--- done...'
 
     click_common.initializeClickControl()
@@ -223,7 +226,7 @@ class Tcpdump(object):
         run_on_host(self.host,
                     cmd=(TCPDUMP.format(
                         filepath=self.flp_rem, interface=DATA_EXT_IF)),
-                    async=True)
+                    sync=False)
 
     def finish(self):
         """
@@ -408,7 +411,7 @@ def setCC(cc):
     # If the CC mode was previously configured to something else, then restart
     # the cluster.
     if CURRENT_CC is not None and cc != CURRENT_CC:
-        launch_all_racks(IMAGE, blocking=False)
+        launch_all_racks(IMAGE, sync=SYNC)
     CURRENT_CC = cc
 
 
@@ -436,11 +439,11 @@ def push_docker_image():
     print 'done...'
 
 
-def run_on_host(host, cmd, timeout_s=0, async=False):
+def run_on_host(host, cmd, timeout_s=0, sync=True):
     print("host: {} , cmd: {}".format(host, cmd))
     if host in PHYSICAL_NODES:
         node = RPYC_CONNECTIONS[get_phost_from_host(host)].root
-        func = node.run if async else node.run_fully
+        func = node.run_fully if sync else node.run
     else:
         if 'arp' in cmd or 'ping' in cmd:
             func = lambda c: RPYC_CONNECTIONS[
@@ -499,10 +502,10 @@ def launch(phost, image, host_id):
                                      rate=CONTROL_RATE_Gbps_TDF))
 
 
-def launch_rack(phost, image, blocking=True):
+def launch_rack(phost, image, sync=True):
     ts = []
     for i in xrange(1, IMAGE_NUM_HOSTS[image] + 1):
-        if blocking:
+        if sync:
             launch(phost, image, i)
         else:
             ts.append(threading.Thread(target=launch, args=(phost, image, i)))
@@ -510,7 +513,7 @@ def launch_rack(phost, image, blocking=True):
     map(lambda t: t.join(), ts)
 
 
-def launch_all_racks(image, blocking=True):
+def launch_all_racks(image, sync=True):
     gen_hosts_file(HOSTS_FILE)
     for phost in PHYSICAL_NODES[1:]:
         try:
@@ -525,10 +528,10 @@ def launch_all_racks(image, blocking=True):
     ts = []
     for phost in PHYSICAL_NODES[1:]:
         runWriteFile(SCP_TO % (HOSTS_FILE, phost, HOSTS_FILE), None)
-        if blocking:
-            launch_rack(phost, image, blocking)
+        if sync:
+            launch_rack(phost, image, sync)
         else:
-            ts.append(threading.Thread(target=launch_rack, args=(phost, image, blocking)))
+            ts.append(threading.Thread(target=launch_rack, args=(phost, image, sync)))
             ts[-1].start()
     map(lambda t: t.join(), ts)
 
