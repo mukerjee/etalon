@@ -17,6 +17,8 @@ import python_config
 DRY_RUN = False
 # If True, then collect tcpdump traces for every experiment.
 TCPDUMP = False
+# If True, then racks will be launched in serial.
+SYNC = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
@@ -106,7 +108,8 @@ def main():
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
-    maybe(lambda: common.initializeExperiment("flowgrindd", cc=cnfs[0]["cc"]))
+    maybe(lambda: common.initializeExperiment(
+        "flowgrindd", cc=cnfs[0]["cc"], sync=SYNC))
     # Total number of experiments.
     tot = len(cnfs)
     for cnt, cnf in enumerate(cnfs, start=1):

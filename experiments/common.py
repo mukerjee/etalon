@@ -37,14 +37,12 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
 
 CURRENT_CC = None
 START_TIME = None
-# If True, then racks will be launched in serial.
-SYNC = False
 
 
 ##
 # Experiment commands
 ##
-def initializeExperiment(image, cc=DEFAULT_CC):
+def initializeExperiment(image, cc=DEFAULT_CC, sync=False):
     global IMAGE, START_TIME
     IMAGE = image
     START_TIME = datetime.datetime.now()
@@ -66,7 +64,7 @@ def initializeExperiment(image, cc=DEFAULT_CC):
     print '--- done...'
 
     print '--- setting CC to {}...'.format(cc)
-    setCC(cc)
+    setCC(cc, sync)
     print '--- done...'
 
     print '--- building etalon docker image...'
@@ -82,7 +80,7 @@ def initializeExperiment(image, cc=DEFAULT_CC):
         print '--- skipping (delete %s to force update)...' % (DID_BUILD_FN)
 
     print '--- launching containers...'
-    launch_all_racks(image, sync=SYNC)
+    launch_all_racks(image, sync)
     print '--- done...'
 
     click_common.initializeClickControl()
@@ -400,7 +398,7 @@ def set_cc_host(phost, cc):
     run_on_host(phost, SET_CC.format(cc=cc))
 
 
-def setCC(cc):
+def setCC(cc, sync=False):
     global CURRENT_CC
     ts = []
     for phost in PHYSICAL_NODES[1:]:
@@ -411,7 +409,7 @@ def setCC(cc):
     # If the CC mode was previously configured to something else, then restart
     # the cluster.
     if CURRENT_CC is not None and cc != CURRENT_CC:
-        launch_all_racks(IMAGE, sync=SYNC)
+        launch_all_racks(IMAGE, sync)
     CURRENT_CC = cc
 
 
