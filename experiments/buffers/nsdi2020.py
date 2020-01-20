@@ -15,6 +15,8 @@ import python_config
 
 # If True, then do not run experiments and instead only print configurations.
 DRY_RUN = False
+# If True, then collect tcpdump traces for every experiment.
+TCPDUMP = False
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
@@ -125,8 +127,8 @@ def main():
                      / 1e3  # Convert from us to ms.
                      * 3000  # 3000 weeks.
                      + 100)  # Extra 100 ms, for good measure.
-                    / 1e3)  # Convert to seconds.
-        }))
+                    / 1e3),  # Convert to seconds.
+            "tcpdump": TCPDUMP}))
     maybe(common.finishExperiment)
 
 

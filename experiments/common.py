@@ -298,10 +298,13 @@ def flowgrind(settings):
     EXPERIMENTS.append(fg_config)
     fn = click_common.FN_FORMAT % ('flowgrind')
     print fn
-    tcpdumps = tcpdump_start(click_common.FN_FORMAT)
+    tcpdump = settings.get("tcpdump", False)
+    if tcpdump:
+        tcpdumps = tcpdump_start(click_common.FN_FORMAT)
     time.sleep(2)
     runWriteFile(cmd, fn)
-    tcpdump_finish(tcpdumps)
+    if tcpdump:
+        tcpdump_finish(tcpdumps)
     save_counters(click_common.FN_FORMAT % ('flowgrind.counters'))
 
 
