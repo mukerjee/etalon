@@ -154,25 +154,55 @@ def disableCircuit():
     setFixedSchedule('1 20000 %s' % (('-1/' * NUM_RACKS)[:-1]))
 
 
-def setStrobeSchedule(night_len_us=20, day_len_us=180):
+def setStrobeSchedule(num_racks=NUM_RACKS, night_len_us=20, day_len_us=180):
     # Configuration that turns off all the circuit links. Remove trailing '/'.
-    off_config = ('-1/' * NUM_RACKS)[:-1]
+    off_config = ('-1/' * num_racks)[:-1]
     # Day len, day config, night len, off config
     config_s = '%d %s %d %s '
-    # The first element is the number of configurations. There are NUM_RACKS - 1
+    # The first element is the number of configurations. There are num_racks - 1
     # configurations because there does not need to be a configuration where the
     # racks connect to themselves. Each configuration actually contains both a
     # day and a night.
-    schedule = '%d ' % ((NUM_RACKS - 1) * 2)
-    for i in xrange(NUM_RACKS - 1):
+    schedule = '%d ' % ((num_racks - 1) * 2)
+    for i in xrange(num_racks - 1):
         day_config = ''
-        for j in xrange(NUM_RACKS):
-            day_config += '%d/' % ((i + 1 + j) % NUM_RACKS)
+        for j in xrange(num_racks):
+            day_config += '%d/' % ((i + 1 + j) % num_racks)
         # Remove trailing '/'.
         day_config = day_config[:-1]
         schedule += config_s % (day_len_us, day_config, night_len_us, off_config)
     # Remove trailing space.
     schedule = schedule[:-1]
+    setFixedSchedule(schedule)
+
+
+def setFakeStrobeSchedule(num_racks_fake=NUM_RACKS, night_len_us=20, day_len_us=180):
+    """
+    Set a schedule that, from the point of view of one node, appears to be a
+    strobe schedule on a testbed with "num_racks_fake" racks.
+
+    E.g., for setFakeSchedule(8, 3600, 400) will create this schedule:
+        "14
+            3600 1/2/0 400 -1/-1/-1   # 1
+            3600 1/2/0 400 -1/-1/-1   # 2
+            3600 1/2/0 400 -1/-1/-1   # 3
+            3600 1/2/0 400 -1/-1/-1   # 4
+            3600 1/2/0 400 -1/-1/-1   # 5
+            3600 1/2/0 400 -1/-1/-1   # 6
+            3600 2/0/1 400 -1/-1/-1"  # 7
+    This schedule mimics an eight-rack cluster where each rack gets a circuit to
+    every other rack for 180us (under time dilation). Values are the srcs,
+    indices are the dsts. E.g., 1/2/0 means that 1->0, 2->1, and 0->2. Day/night
+    pairs 1-6 are the "other" circuits. 7 is the circuit that our test flow will
+    traverse. There are only seven configurations total for an eight-rack
+    cluster because we do not need a configuration where each of the racks
+    connects to itself.
+    """
+    assert num_racks_fake >= 2
+    num_parts = num_racks_fake - 1
+    schedule = "{} ".format(num_parts * 2)
+    schedule += "{} 1/2/0 {} -1/-1/-1 ".format(day_len_us, night_len_us) * (num_parts - 1)
+    schedule += "{} 2/0/1 {} -1/-1/-1".format(day_len_us, night_len_us)
     setFixedSchedule(schedule)
 
 
@@ -236,7 +266,12 @@ def setConfig(config):
     if t == 'no_circuit':
         disableCircuit()
     if t == 'strobe':
-        setStrobeSchedule(c['night_len_us'], c['day_len_us'])
+        setStrobeSchedule(NUM_RACKS, night_len_us=c['night_len_us'],
+                          day_len_us=c['day_len_us'])
+    if t == 'fake_strobe':
+        setFakeStrobeSchedule(num_racks_fake=c['num_racks_fake'],
+                              night_len_us=c['night_len_us'],
+                              day_len_us=c['day_len_us'])
     if t == 'circuit':
         setCircuitSchedule(DEFAULT_CIRCUIT_CONFIG)
     if t == 'fixed':
