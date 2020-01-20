@@ -9,7 +9,6 @@ sys.path.insert(0, path.join(PROGDIR, ".."))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
 
-import buffer_common
 import click_common
 import common
 import python_config
