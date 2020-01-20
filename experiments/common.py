@@ -38,7 +38,7 @@ from python_config import NUM_RACKS, HOSTS_PER_RACK, TIMESTAMP, SCRIPT, \
 CURRENT_CC = None
 START_TIME = None
 # If True, then racks will be launched in serial.
-SYNC = True
+SYNC = False
 
 
 ##
