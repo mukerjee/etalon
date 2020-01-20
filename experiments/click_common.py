@@ -198,7 +198,9 @@ def setFakeStrobeSchedule(num_racks_fake=NUM_RACKS, night_len_us=20, day_len_us=
     cluster because we do not need a configuration where each of the racks
     connects to itself.
     """
-    assert num_racks_fake >= 2
+    assert num_racks_fake >= 3, \
+        ("Can only fake testbeds with more than 3 racks, but "
+         "\"num_racks_fake\" = {}").format(num_racks_fake)
     num_parts = num_racks_fake - 1
     schedule = "{} ".format(num_parts * 2)
     schedule += "{} 1/2/0 {} -1/-1/-1 ".format(day_len_us, night_len_us) * (num_parts - 1)
