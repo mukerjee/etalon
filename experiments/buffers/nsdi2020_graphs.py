@@ -150,7 +150,7 @@ def main():
         print("The first argument must be a directory, but is: {}".format(edr))
         sys.exit(-1)
     # Specify and create the output directory.
-    odr = path.join(PROGDIR, 'graphs', 'nsdi2020')
+    odr = path.join(PROGDIR, "graphs", "nsdi2020")
     if path.exists(odr):
         if not path.isdir(odr):
             print("Output directory exists and is a file: {}".format(odr))
@@ -220,7 +220,7 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
     #     key_fnc=lambda fn: fn.split("-")[7],
-    #     xlb='TCP variant',
+    #     xlb="TCP variant",
     #     srt=False,
     #     xlr=45,
     #     lbs=12,
@@ -244,7 +244,7 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format("*", CHOSEN_TCP),
     #     key_fnc=lambda fn: fn.split("-")[3],
-    #     xlb='Static buffer size (packets)')
+    #     xlb="Static buffer size (packets)")
 
     # # (5.3)
     # buffers_graphs.lat(
@@ -327,7 +327,7 @@ def main():
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                  / python_config.TDF)),
-    #     xlb='Resize time ($\mu$s)',
+    #     xlb="Resize time ($\mu$s)",
     #     xlr=45,
     #     lbs=12,
     #     flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen)
@@ -373,7 +373,7 @@ def main():
     #         odr=odr,
     #         ptn=DYN_PTN.format(us_tdf, "*"),
     #         key_fnc=lambda fn: fn.split("-")[7],
-    #         xlb='TCP variant',
+    #         xlb="TCP variant",
     #         srt=False,
     #         xlr=45,
     #         lbs=12,
@@ -411,7 +411,7 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format("*", "retcp"),
     #     key_fnc=lambda fn: fn.split("-")[3],
-    #     xlb='Static buffer size (packets)')
+    #     xlb="Static buffer size (packets)")
 
     # # (8.3)
     # buffers_graphs.lat(
@@ -467,7 +467,7 @@ def main():
     #     ptn=DYN_PTN.format("*", "retcp"),
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                  / python_config.TDF)),
-    #     xlb='Resize time ($\mu$s)',
+    #     xlb="Resize time ($\mu$s)",
     #     xlr=45,
     #     lbs=12,
     #     flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen)
