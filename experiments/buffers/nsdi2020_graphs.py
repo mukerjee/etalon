@@ -17,6 +17,10 @@ sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
 # For sg.
 sys.path.insert(0, path.join(PROGDIR, "sequence_graphs"))
 
+# Use non-interactive backend.
+import matplotlib
+matplotlib.use("Agg")
+
 import buffers_graphs
 import python_config
 import sg

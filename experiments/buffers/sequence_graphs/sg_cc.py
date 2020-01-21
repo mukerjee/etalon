@@ -8,6 +8,10 @@ PROGDIR = path.dirname(path.realpath(__file__))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "..", "etc"))
 
+# Use non-interactive backend.
+import matplotlib
+matplotlib.use("Agg")
+
 import python_config
 import sg
 
