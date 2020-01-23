@@ -7,3 +7,6 @@
 [submodule "flowgrind-etalon"]
 	path = flowgrind-etalon
 	url = https://github.com/ccanel/flowgrind-etalon
+[submodule "ns3-etalon"]
+	path = ns3-etalon
+	url = https://github.com/Flasew/ns3-etalon.git
