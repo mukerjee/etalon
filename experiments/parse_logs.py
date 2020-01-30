@@ -67,7 +67,7 @@ def msg_from_file(filename, chunksize):
                 break
 
 
-def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
+def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
     log_poss = ["before", "after"]
     assert log_pos in log_poss, \
         "Log position must be one of {}, but is: {}".format(log_poss, log_pos)
@@ -111,7 +111,7 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
 
         for i in xrange(len(ts)):
             if ord(ts[i]) == 0:
-                break;
+                break
         ts = float(ts[:i]) / python_config.TDF
         # ts = float(ts[:20].strip('\x00')) / python_config.TDF
 
@@ -131,13 +131,8 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
             continue
 
         flow = (sender, recv, proto, sport, dport)
-        if chunk_mode:
-            flows[flow].append((ts, seq, byts, voq_len))
-        else:
-            if not flows[flow]:
-                # First timestamp for this flow.
-                flows[flow].append((ts, seq, byts, voq_len))
-            else:
+        if clean:
+            if flows[flow]:
                 # Extract previous datapoint.
                 _, last_seq, last_bytes, _ = flows[flow][-1]
 
@@ -168,6 +163,12 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
                 else:
                     # No, it is not the next packet. Save it for later.
                     seen[flow].append((ts, seq, byts, voq_len))
+            else:
+                # First timestamp for this flow.
+                flows[flow].append((ts, seq, byts, voq_len))
+        else:
+            # Do not perform flow cleaning. Record all packets.
+            flows[flow].append((ts, seq, byts, voq_len))
 
     # Validate the circuit starts and ends.
     for sr_racks in circuit_starts.keys():
@@ -196,6 +197,7 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
         assert (diffs > 0).all(), \
             ("Not all circuits have positive duration (i.e., there are "
              "mismatched starts and ends)!")
+    print("Circuit starts/ends: {}".format(len(circuit_starts[SR_RACKS])))
 
     # Calculate stats about the days and weeks.
     starts = []
@@ -256,13 +258,12 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
     results = {}
     for f in flows.keys():
         if "10.1.2." in f[0]:
-            # Skip the reverse flows (i.e., the ACKs, we only care about the
-            # data packets).
+            # Skip the reverse flows (i.e., skip the ACKs, since we only care
+            # about the data packets).
+            print("Skipping flow: {}".format(f))
             continue
-        print("Parsing flow: {}".format(f))
-        # We already validated that there are the same number of starts and
-        # ends.
-        print("Circuit starts/ends: {}".format(len(circuit_starts[SR_RACKS])))
+        else:
+            print("Parsing flow: {}".format(f))
 
         # Interpolated and uninterpolated (i.e., original) chunks for this flow.
         chunks_interp = []
@@ -344,28 +345,36 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
                     diffs = np.diff(xs) > 0
                     if not np.all(diffs):
                         print("diffs: {}".format(diffs))
-                        print("out:")
-                        for x, y in out:
-                            print("  {}: {}".format(x, y))
+                        print("out:\n{}".format(
+                            "\n".join([
+                                "    x: {}, y: {}, voq len: {}".format(x, y, v)
+                                for x, y, v in out])))
                         raise Exception(
                             "numpy.interp() requires x values to be increasing")
                     # Interpolate based on the data that we have.
-                    chunks_interp.append(np.interp(xrange(dur), xs, ys))
+                    new_xs = xrange(dur)
+                    chunks_interp.append(
+                        (np.interp(new_xs, xs, ys),
+                         np.interp(new_xs, xs, voq_lens)))
                     # Also record the original (uninterpolated) chunk data.
                     chunks_orig.append((xs, ys, voq_lens))
 
-        # List of lists, where each sublist corresponds to one timestep and each
-        # entry of each sublist corresponds to a sequence number for that
-        # timestep.
-        unzipped = zip(*chunks_interp)
-        # Average the sequence numbers for across each timestep, creating the
-        # final results for this flow.
-        results[f] = (
-            [np.average(tstamp_results) for tstamp_results in unzipped],
-            chunks_orig)
         print("Chunks for this flow: {}".format(len(chunks_interp)))
-        print("Timestamps for this flow: {}".format(len(unzipped)))
         print("Bad chunks for this flow: {}".format(bad_chunks))
+        if chunks_interp:
+            # If there is data for this flow...
+            print("Timestamps for this flow: {}".format(len(chunks_interp[0])))
+            # List of lists, where each sublist corresponds to one timestep and each
+            # entry of each sublist corresponds to a sequence number for that
+            # timestep.
+            zipped_seqs, zipped_voqs = zip(*chunks_interp)
+            unzipped_seqs = zip(*zipped_seqs)
+            unzipped_voqs = zip(*zipped_voqs)
+            # Average the sequence numbers for across each timestep, creating the
+            # final results for this flow.
+            results[f] = ([np.average(seqs) for seqs in unzipped_seqs],
+                          [np.average(voqs) for voqs in unzipped_voqs],
+                          chunks_orig)
 
     # # Remove flows that have no datapoints.
     # old_len = len(results)
@@ -374,21 +383,27 @@ def get_seq_data(fln, dur, chunk_mode=False, log_pos="after", msg_len=112):
     # if len_delta:
     #     print("Warning: {} flows were filtered out!".format(len_delta))
 
-    print("Flows for which we have results:")
-    for k in results.keys():
-        print("    {}".format(k))
-
     # Extract the chunk results.
     chunks_orig_all = {
-        flw: chunks_orig for flw, (_, chunks_orig) in results.items()}
+        flw: chunks_orig for flw, (_, _, chunks_orig) in results.items()}
+
+    print("Flows for which we have results:\n{}".format(
+        "\n".join([
+            "    {}: {} chunks".format(
+                flw, len(chunks_orig))
+            for flw, chunks_orig in chunks_orig_all.items()])))
+
     # Turn a list of lists of results for each flow into a list of lists of
     # results for all flows at one timestep.
-    unzipped = zip(*[r for r, _ in results.values()])
+    seqs = zip(*[seqs for seqs, _, _ in results.values()])
+    voqs = zip(*[voqs for _, voqs, _ in results.values()])
+
     # Average the results of all flows at each timestep. So, the output is
     # really: For each timestep, what's the average sequence number of all
     # flows.
-    results = [np.average(q) for q in unzipped]
-    return results, (starts_avg, ends_avg, nxt_starts_avg, nxt_ends_avg,
+    seqs = [np.average(r) for r in seqs]
+    voqs = [np.average(r) for r in voqs]
+    return (seqs, voqs), (starts_avg, ends_avg, nxt_starts_avg, nxt_ends_avg,
                      nxt_nxt_starts_avg, nxt_nxt_ends_avg), chunks_orig_all
 
 

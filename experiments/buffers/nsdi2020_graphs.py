@@ -95,6 +95,9 @@ DEFAULT_MSG_LEN = 116
 # DUR = 1200
 DUR = 4200
 # DUR = 29400
+# True and False mean that the data parsing will be executed using a single
+# thread and multiple threads, respectively.
+SYNC = False
 
 
 def main():
@@ -173,6 +176,7 @@ def main():
 
     # # (1)
     # sg.seq(
+    #     sync=SYNC,
     #     name="1_seq-old-{}".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
@@ -183,6 +187,7 @@ def main():
 
     # # (2)
     # sg.seq(
+    #     sync=SYNC,
     #     name="2_seq-current-{}".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
@@ -193,6 +198,7 @@ def main():
 
     # # (3)
     # sg.seq(
+    #     sync=SYNC,
     #     name="3_seq-future-{}".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
@@ -203,6 +209,7 @@ def main():
 
     # # (4.1)
     # sg.seq(
+    #     sync=SYNC,
     #     name="4-1_seq-current-all",
     #     edr=edr,
     #     odr=odr,
@@ -228,6 +235,7 @@ def main():
 
     # # (5.1)
     # sg.seq(
+    #     sync=SYNC,
     #     name="5-1_seq-static-{}".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
@@ -269,11 +277,13 @@ def main():
     # (6.1.1) With and without inset.
     for ins in [None]:
         sg.seq(
+            sync=SYNC,
             name="6-1-1_seq-dyn-{}{}_cg".format(
                 CHOSEN_TCP,
                 "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
+            # ptn="1579551361-nsdi2020-fake_strobe-16-QUEUE-True-8000-cubic-0.0006-0.5-False-click.txt",
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
@@ -286,6 +296,7 @@ def main():
 
     # # (6.1.2)
     # sg.seq(
+    #     sync=SYNC,
     #     name="6-1-2_seq-dyn-{}_fg".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
@@ -303,6 +314,7 @@ def main():
     #     # With and without zooming in.
     #     for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
     #         sg.seq(
+    #             sync=SYNC,
     #             name="6-1-3_seq-dyn-{}-{}_chunk{}_cg".format(
     #                 CHOSEN_TCP, dyn_us, "" if xlm_zoom is None else "_zoom"),
     #             edr=edr,
@@ -358,6 +370,7 @@ def main():
     # for us in CHOSEN_DYN_USS:
     #     us_tdf = int(round(us * python_config.TDF))
     #     sg.seq(
+    #         sync=SYNC,
     #         name="7-1-1_seq-dyn-all-{}us".format(us),
     #         edr=edr,
     #         odr=odr,
@@ -382,6 +395,7 @@ def main():
     # # (7.1.2)
     # for cc in python_config.CCS:
     #     sg.seq(
+    #         sync=SYNC,
     #         name="7-1-2_seq-dyn-{}".format(cc),
     #         edr=edr,
     #         odr=odr,
@@ -396,6 +410,7 @@ def main():
 
     # # (8.1)
     # sg.seq(
+    #     sync=SYNC,
     #     name="8-1_seq-static-retcp",
     #     edr=edr,
     #     odr=odr,
@@ -435,6 +450,7 @@ def main():
 
     # # (9.1.1)
     # sg.seq(
+    #     sync=SYNC,
     #     name="9-1-1_seq-dyn-retcp_cg",
     #     edr=edr,
     #     odr=odr,
@@ -447,6 +463,7 @@ def main():
 
     # # (9.1.2)
     # sg.seq(
+    #     sync=SYNC,
     #     name="9-1-2_seq-dyn-retcp_fg",
     #     edr=edr,
     #     odr=odr,

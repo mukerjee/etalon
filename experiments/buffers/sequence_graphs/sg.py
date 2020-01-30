@@ -21,29 +21,37 @@ simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 import parse_logs
 import python_config
 
-# True and False mean that the data parsing will be executed using a single
-# thread and multiple threads, respectively.
-SYNC = False
+
+
 # Kilo-sequence number
 UNITS = 1000.0
 
 
 class FileReaderArgs(object):
-    def __init__(self, dur, key, fln, chunk_mode=False, log_pos="after",
+    def __init__(self, dur, key, fln, log_pos="after",
                  msg_len=112):
         self.dur = dur
         self.key = key
         self.fln = fln
-        self.chunk_mode = chunk_mode
         self.log_pos = log_pos
         self.msg_len = msg_len
 
 
 class FileReader(object):
     def __call__(self, args):
-        # Returns tuple (key, results).
-        return (args.key, parse_logs.get_seq_data(
-            args.fln, args.dur, args.chunk_mode, args.log_pos, args.msg_len))
+        """
+        Parses a single results file. "args" is a FileReaderArgs object. Returns
+        tuples of the form (key, results).
+        """
+        # Results with flow cleaning.
+        results, bounds, _ = parse_logs.get_seq_data(
+            args.fln, args.dur, args.log_pos, args.msg_len, clean=True)
+        # Results without flow cleaning.
+        _, _, chunks = parse_logs.get_seq_data(
+            args.fln, args.dur, args.log_pos, args.msg_len, clean=False)
+        # Take the aggregate results and circuit bounds from the cleaned version
+        # and the raw chunk data from the uncleaned version.
+        return args.key, (results, bounds, chunks)
 
 
 def add_optimal(data):
@@ -72,7 +80,7 @@ def add_optimal(data):
 
     # Circuit start and end times, of the form:
     #     [<start>, <end>, <start>, <end>, ...]
-    bounds = [int(round(q)) for q in data["lines"]]
+    bounds = [int(round(q)) for q in data["circuit_lines"]]
     assert len(bounds) % 2 == 0, \
         ("Circuit starts and ends must come in pairs, but the list of them "
          "contains an odd number of elements: {}".format(bounds))
@@ -117,20 +125,20 @@ def add_optimal(data):
                 i, i + 1, pkt_only[i])
 
     data["keys"].insert(0, "packet only")
-    data["data"].insert(0, pkt_only)
+    data["seqs"].insert(0, pkt_only)
     data["keys"].insert(0, "optimal")
-    data["data"].insert(0, optimal)
+    data["seqs"].insert(0, optimal)
 
 
-def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None, log_pos="after",
-             msg_len=112):
+def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
+             log_pos="after", msg_len=112, sync=False):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
     """
     # Open results database file.
     rdb = shelve.open(rdb_filepath, protocol=2, writeback=True)
-    data = rdb.get(key, None)
+    data = rdb.get(key)
 
     if data is None:
         # For each pattern, extract the matches. Then, flatten them into a
@@ -139,35 +147,41 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None, log_pos="af
                 [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
                 for fln in matches]
         assert flns, "Found no files for patterns: {}".format(ptns)
-        print("Found files for patterns: {}".format(ptns))
-        for fln in flns:
-            print("    {}".format(fln))
+        print("Found files for patterns: {}\n{}".format(
+            ptns, "\n".join(["    {}".format(fln) for fln in flns])))
 
-        data = collections.defaultdict(dict)
-        if SYNC:
+        args = [
+            FileReaderArgs(
+                dur, key_fnc(path.basename(fln)), fln, log_pos, msg_len)
+            for fln in flns]
+        if sync:
             # Single-threaded mode.
-            data["raw_data"] = dict(
-                [FileReader()(FileReaderArgs(dur, key_fnc(path.basename(fln)),
-                                             fln, chunk_mode is not None,
-                                             log_pos, msg_len))
-                 for fln in flns])
+            raw_data = [FileReader()(arg) for arg in args]
         else:
+            # Multithreaded mode.
             pool = multiprocessing.Pool()
-            data["raw_data"] = dict(pool.map(
-                FileReader(), [FileReaderArgs(dur, key_fnc(path.basename(fln)),
-                                              fln, chunk_mode is not None,
-                                              log_pos, msg_len)
-                               for fln in flns]))
+            raw_data = pool.map(FileReader(), args)
             # Clean up pool.
             pool.close()
             pool.join()
 
-        data["raw_data"] = sorted(data["raw_data"].items())
+        data = collections.defaultdict(dict)
+        data["raw_data_"] = sorted(raw_data)
+
+        print("len(data[raw_data]): {}".format(len(data["raw_data"])))
+        print("len(data[raw_data][0]): {}".format(len(data["raw_data"][0])))
+        print("len(data[raw_data][0][0]): {}".format(len(data["raw_data"][0][0])))
+
         data["keys"] = list(zip(*data["raw_data"])[0])
-        data["lines"] = data["raw_data"][0][1][1]
-        data["data"] = [[y / UNITS for y in f]
+        data["circuit_lines"] = data["raw_data"][0][1][1]
+        data["seqs"] = [[y / UNITS for y in f]
                         for f in zip(*zip(*data["raw_data"])[1])[0]]
 
+        exit()
+        data["voqs"] = zip(*zip(*data["raw_data"])[1])[0]
+
+
+        
         # Convert the results for each set of original chunk data. Look through
         # each line.
         for line, (_, _, chunks_orig_all) in data["raw_data"]:
@@ -196,7 +210,8 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None, log_pos="af
                     data["chunks_orig"][line][flw].append(
                         (xs, [y / UNITS for y in ys], voq_lens))
 
-        # Select the best chunk for each line. Look through each line.
+        # Select the best chunk for each line (i.e., the chunk with the most
+        # datapoints). Look through each line.
         for line, chunks_orig_all in data["chunks_orig"].items():
             data["chunks_best"][line] = ([], [], [])
             # Look through flow in this line.
@@ -234,16 +249,16 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
              ylm=None, chunk_mode=None):
     voq_lens_all = None
-    if chunk_mode is None:
+    if chunk_mode is None or chunk_mode == "agg":
         # Plot aggregate metrics for all chunks from all flows in each
         # experiment.
-        ys = data["data"]
+        ys = data["seqs"]
         xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
         keys = data["keys"]
     else:
         # Include the "optimal" and "packet only" lines.
         lines = [
-            ([x for x in xrange(len(ys))], ys) for ys in data["data"][0:2]]
+            ([x for x in xrange(len(ys))], ys) for ys in data["seqs"][0:2]]
         if chunk_mode == "best":
             # Plot the best chunk from any flow in each experiment.
             lines.extend(data["chunks_best"].values())
@@ -260,7 +275,7 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
             get_src_id = lambda f: int(f.split(".")[-1])
             # Sort the results by the flow src ID, then split the flows and
             # their results. Do ".values()[0]" because we assume that, if we are
-            # here, there will is only a single experiment (see above).
+            # here, then there is only a single experiment (see above).
             flws, flw_lines = zip(*sorted(
                 exps_data.values()[0].items(),
                 key=lambda p: get_src_id(p[0][0])))
@@ -315,11 +330,11 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         options.y.ticks.major.options.labelsize = 18
     options.x.axis.show = options.y.axis.show = True
     options.x.axis.color = options.y.axis.color = "black"
-    lines = data["lines"]
-    options.vertical_lines.lines = lines
+    circuit_lines = data["circuit_lines"]
+    options.vertical_lines.lines = circuit_lines
     shaded = []
-    for i in xrange(0, len(lines), 2):
-        shaded.append((lines[i], lines[i+1]))
+    for i in xrange(0, len(circuit_lines), 2):
+        shaded.append((circuit_lines[i], circuit_lines[i + 1]))
     options.vertical_shaded.limits = shaded
     options.vertical_shaded.options.alpha = 0.1
     options.vertical_shaded.options.color = "blue"
@@ -414,7 +429,8 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_mode=None, log_pos="after", msg_len=112):
+        xlm=None, ylm=None, chunk_mode=None, log_pos="after", msg_len=112,
+        sync=False):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -433,6 +449,8 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     chunk_mode: None, "best", or an integer
     log_pos: "before" or "after" the hybrid switch
     msg_len: The length of each HSLog message
+    sync: True and False mean that the data parsing will be executed using a
+          single thread and multiple threads, respectively.
     """
     print("Plotting: {}".format(name))
     parse_logs.DURATION = dur
@@ -452,7 +470,7 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     rdb_fln_ptn += ".db"
 
     data = get_data(path.join(edr, rdb_fln_ptn.format(basename)), basename,
-                    [ptn], dur, key_fnc, chunk_mode, log_pos, msg_len)
+                    [ptn], dur, key_fnc, chunk_mode, log_pos, msg_len, sync)
     add_optimal(data)
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
     pyplot.close()
