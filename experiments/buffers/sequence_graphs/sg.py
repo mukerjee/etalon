@@ -80,7 +80,7 @@ def add_optimal(data):
 
     # Circuit start and end times, of the form:
     #     [<start>, <end>, <start>, <end>, ...]
-    bounds = [int(round(q)) for q in data["circuit_lines"]]
+    bounds = [int(round(q)) for q in data["circuit_bounds"]]
     assert len(bounds) % 2 == 0, \
         ("Circuit starts and ends must come in pairs, but the list of them "
          "contains an odd number of elements: {}".format(bounds))
@@ -166,27 +166,34 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
             pool.join()
 
         data = collections.defaultdict(dict)
-        data["raw_data_"] = sorted(raw_data)
-
-        print("len(data[raw_data]): {}".format(len(data["raw_data"])))
-        print("len(data[raw_data][0]): {}".format(len(data["raw_data"][0])))
-        print("len(data[raw_data][0][0]): {}".format(len(data["raw_data"][0][0])))
-
+        # raw_data is a list of tuples of the form:
+        #   (key, (results, bounds, chunks))
+        # Each entry corresponds to one line/experiment. The sorting is
+        # important so that, in the final graphs, the mapping between lines and
+        # legend is correct.
+        data["raw_data"] = sorted(raw_data)
+        # The first element that results from unzipping the raw data is a list
+        # of the first entries from each line, which is a list of the keys for
+        # the lines.
         data["keys"] = list(zip(*data["raw_data"])[0])
-        data["circuit_lines"] = data["raw_data"][0][1][1]
-        data["seqs"] = [[y / UNITS for y in f]
-                        for f in zip(*zip(*data["raw_data"])[1])[0]]
-
-        exit()
-        data["voqs"] = zip(*zip(*data["raw_data"])[1])[0]
+        # Extract the bounds of the first line.
+        data["circuit_bounds"] = data["raw_data"][0][1][1]
+        # First, extract all of the second elements (i.e., drop the keys). Then,
+        # extract the results. Finally, extract the seqs and voqs results
+        # themselves.
+        seqs, voqs = zip(*zip(*zip(*data["raw_data"])[1])[0])
+        # Convert the seqs to the correct units.
+        data["seqs"] = [[seq / UNITS for seq in flw]
+                        for flw in seqs]
+        data["voqs"] = voqs
 
         # Convert the results for each set of original chunk data. Look through
         # each line.
-        for line, (_, _, chunks_orig_all) in data["raw_data"]:
+        for line, (_, _, chunks_origs) in data["raw_data"]:
             # Check whether all flows have the same number of chunks. Extract
             # the number of chunks per flow.
             num_chunks = {flw: len(chunks_orig)
-                          for flw, chunks_orig in chunks_orig_all.items()}
+                          for flw, chunks_orig in chunks_origs.items()}
             # Use the number of chunks in the first flow as the target.
             target_num = num_chunks.values()[0]
             all_same = True
@@ -200,7 +207,7 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
 
             data["chunks_orig"][line] = {}
             # Look through each flow in this line.
-            for flw, chunks_orig in chunks_orig_all.items():
+            for flw, chunks_orig in chunks_origs.items():
                 data["chunks_orig"][line][flw] = []
                 # Look through each chunk in this flow.
                 for chunk_orig in chunks_orig:
@@ -210,10 +217,10 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
 
         # Select the best chunk for each line (i.e., the chunk with the most
         # datapoints). Look through each line.
-        for line, chunks_orig_all in data["chunks_orig"].items():
+        for line, chunks_origs in data["chunks_orig"].items():
             data["chunks_best"][line] = ([], [], [])
             # Look through flow in this line.
-            for chunks_orig in chunks_orig_all.values():
+            for chunks_orig in chunks_origs.values():
                 # Look through each chunk in this flow.
                 for chunk_orig in chunks_orig:
                     if len(chunk_orig[0]) > len(data["chunks_best"][line][0]):
@@ -230,9 +237,9 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
         if chunks_selected_key not in data:
             chunks_selected_data = {}
             # Look through each line.
-            for line, chunks_orig_all in data["chunks_orig"].items():
+            for line, chunks_origs in data["chunks_orig"].items():
                 chunks_selected_data[line] = {}
-                for flw, chunks_orig in chunks_orig_all.items():
+                for flw, chunks_orig in chunks_origs.items():
                     chunks_selected_data[line][flw] = chunks_orig[chunk_mode]
             # Minimize writing to the database by updating "data" and the
             # database separately.
@@ -328,11 +335,11 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         options.y.ticks.major.options.labelsize = 18
     options.x.axis.show = options.y.axis.show = True
     options.x.axis.color = options.y.axis.color = "black"
-    circuit_lines = data["circuit_lines"]
-    options.vertical_lines.lines = circuit_lines
+    circuit_bounds = data["circuit_bounds"]
+    options.vertical_lines.lines = circuit_bounds
     shaded = []
-    for i in xrange(0, len(circuit_lines), 2):
-        shaded.append((circuit_lines[i], circuit_lines[i + 1]))
+    for i in xrange(0, len(circuit_bounds), 2):
+        shaded.append((circuit_bounds[i], circuit_bounds[i + 1]))
     options.vertical_shaded.limits = shaded
     options.vertical_shaded.options.alpha = 0.1
     options.vertical_shaded.options.color = "blue"

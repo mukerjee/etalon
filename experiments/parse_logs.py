@@ -265,7 +265,8 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
             print("Parsing flow: {}".format(f))
 
         # Interpolated and uninterpolated (i.e., original) chunks for this flow.
-        chunks_interp = []
+        seqs_interp = []
+        voqs_interp = []
         chunks_orig = []
         # The idx of the last datapoint in the previous chunk.
         last_idx = 0
@@ -352,27 +353,23 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
                             "numpy.interp() requires x values to be increasing")
                     # Interpolate based on the data that we have.
                     new_xs = xrange(dur)
-                    chunks_interp.append(
-                        (np.interp(new_xs, xs, ys),
-                         np.interp(new_xs, xs, voq_lens)))
+                    seqs_interp.append(np.interp(new_xs, xs, ys))
+                    voqs_interp.append(np.interp(new_xs, xs, voq_lens))
                     # Also record the original (uninterpolated) chunk data.
                     chunks_orig.append((xs, ys, voq_lens))
 
-        print("Chunks for this flow: {}".format(len(chunks_interp)))
+        print("Chunks for this flow: {}".format(len(seqs_interp)))
         print("Bad chunks for this flow: {}".format(bad_chunks))
-        if chunks_interp:
+        if seqs_interp:
             # If there is data for this flow...
-            print("Timestamps for this flow: {}".format(len(chunks_interp[0])))
-            # List of lists, where each sublist corresponds to one timestep and each
-            # entry of each sublist corresponds to a sequence number for that
-            # timestep.
-            zipped_seqs, zipped_voqs = zip(*chunks_interp)
-            unzipped_seqs = zip(*zipped_seqs)
-            unzipped_voqs = zip(*zipped_voqs)
-            # Average the sequence numbers for across each timestep, creating the
-            # final results for this flow.
-            results[f] = ([np.average(seqs) for seqs in unzipped_seqs],
-                          [np.average(voqs) for voqs in unzipped_voqs],
+            print("Timestamps for this flow: {}".format(len(seqs_interp[0])))
+            # First, convert the results into a list of lists, where each
+            # sublist corresponds to one timestep and each entry in each sublist
+            # corresponds to a sequence number at that timestep. Then, average
+            # the list of sequence numbers at each timestep, creating the final
+            # results for this flow.
+            results[f] = ([np.average(seqs) for seqs in zip(*seqs_interp)],
+                          [np.average(voqs) for voqs in zip(*voqs_interp)],
                           chunks_orig)
 
     # # Remove flows that have no datapoints.
@@ -382,27 +379,26 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
     # if len_delta:
     #     print("Warning: {} flows were filtered out!".format(len_delta))
 
+    # First, turn a list of lists of results for each flow into a list of lists
+    # of results for all flows at one timestep. Then, average the results of all
+    # flows at each timestep. So, the output finally: For each timestep, the
+    # average sequence number of all flows.
+    results_seqs = [np.average(r)
+                    for r in zip(*[seqs for seqs, _, _ in results.values()])]
+    results_voqs = [np.average(r)
+                    for r in zip(*[voqs for _, voqs, _ in results.values()])]
     # Extract the chunk results.
-    chunks_orig_all = {
+    chunks_origs = {
         flw: chunks_orig for flw, (_, _, chunks_orig) in results.items()}
     print("Flows for which we have results:\n{}".format(
         "\n".join([
             "    {}: {} chunks".format(
                 flw, len(chunks_orig))
-            for flw, chunks_orig in chunks_orig_all.items()])))
-
-    # Turn a list of lists of results for each flow into a list of lists of
-    # results for all flows at one timestep.
-    seqs = zip(*[seqs for seqs, _, _ in results.values()])
-    voqs = zip(*[voqs for _, voqs, _ in results.values()])
-
-    # Average the results of all flows at each timestep. So, the output is
-    # really: For each timestep, what's the average sequence number of all
-    # flows.
-    seqs = [np.average(r) for r in seqs]
-    voqs = [np.average(r) for r in voqs]
-    return (seqs, voqs), (starts_avg, ends_avg, nxt_starts_avg, nxt_ends_avg,
-                     nxt_nxt_starts_avg, nxt_nxt_ends_avg), chunks_orig_all
+            for flw, chunks_orig in chunks_origs.items()])))
+    return ((results_seqs, results_voqs),
+            (starts_avg, ends_avg, nxt_starts_avg, nxt_ends_avg,
+             nxt_nxt_starts_avg, nxt_nxt_ends_avg),
+            chunks_origs)
 
 
 def parse_packet_log(fln):
