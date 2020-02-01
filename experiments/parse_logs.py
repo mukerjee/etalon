@@ -72,7 +72,6 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
     assert log_pos in log_poss, \
         "Log position must be one of {}, but is: {}".format(log_poss, log_pos)
 
-    print("Parsing: {}".format(fln))
     circuit_starts = collections.defaultdict(list)
     circuit_ends = collections.defaultdict(list)
     flows = collections.defaultdict(list)
@@ -113,7 +112,7 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
             if ord(ts[i]) == 0:
                 break
         ts = float(ts[:i]) / python_config.TDF
-        # ts = float(ts[:20].strip('\x00')) / python_config.TDF
+        # TODO: ts = float(ts[:20].strip('\x00')) / python_config.TDF
 
         if t == 1 or t == 2:
             # Start or end of a circuit.
@@ -386,7 +385,6 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
     # Extract the chunk results.
     chunks_orig_all = {
         flw: chunks_orig for flw, (_, _, chunks_orig) in results.items()}
-
     print("Flows for which we have results:\n{}".format(
         "\n".join([
             "    {}: {} chunks".format(

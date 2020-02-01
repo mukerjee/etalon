@@ -21,10 +21,8 @@ simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 import parse_logs
 import python_config
 
-
-
 # Kilo-sequence number
-UNITS = 1000.0
+UNITS = 1000.
 
 
 class FileReaderArgs(object):
@@ -43,6 +41,8 @@ class FileReader(object):
         Parses a single results file. "args" is a FileReaderArgs object. Returns
         tuples of the form (key, results).
         """
+        print("Parsing: {}".format(args.fln))
+
         # Results with flow cleaning.
         results, bounds, _ = parse_logs.get_seq_data(
             args.fln, args.dur, args.log_pos, args.msg_len, clean=True)
@@ -180,8 +180,6 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
         exit()
         data["voqs"] = zip(*zip(*data["raw_data"])[1])[0]
 
-
-        
         # Convert the results for each set of original chunk data. Look through
         # each line.
         for line, (_, _, chunks_orig_all) in data["raw_data"]:
@@ -249,7 +247,7 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
              ylm=None, chunk_mode=None):
     voq_lens_all = None
-    if chunk_mode is None or chunk_mode == "agg":
+    if chunk_mode is None:
         # Plot aggregate metrics for all chunks from all flows in each
         # experiment.
         ys = data["seqs"]
