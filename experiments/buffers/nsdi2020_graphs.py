@@ -283,7 +283,6 @@ def main():
                 "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
-            # ptn="1579551361-nsdi2020-fake_strobe-16-QUEUE-True-8000-cubic-0.0006-0.5-False-click.txt",
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
