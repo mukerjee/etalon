@@ -291,7 +291,8 @@ def main():
             flt=(lambda idx, label, order=ORDER_DYN_CG: \
                  label.strip(" $\mu$s") in order),
             order=ORDER_DYN_CG,
-            msg_len=msg_len)
+            msg_len=msg_len,
+            voq_agg=True)
 
     # # (6.1.2)
     # sg.seq(

@@ -180,11 +180,12 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
         data["circuit_bounds"] = data["raw_data"][0][1][1]
         # First, extract all of the second elements (i.e., drop the keys). Then,
         # extract the results. Finally, extract the seqs and voqs results
-        # themselves.
+        # themselves. The final result is a list of lists of results, where each
+        # sublist corresponds to one line.
         seqs, voqs = zip(*zip(*zip(*data["raw_data"])[1])[0])
         # Convert the seqs to the correct units.
-        data["seqs"] = [[seq / UNITS for seq in flw]
-                        for flw in seqs]
+        data["seqs"] = [[s / UNITS for s in seqs_flw]
+                        for seqs_flw in seqs]
         data["voqs"] = voqs
 
         # Convert the results for each set of original chunk data. Look through
@@ -211,9 +212,9 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
                 data["chunks_orig"][line][flw] = []
                 # Look through each chunk in this flow.
                 for chunk_orig in chunks_orig:
-                    xs, ys, voq_lens = chunk_orig
+                    xs, ys, voqs = chunk_orig
                     data["chunks_orig"][line][flw].append(
-                        (xs, [y / UNITS for y in ys], voq_lens))
+                        (xs, [y / UNITS for y in ys], voqs))
 
         # Select the best chunk for each line (i.e., the chunk with the most
         # datapoints). Look through each line.
@@ -252,14 +253,24 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
 
 def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
              ins=None, flt=lambda idx, label: True, order=None, xlm=None,
-             ylm=None, chunk_mode=None):
-    voq_lens_all = None
+             ylm=None, chunk_mode=None, voq_agg=False):
+    assert not voq_agg or chunk_mode is None, \
+        "voq_agg=True requires chunk_mode=None!"
+
+    plot_voqs = False
     if chunk_mode is None:
         # Plot aggregate metrics for all chunks from all flows in each
         # experiment.
         ys = data["seqs"]
         xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
         keys = data["keys"]
+
+        if voq_agg:
+            # First, create a list of x values for each list of VOQ results.
+            # Then, split apart the xs and the ys.
+            voq_xs, voq_ys = zip(
+                *[(xrange(len(voqs)), voqs) for voqs in data["voqs"]])
+            plot_voqs = True
     else:
         # Include the "optimal" and "packet only" lines.
         lines = [
@@ -273,9 +284,11 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
             # not use a legend because each line will correspond to a separate
             # flow instead of a separate experiment.
             exps_data = data["chunks_selected_chunk{}".format(chunk_mode)]
-            assert len(exps_data) == 1, \
-                ("There should be exactly one experiment when running "
-                 "chunk_mode={}").format(chunk_mode)
+            num_exps = len(exps_data)
+            assert num_exps == 1, \
+                ("When using chunk_mode={}, there should be exactly one "
+                 "experiment, but there actually are: {}").format(
+                     chunk_mode, num_exps)
             # Extracts a flow's src ID.
             get_src_id = lambda f: int(f.split(".")[-1])
             # Sort the results by the flow src ID, then split the flows and
@@ -289,22 +302,42 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
             # the flows were sent from the same rack to the same rack. Start by
             # extracting the xs and VOQ lengths for each flow and turning them
             # into single-point pairs.
-            voq_lens_all = [zip(xs, voq_lens) for xs, _, voq_lens in flw_lines]
+            voqs = [zip(xs, voqs) for xs, _, voqs in flw_lines]
             # Flatten the per-flow VOQ length results into one master list.
-            voq_lens_all = [pair for voq_lens_flw in voq_lens_all for pair in voq_lens_flw]
+            voqs = [pair for voqs_flw in voqs for pair in voqs_flw]
             # Sort the VOQ length results by their x-values.
-            voq_lens_all = sorted(voq_lens_all, key=lambda val: val[0])
+            voqs = sorted(voqs, key=lambda val: val[0])
             # Split the xs and ys into separate lists.
-            voq_lens_all = zip(*voq_lens_all)
+            voq_xs, voq_ys = zip(*voqs)
+            # Since there is only a single experiment (see above) yet the rest
+            # of the code is generalized to multiple experiments, wrap the
+            # single experiment results in a list.
+            voq_xs = [voq_xs]
+            voq_ys = [voq_ys]
+            plot_voqs = True
 
             # Remove the VOQ lengths from the results.
             flw_lines = [(xs, ys) for xs, ys, _ in flw_lines]
             lines.extend(flw_lines)
 
-            # Convert each of the flows from a src flow ID.
+            # Convert each of the flows to a src ID.
             keys = (data["keys"][0:2] +
                     ["flow {}".format(get_src_id(flw[0])) for flw in flws])
         xs, ys = zip(*lines)
+
+    if plot_voqs:
+        # Convert from tuples to lists to enable insertion.
+        voq_xs = list(voq_xs)
+        voq_ys = list(voq_ys)
+        # Insert empty lists for the "optimal" and "packet only" lines. These
+        # will be removed later.
+        voq_xs.insert(0, None)
+        voq_xs.insert(0, None)
+        voq_ys.insert(0, None)
+        voq_ys.insert(0, None)
+    else:
+        voq_xs = [None for _ in xs]
+        voq_ys = [None for _ in ys]
 
     # Format the legend labels.
     lls = []
@@ -353,18 +386,19 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         xlm_ins, ylm_ins = ins
         options.inset.options.x.limits = xlm_ins
         options.inset.options.y.limits = ylm_ins
-
     if flt is not None:
         # Pick only the lines that we want.
-        xs, ys, options.legend.options.labels = zip(
-            *[(x, y, l) for (i, (x, y, l)) in enumerate(
-                zip(xs, ys, options.legend.options.labels))
+        xs, ys, options.legend.options.labels, voq_xs, voq_ys = zip(
+            *[(x, y, l, vx, vy) for (i, (x, y, l, vx, vy)) in enumerate(
+                zip(xs, ys, options.legend.options.labels, voq_xs, voq_ys))
               if flt(i, l)])
     if order is not None:
         # Reorder the lines.
         real_xs = []
         real_ys = []
         real_ls = []
+        real_voq_xs = []
+        real_voq_ys = []
         for item in order:
             idx = 0
             found = False
@@ -377,15 +411,20 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
                 real_xs.append(xs[idx])
                 real_ys.append(ys[idx])
                 real_ls.append(options.legend.options.labels[idx])
+                real_voq_xs.append(voq_xs[idx])
+                real_voq_ys.append(voq_ys[idx])
         xs = real_xs
         ys = real_ys
         options.legend.options.labels = real_ls
+        voq_xs = real_voq_xs
+        voq_ys = real_voq_ys
 
     # Set series options. Do this after filtering so that we have an accurate
     # count of the number of series.
     if chunk_mode is None:
         options.series_options = [
-            dotmap.DotMap(linewidth=2) for _ in xrange(len(xs))]
+            dotmap.DotMap(color="C{}".format(idx), linewidth=2)
+            for idx, _ in enumerate(xrange(len(xs)))]
     else:
         options.series_options = [
             dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(xs))]
@@ -394,7 +433,7 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
     # lines, otherwise use 2 columns.
     options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
         (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
-    if voq_lens_all is not None:
+    if plot_voqs:
         # If we are going to plot a second y-axis, then shift the legend to the
         # right.
         offset_x, offset_y = options.legend.options.bbox_to_anchor
@@ -402,17 +441,32 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
 
     simpleplotlib.plot(xs, ys, options)
 
-    if voq_lens_all is not None:
+    if plot_voqs:
         # Plot the VOQ length on a second y-axis. Modify the active figure
         # instance to include a totally separate line on a second y-axis. We
         # cannot use simpleplotlib's built-in y2 functionality because we are
-        # not plotting a y2 line for each y line...we want only one y2 line.
+        # not plotting a y2 line for each y line.
         options2 = simpleplotlib.default_options.copy()
         options2.output_fn = options.output_fn
         options2.plot_type = "LINE"
-        options2.series2_options = [dotmap.DotMap(
-            linewidth=1, color="black", alpha=0.5, marker="o",
-            markeredgecolor="none", markersize=3)]
+        options2.series2_options = [dotmap.DotMap() for _ in voq_xs]
+        if voq_agg:
+            # Configure the VOQ line to be dashed and the same color as the
+            # corresponding sequence number lines.
+            for idx in xrange(len(options2.series2_options)):
+                options2.series2_options[idx].color = \
+                    options.series_options[idx].color
+                options2.series2_options[idx].linestyle = "dashed"
+        else:
+            # We are in chunk_mode==#, so there is only a single
+            # experiment.
+            options2.series2_options[-1].linewidth = 1
+            options2.series2_options[-1].color = "black"
+            options2.series2_options[-1].alpha = 0.5
+            options2.series2_options[-1].marker = "o"
+            options2.series2_options[-1].markeredgecolor = "none"
+            options2.series2_options[-1].markersize = 3
+
         options2.x.limits = options.x.limits
         options2.x.margin = options2.y2.margin = \
             simpleplotlib.default_options.x.margin
@@ -423,10 +477,16 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         options2.y2.ticks.major.options.labelsize = \
                 options.y.ticks.major.options.labelsize
 
+        # As a final step, remove the VOQ lines corresponding to "optimal" and
+        # "packet only", which are None.
+        voq_xs, voq_ys, options2.series2_options = zip(
+            *[(vx, vy, o)
+              for vx, vy, o in zip(voq_xs, voq_ys, options2.series2_options)
+              if vx is not None])
+
         ax2 = pyplot.gca().twinx()
-        voq_xs, voq_ys = voq_lens_all
         simpleplotlib.plot_data(
-            ax2, [voq_xs], [voq_ys], options2, options2.series2_options)
+            ax2, voq_xs, voq_ys, options2, options2.series2_options)
         simpleplotlib.apply_options_to_axis(ax2.xaxis, voq_xs, options2.x)
         simpleplotlib.apply_options_to_axis(ax2.yaxis, voq_ys, options2.y2)
         # Overwrite the original graph.
@@ -434,8 +494,8 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_mode=None, log_pos="after", msg_len=112,
-        sync=False):
+        xlm=None, ylm=None, chunk_mode=None, voq_agg=False, log_pos="after",
+        msg_len=112, sync=False):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -452,6 +512,8 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     xlm: x-axis limits
     ylm: y-axis limits
     chunk_mode: None, "best", or an integer
+    voq_agg: Whether to include aggregate VOQ length results on a second y-axis.
+             True chunk_mode=None.
     log_pos: "before" or "after" the hybrid switch
     msg_len: The length of each HSLog message
     sync: True and False mean that the data parsing will be executed using a
@@ -462,20 +524,9 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
-    if "_" in name:
-        basename = name.split("_")[1]
-    else:
-        basename = name
-
-    # If we are in chunk mode, then the parsing is slightly different and we use
-    # a separate results database file.
-    rdb_fln_ptn = "{}"
-    if chunk_mode is not None:
-        rdb_fln_ptn += "_chunk"
-    rdb_fln_ptn += ".db"
-
-    data = get_data(path.join(edr, rdb_fln_ptn.format(basename)), basename,
+    basename = name.split("_")[1] if "_" in name else name
+    data = get_data(path.join(edr, "{}.db".format(basename)), basename,
                     [ptn], dur, key_fnc, chunk_mode, log_pos, msg_len, sync)
     add_optimal(data)
-    plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode)
+    plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode, voq_agg)
     pyplot.close()
