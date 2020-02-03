@@ -34,5 +34,3 @@ def gen_resize_sweep(mn, mx, dl):
         'buffer_size': 16,
         'in_advance': us
     } for us in xrange(mn, mx + 1, dl)]
-
-CONFIGS = gen_static_sweep(2, 7) + gen_resize_sweep(0, 8000, 500)

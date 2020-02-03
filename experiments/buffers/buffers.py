@@ -9,7 +9,7 @@ import common
 
 
 def main():
-    cnfs = buffer_common.CONFIGS
+    cnfs = buffer_common.gen_static_sweep(2, 7) + buffer_common.gen_resize_sweep(0, 8000, 500)
     # Use the first experiment's CC mode, or "reno" if no CC mode is specified.
     # This avoid unnecessarily restarting the cluster.
     common.initializeExperiment('flowgrindd', cnfs[0].get("cc", "reno"))
