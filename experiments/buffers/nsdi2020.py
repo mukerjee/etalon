@@ -20,13 +20,14 @@ TCPDUMP = False
 # If True, then racks will be launched in serial.
 SYNC = False
 # The number of racks to mimic when creating the strobe schedule.
-NUM_RACKS_FAKE = 3
+NUM_RACKS_FAKE = 8
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
 CG_RESIZE_US_MIN = 0
-CG_RESIZE_US_MAX = 225
-CG_RESIZE_US_DELTA = 25
+CG_RESIZE_US_MAX = 1200
+CG_RESIZE_US_DELTA = 100
+ALL_VARIANTS_US = [0, 1200, 500, 1000]
 # Fine granularity sweep bounds.
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
@@ -78,25 +79,25 @@ def main():
         # (4) Coarse granularity.
         for us in xrange(
                 CG_RESIZE_US_MIN, CG_RESIZE_US_MAX + 1, CG_RESIZE_US_DELTA):
-            # Only do full sweeps for CUBIC and reTCP, but capture a handful of
+            # Only do full sweeps for CUBIC and reTCP, but capture a few key
             # us's for all variants.
-            if cc in ["cubic", "retcp"] or us in [50, 100, 125, 150, 175]:
+            if cc in ["cubic", "retcp"] or us in ALL_VARIANTS_US:
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
                           "queue_resize": True,
                           "buffer_size": 16,
                           "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
-        # (4) Fine granularity.
-        for us in xrange(
-                FG_RESIZE_US_MIN, FG_RESIZE_US_MAX + 1, FG_RESIZE_US_DELTA):
-            if cc in ["cubic", "retcp"]:
-                cnfs += [{"type": "fake_strobe",
-                          "num_racks_fake": NUM_RACKS_FAKE,
-                          "queue_resize": True,
-                          "buffer_size": 16,
-                          "in_advance": int(round(us * python_config.TDF)),
-                          "cc": cc}]
+        # # (4) Fine granularity.
+        # for us in xrange(
+        #         FG_RESIZE_US_MIN, FG_RESIZE_US_MAX + 1, FG_RESIZE_US_DELTA):
+        #     if cc in ["cubic", "retcp"]:
+        #         cnfs += [{"type": "fake_strobe",
+        #                   "num_racks_fake": NUM_RACKS_FAKE,
+        #                   "queue_resize": True,
+        #                   "buffer_size": 16,
+        #                   "in_advance": int(round(us * python_config.TDF)),
+        #                   "cc": cc}]
 
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
