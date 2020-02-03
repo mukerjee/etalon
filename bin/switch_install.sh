@@ -25,7 +25,7 @@ done
 sudo rm -fv /etc/iptables/rules.v4
 sudo mkdir -pv /etc/iptables
 sudo iptables-save | while read -r x; do
-    echo "$x" | sudo tee -a /etc/iptables/rules.v4;
+    echo "$x" | sudo tee -a /etc/iptables/rules.v4
 done
 echo iptables-persistent iptables-persistent/autosave_v4 boolean true | \
     sudo debconf-set-selections
@@ -86,7 +86,7 @@ echo "nodev /mnt/huge_1GB hugetlbfs pagesize=1GB 0 0" | sudo tee -a /etc/fstab
 # RTE_SDK location.
 echo "Setting RTE_SDK location..."
 {
-    echo "";
+    echo ""
     echo "export RTE_SDK=/usr/share/dpdk"
     echo "export RTE_TARGET=x86_64-default-linuxapp-gcc"
 } >> "$HOME/.bashrc"
