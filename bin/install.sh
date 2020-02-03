@@ -89,14 +89,18 @@ fi
 # Disable unattended upgrades.
 sudo sed -i "s/1/0/g" /etc/apt/apt.conf.d/20auto-upgrades
 
-# To find the list of installable TCP congestion control modules, get the list
-# of IPv4 kernel modules, find the actual module files, find the TCP modules,
-# remove "tcp_probe" because it does not work, and drop the ".ko" extension.
-for VAR in /lib/modules/"$(uname -r)"/kernal/net/ipv4/*.ko; do
-    if grep "tcp" <<< "$VAR" && ! grep "tcp_probe" <<< "$VAR"; then
-        VAR="$(cut -d"." -f1)"
-        sudo modprobe "$VAR";
-        echo "$VAR" | sudo tee -a /etc/modules
+# Load all available TCP variants. Loop over the list of IPv4 kernel modules.
+for VAR in /lib/modules/"$(uname -r)"/kernel/net/ipv4/*.ko; do
+    # Find the TCP modules, but remove "tcp_probe" because it does not work and
+    # "tcp_diag" because it is for monitoring only.
+    if (grep "tcp" <<< "$VAR") && ! (grep "tcp_probe" <<< "$VAR") && \
+           ! (grep "tcp_diag" <<< "$VAR"); then
+       # Drop the absolute path and the ".ko" extension.
+       VAR=$(basename "$VAR" ".ko")
+       # Load the module.
+       sudo modprobe "$VAR"
+       # Mark the module to be loaded automatically on boot.
+       echo "$VAR" | sudo tee -a /etc/modules
     fi
 done
 
