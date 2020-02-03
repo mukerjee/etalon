@@ -241,6 +241,13 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
             for line, chunks_origs in data["chunks_orig"].items():
                 chunks_selected_data[line] = {}
                 for flw, chunks_orig in chunks_origs.items():
+                    # Note that if the flows have different numbers of chunks,
+                    # then the nth chunk for one flow may not correspond to the
+                    # nth chunk from another flow. I.e., the chunks that we
+                    # extract here may not be the same across flows. This is one
+                    # of the reasons that if we are looking that the raw chunk
+                    # analysis, then we should run the experiments with only a
+                    # single flow.
                     chunks_selected_data[line][flw] = chunks_orig[chunk_mode]
             # Minimize writing to the database by updating "data" and the
             # database separately.
