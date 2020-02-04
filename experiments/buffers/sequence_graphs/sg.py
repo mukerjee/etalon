@@ -212,9 +212,9 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
                 data["chunks_orig"][line][flw] = []
                 # Look through each chunk in this flow.
                 for chunk_orig in chunks_orig:
-                    xs, ys, voqs = chunk_orig
+                    xs, ys, voqs, chunk_idx = chunk_orig
                     data["chunks_orig"][line][flw].append(
-                        (xs, [y / UNITS for y in ys], voqs))
+                        (xs, [y / UNITS for y in ys], voqs, chunk_idx))
 
         # Select the best chunk for each line (i.e., the chunk with the most
         # datapoints). Look through each line.

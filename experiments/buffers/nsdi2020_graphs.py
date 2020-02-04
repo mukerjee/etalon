@@ -283,6 +283,7 @@ def main():
                 "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
+            # ptn="1579550033-nsdi2020-fake_strobe-16-QUEUE-True-2000-cubic-0.0006-0.5-False-click.txt",
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
@@ -293,6 +294,7 @@ def main():
             order=ORDER_DYN_CG,
             msg_len=msg_len,
             voq_agg=True)
+            # chunk_mode=750)
 
     # # (6.1.2)
     # sg.seq(
@@ -328,7 +330,7 @@ def main():
     #             xlm=xlm_zoom,
     #             ylm=ylm_zoom,
     #             chunk_mode=500,
-    #             log_pos="before",
+    #             log_pos="after",
     #             msg_len=msg_len)
 
     # # (6.2)
