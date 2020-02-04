@@ -383,7 +383,7 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
     #     print("Warning: {} flows were filtered out!".format(len_delta))
 
     # Reorganize from flows -> chunks to chunks -> flows.
-    num_chunks = len(circuit_starts[SR_RACKS]) // 3 - 1
+    num_chunks = (len(circuit_starts[SR_RACKS]) - 1) // 3
     results_by_chunk = [
         collections.defaultdict(list) for _ in xrange(num_chunks)]
     # # Version 1: Match up chunks across flows.
@@ -450,6 +450,9 @@ def get_seq_data(fln, dur, log_pos="after", msg_len=112, clean=True):
         chunk_combined = sorted(chunk_combined, key=lambda val: val[0])
         # Separate the xs and voqs into separate lists.
         xs, voqs = zip(*chunk_combined)
+        # Undo the artificial left-shift, since the VOQ lengths are measured
+        # precisely.
+        xs = [x + timing_offset * 1e6 for x in xs]
         # Interpolate and record the results for this chunk.
         results_voqs.append(np.interp(xrange(dur), xs, voqs))
     print("num_chunks: {}".format(num_chunks))
