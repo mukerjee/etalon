@@ -57,11 +57,16 @@ def disableLog():
     time.sleep(0.1)
 
 
-def setQueueSize(size):
-    for i in xrange(1, NUM_RACKS + 1):
-        for j in xrange(1, NUM_RACKS + 1):
-            clickWriteHandler('hybrid_switch/q%d%d/q' % (i, j),
-                              'capacity', size)
+def setQueueCap(cap, which):
+    clickWriteHandler('runner', '{}_queue_capacity'.format(which), cap)
+
+
+def setSmallQueueCap(cap):
+    setQueueCap(cap, which="small")
+
+
+def setBigQueueCap(cap):
+    setQueueCap(cap, which="big")
 
 
 def setEstimateTrafficSource(source):
@@ -245,7 +250,7 @@ def setEcnThresh(thresh):
 
 def setConfig(config):
     global FN_FORMAT
-    c = {'type': 'normal', 'buffer_size': 16,
+    c = {'type': 'normal', 'small_queue_cap': 16, 'big_queue_cap': 128,
          'traffic_source': 'QUEUE', 'queue_resize': False,
          'in_advance': 12000, 'cc': DEFAULT_CC, 'packet_log': True,
          'divert_acks': False, 'circuit_link_delay': CIRCUIT_LATENCY_s_TDF,
@@ -255,8 +260,8 @@ def setConfig(config):
 
     c.update(config)
     clearCounters()
-    setQueueResize(False)  # let manual queue sizes be passed through first
-    setQueueSize(c['buffer_size'])
+    setSmallQueueCap(c['small_queue_cap'])
+    setBigQueueCap(c['big_queue_cap'])
     setEstimateTrafficSource(c['traffic_source'])
     setInAdvance(c['in_advance'])
     common.setCC(c['cc'])
@@ -295,17 +300,21 @@ def setConfig(config):
     setCircuitLinkDelay(c['circuit_link_delay'])
     setPacketLinkBandwidth(c['packet_link_bandwidth'])
 
-    FN_FORMAT = '%s-%s-%s-%d-%s-%s-%s-%s-%s-%s-%s-' % (TIMESTAMP, SCRIPT, t,
-                                                       c['buffer_size'],
-                                                       c['traffic_source'],
-                                                       c['queue_resize'],
-                                                       c['in_advance'],
-                                                       c['cc'],
-                                                       c['circuit_link_delay'],
-                                                       c['packet_link_bandwidth'],
-                                                       c['hdfs'])
-    if t == 'strobe':
-        FN_FORMAT += '%d-%d-' % (c['night_len_us'], c['day_len_us'])
+    FN_FORMAT = "{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-{}-".format(
+        TIMESTAMP, SCRIPT, t,
+        c["small_queue_cap"],
+        c["big_queue_cap"],
+        c["traffic_source"],
+        c["queue_resize"],
+        c["in_advance"],
+        c["cc"],
+        c["circuit_link_delay"],
+        c["packet_link_bandwidth"],
+        c["hdfs"])
+    if t in ["fake_strobe", "strobe"]:
+        FN_FORMAT += "{}-{}-".format(c["night_len_us"], c["day_len_us"])
+    if t == "fake_strobe":
+        FN_FORMAT += "{}-".format(c["num_racks_fake"])
 
     FN_FORMAT += '%s.txt'
     if config and c['packet_log']:
