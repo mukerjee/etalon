@@ -59,8 +59,8 @@ def main():
             cnfs += [{"type": "fake_strobe",
                       "num_racks_fake": NUM_RACKS_FAKE,
                       "buffer_size": 16,
-                      "night_len_us": 1000. * python_config.TDF,
-                      "day_len_us": 9000. * python_config.TDF,
+                      "night_len_us": 1000 * python_config.TDF,
+                      "day_len_us": 9000 * python_config.TDF,
                       "cc": cc}]
             # (2)
             cnfs += [{"type": "fake_strobe",

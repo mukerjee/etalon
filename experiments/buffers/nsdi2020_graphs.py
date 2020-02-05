@@ -25,20 +25,32 @@ import buffers_graphs
 import python_config
 import sg
 
+# Circuit uptime.
+DAY_LEN_us = 9 * python_config.RECONFIG_DELAY_us
+
 # Filename patterns.
 #
 # Matches experiments with a particular CC mode, 1000 us nights, and 9000 us
 # days (under TDF).
-OLD_PTN = "*-{}-*-20000-180000-click.txt"
-# Matches experiments with a particular CC mode, 0.1 us nights, and 0.9 us days
+OLD_PTN = (
+    "*-{}-*-" +
+    "{}-{}".format(1000 * python_config.TDF, 9000 * python_config.TDF)
+    + "-*-click.txt")
+# Matches experiments with a particular CC mode, 1 us nights, and 9 us days
 # (under TDF).
-FUTURE_PTN = "*-{}-*-20-180-click.txt"
+FUTURE_PTN = (
+    "*-{}-*-" +
+    "{}-{}".format(1 * python_config.TDF, 9 * python_config.TDF) +
+    "-*-click.txt")
 # Matches experiments with static buffers of a particular size, a particular CC
 # mode, 20 us nights, and 180 us days (under TDF).
-STATIC_PTN = "*-{}-QUEUE-False-*-{}-*-400-3600-click.txt"
+STATIC_PTN = (
+    "*-{}-QUEUE-False-*-{}-*-" +
+    "{}-{}".format(python_config.RECONFIG_DELAY_us, DAY_LEN_us) +
+    "-*-click.txt")
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
-DYN_PTN = "*-QUEUE-True-{}-{}-*click.txt"
+DYN_PTN = "*-QUEUE-True-{}-{}-*-click.txt"
 
 # Order of the lines for the all TCP variants experiments. This is also used to
 # select which lines to plot.
@@ -50,10 +62,12 @@ ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # used to select which lines to plot. For coarse-grained experiments.
 # ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
 #                 "packet only"]
+ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200", "0",
+                "packet only"]
 # ORDER_DYN_CG = ["optimal", "600", "500", "400", "300", "200", "100", "0",
 #                 "packet only"]
-ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "900", "800", "700",
-                "packet only"]
+# ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "900", "800", "700",
+#                 "packet only"]
 # ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000", "2000", "0",
 #                 "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
@@ -64,10 +78,10 @@ ORDER_DYN_FG_RETCP = ["optimal", "154", "150", "148", "146", "142", "138",
                       "packet only"]
 # The different amounts of dynamic buffer resizing to plot in the multi-variant
 # graphs.
-CHOSEN_DYN_USS = [50, 100, 125, 150, 175]
+CHOSEN_DYN_uss = [50, 100, 125, 150, 175]
 # The order of the lines in the single-variant, multi-resizing experiments.
-ORDER_DYN_USS = (["optimal"] +
-                 list(reversed([str(us) for us in CHOSEN_DYN_USS])) +
+ORDER_DYN_uss = (["optimal"] +
+                 list(reversed([str(us) for us in CHOSEN_DYN_uss])) +
                  ["packet only"])
 # Bars to plot on the utilization graphs.
 CHOSEN_CHOSEN_UTIL = [0, 25, 50, 75, 100, 125, 150, 154, 158, 162, 166, 175,
@@ -91,10 +105,10 @@ DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
 # DYNS_TO_EXAMINE = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
 # The default length to use when reading individual packet log messages.
 DEFAULT_MSG_LEN = 116
-# Duration for normal experiments.
-# DUR = 1200
-DUR = 4200
-# DUR = 29400
+# Calculate experiment duration.
+DAY_LEN_us = 9 * python_config.RECONFIG_DELAY_us
+NUM_RACKS_FAKE = 8
+DUR_us = (python_config.RECONFIG_DELAY_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3
 # True and False mean that the data parsing will be executed using a single
 # thread and multiple threads, respectively.
 SYNC = False
@@ -193,7 +207,7 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
     #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     msg_len=msg_len)
 
     # # (3)
@@ -215,7 +229,7 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
     #     key_fnc=lambda fn: fn.split("-")[7],
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
     #     order=ORDER_VARS,
     #     msg_len=msg_len)
@@ -241,9 +255,10 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format("*", CHOSEN_TCP),
     #     key_fnc=lambda fn: fn.split("-")[3],
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     order=ORDER_STATIC,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     voq_agg=True)
 
     # # (5.2)
     # buffers_graphs.util(
@@ -283,18 +298,16 @@ def main():
                 "_inset" if ins is not None else ""),
             edr=edr,
             odr=odr,
-            # ptn="1579550033-nsdi2020-fake_strobe-16-QUEUE-True-2000-cubic-0.0006-0.5-False-click.txt",
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
                                          / python_config.TDF)),
-            dur=DUR,
+            dur=DUR_us,
             ins=ins,
             flt=(lambda idx, label, order=ORDER_DYN_CG: \
                  label.strip(" $\mu$s") in order),
             order=ORDER_DYN_CG,
             msg_len=msg_len,
             voq_agg=True)
-            # chunk_mode=750)
 
     # # (6.1.2)
     # sg.seq(
@@ -305,7 +318,7 @@ def main():
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                  / python_config.TDF)),
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
     #          label.strip(" $\mu$s") in order),
     #     order=ORDER_DYN_FG_CHOSEN,
@@ -325,7 +338,7 @@ def main():
     #                 int(round(dyn_us * python_config.TDF)), CHOSEN_TCP),
     #             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                          / python_config.TDF)),
-    #             dur=DUR,
+    #             dur=DUR_us,
     #             flt=None,  # lambda idx, label: idx < 3,
     #             xlm=xlm_zoom,
     #             ylm=ylm_zoom,
@@ -369,7 +382,7 @@ def main():
     #     ylb="99th percentile")
 
     # # (7.1.1) and (7.2)
-    # for us in CHOSEN_DYN_USS:
+    # for us in CHOSEN_DYN_uss:
     #     us_tdf = int(round(us * python_config.TDF))
     #     sg.seq(
     #         sync=SYNC,
@@ -378,7 +391,7 @@ def main():
     #         odr=odr,
     #         ptn=DYN_PTN.format(us_tdf, "*"),
     #         key_fnc=lambda fn: fn.split("-")[7],
-    #         dur=DUR,
+    #         dur=DUR_us,
     #         flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
     #         order=ORDER_VARS,
     #         msg_len=msg_len)
@@ -404,10 +417,10 @@ def main():
     #         ptn=DYN_PTN.format("*", cc),
     #         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                      / python_config.TDF)),
-    #         dur=DUR,
-    #         flt=(lambda idx, label, order=ORDER_DYN_USS: \
+    #         dur=DUR_us,
+    #         flt=(lambda idx, label, order=ORDER_DYN_uss: \
     #              label.strip(" $\mu$s") in order),
-    #         order=ORDER_DYN_USS,
+    #         order=ORDER_DYN_uss,
     #         msg_len=msg_len)
 
     # # (8.1)
@@ -418,7 +431,7 @@ def main():
     #     odr=odr,
     #     ptn=STATIC_PTN.format("*", "retcp"),
     #     key_fnc=lambda fn: fn.split("-")[3],
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     msg_len=msg_len)
 
     # # (8.2)
@@ -459,7 +472,7 @@ def main():
     #     ptn=DYN_PTN.format("*", "retcp"),
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                  / python_config.TDF)),
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     flt=lambda idx, label, order=ORDER_DYN_CG: label.strip(" $\mu$s") in order,
     #     order=ORDER_DYN_CG)
 
@@ -472,7 +485,7 @@ def main():
     #     ptn=DYN_PTN.format("*", "retcp"),
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
     #                                  / python_config.TDF)),
-    #     dur=DUR,
+    #     dur=DUR_us,
     #     flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
     #          label.strip(" $\mu$s") in order),
     #     order=ORDER_DYN_FG_RETCP,

@@ -52,7 +52,7 @@ def setLog(log):
 
 
 def disableLog():
-    print 'diabling packet logging'
+    print 'disabling packet logging'
     clickWriteHandler('hsl', 'disableLog', '')
     time.sleep(0.1)
 
