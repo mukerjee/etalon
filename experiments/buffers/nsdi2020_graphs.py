@@ -319,7 +319,7 @@ def main():
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
-            key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                          / python_config.TDF)),
             dur=DUR_us,
             ins=ins,
@@ -338,7 +338,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     dur=DUR_us,
     #     flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
@@ -360,7 +360,7 @@ def main():
     #             odr=odr,
     #             ptn=DYN_PTN.format(
     #                 int(round(dyn_us * python_config.TDF)), CHOSEN_TCP),
-    #             key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                          / python_config.TDF)),
     #             dur=DUR_us,
     #             flt=None,  # lambda idx, label: idx < 3,
@@ -377,7 +377,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     xlb="Resize time ($\mu$s)",
     #     xlr=45,
@@ -390,7 +390,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     prc=50,
     #     ylb="Median")
@@ -401,7 +401,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     prc=99,
     #     ylb="99th percentile")
@@ -442,7 +442,7 @@ def main():
     #         edr=edr,
     #         odr=odr,
     #         ptn=DYN_PTN.format("*", cc),
-    #         key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #         key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                      / python_config.TDF)),
     #         dur=DUR_us,
     #         flt=(lambda idx, label, order=ORDER_DYN_uss: \
@@ -501,7 +501,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     dur=DUR_us,
     #     flt=lambda idx, label, order=ORDER_DYN_CG: label.strip(" $\mu$s") in order,
@@ -516,7 +516,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     dur=DUR_us,
     #     flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
@@ -532,7 +532,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     xlb="Resize time ($\mu$s)",
     #     xlr=45,
@@ -545,7 +545,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     prc=50,
     #     ylb="Median")
@@ -556,7 +556,7 @@ def main():
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[6])
+    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     prc=99,
     #     ylb="99th percentile")
