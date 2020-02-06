@@ -136,7 +136,7 @@ def main():
             # here).
             "dur": (((cnf["night_len_us"] + cnf["day_len_us"])  # One night and day under TDF.
                      / python_config.TDF                        # Convert from TDF to real time.
-                     * (cnf["num_racks_fake"] - 1)                   # Convert to a full week.
+                     * (cnf["num_racks_fake"] - 1)              # Convert to a full week.
                      / 1e3                                      # Convert from us to ms.
                      * 3000                                     # 3000 weeks.
                      + 100)                                     # Extra 100 ms, for good measure.

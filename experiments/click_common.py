@@ -78,10 +78,7 @@ def setInAdvance(in_advance):
 
 
 def setQueueResize(b):
-    if b:
-        clickWriteHandler('runner', 'setDoResize', 'true')
-    else:
-        clickWriteHandler('runner', 'setDoResize', 'false')
+    clickWriteHandler('runner', 'setDoResize', 'true' if b else 'false')
     time.sleep(0.1)
 
 
