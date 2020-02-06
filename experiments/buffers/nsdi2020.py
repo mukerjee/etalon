@@ -32,6 +32,9 @@ ALL_VARIANTS_US = [0, 1200, 500, 1000]
 FG_RESIZE_US_MIN = 140
 FG_RESIZE_US_MAX = 170
 FG_RESIZE_US_DELTA = 1
+# VOQ capacities.
+SMALL_QUEUE_CAP = 4
+BIG_QUEUE_CAP = 40
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -58,14 +61,12 @@ def main():
             # (1)
             cnfs += [{"type": "fake_strobe",
                       "num_racks_fake": NUM_RACKS_FAKE,
-                      "buffer_size": 16,
                       "night_len_us": 1000 * python_config.TDF,
                       "day_len_us": 9000 * python_config.TDF,
                       "cc": cc}]
             # (2)
             cnfs += [{"type": "fake_strobe",
                       "num_racks_fake": NUM_RACKS_FAKE,
-                      "buffer_size": 16,
                       "night_len_us": 1 * python_config.TDF,
                       "day_len_us": 9 * python_config.TDF, "cc": cc}]
         # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
@@ -74,7 +75,7 @@ def main():
             if cc in ["cubic", "retcp"] or exp == 4:
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
-                          "buffer_size": 2**exp,
+                          "small_queue_cap": 2**exp,
                           "cc": cc}]
         # (4) Coarse granularity.
         for us in xrange(
@@ -85,7 +86,6 @@ def main():
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
                           "queue_resize": True,
-                          "buffer_size": 16,
                           "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
         # # (4) Fine granularity.
@@ -95,7 +95,6 @@ def main():
         #         cnfs += [{"type": "fake_strobe",
         #                   "num_racks_fake": NUM_RACKS_FAKE,
         #                   "queue_resize": True,
-        #                   "buffer_size": 16,
         #                   "in_advance": int(round(us * python_config.TDF)),
         #                   "cc": cc}]
 
@@ -115,6 +114,9 @@ def main():
         if "night_len_us" not in cnf:
             cnf["night_len_us"] = int(round(20 * python_config.TDF))
             cnf["day_len_us"] = int(round(180 * python_config.TDF))
+        if "small_queue_cap" not in cnf:
+            cnf["small_queue_cap"] = SMALL_QUEUE_CAP
+            cnf["big_queue_cap"] = BIG_QUEUE_CAP
 
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
