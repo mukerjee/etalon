@@ -58,7 +58,12 @@ def disableLog():
 
 
 def setQueueCap(cap, which):
+    options = ["small", "big"]
+    assert which in options, \
+        "Which queue capacity to set must be one of {}, but is: {}".format(
+            options, which)
     clickWriteHandler('runner', '{}_queue_capacity'.format(which), cap)
+    time.sleep(0.1)
 
 
 def setSmallQueueCap(cap):
