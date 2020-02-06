@@ -25,8 +25,25 @@ import buffers_graphs
 import python_config
 import sg
 
+
+# Experiment parameters.
+#
+# One-wa circuit latency.
+CIR_LAT_s = python_config.CIRCUIT_LATENCY_s
 # Circuit uptime.
 DAY_LEN_us = 9 * python_config.RECONFIG_DELAY_us
+# The default length to use when reading individual packet log messages.
+DEFAULT_MSG_LEN = 116
+# Calculate experiment duration.
+NUM_RACKS_FAKE = 8
+DUR_us = int(round(
+    (python_config.RECONFIG_DELAY_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3))
+# True and False mean that the data parsing will be executed using a single
+# thread and multiple threads, respectively.
+SYNC = False
+# The location of the HSLog element: either "before" or "after" the hybrid
+# switch.
+LOG_POS = "after"
 
 # Filename patterns.
 #
@@ -52,6 +69,8 @@ STATIC_PTN = (
 # particular CC mode.
 DYN_PTN = "*-QUEUE-True-{}-{}-*-click.txt"
 
+# Graph parameters.
+#
 # Order of the lines for the all TCP variants experiments. This is also used to
 # select which lines to plot.
 ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
@@ -62,17 +81,17 @@ ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
 # used to select which lines to plot. For coarse-grained experiments.
 # ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
 #                 "packet only"]
-ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200", "0",
-                "packet only"]
+ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200",
+                "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "600", "500", "400", "300", "200", "100", "0",
 #                 "packet only"]
 # ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "900", "800", "700",
 #                 "packet only"]
-# ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000", "2000", "0",
-#                 "packet only"]
+# ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000",
+#                 "2000", "0", "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
-ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154", "150",
-                       "packet only"]
+ORDER_DYN_FG_CHOSEN = ["optimal", "174", "170", "166", "162", "158", "154",
+                       "150", "packet only"]
 # Same as above. For reTCP's fine-grained experiments.
 ORDER_DYN_FG_RETCP = ["optimal", "154", "150", "148", "146", "142", "138",
                       "packet only"]
@@ -103,15 +122,6 @@ YLM_ZOOM = (0, 2000)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
 DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
 # DYNS_TO_EXAMINE = [0, 200, 400, 600, 800, 1000, 1200, 1400, 1600, 1800, 2000]
-# The default length to use when reading individual packet log messages.
-DEFAULT_MSG_LEN = 116
-# Calculate experiment duration.
-DAY_LEN_us = 9 * python_config.RECONFIG_DELAY_us
-NUM_RACKS_FAKE = 8
-DUR_us = (python_config.RECONFIG_DELAY_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3
-# True and False mean that the data parsing will be executed using a single
-# thread and multiple threads, respectively.
-SYNC = False
 
 
 def main():
@@ -197,7 +207,9 @@ def main():
     #     ptn=OLD_PTN.format(CHOSEN_TCP),
     #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
     #     dur=57590,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (2)
     # sg.seq(
@@ -208,7 +220,9 @@ def main():
     #     ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
     #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
     #     dur=DUR_us,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (3)
     # sg.seq(
@@ -219,7 +233,9 @@ def main():
     #     ptn=FUTURE_PTN.format(CHOSEN_TCP),
     #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
     #     dur=64,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (4.1)
     # sg.seq(
@@ -232,7 +248,9 @@ def main():
     #     dur=DUR_us,
     #     flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
     #     order=ORDER_VARS,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (4.2)
     # buffers_graphs.util(
@@ -258,7 +276,9 @@ def main():
     #     dur=DUR_us,
     #     order=ORDER_STATIC,
     #     msg_len=msg_len,
-    #     voq_agg=True)
+    #     voq_agg=True,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (5.2)
     # buffers_graphs.util(
@@ -307,7 +327,9 @@ def main():
                  label.strip(" $\mu$s") in order),
             order=ORDER_DYN_CG,
             msg_len=msg_len,
-            voq_agg=True)
+            voq_agg=True,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
 
     # # (6.1.2)
     # sg.seq(
@@ -322,7 +344,9 @@ def main():
     #     flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
     #          label.strip(" $\mu$s") in order),
     #     order=ORDER_DYN_FG_CHOSEN,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (6.1.3)
     # for dyn_us in DYNS_TO_EXAMINE:
@@ -343,8 +367,9 @@ def main():
     #             xlm=xlm_zoom,
     #             ylm=ylm_zoom,
     #             chunk_mode=500,
-    #             log_pos="after",
-    #             msg_len=msg_len)
+    #             msg_len=msg_len,
+    #             cir_lat_s=CIR_LAT_s,
+    #             log_pos=LOG_POS)
 
     # # (6.2)
     # buffers_graphs.util(
@@ -394,7 +419,9 @@ def main():
     #         dur=DUR_us,
     #         flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
     #         order=ORDER_VARS,
-    #         msg_len=msg_len)
+    #         msg_len=msg_len,
+    #         cir_lat_s=CIR_LAT_s,
+    #         log_pos=LOG_POS)
     #     buffers_graphs.util(
     #         name="7-2_util-dyn-all-{}us".format(us),
     #         edr=edr,
@@ -421,7 +448,9 @@ def main():
     #         flt=(lambda idx, label, order=ORDER_DYN_uss: \
     #              label.strip(" $\mu$s") in order),
     #         order=ORDER_DYN_uss,
-    #         msg_len=msg_len)
+    #         msg_len=msg_len,
+    #         cir_lat_s=CIR_LAT_s,
+    #         log_pos=LOG_POS)
 
     # # (8.1)
     # sg.seq(
@@ -432,7 +461,9 @@ def main():
     #     ptn=STATIC_PTN.format("*", "retcp"),
     #     key_fnc=lambda fn: fn.split("-")[3],
     #     dur=DUR_us,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (8.2)
     # buffers_graphs.util(
@@ -474,7 +505,9 @@ def main():
     #                                  / python_config.TDF)),
     #     dur=DUR_us,
     #     flt=lambda idx, label, order=ORDER_DYN_CG: label.strip(" $\mu$s") in order,
-    #     order=ORDER_DYN_CG)
+    #     order=ORDER_DYN_CG,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (9.1.2)
     # sg.seq(
@@ -489,7 +522,9 @@ def main():
     #     flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
     #          label.strip(" $\mu$s") in order),
     #     order=ORDER_DYN_FG_RETCP,
-    #     msg_len=msg_len)
+    #     msg_len=msg_len,
+    #     cir_lat_s=CIR_LAT_s,
+    #     log_pos=LOG_POS)
 
     # # (9.2)
     # buffers_graphs.util(

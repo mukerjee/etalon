@@ -26,12 +26,11 @@ UNITS = 1000.
 
 
 class FileReaderArgs(object):
-    def __init__(self, dur, key, fln, log_pos="after",
-                 msg_len=112):
+    def __init__(self, dur, key, fln, time_offset_s, msg_len=112):
         self.dur = dur
         self.key = key
         self.fln = fln
-        self.log_pos = log_pos
+        self.time_offset_s = time_offset_s
         self.msg_len = msg_len
 
 
@@ -45,10 +44,10 @@ class FileReader(object):
 
         # Results with flow cleaning.
         results, bounds, _ = parse_logs.get_seq_data(
-            args.fln, args.dur, args.log_pos, args.msg_len, clean=True)
+            args.fln, args.dur, args.time_offset_s, args.msg_len, clean=True)
         # Results without flow cleaning.
         _, _, chunks = parse_logs.get_seq_data(
-            args.fln, args.dur, args.log_pos, args.msg_len, clean=False)
+            args.fln, args.dur, args.time_offset_s, args.msg_len, clean=False)
         # Take the aggregate results and circuit bounds from the cleaned version
         # and the raw chunk data from the uncleaned version.
         return args.key, (results, bounds, chunks)
@@ -130,8 +129,8 @@ def add_optimal(data):
     data["seqs"].insert(0, optimal)
 
 
-def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
-             log_pos="after", msg_len=112, sync=False):
+def get_data(rdb_filepath, key, ptns, dur, key_fnc, time_offset_s,
+             chunk_mode=None, msg_len=112, sync=False):
     """
     (Optionally) loads the results for the specified key into the provided
     database and returns them.
@@ -152,7 +151,7 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
 
         args = [
             FileReaderArgs(
-                dur, key_fnc(path.basename(fln)), fln, log_pos, msg_len)
+                dur, key_fnc(path.basename(fln)), fln, time_offset_s, msg_len)
             for fln in flns]
         if sync:
             # Single-threaded mode.
@@ -184,8 +183,8 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
         # sublist corresponds to one line.
         seqs, voqs = zip(*zip(*zip(*data["raw_data"])[1])[0])
         # Convert the seqs to the correct units.
-        data["seqs"] = [[s / UNITS for s in seqs_flw]
-                        for seqs_flw in seqs]
+        data["seqs"] = [[sy / UNITS for sy in seq_ys]
+                        for seq_ys in seqs]
         data["voqs"] = voqs
 
         # Convert the results for each set of original chunk data. Look through
@@ -212,9 +211,10 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, chunk_mode=None,
                 data["chunks_orig"][line][flw] = []
                 # Look through each chunk in this flow.
                 for chunk_orig in chunks_orig:
-                    xs, ys, voqs, chunk_idx = chunk_orig
+                    seq_xs, seq_ys, voq_xs, voq_ys, chunk_idx = chunk_orig
                     data["chunks_orig"][line][flw].append(
-                        (xs, [y / UNITS for y in ys], voqs, chunk_idx))
+                        (seq_xs, [sy / UNITS for sy in seq_ys], voq_xs, voq_ys,
+                         chunk_idx))
 
         # Select the best chunk for each line (i.e., the chunk with the most
         # datapoints). Look through each line.
@@ -268,20 +268,20 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
     if chunk_mode is None:
         # Plot aggregate metrics for all chunks from all flows in each
         # experiment.
-        ys = data["seqs"]
-        xs = [xrange(len(ys[i])) for i in xrange(len(ys))]
+        seq_ys = data["seqs"]
+        seq_xs = [xrange(len(seq_ys[idx])) for idx in xrange(len(seq_ys))]
         keys = data["keys"]
 
         if voq_agg:
             # First, create a list of x values for each list of VOQ results.
-            # Then, split apart the xs and the ys.
+            # Then, split apart the seq_xs and the seq_ys.
             voq_xs, voq_ys = zip(
-                *[(xrange(len(voqs)), voqs) for voqs in data["voqs"]])
+                *[(xrange(len(voq_ys)), voq_ys) for voq_ys in data["voqs"]])
             plot_voqs = True
     else:
         # Include the "optimal" and "packet only" lines.
-        lines = [
-            ([x for x in xrange(len(ys))], ys) for ys in data["seqs"][0:2]]
+        lines = [([x for x in xrange(len(seq_ys))], seq_ys)
+                 for seq_ys in data["seqs"][0:2]]
         if chunk_mode == "best":
             # Plot the best chunk from any flow in each experiment.
             lines.extend(data["chunks_best"].values())
@@ -301,7 +301,7 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
             # Sort the results by the flow src ID, then split the flows and
             # their results. Do ".values()[0]" because we assume that, if we are
             # here, then there is only a single experiment (see above).
-            flws, flw_lines = zip(*sorted(
+            flws, results_by_chunk = zip(*sorted(
                 exps_data.values()[0].items(),
                 key=lambda p: get_src_id(p[0][0])))
 
@@ -309,12 +309,13 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
             # the flows were sent from the same rack to the same rack. Start by
             # extracting the xs and VOQ lengths for each flow and turning them
             # into single-point pairs.
-            voqs = [zip(xs, voqs) for xs, _, voqs in flw_lines]
+            voqs = [zip(voq_xs, voq_ys)
+                    for _, _, voq_xs, voq_ys, _ in results_by_chunk]
             # Flatten the per-flow VOQ length results into one master list.
             voqs = [pair for voqs_flw in voqs for pair in voqs_flw]
             # Sort the VOQ length results by their x-values.
             voqs = sorted(voqs, key=lambda val: val[0])
-            # Split the xs and ys into separate lists.
+            # Split the voq_xs and voq_ys into separate lists.
             voq_xs, voq_ys = zip(*voqs)
             # Since there is only a single experiment (see above) yet the rest
             # of the code is generalized to multiple experiments, wrap the
@@ -323,14 +324,15 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
             voq_ys = [voq_ys]
             plot_voqs = True
 
-            # Remove the VOQ lengths from the results.
-            flw_lines = [(xs, ys) for xs, ys, _ in flw_lines]
-            lines.extend(flw_lines)
-
+            # Remove the VOQ lengths from the results, then add them to the list
+            # of all lines (which currently includes the "optimal" and "packet
+            # only" lines).
+            lines.extend([(seq_xs, seq_ys)
+                          for seq_xs, seq_ys, _, _, _ in results_by_chunk])
             # Convert each of the flows to a src ID.
             keys = (data["keys"][0:2] +
                     ["flow {}".format(get_src_id(flw[0])) for flw in flws])
-        xs, ys = zip(*lines)
+        seq_xs, seq_ys = zip(*lines)
 
     if plot_voqs:
         # Convert from tuples to lists to enable insertion.
@@ -343,8 +345,8 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         voq_ys.insert(0, None)
         voq_ys.insert(0, None)
     else:
-        voq_xs = [None for _ in xs]
-        voq_ys = [None for _ in ys]
+        voq_xs = [None for _ in seq_xs]
+        voq_ys = [None for _ in seq_ys]
 
     # Format the legend labels.
     lls = []
@@ -395,17 +397,18 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         options.inset.options.y.limits = ylm_ins
     if flt is not None:
         # Pick only the lines that we want.
-        xs, ys, options.legend.options.labels, voq_xs, voq_ys = zip(
-            *[(x, y, l, vx, vy) for (i, (x, y, l, vx, vy)) in enumerate(
-                zip(xs, ys, options.legend.options.labels, voq_xs, voq_ys))
-              if flt(i, l)])
+        seq_xs, seq_ys, voq_xs, voq_ys, options.legend.options.labels = zip(
+            *[(sx, sy, vx, vy, l) for (idx, (sx, sy, vx, vy, l)) in enumerate(
+                zip(seq_xs, seq_ys, voq_xs, voq_ys,
+                    options.legend.options.labels))
+              if flt(idx, l)])
     if order is not None:
         # Reorder the lines.
-        real_xs = []
-        real_ys = []
-        real_ls = []
+        real_seq_xs = []
+        real_seq_ys = []
         real_voq_xs = []
         real_voq_ys = []
+        real_ls = []
         for item in order:
             idx = 0
             found = False
@@ -415,38 +418,38 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
                     break
                 idx += 1
             if found:
-                real_xs.append(xs[idx])
-                real_ys.append(ys[idx])
-                real_ls.append(options.legend.options.labels[idx])
+                real_seq_xs.append(seq_xs[idx])
+                real_seq_ys.append(seq_ys[idx])
                 real_voq_xs.append(voq_xs[idx])
                 real_voq_ys.append(voq_ys[idx])
-        xs = real_xs
-        ys = real_ys
-        options.legend.options.labels = real_ls
+                real_ls.append(options.legend.options.labels[idx])
+        seq_xs = real_seq_xs
+        seq_ys = real_seq_ys
         voq_xs = real_voq_xs
         voq_ys = real_voq_ys
+        options.legend.options.labels = real_ls
 
     # Set series options. Do this after filtering so that we have an accurate
     # count of the number of series.
     if chunk_mode is None:
         options.series_options = [
             dotmap.DotMap(color="C{}".format(idx), linewidth=2)
-            for idx, _ in enumerate(xrange(len(xs)))]
+            for idx in xrange(len(seq_xs))]
     else:
         options.series_options = [
-            dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(xs))]
+            dotmap.DotMap(s=6, edgecolors="none") for _ in xrange(len(seq_xs))]
     # Set legend options. Do this after filtering so that we have an accurate
     # count of the number of series. Use 1 column if there are 10 or fewer
     # lines, otherwise use 2 columns.
     options.legend.options.ncol, options.legend.options.bbox_to_anchor = \
-        (1, (1.4, 0.5)) if len(xs) <= 10 else (2, (1.65, 0.5))
+        (1, (1.4, 0.5)) if len(seq_xs) <= 10 else (2, (1.65, 0.5))
     if plot_voqs:
         # If we are going to plot a second y-axis, then shift the legend to the
         # right.
         offset_x, offset_y = options.legend.options.bbox_to_anchor
         options.legend.options.bbox_to_anchor = (offset_x + 0.1, offset_y)
 
-    simpleplotlib.plot(xs, ys, options)
+    simpleplotlib.plot(seq_xs, seq_ys, options)
 
     if plot_voqs:
         # Plot the VOQ length on a second y-axis. Modify the active figure
@@ -500,7 +503,7 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
         pyplot.savefig(options2["output_fn"], bbox_inches="tight", pad_inches=0)
 
 
-def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
+def seq(name, edr, odr, ptn, key_fnc, dur, cir_lat_s, ins=None, flt=None, order=None,
         xlm=None, ylm=None, chunk_mode=None, voq_agg=False, log_pos="after",
         msg_len=112, sync=False):
     """ Create a sequence graph.
@@ -512,6 +515,10 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     key_fnc: Function that takes an experiment data filename returns a legend
              key.
     dur: The duration of the experiment, in milliseconds.
+    cir_lat_s: The one-way latency of the circuit network, in microseconds.
+                Used to offset the graphs to sequence numbers when packets
+                arrived at the hybrid switch, even though the HSLog element is
+                after the hybrid switch.
     ins: An inset specification.
     flt: Function that takes a legend index and label and returns a boolean
          indicating whether to include that line.
@@ -520,8 +527,9 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     ylm: y-axis limits
     chunk_mode: None, "best", or an integer
     voq_agg: Whether to include aggregate VOQ length results on a second y-axis.
-             True chunk_mode=None.
-    log_pos: "before" or "after" the hybrid switch
+             True requires chunk_mode=None.
+    log_pos: The location of the HSLog element: either "before" or "after" the
+             hybrid switch.
     msg_len: The length of each HSLog message
     sync: True and False mean that the data parsing will be executed using a
           single thread and multiple threads, respectively.
@@ -532,8 +540,16 @@ def seq(name, edr, odr, ptn, key_fnc, dur, ins=None, flt=None, order=None,
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
     basename = name.split("_")[1] if "_" in name else name
-    data = get_data(path.join(edr, "{}.db".format(basename)), basename,
-                    [ptn], dur, key_fnc, chunk_mode, log_pos, msg_len, sync)
+    data = get_data(
+        rdb_filepath=path.join(edr, "{}.db".format(basename)),
+        key=basename,
+        ptns=[ptn],
+        dur=dur,
+        key_fnc=key_fnc,
+        time_offset_s=cir_lat_s if log_pos == "after" else 0,
+        chunk_mode=chunk_mode,
+        msg_len=msg_len,
+        sync=sync)
     add_optimal(data)
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode, voq_agg)
     pyplot.close()
