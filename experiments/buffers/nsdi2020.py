@@ -24,17 +24,17 @@ NUM_RACKS_FAKE = 8
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
-CG_RESIZE_US_MIN = 0
-CG_RESIZE_US_MAX = 1200
-CG_RESIZE_US_DELTA = 100
-ALL_VARIANTS_US = [0, 1200, 500, 1000]
+CG_RESIZE_MIN_us = 0
+CG_RESIZE_MAX_us = 1200
+CG_RESIZE_DELTA_us = 100
+ALL_VARIANTS_uss = [0, 1200, 500, 1000]
 # Fine granularity sweep bounds.
-FG_RESIZE_US_MIN = 140
-FG_RESIZE_US_MAX = 170
-FG_RESIZE_US_DELTA = 1
+FG_RESIZE_MIN_us = 140
+FG_RESIZE_MAX_us = 170
+FG_RESIZE_DELTA_us = 1
 # VOQ capacities.
-SMALL_QUEUE_CAP = 4
-BIG_QUEUE_CAP = 40
+SMALL_QUEUE_CAP = 16
+BIG_QUEUE_CAP = 64
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -69,9 +69,10 @@ def main():
                       "num_racks_fake": NUM_RACKS_FAKE,
                       "night_len_us": 1 * python_config.TDF,
                       "day_len_us": 9 * python_config.TDF, "cc": cc}]
-        # (3) Only do full sweeps for CUBIC and reTCP, but capture 16 packets
-        #     for all variants.
+        # (3) Static buffers.
         for exp in xrange(2, MAX_STATIC_POW + 1):
+            # Only do full sweeps for CUBIC and reTCP, but capture 16 packets
+            # for all variants.
             if cc in ["cubic", "retcp"] or exp == 4:
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
@@ -79,10 +80,10 @@ def main():
                           "cc": cc}]
         # (4) Coarse granularity.
         for us in xrange(
-                CG_RESIZE_US_MIN, CG_RESIZE_US_MAX + 1, CG_RESIZE_US_DELTA):
+                CG_RESIZE_MIN_us, CG_RESIZE_MAX_us + 1, CG_RESIZE_DELTA_us):
             # Only do full sweeps for CUBIC and reTCP, but capture a few key
             # us's for all variants.
-            if cc in ["cubic", "retcp"] or us in ALL_VARIANTS_US:
+            if cc in ["cubic", "retcp"] or us in ALL_VARIANTS_uss:
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
                           "queue_resize": True,
@@ -90,7 +91,7 @@ def main():
                           "cc": cc}]
         # # (4) Fine granularity.
         # for us in xrange(
-        #         FG_RESIZE_US_MIN, FG_RESIZE_US_MAX + 1, FG_RESIZE_US_DELTA):
+        #         FG_RESIZE_MIN_us, FG_RESIZE_MAX_us + 1, FG_RESIZE_DELTA_us):
         #     if cc in ["cubic", "retcp"]:
         #         cnfs += [{"type": "fake_strobe",
         #                   "num_racks_fake": NUM_RACKS_FAKE,
