@@ -90,6 +90,8 @@ ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200",
 #                 "packet only"]
 # ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "900", "800", "700",
 #                 "packet only"]
+# ORDER_DYN_CG = ["optimal", "7000", "6000", "5000", "4000", "3000", "2000",
+#                 "1000", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000",
 #                 "2000", "0", "packet only"]
 # Same as above. For the chosen variant's fine-grained experiments.
