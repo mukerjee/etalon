@@ -550,73 +550,73 @@ def main():
             ylb="99th percentile",
             msg_len=msg_len)
 
-    # # Note: The numbers below have no correlation with the sections in the
-    # #       paper.
-    # #
-    # # Graphs:
-    # #   (1) Sequence: Long nights/days, static buffers, CUBIC
-    # _1()
-    # #   (2) Sequence: Short nights/days, static buffers, CUBIC
-    # _2()
-    # #   (3) Sequence: Very short nights/days, static buffers, CUBIC
-    # _3()
-    # #   (4) Short nights/days, static buffers, all TCP variants
-    # #     (4.1) Sequence
-    # _4_1()
-    # #     (4.2) Utilization
-    # _4_2()
-    # # - Contributions:
-    # #   (5) Static buffers, CUBIC
-    # #     (5.1) Sequence
-    # _5_1()
-    # #     (5.2) Utilization
-    # _5_2()
-    # #     (5.3) Latency 50
-    # _5_3()
-    # #     (5.4) Latency 99
-    # _5_4()
-    # #   (6) Dynamic buffers, CUBIC
-    # #     (6.1) Sequence
-    # #       (6.1.1) Coarse-grained
-    # _6_1_1()
-    # #       (6.1.2) Fine-grained
+    # Note: The numbers below have no correlation with the sections or figures
+    #       in the paper.
+    #
+    # Graphs:
+    #   (1) Sequence: Long nights/days, static buffers, CUBIC
+    _1()
+    #   (2) Sequence: Short nights/days, static buffers, CUBIC
+    _2()
+    #   (3) Sequence: Very short nights/days, static buffers, CUBIC
+    _3()
+    #   (4) Short nights/days, static buffers, all TCP variants
+    #     (4.1) Sequence
+    _4_1()
+    #     (4.2) Utilization
+    _4_2()
+    # - Contributions:
+    #   (5) Static buffers, CUBIC
+    #     (5.1) Sequence
+    _5_1()
+    #     (5.2) Utilization
+    _5_2()
+    #     (5.3) Latency 50
+    _5_3()
+    #     (5.4) Latency 99
+    _5_4()
+    #   (6) Dynamic buffers, CUBIC
+    #     (6.1) Sequence
+    #       (6.1.1) Coarse-grained
+    _6_1_1()
+    #       (6.1.2) Fine-grained
     # _6_1_2()
-    # #       (6.1.3) For one experiment, look at all flows in detail
+    #       (6.1.3) For one experiment, look at all flows in detail
     # _6_1_3()
-    # #     (6.2) Utilization
-    # _6_2()
-    # #     (6.3) Latency 50
-    # _6_3()
-    # #     (6.4) Latency 99
-    # _6_4()
-    # #   (7) Dynamic buffers, all TCP variants
-    # #     (7.1) Sequence
-    # #       (7.1.1) Fixed resize time, varying variant
-    # _7_1_1_and_7_2()
-    # #       (7.1.2) Fixed variant, varying resize time
-    # _7_1_2()
-    # #     (7.2) Utilization, for various resize times
-    # #   (8) Static buffers, reTCP
-    # #     (8.1) Sequence
-    # _8_1()
-    # #     (8.2) Utilization
-    # _8_2()
-    # #     (8.3) Latency 50
-    # _8_3()
-    # #     (8.4) Latency 99
-    # _8_4()
-    # #   (9) Dynamic buffers, reTCP
-    # #     (9.1) Sequence
-    # #       (9.1.1) Coarse-grained
-    # _9_1_1()
-    # #       (9.1.2) Fine-grained
+    #     (6.2) Utilization
+    _6_2()
+    #     (6.3) Latency 50
+    _6_3()
+    #     (6.4) Latency 99
+    _6_4()
+    #   (7) Dynamic buffers, all TCP variants
+    #     (7.1) Sequence
+    #       (7.1.1) Fixed resize time, varying variant
+    _7_1_1_and_7_2()
+    #       (7.1.2) Fixed variant, varying resize time
+    _7_1_2()
+    #     (7.2) Utilization, for various resize times
+    #   (8) Static buffers, reTCP
+    #     (8.1) Sequence
+    _8_1()
+    #     (8.2) Utilization
+    _8_2()
+    #     (8.3) Latency 50
+    _8_3()
+    #     (8.4) Latency 99
+    _8_4()
+    #   (9) Dynamic buffers, reTCP
+    #     (9.1) Sequence
+    #       (9.1.1) Coarse-grained
+    _9_1_1()
+    #       (9.1.2) Fine-grained
     # _9_1_2()
-    # #     (9.2) Utilization
-    # _9_2()
-    # #     (9.3) Latency 50
-    # _9_3()
-    # #     (9.4) Latency 99
-    # _9_4()
+    #     (9.2) Utilization
+    _9_2()
+    #     (9.3) Latency 50
+    _9_3()
+    #     (9.4) Latency 99
+    _9_4()
 
 
 if __name__ == "__main__":
