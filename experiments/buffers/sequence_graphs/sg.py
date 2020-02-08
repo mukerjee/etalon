@@ -53,13 +53,20 @@ class FileReader(object):
         return args.key, (results, bounds, chunks)
 
 
-def add_optimal(data):
+def add_optimal(data, rcf_us=python_config.RECONFIG_DELAY_us):
     """
     Adds the calculated baselines (optimal and packet-only) to the provided data
     dictionary. Recall that sequence numbers are in terms of bytes, and that
     during reconfigurations, both the packet and circuit networks are offline.
+
+    rcf_us: The circuit network reconfiguration delay, in microseconds.
     """
     print("Computing optimal...")
+    # Validate the reconfiguration delay.
+    assert rcf_us == round(rcf_us), \
+        "The reconfiguration delay must be an integer, but is: {}".format(
+            rcf_us)
+    rcf_us = int(rcf_us)
 
     # Calculate the raw rate of the packet and circuit networks.
     #
@@ -84,13 +91,6 @@ def add_optimal(data):
         ("Circuit starts and ends must come in pairs, but the list of them "
          "contains an odd number of elements: {}".format(bounds))
     print("circuit bounds: {}".format(bounds))
-
-    # Validate the reconfiguration delay.
-    rcf_us = python_config.RECONFIG_DELAY_us
-    assert rcf_us == round(rcf_us), \
-        "The reconfiguration delay must be an integer, but is: {}".format(
-            rcf_us)
-    rcf_us = int(rcf_us)
 
     # Each entry is the maximum amount of data that could have been sent up to
     # the beginning of that time unit.
@@ -505,8 +505,9 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
 
 
 def seq(name, edr, odr, ptn, key_fnc, dur, cir_lat_s, ins=None, flt=None, order=None,
-        xlm=None, ylm=None, chunk_mode=None, voq_agg=False, log_pos="after",
-        msg_len=112, sync=False):
+        xlm=None, ylm=None, chunk_mode=None, voq_agg=False,
+        rcf_us=python_config.RECONFIG_DELAY_us, log_pos="after", msg_len=112,
+        sync=False):
     """ Create a sequence graph.
 
     name: Name of this experiment, which become the output filename.
@@ -529,6 +530,7 @@ def seq(name, edr, odr, ptn, key_fnc, dur, cir_lat_s, ins=None, flt=None, order=
     chunk_mode: None, "best", or an integer
     voq_agg: Whether to include aggregate VOQ length results on a second y-axis.
              True requires chunk_mode=None.
+    rcf_us: The circuit network reconfiguration delay, in microseconds.
     log_pos: The location of the HSLog element: either "before" or "after" the
              hybrid switch.
     msg_len: The length of each HSLog message
@@ -551,6 +553,6 @@ def seq(name, edr, odr, ptn, key_fnc, dur, cir_lat_s, ins=None, flt=None, order=
         chunk_mode=chunk_mode,
         msg_len=msg_len,
         sync=sync)
-    add_optimal(data)
+    add_optimal(data, rcf_us)
     plot_seq(data, name, odr, ins, flt, order, xlm, ylm, chunk_mode, voq_agg)
     pyplot.close()

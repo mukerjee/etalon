@@ -148,6 +148,7 @@ def main():
         msg_len = DEFAULT_MSG_LEN
 
     def _1():
+        rcf_us = int(round(1000 * python_config.TDF))
         sg.seq(
             sync=SYNC,
             name="1_seq-old-{}".format(CHOSEN_TCP),
@@ -156,14 +157,14 @@ def main():
             # Matches experiments with static buffers with a particular small
             # capacity, a particular CC mode, 1000 us nights, and 9000 us days
             # (under TDF).
-            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP,
-                                  int(round(1000 * python_config.TDF)),
-                                  int(round(9000 * python_config.TDF))),
+            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP, rcf_us,
+                                  9 * rcf_us),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
             dur=57590,
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            rcf_us=rcf_us)
 
     def _2():
         sg.seq(
@@ -179,6 +180,7 @@ def main():
             log_pos=LOG_POS)
 
     def _3():
+        rcf_us = int(round(python_config.TDF))
         sg.seq(
             sync=SYNC,
             name="3_seq-future-{}".format(CHOSEN_TCP),
@@ -187,9 +189,8 @@ def main():
             # Matches experiments with static buffers with a particular small
             # capacity, a particular CC mode, 1 us nights, and 9 us days (under
             # TDF).
-            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP,
-                                  int(round(1 * python_config.TDF)),
-                                  int(round(9 * python_config.TDF))),
+            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP, rcf_us,
+                                  9 * rcf_us),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
             dur=64,
             msg_len=msg_len,
