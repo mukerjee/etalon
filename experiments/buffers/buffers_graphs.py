@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 
 import collections
+import glob
+import multiprocessing
 from os import path
+import shelve
 import sys
 # Directory containing this program.
 PROGDIR = path.dirname(path.realpath(__file__))
@@ -9,12 +12,10 @@ PROGDIR = path.dirname(path.realpath(__file__))
 sys.path.insert(0, path.join(PROGDIR, ".."))
 # For python_config.
 sys.path.insert(0, path.join(PROGDIR, "..", "..", "etc"))
-import shelve
-import glob
-import numpy as np
 
 import dotmap
 from matplotlib import pyplot
+import numpy as np
 import simpleplotlib
 simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 
@@ -24,7 +25,22 @@ import python_config
 SR_RACKS = (1, 2)
 
 
-def get_data(rdb_filepath, edr, key, files, key_fnc, msg_len=112):
+class FileReaderArgs(object):
+    def __init__(self, fln, msg_len):
+        self.fln = fln
+        self.msg_len = msg_len
+
+
+class FileReader(object):
+    def __call__(self, args):
+        """
+        Parses a single results file. "args" is a FileReaderArgs object. Returns
+        tuples of the form (filename, results).
+        """
+        return args.fln, parse_logs.parse_packet_log(args.fln, args.msg_len)
+
+
+def get_data(rdb_filepath, edr, key, files, key_fnc, msg_len=112, sync=False):
     # Open results database file.
     rdb = shelve.open(rdb_filepath, protocol=2, writeback=True)
     data = rdb.get(key)
@@ -37,11 +53,22 @@ def get_data(rdb_filepath, edr, key, files, key_fnc, msg_len=112):
         for fln in flns:
             print("    {}".format(fln))
 
+        args = [FileReaderArgs(fln, msg_len) for fln in flns]
+        if sync:
+            # Single-threaded mode.
+            raw_data = [FileReader()(arg) for arg in args]
+        else:
+            # Multithreaded mode.
+            pool = multiprocessing.Pool()
+            raw_data = pool.map(FileReader(), args)
+            # Clean up pool.
+            pool.close()
+            pool.join()
+
         data = collections.defaultdict(lambda: collections.defaultdict(dict))
-        for fln in flns:
+        for fln, results in raw_data:
             lbl = key_fnc[key](path.basename(fln))
-            lats, (_, tpt_c, _), _, _ = parse_logs.parse_packet_log(
-                fln, msg_len)
+            lats, (_, tpt_c, _), _, _ = results
             data["tpt_c"][lbl] = tpt_c[SR_RACKS]
             # First, convert from grouping based on combined, circuit, and
             # packet latency to grouping backed on percentile. Then, extract the
@@ -115,7 +142,7 @@ def plot_lat(keys, latencies, fln, ylb, ylm=None, xlr=0,
 
 def plot_circuit_util(keys, tpts_Gbps_c, fln, xlb, num_racks,
                       odr=path.join(PROGDIR, "graphs"), srt=True, xlr=0, lbs=23,
-                      flt=lambda key: True):
+                      flt=lambda key: True, order=None):
     """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     if srt:
         # Sort the data based on the x-values (keys).
@@ -148,6 +175,19 @@ def plot_circuit_util(keys, tpts_Gbps_c, fln, xlb, num_racks,
     utls = [tpt_Gbps_c * (num_racks - 1) /
             (0.9 * python_config.CIRCUIT_BW_Gbps) * 100
             for tpt_Gbps_c in tpts_Gbps_c]
+
+    if order is not None:
+        # Reorder the lines.
+        real_keys = []
+        real_utls = []
+        for item in order:
+            for idx, possibility in enumerate(keys):
+                if possibility.startswith(item):
+                    real_keys.append(possibility)
+                    real_utls.append(utls[idx])
+                    break
+        keys = real_keys
+        utls = real_utls
 
     print("")
     print("raw util data for: {}".format(fln))
@@ -212,24 +252,25 @@ def plot_util_vs_latency(tpts, latencies, fln):
         dotmap.DotMap(locations=[0, 200, 400, 600, 800, 1000]) \
         if "99" in fln else \
         dotmap.DotMap(locations=[0, 100, 200, 300, 400, 500, 600])
-
     simpleplotlib.plot(x, y, options)
 
 
-def lat(name, edr, odr, ptn, key_fnc, prc, ylb, ylm=None, xlr=0, msg_len=112):
+def lat(name, edr, odr, ptn, key_fnc, prc, ylb, ylm=None, xlr=0, msg_len=112,
+        sync=False):
     print("Plotting: {}".format(name))
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
     basename = name.split("_")[1] if "_" in name else name
     data = get_data(path.join(edr, "{}.db".format(basename)), edr, basename,
-                    files={basename: ptn}, key_fnc={basename: key_fnc}, msg_len=msg_len)
+                    files={basename: ptn}, key_fnc={basename: key_fnc},
+                    msg_len=msg_len, sync=sync)
     plot_lat(data["keys"], data["lat"][prc], name, ylb, ylm, xlr, odr)
     pyplot.close()
 
 
 def util(name, edr, odr, ptn, key_fnc, xlb, num_racks, srt=True, xlr=0, lbs=23,
-         flt=lambda key: True, msg_len=112):
+         flt=lambda key: True, order=None, msg_len=112, sync=False):
     """
     srt: sort
     xlr: x label rotation (degrees)
@@ -243,7 +284,7 @@ def util(name, edr, odr, ptn, key_fnc, xlb, num_racks, srt=True, xlr=0, lbs=23,
     basename = name.split("_")[1] if "_" in name else name
     data = get_data(path.join(edr, "{}.db".format(basename)), edr, basename,
                     files={basename: ptn}, key_fnc={basename: key_fnc},
-                    msg_len=msg_len)
+                    msg_len=msg_len, sync=sync)
     plot_circuit_util(data["keys"], data["tpt_c"], name, xlb, num_racks, odr,
-                      srt, xlr, lbs, flt)
+                      srt, xlr, lbs, flt, order)
     pyplot.close()

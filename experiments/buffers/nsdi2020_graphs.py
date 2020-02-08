@@ -214,6 +214,7 @@ def main():
 
     def _4_2():
         buffers_graphs.util(
+            sync=SYNC,
             name="4-2_util-lat-current-all_util",
             edr=edr,
             odr=odr,
@@ -244,17 +245,20 @@ def main():
 
     def _5_2():
         buffers_graphs.util(
+            sync=SYNC,
             name="5-2_util-lat-static-{}_util".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: fn.split("-")[3],
             xlb="Static buffer size (packets)",
+            order=ORDER_STATIC_UTIL,
             num_racks=NUM_RACKS_FAKE,
             msg_len=msg_len)
 
     def _5_3():
         buffers_graphs.lat(
+            sync=SYNC,
             name="5-3_util-lat-static-{}_lat50".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
@@ -266,6 +270,7 @@ def main():
 
     def _5_4():
         buffers_graphs.lat(
+            sync=SYNC,
             name="5-4_util-lat-static-{}_lat99".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
@@ -341,6 +346,7 @@ def main():
 
     def _6_2():
         buffers_graphs.util(
+            sync=SYNC,
             name="6-2_util-lat-dyn-{}_util".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
@@ -356,6 +362,7 @@ def main():
 
     def _6_3():
         buffers_graphs.lat(
+            sync=SYNC,
             name="6-3_util-lat-dyn-{}_lat50".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
@@ -370,6 +377,7 @@ def main():
 
     def _6_4():
         buffers_graphs.lat(
+            sync=SYNC,
             name="6-4_util-lat-dyn-{}_lat99".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
@@ -399,6 +407,7 @@ def main():
                 cir_lat_s=CIR_LAT_s,
                 log_pos=LOG_POS)
             buffers_graphs.util(
+                sync=SYNC,
                 name="7-2_util-lat-dyn-all-{}us_util".format(us),
                 edr=edr,
                 odr=odr,
@@ -438,6 +447,7 @@ def main():
             odr=odr,
             ptn=STATIC_PTN_CUR.format("*", "retcp"),
             key_fnc=lambda fn: fn.split("-")[3],
+            order=ORDER_STATIC_SEQ,
             dur=DUR_us,
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
@@ -445,17 +455,20 @@ def main():
 
     def _8_2():
         buffers_graphs.util(
+            sync=SYNC,
             name="8-2_util-lat-static-retcp_util",
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format("*", "retcp"),
             key_fnc=lambda fn: fn.split("-")[3],
+            order=ORDER_STATIC_UTIL,
             xlb="Static buffer size (packets)",
             num_racks=NUM_RACKS_FAKE,
             msg_len=msg_len)
 
     def _8_3():
         buffers_graphs.lat(
+            sync=SYNC,
             name="8-3_util-lat-static-retcp_lat50",
             edr=edr,
             odr=odr,
@@ -467,6 +480,7 @@ def main():
 
     def _8_4():
         buffers_graphs.lat(
+            sync=SYNC,
             name="8-4_util-lat-static-retcp_lat99",
             edr=edr,
             odr=odr,
@@ -511,6 +525,7 @@ def main():
 
     def _9_2():
         buffers_graphs.util(
+            sync=SYNC,
             name="9-2_util-lat-dyn-retcp_util",
             edr=edr,
             odr=odr,
@@ -526,6 +541,7 @@ def main():
 
     def _9_3():
         buffers_graphs.lat(
+            sync=SYNC,
             name="9-3_util-lat-dyn-retcp_lat50",
             edr=edr,
             odr=odr,
@@ -538,6 +554,7 @@ def main():
 
     def _9_4():
         buffers_graphs.lat(
+            sync=SYNC,
             name="9-4_util-lat-dyn-retcp_lat99",
             edr=edr,
             odr=odr,
