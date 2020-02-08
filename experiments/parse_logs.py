@@ -449,89 +449,123 @@ def get_seq_data(fln, dur, time_offset_s, msg_len=112, clean=True):
             chunks_origs)
 
 
-def parse_packet_log(fln):
+def parse_packet_log(fln, msg_len=112):
     print("Parsing: {}".format(fln))
-    latencies = []
-    latencies_circuit = []
-    latencies_packet = []
-    throughputs = collections.defaultdict(int)
-    circuit_bytes = collections.defaultdict(int)
-    packet_bytes = collections.defaultdict(int)
-    flow_start = {}
-    flow_end = {}
-    number_circuit_ups = collections.defaultdict(int)
-    circuit_starts = collections.defaultdict(list)
-    most_recent_circuit_up = collections.defaultdict(int)
-    bytes_in_rtt = collections.defaultdict(lambda: collections.defaultdict(int))
-    for msg in msg_from_file(fln, chunksize=112):
-        (t, ts, lat, src, dst, data) = unpack("i32siii64s", msg)
-        byts = unpack("!H", data[2:4])[0]
-        circuit = ord(data[1]) & 0x1
-        sender = ord(data[14])
-        recv = ord(data[18])
-        ts = float(ts[:20].strip("\x00"))
-        if t == 1 or t == 2:  # starting or closing
-            sr_racks = (src, dst)
-            if t == 1:  # starting
-                most_recent_circuit_up[sr_racks] = ts
-            if t == 2:  # closing
-                circuit_starts[sr_racks].append(ts / python_config.TDF)
-                number_circuit_ups[sr_racks] += 1
-            continue
+    # Mapping from (sender, receiver) to combined, circuit, and packet
+    # latencies, respectively.
+    lats = []
+    lats_c = []
+    lats_p = []
+    # Mapping from (sender, receiver) to total, circuit, and packet bytes,
+    # respectively.
+    byts = collections.defaultdict(int)
+    byts_c = collections.defaultdict(int)
+    byts_p = collections.defaultdict(int)
+    # Mapping from (sender, receiver) to when traffic from the sender to the
+    # receiver started and ended, respectively.
+    flw_starts = {}
+    flw_ends = {}
+    # # Mapping from (sender, receiver) to the number of complete circuits between
+    # # them.
+    # number_circuit_ups = collections.defaultdict(int)
+    # # Mapping from (sender, receiver) to when circuits began between them.
+    # circuit_starts = collections.defaultdict(list)
+    # # Mapping from (sender, receiver) to when the latest circuit between them
+    # # started.
+    # most_recent_circuit_up = collections.defaultdict(int)
 
-        latency = float(lat)
-        sr = (sender, recv)
-        if byts < 100:
-            continue
-        if sr not in flow_start:
-            flow_start[sr] = ts / python_config.TDF
-
-        if circuit:
-            which_rtt = int((ts - most_recent_circuit_up[sr] - 0.5 * RTT) / RTT)
-            bytes_in_rtt[sr][which_rtt] += byts
-            circuit_bytes[sr] += byts
+    # bytes_in_rtt = collections.defaultdict(lambda: collections.defaultdict(int))
+    for msg in msg_from_file(fln, msg_len):
+        if msg_len == 112:
+            # type (int), timestamp (char[32]), latency (int), src (int),
+            # dst (int), data (char[64])
+            typ, ts, lat, _, _, data = unpack("i32siii64s", msg)
+        elif msg_len == 116:
+            # type (int), timestamp (char[32]), latency (int), src (int),
+            # dst (int), VOQ length (int), data (char[64])
+            typ, ts, lat, _, _, _, data = unpack("i32siiii64s", msg)
         else:
-            packet_bytes[sr] += byts
+            raise Exception(
+                "Message length must be either 112 or 116, but is: {}".format(
+                    msg_len))
 
-        throughputs[sr] += byts
-        flow_end[sr] = ts / python_config.TDF
-        if byts > 1000:
-            latencies.append(latency)
+        ip_bytes = unpack("!H", data[2:4])[0]
+        sender = int(socket.inet_ntoa(data[12:16]).split(".")[2])
+        recv = int(socket.inet_ntoa(data[16:20]).split(".")[2])
+        sr_racks = (sender, recv)
+        proto = ord(data[9])
+        ihl = (ord(data[0]) & 0xF) * 4
+        thl = 0
+        if proto == 6:  # TCP
+            thl = (ord(data[ihl+12]) >> 4) * 4
+        data_byts = ip_bytes - ihl - thl
+        ts_s_tdf = float(ts[:20].strip("\x00"))
+        ts_s = ts_s_tdf / python_config.TDF
+        circuit = ord(data[1]) & 0x1
+        lat = float(lat)
+
+        # A circuit is starting or ending.
+        if typ == 1 or typ == 2:
+            continue
+
+        if data_byts < 100:
+            continue
+        elif data_byts > 1000:
+            lats.append(lat)
             if circuit:
-                latencies_circuit.append(latency)
+                lats_c.append(lat)
             else:
-                latencies_packet.append(latency)
-    lat = [(perc, np.percentile(latencies, perc)) for perc in PERCENTILES]
-    latc = [(p, 0) for p in PERCENTILES]
-    if latencies_circuit:
-        latc = [(perc, np.percentile(latencies_circuit, perc))
-                for perc in PERCENTILES]
-    latp = [(perc, np.percentile(latencies_packet, perc))
-            for perc in PERCENTILES]
+                lats_p.append(lat)
 
-    tp = {}
+        byts[sr_racks] += data_byts
+        if circuit:
+            # which_rtt = int((ts_s_tdf - most_recent_circuit_up[sr_racks] - 0.5 * RTT)
+            #                 / RTT)
+            # bytes_in_rtt[sr_racks][which_rtt] += data_byts
+            byts_c[sr_racks] += data_byts
+        else:
+            byts_p[sr_racks] += data_byts
+
+        if sr_racks not in flw_starts:
+            # If we have not seen this rack pair before, then this is the start
+            # of traffic between this rack pair.
+            flw_starts[sr_racks] = ts_s
+        # This is, by definition, the latest packet from this rack pair that we
+        # have seen so far.
+        flw_ends[sr_racks] = ts_s
+
+    # Overall latency.
+    lats = [(prc, np.percentile(lats, prc)) for prc in PERCENTILES]
+    # Circuit network latency.
+    if lats_c:
+        lats_c = [(prc, np.percentile(lats_c, prc)) for prc in PERCENTILES]
+    else:
+        lats_c = [(prc, 0) for prc in PERCENTILES]
+    # Packet network latency.
+    lats_p = [(prc, np.percentile(lats_p, prc)) for prc in PERCENTILES]
+
     b = collections.defaultdict(dict)
-    p = {}
-    c = {}
-    for sr in flow_start:
-        total_time = flow_end[sr] - flow_start[sr]
-        tp[sr] = throughputs[sr] / total_time
-        tp[sr] *= 8  # bytes to bits
-        tp[sr] /= 1e9  # bits to gbits
+    # Mapping from (sender, receiver) to total, circuit, and packet throughput,
+    # respectively, in Gbps.
+    tpts_Gbps = {}
+    tpts_Gbps_c = {}
+    tpts_Gbps_p = {}
+    for sr_racks, flw_start in flw_starts.items():
+        total_time = float(flw_ends[sr_racks] - flw_start)
+        tpts_Gbps[sr_racks] = (byts[sr_racks] / total_time) * 8 / 1.e9
+        tpts_Gbps_c[sr_racks] = (byts_c[sr_racks] / total_time) * 8 / 1.e9
+        tpts_Gbps_p[sr_racks] = (byts_p[sr_racks] / total_time) * 8 / 1.e9
 
-        p[sr] = (packet_bytes[sr] / total_time) * 8 / 1e9
-        c[sr] = (circuit_bytes[sr] / total_time) * 8 / 1e9
+        # n = 0
+        # for ts in circuit_starts[sr_racks]:
+        #     if ts >= flw_start and ts <= flw_ends[sr_racks]:
+        #         n += 1
+        # max_bytes = n * RTT * python_config.CIRCUIT_BW_Gbps_TDF * 8 / 1.e9
+        # for i, r in sorted(bytes_in_rtt[sr_racks].items()):
+        #     b[sr_racks][i] = (r / max_bytes) * 100
 
-        n = 0
-        for ts in circuit_starts[sr]:
-            if ts >= flow_start[sr] and ts <= flow_end[sr]:
-                n += 1
-        max_bytes = n * RTT * (python_config.CIRCUIT_BW_Gbps_TDF * 1e9 / 8.)
-        for i, r in sorted(bytes_in_rtt[sr].items()):
-            b[sr][i] = (r / max_bytes) * 100
-
-    return tp, (lat, latc, latp), p, c, b, \
-        sum(circuit_bytes.values()), sum(packet_bytes.values())
+    return (lats, lats_c, lats_p), (tpts_Gbps, tpts_Gbps_c, tpts_Gbps_p), b, \
+        sum(byts_c.values()), sum(byts_p.values())
 
 
 def parse_validation_log(fln, dur_ms=1300, bin_size_ms=1):

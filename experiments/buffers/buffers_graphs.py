@@ -16,135 +16,156 @@ import numpy as np
 import dotmap
 from matplotlib import pyplot
 import simpleplotlib
-simpleplotlib.default_options.rcParams['font.family'] = "Tahoma"
+simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 
 import parse_logs
 import python_config
 
-FLW = (1, 2)
-
-TYPES = ['static', 'resize', 'reTCP', 'reTCP+resize']
-
-FILES = {
-    'static': '*-strobe-*-False-*-cubic-*-400-3600-click.txt',
-    'resize': '*-QUEUE-True-*-cubic-*-400-3600-click.txt',
-    'reTCP': '*-QUEUE-False-*-retcp-*-400-3600-click.txt',
-    'reTCP+resize': '*-QUEUE-True-*-retcp-*-400-3600-click.txt',
-}
-
-KEY_FNC = {
-    'static': lambda fn: int(fn.split('strobe-')[1].split('-')[0]),
-    'resize': lambda fn: (int(fn.split('True-')[1].split('-')[0])
-                          / python_config.TDF),
-    'reTCP': lambda fn: 0,
-    'reTCP+resize': lambda fn: (int(fn.split('True-')[1].split('-')[0])
-                                / python_config.TDF),
-}
+SR_RACKS = (1, 2)
 
 
-def get_data(db, key, files=FILES, key_fnc=KEY_FNC):
-    if key not in db:
-        ptn = path.join(sys.argv[1], files[key])
-        fns = glob.glob(ptn)
-        assert fns, "Found no files for pattern: {}".format(ptn)
+def get_data(rdb_filepath, edr, key, files, key_fnc, msg_len=112):
+    # Open results database file.
+    rdb = shelve.open(rdb_filepath, protocol=2, writeback=True)
+    data = rdb.get(key)
+
+    if data is None:
+        ptn = path.join(edr, files[key])
+        flns = glob.glob(ptn)
+        assert flns, "Found no files for pattern: {}".format(ptn)
         print("Found files for pattern: {}".format(ptn))
-        for fn in fns:
-            print("    {}".format(fn))
+        for fln in flns:
+            print("    {}".format(fln))
 
         data = collections.defaultdict(lambda: collections.defaultdict(dict))
-        for fn in fns:
-            lbl = key_fnc[key](fn.split('/')[-1])
-            _, lat, _, c_tput, _, _, _ = parse_logs.parse_packet_log(fn)
-            data['lat'][50][lbl] = [x[1] for x in zip(*lat)[1]]
-            data['lat'][99][lbl] = [x[1] for x in zip(*lat)[3]]
-            data['circ_tput'][lbl] = c_tput[FLW]
+        for fln in flns:
+            lbl = key_fnc[key](path.basename(fln))
+            lats, (_, tpt_c, _), _, _ = parse_logs.parse_packet_log(
+                fln, msg_len)
+            data["tpt_c"][lbl] = tpt_c[SR_RACKS]
+            # First, convert from grouping based on combined, circuit, and
+            # packet latency to grouping backed on percentile. Then, extract the
+            # values for a certain percentile. Finally, drop the percentile.
+            data["lat"][50][lbl] = [
+                lt for _, lt in zip(*lats)[parse_logs.PERCENTILES.index(50)]]
+            data["lat"][99][lbl] = [
+                lt for _, lt in zip(*lats)[parse_logs.PERCENTILES.index(99)]]
 
-        data['keys'] = list(zip(*sorted(data['circ_tput'].items()))[0])
-        data['lat'][50] = list(zip(*sorted(data['lat'][50].items()))[1])
-        data['lat'][99] = list(zip(*sorted(data['lat'][99].items()))[1])
-        data['circ_tput'] = list(zip(*sorted(data['circ_tput'].items()))[1])
-
+        # Convert from dictionary to key-value pairs, then sort by the key, then
+        # extract the keys only.
+        data["keys"] = list(zip(*sorted(data["tpt_c"].items()))[0])
+        # Convert from dictionary to key-value pairs, then sort by the key, then
+        # extract the values only.
+        data["lat"][50] = list(zip(*sorted(data["lat"][50].items()))[1])
+        data["lat"][99] = list(zip(*sorted(data["lat"][99].items()))[1])
+        data["tpt_c"] = list(zip(*sorted(data["tpt_c"].items()))[1])
         # Store the new data in the database.
-        db[key] = dict(data)
-    return db[key]
+        rdb[key] = dict(data)
+
+    rdb.close()
+    return data
 
 
-def graph_lat(keys, latencies, fn, ylb, odr=path.join(PROGDIR, "graphs")):
+def plot_lat(keys, latencies, fln, ylb, ylm=None, xlr=0,
+             odr=path.join(PROGDIR, "graphs")):
     # Sort the data based on the x-values (keys).
     keys, latencies = zip(
         *sorted(zip(keys, latencies), key=lambda p: int(p[0])))
 
-    x = [keys for i in xrange(len(latencies[0]))]
+    x = [keys for _ in xrange(len(latencies[0]))]
     y = zip(*latencies)
 
     print("")
-    print("raw latency data for: {}".format(fn))
+    print("raw latency data for: {}".format(fln))
     print("{}:".format(ylb.strip("\n")))
-    print("    all: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[0], y[0])])))
-    print("    circuit: {}".format(". ".join(["({}: {})".format(a, b) for a, b in zip(x[1], y[1])])))
-    print("    packet: {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(x[2], y[2])])))
+    print("    all: {}".format(
+        ", ".join(["({}: {})".format(a, b) for a, b in zip(x[0], y[0])])))
+    print("    circuit: {}".format(
+        ". ".join(["({}: {})".format(a, b) for a, b in zip(x[1], y[1])])))
+    print("    packet: {}".format(
+        ", ".join(["({}: {})".format(a, b) for a, b in zip(x[2], y[2])])))
     print("")
 
     options = dotmap.DotMap()
-    options.plot_type = 'LINE'
-    options.legend.options.labels = ['all traffic', 'only circuit',
-                                     'only packet']
+    options.legend.options.labels = ["all traffic", "only circuit",
+                                     "only packet"]
     options.legend.options.fontsize = 20
+    options.output_fn = path.join(odr, "{}.pdf".format(fln))
+    options.plot_type = "LINE"
+    options.series_options = [
+        dotmap.DotMap(marker="o", markersize=10, linewidth=5)
+        for _ in xrange(len(x))]
     options.x.label.fontsize = options.y.label.fontsize = 20
+    options.x.label.xlabel = "Buffer size (packets)" if "static" in fln \
+        else "Early buffer resizing ($\mu$s)"
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 20
-    options.series_options = [
-        dotmap.DotMap(marker='o', markersize=10, linewidth=5)
-        for i in range(len(x))]
-    options.output_fn = path.join(odr, '{}.pdf'.format(fn))
-    options.x.label.xlabel = 'Buffer size (packets)' if 'static' in fn \
-                             else 'Early buffer resizing ($\mu$s)'
-    options.y.label.ylabel = '{} latency ($\mu$s)'.format(ylb)
     options.x.ticks.major.labels = \
         dotmap.DotMap(locations=[4, 8, 16, 32, 64, 128]) \
-        if 'static' in fn else \
-        dotmap.DotMap(locations=[0, 25, 50, 75, 100, 125, 150, 175, 200, 225])
-    options.y.ticks.major.labels = dotmap.DotMap(
-        locations=[0, 50, 100, 150, 200, 250, 300, 350])
-    options.y.limits = [0, 350]
+        if "static" in fln else dotmap.DotMap(locations=keys)
+    options.x.ticks.major.labels.options.rotation = xlr
+    options.x.ticks.major.labels.options.rotation_mode = "anchor"
+    options.x.ticks.major.labels.options.horizontalalignment = \
+        "center" if xlr == 0 else "right"
+    options.y.label.ylabel = "{} latency ($\mu$s)".format(ylb)
+    if ylm is not None:
+        options.y.limits = [0, ylm]
     simpleplotlib.plot(x, y, options)
 
 
-def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
-                       srt=True, xlr=0, lbs=23, flt=lambda key: True):
+def plot_circuit_util(keys, tpts_Gbps_c, fln, xlb, num_racks,
+                      odr=path.join(PROGDIR, "graphs"), srt=True, xlr=0, lbs=23,
+                      flt=lambda key: True):
     """ srt: sort, xlr: x label rotation (degrees), lbs: bar label size """
     if srt:
         # Sort the data based on the x-values (keys).
-        keys, tputs = zip(*sorted(zip(keys, tputs), key=lambda p: int(p[0])))
-
+        keys, tpts_Gbps_c = zip(*sorted(zip(keys, tpts_Gbps_c)))
     # Filter.
-    keys, tputs = zip(
-        *[(key, tput) for key, tput in zip(keys, tputs) if flt(key)])
-
-    x = [np.arange(len(tputs))]
-    # Convert circuit throughput into utilization.
-    y = [[min(
-        tput / (0.9 * 1. / (python_config.NUM_RACKS - 1)
-                * python_config.CIRCUIT_BW_Gbps) * 100,
-        100.0)
-          for tput in tputs]]
+    keys, tpts_Gbps_c = zip(
+        *[(key, tpt_Gbps_c)
+          for key, tpt_Gbps_c in zip(keys, tpts_Gbps_c) if flt(key)])
+    # Convert circuit throughput into circuit utilization. The throughput values
+    # are averages over the entire experiment, including when the circuit
+    # network was not active: they were computed by dividing the number of bytes
+    # transported by the circuit network over the course the entire experiment
+    # by the length of the experiment. To calculate the average circuit
+    # utilization, we divide the achieved average throughput by the maximum
+    # possible average throughput. The maximum possible average throughput is
+    # equal to the circuit bandwidth multiplied by the fraction of the
+    # experiment during which the circuit network was in use. This is equal to
+    # the fraction of the schedule during which a circuit was assigned between
+    # the racks in question (1 / (num_racks - 1)) times the fraction of that
+    # time during which the circuit was up (reconfiguration time / day length =
+    # 0.9). Therefore:
+    #
+    # util =            throughput           = throughput * (num_racks - 1)
+    #        -------------------------------   ----------------------------
+    #        bandwidth *       1       * 0.9         0.9 * bandwidth
+    #                    -------------
+    #                    num_racks - 1
+    #
+    # Finally, we multiply by 100 to convert to a percent.
+    utls = [tpt_Gbps_c * (num_racks - 1) /
+            (0.9 * python_config.CIRCUIT_BW_Gbps) * 100
+            for tpt_Gbps_c in tpts_Gbps_c]
 
     print("")
-    print("raw util data for: {}".format(fn))
+    print("raw util data for: {}".format(fln))
     print("{}:".format(xlb))
-    print("    {}".format(", ".join(["({}: {})".format(a, b) for a, b in zip(keys, y[0])])))
+    print("    {}".format(", ".join(
+        ["({}: {})".format(key, utl) for key, utl in zip(keys, utls)])))
     print("")
 
     options = dotmap.DotMap()
-    options.plot_type = 'BAR'
+    options.plot_type = "BAR"
     options.legend.options.fontsize = 20
-    options.bar_labels.format_string = '%1.0f'
+    options.bar_labels.format_string = "%1.0f"
     options.bar_labels.options.fontsize = lbs
-    options.output_fn = path.join(odr, "{}.pdf".format(fn))
+    options.output_fn = path.join(odr, "{}.pdf".format(fln))
     options.y.limits = (0, 100)
     options.x.label.fontsize = options.y.label.fontsize = 20
     options.x.label.xlabel = xlb
-    options.y.label.ylabel = 'Average circuit\nutilization (%)'
+    options.y.label.ylabel = "Average circuit\nutilization (%)"
     options.x.ticks.major.options.labelsize = \
         options.y.ticks.major.options.labelsize = 20
     options.x.ticks.major.labels = dotmap.DotMap(text=keys)
@@ -154,114 +175,75 @@ def graph_circuit_util(keys, tputs, fn, xlb, odr=path.join(PROGDIR, "graphs"),
         "center" if xlr == 0 else "right"
     options.y.ticks.major.show = True
     options.x.ticks.major.show = False
-    simpleplotlib.plot(x, y, options)
+    simpleplotlib.plot([np.arange(len(utls))], [utls], options)
 
 
-def graph_util_vs_latency(tputs, latencies, fn):
-    x = [map(
-        lambda j: min(
-            j / (0.9 * 1. / (python_config.NUM_RACKS - 1)
-                 * python_config.CIRCUIT_BW_Gbps) * 100,
-            100.0),
-        u)
-         for t in tputs]
+def plot_util_vs_latency(tpts, latencies, fln):
+    x = [[min(
+        j / (0.9 * 1. / (python_config.NUM_RACKS - 1)
+             * python_config.CIRCUIT_BW_Gbps) * 100,
+        100.0) for j in t]
+         for t in tpts]
     y = [zip(*l)[0] for l in latencies]
 
     options = dotmap.DotMap()
-    options.plot_type = 'LINE'
-    options.legend.options.labels = ['Static buffers (vary size)',
-                                     'Dynamic buffers (vary $\\tau$)',
-                                     'reTCP',
-                                     'reTCP + dynamic buffers (vary $\\tau$)']
+    options.plot_type = "LINE"
+    options.legend.options.labels = ["Static buffers (vary size)",
+                                     "Dynamic buffers (vary $\\tau$)",
+                                     "reTCP",
+                                     "reTCP + dynamic buffers (vary $\\tau$)"]
     options.legend.options.fontsize = 19
     options.series_options = [
-        dotmap.DotMap(marker='o', markersize=10, linewidth=5)
-        for i in range(len(x))]
-    options.series_options[2].marker = 'x'
+        dotmap.DotMap(marker="o", markersize=10, linewidth=5)
+        for _ in xrange(len(x))]
+    options.series_options[2].marker = "x"
     options.series_options[2].s = 100
     del options.series_options[2].markersize
     options.series_options[2].zorder = 10
     options.output_fn = \
-        path.join(PROGDIR, 'graphs', 'throughput_vs_latency99.pdf') \
-        if '99' in fn \
-           else path.join(PROGDIR, 'graphs', 'throughput_vs_latency.pdf')
-    options.x.label.xlabel = 'Circuit utilization (%)'
-    options.y.label.ylabel = '99th percent. latency ($\mu$s)' if '99' in fn \
-                             else 'Median latency ($\mu$s)'
-    options.y.limits = [0, 1000] if '99' in fn else [0, 600]
+        path.join(PROGDIR, "graphs", "throughput_vs_latency99.pdf") \
+        if "99" in fln \
+           else path.join(PROGDIR, "graphs", "throughput_vs_latency.pdf")
+    options.x.label.xlabel = "Circuit utilization (%)"
+    options.y.label.ylabel = "99th percent. latency ($\mu$s)" if "99" in fln \
+                             else "Median latency ($\mu$s)"
+    options.y.limits = [0, 1000] if "99" in fln else [0, 600]
     options.y.ticks.major.labels = \
         dotmap.DotMap(locations=[0, 200, 400, 600, 800, 1000]) \
-        if '99' in fn else \
+        if "99" in fln else \
         dotmap.DotMap(locations=[0, 100, 200, 300, 400, 500, 600])
 
     simpleplotlib.plot(x, y, options)
 
 
-def lat(name, edr, odr, ptn, key_fnc, prc, ylb):
+def lat(name, edr, odr, ptn, key_fnc, prc, ylb, ylm=None, xlr=0, msg_len=112):
+    print("Plotting: {}".format(name))
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
-    print("Plotting: {}".format(name))
-    basename = name.split("_")[1]
-    db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    data = get_data(
-        db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
-    db.close()
-    graph_lat(data['keys'], data['lat'][prc], name, ylb, odr)
+    basename = name.split("_")[1] if "_" in name else name
+    data = get_data(path.join(edr, "{}.db".format(basename)), edr, basename,
+                    files={basename: ptn}, key_fnc={basename: key_fnc}, msg_len=msg_len)
+    plot_lat(data["keys"], data["lat"][prc], name, ylb, ylm, xlr, odr)
     pyplot.close()
 
 
-def util(name, edr, odr, ptn, key_fnc, xlb, srt=True, xlr=0, lbs=23,
-         flt=lambda key: True):
+def util(name, edr, odr, ptn, key_fnc, xlb, num_racks, srt=True, xlr=0, lbs=23,
+         flt=lambda key: True, msg_len=112):
     """
-    srt: sort, xlr: x label rotation (degrees), lbs: bar label fontsize,
+    srt: sort
+    xlr: x label rotation (degrees)
+    lbs: bar label fontsize
     flt: filter function that takes in a key
     """
     print("Plotting: {}".format(name))
-    basename = name.split("_")[1]
-    db = shelve.open(path.join(edr, "{}.db".format(basename)))
-    data = get_data(
-        db, basename, files={basename: ptn}, key_fnc={basename: key_fnc})
-    db.close()
-    graph_circuit_util(
-        data['keys'], data['circ_tput'], name, xlb, odr, srt, xlr, lbs, flt)
+    # Names are of the form "<number>_<details>_<specific options>". Experiments
+    # where <details> are the same should be based on the same data. Therefore,
+    # use <details> as the database key.
+    basename = name.split("_")[1] if "_" in name else name
+    data = get_data(path.join(edr, "{}.db".format(basename)), edr, basename,
+                    files={basename: ptn}, key_fnc={basename: key_fnc},
+                    msg_len=msg_len)
+    plot_circuit_util(data["keys"], data["tpt_c"], name, xlb, num_racks, odr,
+                      srt, xlr, lbs, flt)
     pyplot.close()
-
-
-def main():
-    if not path.isdir(sys.argv[1]):
-        print 'first arg must be dir'
-        sys.exit(-1)
-    db = shelve.open(sys.argv[1] + '/buffer_shelve.db')
-
-    typ = 'static'
-    data = get_data(db, typ)
-    graph_lat(keys=data['keys'], latencies=data['lat'][50], fn=typ,
-              ylb="Median")
-    graph_circuit_util(data['circ_tput'], typ)
-
-    typ = 'resize'
-    data = get_data(db, typ)
-    graph_lat(keys=data['keys'], latencies=data['lat'][50],
-              fn="{}-median".format(typ), ylb="Median")
-    graph_lat(keys=data['keys'], latencies=data['lat'][99],
-              fn="{}-99".format(typ), ylb="99th percentile\n")
-    graph_circuit_util([db['static']['circ_tput'][2]] + data['circ_tput'], typ)
-
-    typ = 'reTCP'
-    get_data(db, typ)
-
-    typ = 'reTCP+resize'
-    get_data(db, typ)
-
-    tputs = [db[t]['circ_tput'] for t in TYPES]
-    lat50 = [db[t]['lat'][50] for t in TYPES]
-    lat99 = [db[t]['lat'][99] for t in TYPES]
-    graph_util_vs_latency(tputs, lat50, '50')
-    graph_util_vs_latency(tputs, lat99, '99')
-
-    db.close()
-
-
-if __name__ == '__main__':
-    main()

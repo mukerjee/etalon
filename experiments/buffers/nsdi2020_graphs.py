@@ -387,7 +387,9 @@ def main():
     #     xlb="Resize time ($\mu$s)",
     #     xlr=45,
     #     lbs=12,
-    #     flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen)
+    #     num_racks=NUM_RACKS_FAKE,
+    #     # flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen,
+    #     msg_len=msg_len)
 
     # # (6.3)
     # buffers_graphs.lat(
@@ -398,7 +400,10 @@ def main():
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     prc=50,
-    #     ylb="Median")
+    #     ylb="Median",
+    #     ylm=500,
+    #     xlr=45,
+    #     msg_len=msg_len)
 
     # # (6.4)
     # buffers_graphs.lat(
@@ -409,7 +414,10 @@ def main():
     #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
     #                                  / python_config.TDF)),
     #     prc=99,
-    #     ylb="99th percentile")
+    #     ylb="99th percentile\n",
+    #     ylm=500,
+    #     xlr=45,
+    #     msg_len=msg_len)
 
     # # (7.1.1) and (7.2)
     # for us in CHOSEN_DYN_uss:
