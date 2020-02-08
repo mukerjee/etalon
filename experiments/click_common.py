@@ -314,7 +314,7 @@ def setConfig(config):
         c["packet_link_bandwidth"],
         c["hdfs"])
     if t in ["fake_strobe", "strobe"]:
-        FN_FORMAT += "{}-{}-".format(c["night_len_us"], c["day_len_us"])
+        FN_FORMAT += "{}-{}-".format(int(c["night_len_us"]), int(c["day_len_us"]))
     if t == "fake_strobe":
         FN_FORMAT += "{}-".format(c["num_racks_fake"])
 
