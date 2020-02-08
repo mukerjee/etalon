@@ -34,16 +34,17 @@ SYNC = False
 # One-wa circuit latency.
 CIR_LAT_s = python_config.CIRCUIT_LATENCY_s
 # Circuit uptime.
-DAY_LEN_us = 9 * python_config.RECONFIG_DELAY_us
-# The default length to use when reading individual packet log messages.
-DEFAULT_MSG_LEN = 116
-# Calculate experiment duration.
+RECNF_us = python_config.RECONFIG_DELAY_us
+DAY_LEN_us = 9 * RECNF_us
+# The number of racks that the fake strobe schedule emulated.
 NUM_RACKS_FAKE = 8
-DUR_us = int(round(
-    (python_config.RECONFIG_DELAY_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3))
+# Calculate experiment duration.
+DUR_us = int(round((RECNF_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3))
 # The location of the HSLog element: either "before" or "after" the hybrid
 # switch.
 LOG_POS = "after"
+# The default length to use when reading individual packet log messages.
+DEFAULT_MSG_LEN = 116
 # Small static buffer size to use.
 CHOSEN_STATIC_SMALL = 16
 
@@ -55,8 +56,8 @@ STATIC_PTN = "*-{}-*-QUEUE-False-*-{}-*-{}-{}-*-click.txt"
 # Matches experiments with static buffers with a particular small capacity, a
 # particular CC mode, 20 us nights, and 180 us days (under TDF).
 STATIC_PTN_CUR = STATIC_PTN.format("{}", "{}",
-                                   int(round(python_config.RECONFIG_DELAY_us)),
-                                   int(round(DAY_LEN_us)))
+                                   int(round(RECNF_us * python_config.TDF)),
+                                   int(round(DAY_LEN_us * python_config.TDF)))
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
 DYN_PTN = "*-QUEUE-True-{}-{}-*-click.txt"
@@ -68,7 +69,8 @@ DYN_PTN = "*-QUEUE-True-{}-{}-*-click.txt"
 ORDER_VARS = ["optimal", "bbr", "cubic", "dctcp", "highspeed",
               "illinois", "scalable", "westwood", "yeah", "packet only"]
 # Order of the lines for the static buffers experiments.
-ORDER_STATIC = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
+ORDER_STATIC_SEQ = ["optimal", "128", "64", "32", "16", "8", "4", "packet only"]
+ORDER_STATIC_UTIL = ["4", "8", "16", "32", "64", "128"]
 # Order of the lines for the dynamic buffer resizing experiments. This is also
 # used to select which lines to plot. For coarse-grained experiments.
 # ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
@@ -148,7 +150,8 @@ def main():
         msg_len = DEFAULT_MSG_LEN
 
     def _1():
-        rcf_us = int(round(1000 * python_config.TDF))
+        rcf_us = 1000
+        day_len_us = 9 * rcf_us
         sg.seq(
             sync=SYNC,
             name="1_seq-old-{}".format(CHOSEN_TCP),
@@ -157,14 +160,16 @@ def main():
             # Matches experiments with static buffers with a particular small
             # capacity, a particular CC mode, 1000 us nights, and 9000 us days
             # (under TDF).
-            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP, rcf_us,
-                                  9 * rcf_us),
+            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP,
+                                  int(round(rcf_us * python_config.TDF)),
+                                  int(round(day_len_us * python_config.TDF))),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-            dur=57590,
+            dur=int(round((rcf_us + day_len_us) * (NUM_RACKS_FAKE - 1) * 3)),
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
             log_pos=LOG_POS,
-            rcf_us=rcf_us)
+            rcf_us=rcf_us,
+            voq_agg=True)
 
     def _2():
         sg.seq(
@@ -177,10 +182,12 @@ def main():
             dur=DUR_us,
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            voq_agg=True)
 
     def _3():
-        rcf_us = int(round(python_config.TDF))
+        rcf_us = 1
+        day_len_us = 9 * rcf_us
         sg.seq(
             sync=SYNC,
             name="3_seq-future-{}".format(CHOSEN_TCP),
@@ -189,13 +196,16 @@ def main():
             # Matches experiments with static buffers with a particular small
             # capacity, a particular CC mode, 1 us nights, and 9 us days (under
             # TDF).
-            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP, rcf_us,
-                                  9 * rcf_us),
+            ptn=STATIC_PTN.format(CHOSEN_STATIC_SMALL, CHOSEN_TCP,
+                                  int(round(rcf_us * python_config.TDF)),
+                                  int(round(day_len_us * python_config.TDF))),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-            dur=64,
+            dur=int(round((rcf_us + day_len_us) * (NUM_RACKS_FAKE - 1) * 3)),
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            rcf_us=rcf_us,
+            voq_agg=True)
 
     def _4_1():
         sg.seq(
@@ -204,7 +214,7 @@ def main():
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format(CHOSEN_STATIC_SMALL, "*"),
-            key_fnc=lambda fn: fn.split("-")[7],
+            key_fnc=lambda fn: fn.split("-")[8],
             dur=DUR_us,
             flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
             order=ORDER_VARS,
@@ -219,7 +229,7 @@ def main():
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format(CHOSEN_STATIC_SMALL, "*"),
-            key_fnc=lambda fn: fn.split("-")[7],
+            key_fnc=lambda fn: fn.split("-")[8],
             xlb="TCP variant",
             srt=False,
             xlr=45,
@@ -237,7 +247,7 @@ def main():
             ptn=STATIC_PTN_CUR.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: fn.split("-")[3],
             dur=DUR_us,
-            order=ORDER_STATIC,
+            order=ORDER_STATIC_SEQ,
             msg_len=msg_len,
             voq_agg=True,
             cir_lat_s=CIR_LAT_s,
@@ -291,8 +301,8 @@ def main():
                 edr=edr,
                 odr=odr,
                 ptn=DYN_PTN.format("*", CHOSEN_TCP),
-                key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-                                             / python_config.TDF)),
+                key_fnc=lambda fn: int(round(float(fn.split("-")[7]) /
+                                             python_config.TDF)),
                 dur=DUR_us,
                 ins=ins,
                 flt=(lambda idx, label, order=ORDER_DYN_CG: \
@@ -336,7 +346,7 @@ def main():
                     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                                  / python_config.TDF)),
                     dur=DUR_us,
-                    flt=None,  # lambda idx, label: idx < 3,
+                    flt=None,
                     xlm=xlm_zoom,
                     ylm=ylm_zoom,
                     chunk_mode=500,
@@ -399,7 +409,7 @@ def main():
                 edr=edr,
                 odr=odr,
                 ptn=DYN_PTN.format(us_tdf, "*"),
-                key_fnc=lambda fn: fn.split("-")[7],
+                key_fnc=lambda fn: fn.split("-")[8],
                 dur=DUR_us,
                 flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
                 order=ORDER_VARS,
@@ -412,7 +422,7 @@ def main():
                 edr=edr,
                 odr=odr,
                 ptn=DYN_PTN.format(us_tdf, "*"),
-                key_fnc=lambda fn: fn.split("-")[7],
+                key_fnc=lambda fn: fn.split("-")[8],
                 xlb="TCP variant",
                 srt=False,
                 xlr=45,
