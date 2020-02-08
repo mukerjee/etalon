@@ -130,49 +130,6 @@ DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
 
 
 def main():
-    # Note: The numbers below have no correlation with the sections in the
-    #       paper.
-    #
-    # Graphs:
-    # - Motivation:
-    #   (1) Sequence: Long nights/days, static buffers, CUBIC
-    #   (2) Sequence: Short nights/days, static buffers, CUBIC
-    #   (3) Sequence: Very short nights/days, static buffers, CUBIC
-    #   (4) Short nights/days, static buffers, all TCP variants
-    #     (4.1) Sequence
-    #     (4.2) Utilization
-    # - Contributions:
-    #   (5) Static buffers, CUBIC
-    #     (5.1) Sequence
-    #     (5.2) Utilization
-    #     (5.3) Latency 50
-    #     (5.4) Latency 99
-    #   (6) Dynamic buffers, CUBIC
-    #     (6.1) Sequence
-    #       (6.1.1) Coarse-grained
-    #       (6.1.2) Fine-grained
-    #       (6.1.3) For one experiment, look at all flows in detail
-    #     (6.2) Utilization
-    #     (6.3) Latency 50
-    #     (6.4) Latency 99
-    #   (7) Dynamic buffers, all TCP variants
-    #     (7.1) Sequence
-    #       (7.1.1) Fixed resize time, varying variant
-    #       (7.1.2) Fixed variant, varying resize time
-    #     (7.2) Utilization, for various resize times
-    #   (8) Static buffers, reTCP
-    #     (8.1) Sequence
-    #     (8.2) Utilization
-    #     (8.3) Latency 50
-    #     (8.4) Latency 99
-    #   (9) Dynamic buffers, reTCP
-    #     (9.1) Sequence
-    #       (9.1.1) Coarse-grained
-    #       (9.1.2) Fine-grained
-    #     (9.2) Utilization
-    #     (9.3) Latency 50
-    #     (9.4) Latency 99
-
     num_args = len(sys.argv)
     assert num_args == 2 or num_args == 3, \
         ("Expected either one or two arguments: experiment data directory "
@@ -203,376 +160,463 @@ def main():
     else:
         msg_len = DEFAULT_MSG_LEN
 
-    # # (1)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="1_seq-old-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=OLD_PTN.format(CHOSEN_TCP),
-    #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-    #     dur=57590,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
-
-    # # (2)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="2_seq-current-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
-    #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-    #     dur=DUR_us,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
-
-    # # (3)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="3_seq-future-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=FUTURE_PTN.format(CHOSEN_TCP),
-    #     key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
-    #     dur=64,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
-
-    # # (4.1)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="4-1_seq-current-all",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
-    #     key_fnc=lambda fn: fn.split("-")[7],
-    #     dur=DUR_us,
-    #     flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
-    #     order=ORDER_VARS,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
-
-    # # (4.2)
-    # buffers_graphs.util(
-    #     name="4-2_util-current-all",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
-    #     key_fnc=lambda fn: fn.split("-")[7],
-    #     xlb="TCP variant",
-    #     srt=False,
-    #     xlr=45,
-    #     lbs=12,
-    #     flt=lambda key: key != "retcp")
-
-    # # (5.1)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="5-1_seq-static-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     dur=DUR_us,
-    #     order=ORDER_STATIC,
-    #     msg_len=msg_len,
-    #     voq_agg=True,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
-
-    # # (5.2)
-    # buffers_graphs.util(
-    #     name="5-2_util-static-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     xlb="Static buffer size (packets)")
-
-    # # (5.3)
-    # buffers_graphs.lat(
-    #     name="5-3_lat-50-static-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     prc=50,
-    #     ylb="Median")
-
-    # # (5.4)
-    # buffers_graphs.lat(
-    #     name="5-4_lat-99-static-{}".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     prc=99,
-    #     ylb="99th percentile")
-
-    # (6.1.1) With and without inset.
-    for ins in [None]:
+    def _1():
         sg.seq(
             sync=SYNC,
-            name="6-1-1_seq-dyn-{}{}_cg".format(
-                CHOSEN_TCP,
-                "_inset" if ins is not None else ""),
+            name="1_seq-old-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=OLD_PTN.format(CHOSEN_TCP),
+            key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
+            dur=57590,
+            msg_len=msg_len,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
+
+    def _2():
+        sg.seq(
+            sync=SYNC,
+            name="2_seq-current-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
+            key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
+            dur=DUR_us,
+            msg_len=msg_len,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
+
+    def _3():
+        sg.seq(
+            sync=SYNC,
+            name="3_seq-future-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=FUTURE_PTN.format(CHOSEN_TCP),
+            key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
+            dur=64,
+            msg_len=msg_len,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
+
+    def _4_1():
+        sg.seq(
+            sync=SYNC,
+            name="4-1_seq-current-all",
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
+            key_fnc=lambda fn: fn.split("-")[7],
+            dur=DUR_us,
+            flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
+            order=ORDER_VARS,
+            msg_len=msg_len,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
+
+    def _4_2():
+        buffers_graphs.util(
+            name="4-2_util-current-all",
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format(CHOSEN_STATIC, "*"),
+            key_fnc=lambda fn: fn.split("-")[7],
+            xlb="TCP variant",
+            srt=False,
+            xlr=45,
+            lbs=12,
+            flt=lambda key: key != "retcp",
+            num_racks=NUM_RACKS_FAKE,
+            msg_len=msg_len)
+
+    def _5_1():
+        sg.seq(
+            sync=SYNC,
+            name="5-1_seq-static-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: fn.split("-")[3],
+            dur=DUR_us,
+            order=ORDER_STATIC,
+            msg_len=msg_len,
+            voq_agg=True,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
+
+    def _5_2():
+        buffers_graphs.util(
+            name="5-2_util-static-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: fn.split("-")[3],
+            xlb="Static buffer size (packets)",
+            num_racks=NUM_RACKS_FAKE,
+            msg_len=msg_len)
+
+    def _5_3():
+        buffers_graphs.lat(
+            name="5-3_lat-50-static-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: fn.split("-")[3],
+            prc=50,
+            ylb="Median",
+            msg_len=msg_len)
+
+    def _5_4():
+        buffers_graphs.lat(
+            name="5-4_lat-99-static-{}".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: fn.split("-")[3],
+            prc=99,
+            ylb="99th percentile",
+            msg_len=msg_len)
+
+    def _6_1_1():
+        # With and without inset.
+        for ins in [None]:
+            sg.seq(
+                sync=SYNC,
+                name="6-1-1_seq-dyn-{}{}_cg".format(
+                    CHOSEN_TCP,
+                    "_inset" if ins is not None else ""),
+                edr=edr,
+                odr=odr,
+                ptn=DYN_PTN.format("*", CHOSEN_TCP),
+                key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                             / python_config.TDF)),
+                dur=DUR_us,
+                ins=ins,
+                flt=(lambda idx, label, order=ORDER_DYN_CG: \
+                     label.strip(" $\mu$s") in order),
+                order=ORDER_DYN_CG,
+                msg_len=msg_len,
+                voq_agg=True,
+                cir_lat_s=CIR_LAT_s,
+                log_pos=LOG_POS)
+
+    def _6_1_2():
+        sg.seq(
+            sync=SYNC,
+            name="6-1-2_seq-dyn-{}_fg".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", CHOSEN_TCP),
             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                          / python_config.TDF)),
             dur=DUR_us,
-            ins=ins,
-            flt=(lambda idx, label, order=ORDER_DYN_CG: \
+            flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
                  label.strip(" $\mu$s") in order),
-            order=ORDER_DYN_CG,
+            order=ORDER_DYN_FG_CHOSEN,
             msg_len=msg_len,
-            voq_agg=True,
             cir_lat_s=CIR_LAT_s,
             log_pos=LOG_POS)
 
-    # # (6.1.2)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="6-1-2_seq-dyn-{}_fg".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     dur=DUR_us,
-    #     flt=(lambda idx, label, order=ORDER_DYN_FG_CHOSEN: \
-    #          label.strip(" $\mu$s") in order),
-    #     order=ORDER_DYN_FG_CHOSEN,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
+    def _6_1_3():
+        for dyn_us in DYNS_TO_EXAMINE:
+            # With and without zooming in.
+            for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
+                sg.seq(
+                    sync=SYNC,
+                    name="6-1-3_seq-dyn-{}_{}_chunk{}_cg".format(
+                        CHOSEN_TCP, dyn_us, "" \
+                        if xlm_zoom is None else "_zoom"),
+                    edr=edr,
+                    odr=odr,
+                    ptn=DYN_PTN.format(
+                        int(round(dyn_us * python_config.TDF)), CHOSEN_TCP),
+                    key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                                 / python_config.TDF)),
+                    dur=DUR_us,
+                    flt=None,  # lambda idx, label: idx < 3,
+                    xlm=xlm_zoom,
+                    ylm=ylm_zoom,
+                    chunk_mode=500,
+                    msg_len=msg_len,
+                    cir_lat_s=CIR_LAT_s,
+                    log_pos=LOG_POS)
 
-    # # (6.1.3)
-    # for dyn_us in DYNS_TO_EXAMINE:
-    #     # With and without zooming in.
-    #     for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
-    #         sg.seq(
-    #             sync=SYNC,
-    #             name="6-1-3_seq-dyn-{}_{}_chunk{}_cg".format(
-    #                 CHOSEN_TCP, dyn_us, "" if xlm_zoom is None else "_zoom"),
-    #             edr=edr,
-    #             odr=odr,
-    #             ptn=DYN_PTN.format(
-    #                 int(round(dyn_us * python_config.TDF)), CHOSEN_TCP),
-    #             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                          / python_config.TDF)),
-    #             dur=DUR_us,
-    #             flt=None,  # lambda idx, label: idx < 3,
-    #             xlm=xlm_zoom,
-    #             ylm=ylm_zoom,
-    #             chunk_mode=500,
-    #             msg_len=msg_len,
-    #             cir_lat_s=CIR_LAT_s,
-    #             log_pos=LOG_POS)
+    def _6_2():
+        buffers_graphs.util(
+            name="6-2_util-lat-dyn-{}_util".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            xlb="Resize time ($\mu$s)",
+            xlr=45,
+            lbs=12,
+            # flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen,
+            num_racks=NUM_RACKS_FAKE,
+            msg_len=msg_len)
 
-    # # (6.2)
-    # buffers_graphs.util(
-    #     name="6-2_util-lat-dyn-{}_util".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     xlb="Resize time ($\mu$s)",
-    #     xlr=45,
-    #     lbs=12,
-    #     num_racks=NUM_RACKS_FAKE,
-    #     # flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen,
-    #     msg_len=msg_len)
+    def _6_3():
+        buffers_graphs.lat(
+            name="6-3_util-lat-dyn-{}_lat50".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            prc=50,
+            ylb="Median",
+            ylm=500,
+            xlr=45,
+            msg_len=msg_len)
 
-    # # (6.3)
-    # buffers_graphs.lat(
-    #     name="6-3_util-lat-dyn-{}_lat50".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     prc=50,
-    #     ylb="Median",
-    #     ylm=500,
-    #     xlr=45,
-    #     msg_len=msg_len)
+    def _6_4():
+        buffers_graphs.lat(
+            name="6-4_util-lat-dyn-{}_lat99".format(CHOSEN_TCP),
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", CHOSEN_TCP),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            prc=99,
+            ylb="99th percentile\n",
+            ylm=500,
+            xlr=45,
+            msg_len=msg_len)
 
-    # # (6.4)
-    # buffers_graphs.lat(
-    #     name="6-4_util-lat-dyn-{}_lat99".format(CHOSEN_TCP),
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     prc=99,
-    #     ylb="99th percentile\n",
-    #     ylm=500,
-    #     xlr=45,
-    #     msg_len=msg_len)
+    def _7_1_1_and_7_2():
+        for us in CHOSEN_DYN_uss:
+            us_tdf = int(round(us * python_config.TDF))
+            sg.seq(
+                sync=SYNC,
+                name="7-1-1_seq-dyn-all-{}us".format(us),
+                edr=edr,
+                odr=odr,
+                ptn=DYN_PTN.format(us_tdf, "*"),
+                key_fnc=lambda fn: fn.split("-")[7],
+                dur=DUR_us,
+                flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
+                order=ORDER_VARS,
+                msg_len=msg_len,
+                cir_lat_s=CIR_LAT_s,
+                log_pos=LOG_POS)
+            buffers_graphs.util(
+                name="7-2_util-dyn-all-{}us".format(us),
+                edr=edr,
+                odr=odr,
+                ptn=DYN_PTN.format(us_tdf, "*"),
+                key_fnc=lambda fn: fn.split("-")[7],
+                xlb="TCP variant",
+                srt=False,
+                xlr=45,
+                lbs=12,
+                flt=lambda key: key != "retcp",
+                num_racks=NUM_RACKS_FAKE,
+                msg_len=msg_len)
 
-    # # (7.1.1) and (7.2)
-    # for us in CHOSEN_DYN_uss:
-    #     us_tdf = int(round(us * python_config.TDF))
-    #     sg.seq(
-    #         sync=SYNC,
-    #         name="7-1-1_seq-dyn-all-{}us".format(us),
-    #         edr=edr,
-    #         odr=odr,
-    #         ptn=DYN_PTN.format(us_tdf, "*"),
-    #         key_fnc=lambda fn: fn.split("-")[7],
-    #         dur=DUR_us,
-    #         flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
-    #         order=ORDER_VARS,
-    #         msg_len=msg_len,
-    #         cir_lat_s=CIR_LAT_s,
-    #         log_pos=LOG_POS)
-    #     buffers_graphs.util(
-    #         name="7-2_util-dyn-all-{}us".format(us),
-    #         edr=edr,
-    #         odr=odr,
-    #         ptn=DYN_PTN.format(us_tdf, "*"),
-    #         key_fnc=lambda fn: fn.split("-")[7],
-    #         xlb="TCP variant",
-    #         srt=False,
-    #         xlr=45,
-    #         lbs=12,
-    #         flt=lambda key: key != "retcp")
+    def _7_1_2():
+        for cc in python_config.CCS:
+            sg.seq(
+                sync=SYNC,
+                name="7-1-2_seq-dyn-{}".format(cc),
+                edr=edr,
+                odr=odr,
+                ptn=DYN_PTN.format("*", cc),
+                key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                             / python_config.TDF)),
+                dur=DUR_us,
+                flt=(lambda idx, label, order=ORDER_DYN_uss: \
+                     label.strip(" $\mu$s") in order),
+                order=ORDER_DYN_uss,
+                msg_len=msg_len,
+                cir_lat_s=CIR_LAT_s,
+                log_pos=LOG_POS)
 
-    # # (7.1.2)
-    # for cc in python_config.CCS:
-    #     sg.seq(
-    #         sync=SYNC,
-    #         name="7-1-2_seq-dyn-{}".format(cc),
-    #         edr=edr,
-    #         odr=odr,
-    #         ptn=DYN_PTN.format("*", cc),
-    #         key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                      / python_config.TDF)),
-    #         dur=DUR_us,
-    #         flt=(lambda idx, label, order=ORDER_DYN_uss: \
-    #              label.strip(" $\mu$s") in order),
-    #         order=ORDER_DYN_uss,
-    #         msg_len=msg_len,
-    #         cir_lat_s=CIR_LAT_s,
-    #         log_pos=LOG_POS)
+    def _8_1():
+        sg.seq(
+            sync=SYNC,
+            name="8-1_seq-static-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: fn.split("-")[3],
+            dur=DUR_us,
+            msg_len=msg_len,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
 
-    # # (8.1)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="8-1_seq-static-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     dur=DUR_us,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
+    def _8_2():
+        buffers_graphs.util(
+            name="8-2_util-static-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: fn.split("-")[3],
+            xlb="Static buffer size (packets)",
+            num_racks=NUM_RACKS_FAKE,
+            msg_len=msg_len)
 
-    # # (8.2)
-    # buffers_graphs.util(
-    #     name="8-2_util-static-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     xlb="Static buffer size (packets)")
+    def _8_3():
+        buffers_graphs.lat(
+            name="8-3_lat-50-static-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: fn.split("-")[3],
+            prc=50,
+            ylb="Median",
+            msg_len=msg_len)
 
-    # # (8.3)
-    # buffers_graphs.lat(
-    #     name="8-3_lat-50-static-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     prc=50,
-    #     ylb="Median")
+    def _8_4():
+        buffers_graphs.lat(
+            name="8-4_lat-99-static-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=STATIC_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: fn.split("-")[3],
+            prc=99,
+            ylb="99th percentile",
+            msg_len=msg_len)
 
-    # # (8.4)
-    # buffers_graphs.lat(
-    #     name="8-4_lat-99-static-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=STATIC_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: fn.split("-")[3],
-    #     prc=99,
-    #     ylb="99th percentile")
+    def _9_1_1():
+        sg.seq(
+            sync=SYNC,
+            name="9-1-1_seq-dyn-retcp_cg",
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            dur=DUR_us,
+            flt=(lambda idx, label, order=ORDER_DYN_CG:
+                 label.strip(" $\mu$s") in order),
+            order=ORDER_DYN_CG,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
 
-    # # (9.1.1)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="9-1-1_seq-dyn-retcp_cg",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     dur=DUR_us,
-    #     flt=lambda idx, label, order=ORDER_DYN_CG: label.strip(" $\mu$s") in order,
-    #     order=ORDER_DYN_CG,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
+    def _9_1_2():
+        sg.seq(
+            sync=SYNC,
+            name="9-1-2_seq-dyn-retcp_fg",
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            dur=DUR_us,
+            flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
+                 label.strip(" $\mu$s") in order),
+            order=ORDER_DYN_FG_RETCP,
+            msg_len=msg_len,
+            cir_lat_s=CIR_LAT_s,
+            log_pos=LOG_POS)
 
-    # # (9.1.2)
-    # sg.seq(
-    #     sync=SYNC,
-    #     name="9-1-2_seq-dyn-retcp_fg",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     dur=DUR_us,
-    #     flt=(lambda idx, label, order=ORDER_DYN_FG_RETCP: \
-    #          label.strip(" $\mu$s") in order),
-    #     order=ORDER_DYN_FG_RETCP,
-    #     msg_len=msg_len,
-    #     cir_lat_s=CIR_LAT_s,
-    #     log_pos=LOG_POS)
+    def _9_2():
+        buffers_graphs.util(
+            name="9-2_util-dyn-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            xlb="Resize time ($\mu$s)",
+            xlr=45,
+            lbs=12,
+            flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen,
+            num_racks=NUM_RACKS_FAKE,
+            msg_len=msg_len)
 
-    # # (9.2)
-    # buffers_graphs.util(
-    #     name="9-2_util-dyn-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     xlb="Resize time ($\mu$s)",
-    #     xlr=45,
-    #     lbs=12,
-    #     flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen)
+    def _9_3():
+        buffers_graphs.lat(
+            name="9-3_lat-50-dyn-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            prc=50,
+            ylb="Median",
+            msg_len=msg_len)
 
-    # # (9.3)
-    # buffers_graphs.lat(
-    #     name="9-3_lat-50-dyn-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     prc=50,
-    #     ylb="Median")
+    def _9_4():
+        buffers_graphs.lat(
+            name="9-4_lat-99-dyn-retcp",
+            edr=edr,
+            odr=odr,
+            ptn=DYN_PTN.format("*", "retcp"),
+            key_fnc=lambda fn: int(round(float(fn.split("-")[7])
+                                         / python_config.TDF)),
+            prc=99,
+            ylb="99th percentile",
+            msg_len=msg_len)
 
-    # # (9.4)
-    # buffers_graphs.lat(
-    #     name="9-4_lat-99-dyn-retcp",
-    #     edr=edr,
-    #     odr=odr,
-    #     ptn=DYN_PTN.format("*", "retcp"),
-    #     key_fnc=lambda fn: int(round(float(fn.split("-")[7])
-    #                                  / python_config.TDF)),
-    #     prc=99,
-    #     ylb="99th percentile")
+    # # Note: The numbers below have no correlation with the sections in the
+    # #       paper.
+    # #
+    # # Graphs:
+    # #   (1) Sequence: Long nights/days, static buffers, CUBIC
+    # _1()
+    # #   (2) Sequence: Short nights/days, static buffers, CUBIC
+    # _2()
+    # #   (3) Sequence: Very short nights/days, static buffers, CUBIC
+    # _3()
+    # #   (4) Short nights/days, static buffers, all TCP variants
+    # #     (4.1) Sequence
+    # _4_1()
+    # #     (4.2) Utilization
+    # _4_2()
+    # # - Contributions:
+    # #   (5) Static buffers, CUBIC
+    # #     (5.1) Sequence
+    # _5_1()
+    # #     (5.2) Utilization
+    # _5_2()
+    # #     (5.3) Latency 50
+    # _5_3()
+    # #     (5.4) Latency 99
+    # _5_4()
+    # #   (6) Dynamic buffers, CUBIC
+    # #     (6.1) Sequence
+    # #       (6.1.1) Coarse-grained
+    # _6_1_1()
+    # #       (6.1.2) Fine-grained
+    # _6_1_2()
+    # #       (6.1.3) For one experiment, look at all flows in detail
+    # _6_1_3()
+    # #     (6.2) Utilization
+    # _6_2()
+    # #     (6.3) Latency 50
+    # _6_3()
+    # #     (6.4) Latency 99
+    # _6_4()
+    # #   (7) Dynamic buffers, all TCP variants
+    # #     (7.1) Sequence
+    # #       (7.1.1) Fixed resize time, varying variant
+    # _7_1_1_and_7_2()
+    # #       (7.1.2) Fixed variant, varying resize time
+    # _7_1_2()
+    # #     (7.2) Utilization, for various resize times
+    # #   (8) Static buffers, reTCP
+    # #     (8.1) Sequence
+    # _8_1()
+    # #     (8.2) Utilization
+    # _8_2()
+    # #     (8.3) Latency 50
+    # _8_3()
+    # #     (8.4) Latency 99
+    # _8_4()
+    # #   (9) Dynamic buffers, reTCP
+    # #     (9.1) Sequence
+    # #       (9.1.1) Coarse-grained
+    # _9_1_1()
+    # #       (9.1.2) Fine-grained
+    # _9_1_2()
+    # #     (9.2) Utilization
+    # _9_2()
+    # #     (9.3) Latency 50
+    # _9_3()
+    # #     (9.4) Latency 99
+    # _9_4()
 
 
 if __name__ == "__main__":
