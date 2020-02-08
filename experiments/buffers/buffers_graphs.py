@@ -135,8 +135,8 @@ def plot_lat(keys, latencies, fln, ylb, ylm=None, xlr=0,
     options.x.ticks.major.labels.options.horizontalalignment = \
         "center" if xlr == 0 else "right"
     options.y.label.ylabel = "{} latency ($\mu$s)".format(ylb)
-    if ylm is not None:
-        options.y.limits = [0, ylm]
+    ylm = ylm if ylm is not None else 1.2 * max([max(line) for line in y])
+    options.y.limits = [0, ylm]
     simpleplotlib.plot(x, y, options)
 
 
