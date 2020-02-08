@@ -354,7 +354,7 @@ def main():
     #     for xlm_zoom, ylm_zoom in [(XLM_ZOOM, YLM_ZOOM), (None, None)]:
     #         sg.seq(
     #             sync=SYNC,
-    #             name="6-1-3_seq-dyn-{}-{}_chunk{}_cg".format(
+    #             name="6-1-3_seq-dyn-{}_{}_chunk{}_cg".format(
     #                 CHOSEN_TCP, dyn_us, "" if xlm_zoom is None else "_zoom"),
     #             edr=edr,
     #             odr=odr,
@@ -373,7 +373,7 @@ def main():
 
     # # (6.2)
     # buffers_graphs.util(
-    #     name="6-2_util-dyn-{}".format(CHOSEN_TCP),
+    #     name="6-2_util-lat-dyn-{}_util".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
@@ -386,7 +386,7 @@ def main():
 
     # # (6.3)
     # buffers_graphs.lat(
-    #     name="6-3_lat-50-dyn-{}".format(CHOSEN_TCP),
+    #     name="6-3_util-lat-dyn-{}_lat50".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
@@ -397,7 +397,7 @@ def main():
 
     # # (6.4)
     # buffers_graphs.lat(
-    #     name="6-4_lat-99-dyn-{}".format(CHOSEN_TCP),
+    #     name="6-4_util-lat-dyn-{}_lat99".format(CHOSEN_TCP),
     #     edr=edr,
     #     odr=odr,
     #     ptn=DYN_PTN.format("*", CHOSEN_TCP),
