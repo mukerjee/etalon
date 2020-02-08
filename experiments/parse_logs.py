@@ -465,14 +465,6 @@ def parse_packet_log(fln, msg_len=112):
     # receiver started and ended, respectively.
     flw_starts = {}
     flw_ends = {}
-    # # Mapping from (sender, receiver) to the number of complete circuits between
-    # # them.
-    # number_circuit_ups = collections.defaultdict(int)
-    # # Mapping from (sender, receiver) to when circuits began between them.
-    # circuit_starts = collections.defaultdict(list)
-    # # Mapping from (sender, receiver) to when the latest circuit between them
-    # # started.
-    # most_recent_circuit_up = collections.defaultdict(int)
 
     # bytes_in_rtt = collections.defaultdict(lambda: collections.defaultdict(int))
     for msg in msg_from_file(fln, msg_len):
@@ -519,9 +511,6 @@ def parse_packet_log(fln, msg_len=112):
 
         byts[sr_racks] += data_byts
         if circuit:
-            # which_rtt = int((ts_s_tdf - most_recent_circuit_up[sr_racks] - 0.5 * RTT)
-            #                 / RTT)
-            # bytes_in_rtt[sr_racks][which_rtt] += data_byts
             byts_c[sr_racks] += data_byts
         else:
             byts_p[sr_racks] += data_byts
@@ -544,7 +533,6 @@ def parse_packet_log(fln, msg_len=112):
     # Packet network latency.
     lats_p = [(prc, np.percentile(lats_p, prc)) for prc in PERCENTILES]
 
-    b = collections.defaultdict(dict)
     # Mapping from (sender, receiver) to total, circuit, and packet throughput,
     # respectively, in Gbps.
     tpts_Gbps = {}
@@ -556,15 +544,7 @@ def parse_packet_log(fln, msg_len=112):
         tpts_Gbps_c[sr_racks] = (byts_c[sr_racks] / total_time) * 8 / 1.e9
         tpts_Gbps_p[sr_racks] = (byts_p[sr_racks] / total_time) * 8 / 1.e9
 
-        # n = 0
-        # for ts in circuit_starts[sr_racks]:
-        #     if ts >= flw_start and ts <= flw_ends[sr_racks]:
-        #         n += 1
-        # max_bytes = n * RTT * python_config.CIRCUIT_BW_Gbps_TDF * 8 / 1.e9
-        # for i, r in sorted(bytes_in_rtt[sr_racks].items()):
-        #     b[sr_racks][i] = (r / max_bytes) * 100
-
-    return (lats, lats_c, lats_p), (tpts_Gbps, tpts_Gbps_c, tpts_Gbps_p), b, \
+    return (lats, lats_c, lats_p), (tpts_Gbps, tpts_Gbps_c, tpts_Gbps_p), \
         sum(byts_c.values()), sum(byts_p.values())
 
 
