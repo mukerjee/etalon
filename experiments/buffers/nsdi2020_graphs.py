@@ -44,30 +44,31 @@ SYNC = False
 # The location of the HSLog element: either "before" or "after" the hybrid
 # switch.
 LOG_POS = "after"
+# Static buffer size to use.
+CHOSEN_STATIC_SMALL = 16
+CHOSEN_STATIC_BIG = 64
 
 # Filename patterns.
 #
-# Matches experiments with a particular CC mode, 1000 us nights, and 9000 us
-# days (under TDF).
-OLD_PTN = (
-    "-*-{}-*-" +
-    "{}-{}".format(int(round(1000 * python_config.TDF)),
-                   int(round(9000 * python_config.TDF)))
-    + "-*-click.txt")
-# Matches experiments with a particular CC mode, 1 us nights, and 9 us days
-# (under TDF).
-FUTURE_PTN = (
-    "*-{}-*-" +
-    "{}-{}".format(int(round(1 * python_config.TDF)),
-                   int(round(9 * python_config.TDF))) +
-    "-*-click.txt")
-# Matches experiments with static buffers of a particular size, a particular CC
-# mode, 20 us nights, and 180 us days (under TDF).
-STATIC_PTN = (
-    "*-{}-QUEUE-False-*-{}-*-" +
-    "{}-{}".format(int(round(python_config.RECONFIG_DELAY_us)),
-                   int(round(DAY_LEN_us))) +
-    "-*-click.txt")
+# Matches experiments with static buffers of particular small and big sizes, a
+# particular CC mode, and days and nights of certain lengths.
+STATIC_PTN = "*-{}-{}-QUEUE-False-*-{}-*-{}-{}-*-click.txt".format(
+    CHOSEN_STATIC_SMALL, CHOSEN_STATIC_BIG, "{}", "{}", "{}")
+# Matches experiments with static buffers of particular small and big sizes, a
+# particular CC mode, 1000 us nights, and 9000 us days (under TDF).
+STATIC_PTN_OLD = STATIC_PTN.format("{}",
+                                   int(round(1000 * python_config.TDF)),
+                                   int(round(9000 * python_config.TDF)))
+# Matches experiments with static buffers of particular small and big sizes, a
+# particular CC mode, 1 us nights, and 9 us days (under TDF).
+STATIC_PTN_FUT = STATIC_PTN.format("{}",
+                                   int(round(1 * python_config.TDF)),
+                                   int(round(9 * python_config.TDF)))
+# Matches experiments with static buffers of particular small and big sizes, a
+# particular CC mode, 20 us nights, and 180 us days (under TDF).
+STATIC_PTN_CUR = STATIC_PTN.format("{}",
+                                   int(round(python_config.RECONFIG_DELAY_us)),
+                                   int(round(DAY_LEN_us)))
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
 DYN_PTN = "*-QUEUE-True-{}-{}-*-click.txt"
@@ -114,8 +115,6 @@ CHOSEN_RETCP_UTIL = [0, 25, 50, 75, 100, 125, 138, 142, 146, 148, 150, 175,
                      200, 225]
 # The TCP variant to use as our baseline.
 CHOSEN_TCP = "cubic"
-# Static buffer size to use.
-CHOSEN_STATIC = 16
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
@@ -166,7 +165,7 @@ def main():
             name="1_seq-old-{}".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
-            ptn=OLD_PTN.format(CHOSEN_TCP),
+            ptn=STATIC_PTN_OLD.format(CHOSEN_TCP),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
             dur=57590,
             msg_len=msg_len,
@@ -179,7 +178,8 @@ def main():
             name="2_seq-current-{}".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
-            ptn=STATIC_PTN.format(CHOSEN_STATIC, CHOSEN_TCP),
+            ptn=STATIC_PTN_CUR.format(CHOSEN_STATIC_SMALL, CHOSEN_STATIC_BIG,
+                                  CHOSEN_TCP),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
             dur=DUR_us,
             msg_len=msg_len,
@@ -192,7 +192,7 @@ def main():
             name="3_seq-future-{}".format(CHOSEN_TCP),
             edr=edr,
             odr=odr,
-            ptn=FUTURE_PTN.format(CHOSEN_TCP),
+            ptn=STATIC_PTN_FUT.format(CHOSEN_TCP),
             key_fnc=lambda fn, chosen_tcp=CHOSEN_TCP: chosen_tcp,
             dur=64,
             msg_len=msg_len,
