@@ -445,7 +445,7 @@ def main():
 
     def _8_2():
         buffers_graphs.util(
-            name="8-2_util-static-retcp",
+            name="8-2_util-lat-static-retcp_util",
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format("*", "retcp"),
@@ -456,7 +456,7 @@ def main():
 
     def _8_3():
         buffers_graphs.lat(
-            name="8-3_lat-50-static-retcp",
+            name="8-3_util-lat-static-retcp_lat50",
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format("*", "retcp"),
@@ -467,7 +467,7 @@ def main():
 
     def _8_4():
         buffers_graphs.lat(
-            name="8-4_lat-99-static-retcp",
+            name="8-4_util-lat-static-retcp_lat99",
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format("*", "retcp"),
@@ -511,7 +511,7 @@ def main():
 
     def _9_2():
         buffers_graphs.util(
-            name="9-2_util-dyn-retcp",
+            name="9-2_util-lat-dyn-retcp_util",
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", "retcp"),
@@ -526,7 +526,7 @@ def main():
 
     def _9_3():
         buffers_graphs.lat(
-            name="9-3_lat-50-dyn-retcp",
+            name="9-3_util-lat-dyn-retcp_lat50",
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", "retcp"),
@@ -538,7 +538,7 @@ def main():
 
     def _9_4():
         buffers_graphs.lat(
-            name="9-4_lat-99-dyn-retcp",
+            name="9-4_util-lat-dyn-retcp_lat99",
             edr=edr,
             odr=odr,
             ptn=DYN_PTN.format("*", "retcp"),
