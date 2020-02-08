@@ -25,6 +25,9 @@ import buffers_graphs
 import python_config
 import sg
 
+# True and False mean that the data parsing will be executed using a single
+# thread and multiple threads, respectively.
+SYNC = False
 
 # Experiment parameters.
 #
@@ -38,15 +41,11 @@ DEFAULT_MSG_LEN = 116
 NUM_RACKS_FAKE = 8
 DUR_us = int(round(
     (python_config.RECONFIG_DELAY_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3))
-# True and False mean that the data parsing will be executed using a single
-# thread and multiple threads, respectively.
-SYNC = False
 # The location of the HSLog element: either "before" or "after" the hybrid
 # switch.
 LOG_POS = "after"
-# Static buffer size to use.
+# Small static buffer size to use.
 CHOSEN_STATIC_SMALL = 16
-CHOSEN_STATIC_BIG = 64
 
 # Filename patterns.
 #
@@ -214,7 +213,7 @@ def main():
 
     def _4_2():
         buffers_graphs.util(
-            name="4-2_util-current-all",
+            name="4-2_util-lat-current-all_util",
             edr=edr,
             odr=odr,
             ptn=STATIC_PTN_CUR.format(CHOSEN_STATIC_SMALL, "*"),
@@ -399,7 +398,7 @@ def main():
                 cir_lat_s=CIR_LAT_s,
                 log_pos=LOG_POS)
             buffers_graphs.util(
-                name="7-2_util-dyn-all-{}us".format(us),
+                name="7-2_util-lat-dyn-all-{}us_util".format(us),
                 edr=edr,
                 odr=odr,
                 ptn=DYN_PTN.format(us_tdf, "*"),
@@ -520,7 +519,7 @@ def main():
             xlb="Resize time ($\mu$s)",
             xlr=45,
             lbs=12,
-            flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen,
+            # flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen,
             num_racks=NUM_RACKS_FAKE,
             msg_len=msg_len)
 
