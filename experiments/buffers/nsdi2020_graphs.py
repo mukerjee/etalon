@@ -50,20 +50,23 @@ LOG_POS = "after"
 # Matches experiments with a particular CC mode, 1000 us nights, and 9000 us
 # days (under TDF).
 OLD_PTN = (
-    "*-{}-*-" +
-    "{}-{}".format(1000 * python_config.TDF, 9000 * python_config.TDF)
+    "-*-{}-*-" +
+    "{}-{}".format(int(round(1000 * python_config.TDF)),
+                   int(round(9000 * python_config.TDF)))
     + "-*-click.txt")
 # Matches experiments with a particular CC mode, 1 us nights, and 9 us days
 # (under TDF).
 FUTURE_PTN = (
     "*-{}-*-" +
-    "{}-{}".format(1 * python_config.TDF, 9 * python_config.TDF) +
+    "{}-{}".format(int(round(1 * python_config.TDF)),
+                   int(round(9 * python_config.TDF))) +
     "-*-click.txt")
 # Matches experiments with static buffers of a particular size, a particular CC
 # mode, 20 us nights, and 180 us days (under TDF).
 STATIC_PTN = (
     "*-{}-QUEUE-False-*-{}-*-" +
-    "{}-{}".format(python_config.RECONFIG_DELAY_us, DAY_LEN_us) +
+    "{}-{}".format(int(round(python_config.RECONFIG_DELAY_us)),
+                   int(round(DAY_LEN_us))) +
     "-*-click.txt")
 # Matches experiments with dynamic buffers, a particular resize time, and a
 # particular CC mode.
