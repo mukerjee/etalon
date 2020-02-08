@@ -129,7 +129,7 @@ def add_optimal(data):
     data["seqs"].insert(0, optimal)
 
 
-def get_data(rdb_filepath, key, ptns, dur, key_fnc, time_offset_s,
+def get_data(rdb_filepath, edr, key, ptns, dur, key_fnc, time_offset_s,
              chunk_mode=None, msg_len=112, sync=False):
     """
     (Optionally) loads the results for the specified key into the provided
@@ -143,7 +143,7 @@ def get_data(rdb_filepath, key, ptns, dur, key_fnc, time_offset_s,
         # For each pattern, extract the matches. Then, flatten them into a
         # single list.
         flns = [fln for matches in
-                [glob.glob(path.join(sys.argv[1], ptn)) for ptn in ptns]
+                [glob.glob(path.join(edr, ptn)) for ptn in ptns]
                 for fln in matches]
         assert flns, "Found no files for patterns: {}".format(ptns)
         print("Found files for patterns: {}\n{}".format(
@@ -263,6 +263,7 @@ def plot_seq(data, fln, odr=path.join(PROGDIR, "..", "graphs"),
              ylm=None, chunk_mode=None, voq_agg=False):
     assert not voq_agg or chunk_mode is None, \
         "voq_agg=True requires chunk_mode=None!"
+    assert not voq_agg or ins is None, "voq_agg=True requires ins=None!"
 
     plot_voqs = False
     if chunk_mode is None:
@@ -535,13 +536,13 @@ def seq(name, edr, odr, ptn, key_fnc, dur, cir_lat_s, ins=None, flt=None, order=
           single thread and multiple threads, respectively.
     """
     print("Plotting: {}".format(name))
-    parse_logs.DURATION = dur
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
     # use <details> as the database key.
     basename = name.split("_")[1] if "_" in name else name
     data = get_data(
         rdb_filepath=path.join(edr, "{}.db".format(basename)),
+        edr=edr,
         key=basename,
         ptns=[ptn],
         dur=dur,
