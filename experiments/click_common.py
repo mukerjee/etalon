@@ -30,7 +30,9 @@ def clickWriteHandler(element, handler, value):
     message = "WRITE %s.%s %s\n" % (element, handler, value)
     print message.strip()
     CLICK_SOCKET.send(message)
-    print CLICK_SOCKET.recv(CLICK_BUFFER_SIZE).strip()
+    response = CLICK_SOCKET.recv(CLICK_BUFFER_SIZE).strip()
+    print response
+    assert int(response.split("\n")[-1].split(" ")[0]) == 200, response
 
 
 def clickReadHandler(element, handler):
