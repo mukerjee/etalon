@@ -35,7 +35,9 @@ def main():
     data = defaultdict(lambda: defaultdict(dict))
     with open(edf) as f:
         for line in f:
-            date, swt_us, num_flows, q_len_p, delay_2way_ns, fct_us, num_rtx, \
+            # date, swt_us, num_flows, q_len_p, delay_2way_ns, fct_us, num_rtx, \
+            #     num_rto, num_syns, avt_rtt_us = line.strip().split()
+            date, num_flows, swt_us, q_len_p, delay_2way_ns, fct_us, num_rtx, \
                 num_rto, num_syns, avt_rtt_us = line.strip().split()
             # Convert the queue length from being in terms of 1500-byte packets
             # to being in terms of 9000-bytes packets.
