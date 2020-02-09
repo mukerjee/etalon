@@ -27,7 +27,7 @@ MAX_STATIC_POW = 7
 CG_RESIZE_MIN_us = 0
 CG_RESIZE_MAX_us = 1200
 CG_RESIZE_DELTA_us = 100
-ALL_VARIANTS_uss = [0, 1200, 500, 1000]
+ALL_VARIANTS_uss = [0, 500, 1000, 1200]
 # Fine granularity sweep bounds.
 FG_RESIZE_MIN_us = 140
 FG_RESIZE_MAX_us = 170
