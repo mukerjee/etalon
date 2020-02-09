@@ -81,6 +81,8 @@ ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200",
 #                 "packet only"]
 # ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "900", "800", "700",
 #                 "packet only"]
+# ORDER_DYN_CG = ["optimal", "3600", "3000", "2400", "1800", "1200", "600", "0"
+#                 "packet only"]
 # ORDER_DYN_CG = ["optimal", "7000", "6000", "5000", "4000", "3000", "2000",
 #                 "1000", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000",
@@ -108,10 +110,10 @@ CHOSEN_TCP = "cubic"
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (360, 800)
+XLM_ZOOM = (9220, 9700)
 # XLM_ZOOM = (4000, 8120)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (0, 2000)
+YLM_ZOOM = (750, 1000)
 # YLM_ZOOM = (0, 15000)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
 DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
@@ -312,6 +314,8 @@ def main():
                 voq_agg=True,
                 cir_lat_s=CIR_LAT_s,
                 log_pos=LOG_POS)
+                # xlm=XLM_ZOOM,
+                # ylm=YLM_ZOOM)
 
     def _6_1_2():
         sg.seq(
