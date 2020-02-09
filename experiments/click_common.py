@@ -59,21 +59,19 @@ def disableLog():
     time.sleep(0.1)
 
 
-def setQueueCap(cap, which):
-    options = ["small", "big"]
-    assert which in options, \
-        "Which queue capacity to set must be one of {}, but is: {}".format(
-            options, which)
-    clickWriteHandler('runner', '{}_queue_capacity'.format(which), cap)
+def setQueueCap(s_cap, b_cap):
+    # When resizing the small VOQ capacity, we need to explicitly reconfigure
+    # the VOQs themselves. This is necessary because the Click RunSchedule
+    # element does not set the VOQ capacity when in static VOQ mode. The best
+    # solution would be to modify RunSchedule to always set the proper VOQ
+    # capacity, but I do not want to risk introducing a bug, so I will do this
+    # hack instead.
+    for src in xrange(1, NUM_RACKS + 1):
+        for dst in xrange(1, NUM_RACKS + 1):
+            clickWriteHandler("hybrid_switch/q{}{}/q".format(src, dst),
+                              "resize_capacity", s_cap)
+    clickWriteHandler("runner", "queue_capacity", "{},{}".format(s_cap, b_cap))
     time.sleep(0.1)
-
-
-def setSmallQueueCap(cap):
-    setQueueCap(cap, which="small")
-
-
-def setBigQueueCap(cap):
-    setQueueCap(cap, which="big")
 
 
 def setEstimateTrafficSource(source):
@@ -264,8 +262,7 @@ def setConfig(config):
 
     c.update(config)
     clearCounters()
-    setSmallQueueCap(c['small_queue_cap'])
-    setBigQueueCap(c['big_queue_cap'])
+    setQueueCap(c['small_queue_cap'], c['big_queue_cap'])
     setEstimateTrafficSource(c['traffic_source'])
     setInAdvance(c['in_advance'])
     common.setCC(c['cc'])
