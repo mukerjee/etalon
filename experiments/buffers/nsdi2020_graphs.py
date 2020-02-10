@@ -226,7 +226,9 @@ def main():
             order=ORDER_VARS,
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            xlm=XLM_ZOOM,
+            ylm=YLM_ZOOM)
 
     def _4_2():
         buffers_graphs.util(
@@ -255,9 +257,11 @@ def main():
             dur=DUR_us,
             order=ORDER_STATIC_SEQ,
             msg_len=msg_len,
-            voq_agg=True,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            voq_agg=True,
+            xlm=XLM_ZOOM,
+            ylm=YLM_ZOOM)
 
     def _5_2():
         buffers_graphs.util(
