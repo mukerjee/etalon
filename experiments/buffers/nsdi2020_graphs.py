@@ -75,11 +75,12 @@ ORDER_STATIC_UTIL = ["4", "8", "16", "32", "64", "128"]
 # used to select which lines to plot. For coarse-grained experiments.
 # ORDER_DYN_CG = ["optimal", "175", "150", "125", "100", "75", "50", "25", "0",
 #                 "packet only"]
-ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200",
-                "0", "packet only"]
+# ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "800", "600", "400", "200",
+#                 "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "600", "500", "400", "300", "200", "100", "0",
 #                 "packet only"]
-# ORDER_DYN_CG = ["optimal", "1200", "1100", "1000", "900", "800", "700",
+ORDER_DYN_CG = ["optimal", "1000", "500", "0", "packet only"]
+# ORDER_DYN_CG = ["optimal", "1100", "1000", "900", "800", "700", "500", "0",
 #                 "packet only"]
 # ORDER_DYN_CG = ["optimal", "3600", "3000", "2400", "1800", "1200", "600", "0"
 #                 "packet only"]
@@ -110,10 +111,13 @@ CHOSEN_TCP = "cubic"
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = (9220, 9700)
+# XLM_ZOOM = None
+XLM_ZOOM = (1300, 2900)
+# XLM_ZOOM = (9220, 9700)
 # XLM_ZOOM = (4000, 8120)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = (750, 1000)
+YLM_ZOOM = None
+# YLM_ZOOM = (750, 1000)
 # YLM_ZOOM = (0, 15000)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
 DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
@@ -313,9 +317,9 @@ def main():
                 msg_len=msg_len,
                 voq_agg=True,
                 cir_lat_s=CIR_LAT_s,
-                log_pos=LOG_POS)
-                # xlm=XLM_ZOOM,
-                # ylm=YLM_ZOOM)
+                log_pos=LOG_POS,
+                xlm=XLM_ZOOM,
+                ylm=YLM_ZOOM)
 
     def _6_1_2():
         sg.seq(
@@ -518,7 +522,10 @@ def main():
                  label.strip(" $\mu$s") in order),
             order=ORDER_DYN_CG,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            voq_agg=True,
+            xlm=XLM_ZOOM,
+            ylm=YLM_ZOOM)
 
     def _9_1_2():
         sg.seq(
