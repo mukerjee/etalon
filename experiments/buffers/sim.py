@@ -14,6 +14,7 @@ from simpleplotlib import plot
 
 MSS_B_EXP = 1500
 MSS_B_TARGET = 9000
+CHOSEN_QUEUE_CAPS = [8, 16, 32, 64, 128]
 
 
 def main():
@@ -65,6 +66,9 @@ def main():
             (swt_us, fct_s)
             for swt_us, (_, _, fct_s, _, _, _, _) in swt_us_results.items()]
                  for q_len_p, swt_us_results in q_len_results.items()}.items()
+        # Pick only the lines we want.
+        lines = [(q_len_p, res) for q_len_p, res in lines
+                 if q_len_p in CHOSEN_QUEUE_CAPS]
         # Sort the datapoints based on their x-valies.
         lines = sorted(lines, key=lambda a: a[0])
         # lbls: list of q lens
@@ -81,7 +85,8 @@ def main():
             "{} packets".format(int(round(lbl))) for lbl in lbls]
         options.legend.options.fontsize = 18
         options.legend.options.ncol = 1
-        options.series_options = [DotMap(linewidth=2) for _ in range(len(xs))]
+        options.series_options = [DotMap(linewidth=2, marker="o")
+                                  for _ in range(len(xs))]
         options.output_fn = path.join(odr, "sim-{}-flows.pdf".format(num_flows))
         options.x.label.xlabel = "Circuit uptime ($\mu$s)"
         options.y.label.ylabel = "Flow completion time (s)"
@@ -91,6 +96,7 @@ def main():
         options.x.log = True
         options.x.axis.show = options.y.axis.show = True
         options.x.axis.color = options.y.axis.color = "black"
+        options.x.axis.stretch = 1.35
         # Flip the x-axis.
         options.x.limits = (max([max(vals) for vals in xs]) * 1.5,
                             min([min(vals) for vals in xs]) * 0.5)
