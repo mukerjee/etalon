@@ -5,6 +5,7 @@
  */
 
 #include <linux/module.h>
+#include <linux/time.h>
 #include <net/tcp.h>
 
 static int jump_up __read_mostly = 2;
@@ -36,23 +37,26 @@ static void retcp_in_ack(struct sock *sk, u32 flags)
 static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 {
   int old_cwnd;
+  struct timespec ts;
   struct retcp *ca = inet_csk_ca(sk);
   struct tcp_sock *tp = tcp_sk(sk);
+
+  getnstimeofday(&ts);
   tcp_reno_cong_avoid(sk, ack, acked);
 
   if (ca->have_circuit && !ca->jumped) {
     old_cwnd = tp->snd_cwnd;
     tp->snd_cwnd *= jump_up;
     ca->jumped = 1;
-    printk(KERN_WARNING "reTCP increase, old cwnd: %d, new cwnd: %d, ack: %u\n",
-	   old_cwnd, tp->snd_cwnd, ack);
+    printk(KERN_WARNING "time: %lu, reTCP increase, old cwnd: %d, new cwnd: %d, ack: %u\n",
+	   ts.tv_nsec, old_cwnd, tp->snd_cwnd, ack);
   }
   if (!ca->have_circuit && ca->jumped) {
     old_cwnd = tp->snd_cwnd;
     tp->snd_cwnd /= jump_down;
     ca->jumped = 0;
-    printk(KERN_WARNING "reTCP decrease, old cwnd: %d, new cwnd: %d, ack: %u\n",
-	   old_cwnd, tp->snd_cwnd, ack);
+    printk(KERN_WARNING "time: %lu, reTCP decrease, old cwnd: %d, new cwnd: %d, ack: %u\n",
+	   ts.tv_nsec, old_cwnd, tp->snd_cwnd, ack);
   }
 }
 
