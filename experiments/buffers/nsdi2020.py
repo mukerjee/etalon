@@ -124,16 +124,10 @@ def main():
             cnf["small_queue_cap"] = SMALL_QUEUE_CAP
             cnf["big_queue_cap"] = BIG_QUEUE_CAP
 
-    # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
-    # restarting the cluster.
-    maybe(lambda: common.initializeExperiment(
-        "flowgrindd", cc=cnfs[0]["cc"], sync=SYNC))
-    # Total number of experiments.
-    tot = len(cnfs)
-    for cnt, cnf in enumerate(cnfs, start=1):
-        maybe(lambda: click_common.setConfig(cnf))
-        print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
-        maybe(lambda: common.flowgrind(settings={
+    # Assemble settings. Generate the list of settings first so that we can
+    # the estimated total duration.
+    stgs = [
+        {
             # Generate a flow from each machine on rack 1 to its corresponding
             # partner machine on rack 2.
             "flows": [{"src": "r1", "dst": "r2"}],
@@ -149,8 +143,23 @@ def main():
                      * 3000                                     # 3000 weeks.
                      + 100)                                     # Extra 100 ms, for good measure.
                     / 1e3),                                     # Convert to seconds.
-            "tcpdump": TCPDUMP}))
-    maybe(common.finishExperiment)
+            "tcpdump": TCPDUMP
+        } for cnf in cnfs]
+
+    # Total number of experiments.
+    tot = len(cnfs)
+    # Estimated total duration.
+    dur = sum([stg["dur"] for stg in stgs]) * python_config.TDF
+    print("Estimated total duration: >{} seconds".format(dur))
+    # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
+    # restarting the cluster.
+    maybe(lambda: common.initializeExperiment(
+        "flowgrindd", cc=cnfs[0]["cc"], sync=SYNC))
+    for cnt, (cnf, stg)  in enumerate(zip(cnfs, stgs), start=1):
+        maybe(lambda: click_common.setConfig(cnf))
+        print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
+        maybe(lambda: common.flowgrind(settings=stg))
+        maybe(common.finishExperiment)
 
 
 if __name__ == "__main__":
