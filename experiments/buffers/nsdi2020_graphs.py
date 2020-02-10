@@ -469,7 +469,10 @@ def main():
             dur=DUR_us,
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
-            log_pos=LOG_POS)
+            log_pos=LOG_POS,
+            voq_agg=True,
+            xlm=XLM_ZOOM,
+            ylm=YLM_ZOOM)
 
     def _8_2():
         buffers_graphs.util(
