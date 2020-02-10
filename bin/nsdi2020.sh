@@ -20,3 +20,7 @@ echo "1" | sudo tee /proc/sys/vm/drop_caches
 # Run experiments.
 "$HOME"/etalon/experiments/buffers/nsdi2020.py
 cleanup
+
+ssh -t host1 'sudo sysctl -w net.ipv4.tcp_congestion_control=cubic'
+ssh -t host2 'sudo sysctl -w net.ipv4.tcp_congestion_control=cubic'
+ssh -t host3 'sudo sysctl -w net.ipv4.tcp_congestion_control=cubic'
