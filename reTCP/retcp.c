@@ -48,15 +48,15 @@ static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
     old_cwnd = tp->snd_cwnd;
     tp->snd_cwnd *= jump_up;
     ca->jumped = 1;
-    printk(KERN_WARNING "time: %lu, reTCP increase, old cwnd: %d, new cwnd: %d, ack: %u, bytes_received: %llu\n",
-	   ts.tv_nsec, old_cwnd, tp->snd_cwnd, ack, tp->bytes_received);
+    printk(KERN_WARNING "time: %lu, reTCP increase, old cwnd: %d, new cwnd: %d, ack: %u\n",
+	   ts.tv_nsec, old_cwnd, tp->snd_cwnd, ack);
   }
   if (!ca->have_circuit && ca->jumped) {
     old_cwnd = tp->snd_cwnd;
     tp->snd_cwnd /= jump_down;
     ca->jumped = 0;
-    printk(KERN_WARNING "time: %lu, reTCP decrease, old cwnd: %d, new cwnd: %d, ack: %u, bytes_received: %llu\n",
-	   ts.tv_nsec, old_cwnd, tp->snd_cwnd, ack, tp->bytes_received);
+    printk(KERN_WARNING "time: %lu, reTCP decrease, old cwnd: %d, new cwnd: %d, ack: %u\n",
+	   ts.tv_nsec, old_cwnd, tp->snd_cwnd, ack);
   }
 }
 
