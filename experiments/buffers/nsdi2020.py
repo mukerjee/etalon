@@ -22,11 +22,11 @@ SYNC = False
 # The number of racks to mimic when creating the strobe schedule.
 NUM_RACKS_FAKE = 25
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
-MAX_STATIC_POW = 6
+MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
 CG_RESIZE_MIN_us = 0
-CG_RESIZE_MAX_us = 3000
-CG_RESIZE_DELTA_us = 300
+CG_RESIZE_MAX_us = 300
+CG_RESIZE_DELTA_us = 50
 ALL_VARIANTS_uss = [0, 900, 2100]
 # Fine granularity sweep bounds.
 FG_RESIZE_MIN_us = 140
