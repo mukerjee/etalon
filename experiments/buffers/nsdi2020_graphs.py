@@ -79,11 +79,12 @@ ORDER_STATIC_UTIL = ["4", "8", "16", "32", "64", "128"]
 #                 "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "600", "500", "400", "300", "200", "100", "0",
 #                 "packet only"]
-ORDER_DYN_CG = ["optimal", "1000", "500", "0", "packet only"]
+# ORDER_DYN_CG = ["optimal", "1000", "500", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "1100", "1000", "900", "800", "700", "500", "0",
 #                 "packet only"]
-# ORDER_DYN_CG = ["optimal", "3600", "3000", "2400", "1800", "1200", "600", "0"
+# ORDER_DYN_CG = ["optimal", "3200", "2800", "2400", "2000", "1600", "800", "400", "0",
 #                 "packet only"]
+ORDER_DYN_CG = ["optimal", "2000", "800", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "7000", "6000", "5000", "4000", "3000", "2000",
 #                 "1000", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000",
@@ -111,8 +112,8 @@ CHOSEN_TCP = "cubic"
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-XLM_ZOOM = None
-# XLM_ZOOM = (7420, 9700)
+# XLM_ZOOM = None
+XLM_ZOOM = (7420, 9700)
 # XLM_ZOOM = (1300, 2900)
 # XLM_ZOOM = (9220, 9700)
 # XLM_ZOOM = (4000, 8120)
