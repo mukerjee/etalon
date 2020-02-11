@@ -48,7 +48,6 @@ static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
   cur_nsec = ts.tv_nsec;
   // 1000 to convert from ns to us.
   delta_usec = (cur_nsec - ca->last_nsec) / 1000;
-  ca->last_nsec = cur_nsec;
 
   tcp_reno_cong_avoid(sk, ack, acked);
   if (ca->have_circuit && !ca->jumped) {
@@ -59,6 +58,7 @@ static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 	    "time (ns): %ld, time delta (us): %ld, sock: %p, reTCP increase, "
 	    "old cwnd: %d, new cwnd: %d, ack: %u\n"),
 	   ts.tv_nsec, delta_usec, tp, old_cwnd, tp->snd_cwnd, ack);
+    ca->last_nsec = cur_nsec;
   }
   if (!ca->have_circuit && ca->jumped) {
     old_cwnd = tp->snd_cwnd;
@@ -68,6 +68,7 @@ static void retcp_cong_avoid(struct sock *sk, u32 ack, u32 acked)
 	    "time (ns): %ld, time delta (us): %ld, sock: %p, reTCP decrease, "
 	    "old cwnd: %d, new cwnd: %d, ack: %u\n"),
 	   ts.tv_nsec, delta_usec, tp, old_cwnd, tp->snd_cwnd, ack);
+    ca->last_nsec = cur_nsec;
   }
 }
 
