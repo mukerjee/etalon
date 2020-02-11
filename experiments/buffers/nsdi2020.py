@@ -25,16 +25,16 @@ NUM_RACKS_FAKE = 25
 MAX_STATIC_POW = 6
 # Coarse granularity sweep bounds.
 CG_RESIZE_MIN_us = 0
-CG_RESIZE_MAX_us = 4000
-CG_RESIZE_DELTA_us = 500
-ALL_VARIANTS_uss = [0, 500, 2500]
+CG_RESIZE_MAX_us = 3000
+CG_RESIZE_DELTA_us = 300
+ALL_VARIANTS_uss = [0, 900, 2100]
 # Fine granularity sweep bounds.
 FG_RESIZE_MIN_us = 140
 FG_RESIZE_MAX_us = 170
 FG_RESIZE_DELTA_us = 1
 # VOQ capacities.
 SMALL_QUEUE_CAP = 16
-BIG_QUEUE_CAP = 64
+BIG_QUEUE_CAP = 50
 
 
 def maybe(fnc, do=not DRY_RUN):
