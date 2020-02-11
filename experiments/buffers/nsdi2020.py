@@ -14,7 +14,7 @@ import common
 import python_config
 
 # If True, then do not run experiments and instead only print configurations.
-DRY_RUN = True
+DRY_RUN = False
 # If True, then collect tcpdump traces for every experiment.
 TCPDUMP = False
 # If True, then racks will be launched in serial.
