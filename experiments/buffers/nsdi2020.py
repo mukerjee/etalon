@@ -159,7 +159,7 @@ def main():
         maybe(lambda: click_common.setConfig(cnf))
         print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
         maybe(lambda: common.flowgrind(settings=stg))
-        maybe(common.finishExperiment)
+    maybe(common.finishExperiment)
 
 
 if __name__ == "__main__":
