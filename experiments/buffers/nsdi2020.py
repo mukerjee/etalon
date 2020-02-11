@@ -22,12 +22,12 @@ SYNC = False
 # The number of racks to mimic when creating the strobe schedule.
 NUM_RACKS_FAKE = 25
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
-MAX_STATIC_POW = 7
+MAX_STATIC_POW = 6
 # Coarse granularity sweep bounds.
 CG_RESIZE_MIN_us = 0
 CG_RESIZE_MAX_us = 4000
-CG_RESIZE_DELTA_us = 400
-ALL_VARIANTS_uss = [0, 1200, 2400, 4000]
+CG_RESIZE_DELTA_us = 500
+ALL_VARIANTS_uss = [0, 500, 2500]
 # Fine granularity sweep bounds.
 FG_RESIZE_MIN_us = 140
 FG_RESIZE_MAX_us = 170
@@ -57,18 +57,18 @@ def main():
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
-        if cc in ["cubic"]:
-            # (1) Old switches.
-            cnfs += [{"type": "fake_strobe",
-                      "num_racks_fake": NUM_RACKS_FAKE,
-                      "night_len_us": 1000 * python_config.TDF,
-                      "day_len_us": 9000 * python_config.TDF,
-                      "cc": cc}]
-            # (2) Future switches.
-            cnfs += [{"type": "fake_strobe",
-                      "num_racks_fake": NUM_RACKS_FAKE,
-                      "night_len_us": 1 * python_config.TDF,
-                      "day_len_us": 9 * python_config.TDF, "cc": cc}]
+        # if cc in ["cubic"]:
+        #     # (1) Old switches.
+        #     cnfs += [{"type": "fake_strobe",
+        #               "num_racks_fake": NUM_RACKS_FAKE,
+        #               "night_len_us": 1000 * python_config.TDF,
+        #               "day_len_us": 9000 * python_config.TDF,
+        #               "cc": cc}]
+        #     # (2) Future switches.
+        #     cnfs += [{"type": "fake_strobe",
+        #               "num_racks_fake": NUM_RACKS_FAKE,
+        #               "night_len_us": 1 * python_config.TDF,
+        #               "day_len_us": 9 * python_config.TDF, "cc": cc}]
         # (3) Static buffers.
         for exp in xrange(2, MAX_STATIC_POW + 1):
             # Only do full sweeps for CUBIC and reTCP, but capture 16 packets
