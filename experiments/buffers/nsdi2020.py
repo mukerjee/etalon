@@ -20,14 +20,14 @@ TCPDUMP = False
 # If True, then racks will be launched in serial.
 SYNC = False
 # The number of racks to mimic when creating the strobe schedule.
-NUM_RACKS_FAKE = 8
+NUM_RACKS_FAKE = 25
 # Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
 MAX_STATIC_POW = 7
 # Coarse granularity sweep bounds.
 CG_RESIZE_MIN_us = 0
-CG_RESIZE_MAX_us = 1200
-CG_RESIZE_DELTA_us = 100
-ALL_VARIANTS_uss = [0, 500, 1000, 1200]
+CG_RESIZE_MAX_us = 4000
+CG_RESIZE_DELTA_us = 400
+ALL_VARIANTS_uss = [0, 1200, 2400, 4000]
 # Fine granularity sweep bounds.
 FG_RESIZE_MIN_us = 140
 FG_RESIZE_MAX_us = 170
@@ -58,13 +58,13 @@ def main():
     # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
         if cc in ["cubic"]:
-            # (1)
+            # (1) Old switches.
             cnfs += [{"type": "fake_strobe",
                       "num_racks_fake": NUM_RACKS_FAKE,
                       "night_len_us": 1000 * python_config.TDF,
                       "day_len_us": 9000 * python_config.TDF,
                       "cc": cc}]
-            # (2)
+            # (2) Future switches.
             cnfs += [{"type": "fake_strobe",
                       "num_racks_fake": NUM_RACKS_FAKE,
                       "night_len_us": 1 * python_config.TDF,
