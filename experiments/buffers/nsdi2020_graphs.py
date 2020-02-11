@@ -37,7 +37,7 @@ CIR_LAT_s = python_config.CIRCUIT_LATENCY_s
 RECNF_us = python_config.RECONFIG_DELAY_us
 DAY_LEN_us = 9 * RECNF_us
 # The number of racks that the fake strobe schedule emulated.
-NUM_RACKS_FAKE = 8
+NUM_RACKS_FAKE = 25
 # Calculate experiment duration.
 DUR_us = int(round((RECNF_us + DAY_LEN_us) * (NUM_RACKS_FAKE - 1) * 3))
 # The location of the HSLog element: either "before" or "after" the hybrid
@@ -111,8 +111,9 @@ CHOSEN_TCP = "cubic"
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
-# XLM_ZOOM = None
-XLM_ZOOM = (1300, 2900)
+XLM_ZOOM = None
+# XLM_ZOOM = (7420, 9700)
+# XLM_ZOOM = (1300, 2900)
 # XLM_ZOOM = (9220, 9700)
 # XLM_ZOOM = (4000, 8120)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.

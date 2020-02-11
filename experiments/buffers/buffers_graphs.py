@@ -22,7 +22,7 @@ simpleplotlib.default_options.rcParams["font.family"] = "Tahoma"
 import parse_logs
 import python_config
 
-SR_RACKS = (1, 2)
+SR_RACKS = (2, 3)
 
 
 class FileReaderArgs(object):
