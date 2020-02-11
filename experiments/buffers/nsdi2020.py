@@ -14,24 +14,24 @@ import common
 import python_config
 
 # If True, then do not run experiments and instead only print configurations.
-DRY_RUN = False
+DRY_RUN = True
 # If True, then collect tcpdump traces for every experiment.
 TCPDUMP = False
 # If True, then racks will be launched in serial.
 SYNC = False
 # The number of racks to mimic when creating the strobe schedule.
 NUM_RACKS_FAKE = 25
-# Run static buffer experiments up to buffer size 2**MAX_STATIC_POW.
-MAX_STATIC_POW = 7
-# Coarse granularity sweep bounds.
-CG_RESIZE_MIN_us = 0
-CG_RESIZE_MAX_us = 300
-CG_RESIZE_DELTA_us = 50
-ALL_VARIANTS_uss = [0, 900, 2100]
-# Fine granularity sweep bounds.
-FG_RESIZE_MIN_us = 140
-FG_RESIZE_MAX_us = 170
-FG_RESIZE_DELTA_us = 1
+# Run static buffer experiments up to buffer size 2**STATIC_POW_MAX.
+STATIC_POW_MAX = 7
+# Long prebuffering sweep bounds.
+RESIZE_LONG_MIN_us = 0
+RESIZE_LONG_MAX_us = 3000
+RESIZE_LONG_DELTA_us = 300
+ALL_VARIANTS_uss = [1200]
+# Short prebuffering sweep bounds.
+RESIZE_SHORT_MIN_us = 0
+RESIZE_SHORT_MAX_us = 300
+RESIZE_SHORT_DELTA_us = 50
 # VOQ capacities.
 SMALL_QUEUE_CAP = 16
 BIG_QUEUE_CAP = 50
@@ -57,20 +57,20 @@ def main():
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
-        # if cc in ["cubic"]:
-        #     # (1) Old switches.
-        #     cnfs += [{"type": "fake_strobe",
-        #               "num_racks_fake": NUM_RACKS_FAKE,
-        #               "night_len_us": 1000 * python_config.TDF,
-        #               "day_len_us": 9000 * python_config.TDF,
-        #               "cc": cc}]
-        #     # (2) Future switches.
-        #     cnfs += [{"type": "fake_strobe",
-        #               "num_racks_fake": NUM_RACKS_FAKE,
-        #               "night_len_us": 1 * python_config.TDF,
-        #               "day_len_us": 9 * python_config.TDF, "cc": cc}]
+        if cc in ["cubic"]:
+            # (1) Old switches.
+            cnfs += [{"type": "fake_strobe",
+                      "num_racks_fake": NUM_RACKS_FAKE,
+                      "night_len_us": 1000 * python_config.TDF,
+                      "day_len_us": 9000 * python_config.TDF,
+                      "cc": cc}]
+            # (2) Future switches.
+            cnfs += [{"type": "fake_strobe",
+                      "num_racks_fake": NUM_RACKS_FAKE,
+                      "night_len_us": 1 * python_config.TDF,
+                      "day_len_us": 9 * python_config.TDF, "cc": cc}]
         # (3) Static buffers.
-        for exp in xrange(2, MAX_STATIC_POW + 1):
+        for exp in xrange(2, STATIC_POW_MAX + 1):
             # Only do full sweeps for CUBIC and reTCP, but capture 16 packets
             # for all variants.
             if cc in ["cubic", "retcp"] or exp == 4:
@@ -83,27 +83,26 @@ def main():
                           "small_queue_cap": 2**exp,
                           "big_queue_cap": 2**exp,
                           "cc": cc}]
-        # (4) Coarse granularity.
-        for us in xrange(
-                CG_RESIZE_MIN_us, CG_RESIZE_MAX_us + 1, CG_RESIZE_DELTA_us):
-            # Only do full sweeps for CUBIC and reTCP, but capture a few key
-            # us's for all variants.
-            if cc in ["cubic", "retcp"] or us in ALL_VARIANTS_uss:
+        # (4) Long prebuffering.
+        for us in xrange(RESIZE_LONG_MIN_us, RESIZE_LONG_MAX_us + 1,
+                         RESIZE_LONG_DELTA_us):
+            # Only do a full sweep for CUBIC, but capture a few key us's for all
+            # variants.
+            if cc == "cubic" or us in ALL_VARIANTS_uss:
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
                           "queue_resize": True,
                           "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
-        # # (4) Fine granularity.
-        # for us in xrange(
-        #         FG_RESIZE_MIN_us, FG_RESIZE_MAX_us + 1, FG_RESIZE_DELTA_us):
-        #     if cc in ["cubic", "retcp"]:
-        #         cnfs += [{"type": "fake_strobe",
-        #                   "num_racks_fake": NUM_RACKS_FAKE,
-        #                   "queue_resize": True,
-        #                   "in_advance": int(round(us * python_config.TDF)),
-        #                   "cc": cc}]
-
+        # (4) Short prebuffering, only for reTCP.
+        if cc == "retcp":
+            for us in xrange(RESIZE_SHORT_MIN_us, RESIZE_SHORT_MAX_us + 1,
+                             RESIZE_SHORT_DELTA_us):
+                cnfs += [{"type": "fake_strobe",
+                          "num_racks_fake": NUM_RACKS_FAKE,
+                          "queue_resize": True,
+                          "in_advance": int(round(us * python_config.TDF)),
+                          "cc": cc}]
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
         # Enable the hybrid switch's packet log. This should already be enabled
@@ -126,8 +125,8 @@ def main():
 
     # Assemble settings. Generate the list of settings first so that we can
     # the estimated total duration.
-    stgs = [
-        {
+    cnfs = [
+        (cnf, {
             # Generate a flow from each machine on rack 1 to its corresponding
             # partner machine on rack 2.
             "flows": [{"src": "r2", "dst": "r3"}],
@@ -144,18 +143,18 @@ def main():
                      + 100)                                     # Extra 100 ms, for good measure.
                     / 1e3),                                     # Convert to seconds.
             "tcpdump": TCPDUMP
-        } for cnf in cnfs]
+        }) for cnf in cnfs]
 
     # Total number of experiments.
     tot = len(cnfs)
     # Estimated total duration.
-    dur = sum([stg["dur"] for stg in stgs]) * python_config.TDF
+    dur = sum([stg["dur"] for cnf, stg in cnfs]) * python_config.TDF
     print("Estimated total duration: >{} seconds".format(dur))
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
     maybe(lambda: common.initializeExperiment(
-        "flowgrindd", cc=cnfs[0]["cc"], sync=SYNC))
-    for cnt, (cnf, stg)  in enumerate(zip(cnfs, stgs), start=1):
+        "flowgrindd", cc=cnfs[0][0]["cc"], sync=SYNC))
+    for cnt, (cnf, stg)  in enumerate(cnfs, start=1):
         maybe(lambda: click_common.setConfig(cnf))
         print("--- experiment {} of {}, config:\n{}".format(cnt, tot, cnf))
         maybe(lambda: common.flowgrind(settings=stg))
