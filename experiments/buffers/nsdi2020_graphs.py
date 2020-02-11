@@ -530,6 +530,7 @@ def main():
             order=ORDER_DYN_CG,
             cir_lat_s=CIR_LAT_s,
             log_pos=LOG_POS,
+            msg_len=msg_len,
             voq_agg=True,
             xlm=XLM_ZOOM,
             ylm=YLM_ZOOM)
