@@ -130,7 +130,7 @@ def main():
         {
             # Generate a flow from each machine on rack 1 to its corresponding
             # partner machine on rack 2.
-            "flows": [{"src": "r1", "dst": "r2"}],
+            "flows": [{"src": "r2", "dst": "r3"}],
             # Run the flow for three thousand weeks plus 100 ms for good
             # measure, converted to seconds. The resulting duration is not under
             # TDF, but the flow will be under TDF when it is executed (i.e., the
