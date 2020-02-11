@@ -241,12 +241,20 @@ def setEcnEnabled(enabled):
     time.sleep(0.1)
 
 
-def setEcnThresh(thresh):
+def setEcnThresh(threshs):
     """ Set the ECN marking threshold. """
+    num_threshs = len(threshs)
+    assert num_threshs == 2, \
+        ("Must specify exactly two marking threshold (small and big), "
+         "not {}: {}").format(num_threshs, threshs)
+    s_thresh, b_thresh = threshs
+
     for src in xrange(1, NUM_RACKS + 1):
         for dst in xrange(1, NUM_RACKS + 1):
             clickWriteHandler('hybrid_switch/q{}{}/q'.format(src, dst),
-                              'marking_threshold', thresh)
+                              'marking_threshold', s_thresh)
+    clickWriteHandler("runner", "marking_threshold",
+                      "{},{}".format(s_thresh, b_thresh))
     time.sleep(0.1)
 
 

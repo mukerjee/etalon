@@ -108,10 +108,6 @@ def main():
         # Enable the hybrid switch's packet log. This should already be enabled
         # by default.
         cnf["packet_log"] = True
-        if cnf["cc"] == "dctcp":
-            # If the configuration uses DCTCP, then enable threshold-based ECN
-            # marking.
-            cnf["ecn"] = python_config.DCTCP_THRESH
         # If the night and day lengths have not been set already, then do so
         # here. Explicitly set the night and day lengths instead of relying on
         # their defaults so that we can automatically calculate the experiment
@@ -122,6 +118,14 @@ def main():
         if "small_queue_cap" not in cnf:
             cnf["small_queue_cap"] = SMALL_QUEUE_CAP
             cnf["big_queue_cap"] = BIG_QUEUE_CAP
+        if cnf["cc"] == "dctcp":
+            # If the configuration uses DCTCP, then enable threshold-based ECN
+            # marking.
+            cnf["ecn"] = (
+                python_config.DCTCP_THRESH,
+                int(round(float(cnf["big_queue_cap"]) / cnf["small_queue_cap"] *
+                          python_config.DCTCP_THRESH)))
+
 
     # Assemble settings. Generate the list of settings first so that we can
     # the estimated total duration.
