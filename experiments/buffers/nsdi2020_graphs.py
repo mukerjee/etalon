@@ -385,7 +385,6 @@ def main():
             xlb="Resize time ($\mu$s)",
             xlr=45,
             lbs=12,
-            # flt=lambda key, chosen=CHOSEN_CHOSEN_UTIL: key in chosen,
             num_racks=NUM_RACKS_FAKE,
             msg_len=msg_len)
 
@@ -532,9 +531,9 @@ def main():
             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                          / python_config.TDF)),
             dur=DUR_us,
-            flt=(lambda idx, label, order=ORDER_DYN_CG:
+            flt=(lambda idx, label, order=ORDER_DYN_RETCP:
                  label.strip(" $\mu$s") in order),
-            order=ORDER_DYN_CG,
+            order=ORDER_DYN_RETCP,
             cir_lat_s=CIR_LAT_s,
             log_pos=LOG_POS,
             msg_len=msg_len,
@@ -568,10 +567,11 @@ def main():
             ptn=DYN_PTN.format("*", "retcp"),
             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                          / python_config.TDF)),
+            flt=lambda key, order=ORDER_DYN_RETCP_UTIL: key in order,
+            order=ORDER_DYN_RETCP_UTIL,
             xlb="Resize time ($\mu$s)",
             xlr=45,
             lbs=12,
-            # flt=lambda key, chosen=CHOSEN_RETCP_UTIL: key in chosen,
             num_racks=NUM_RACKS_FAKE,
             msg_len=msg_len)
 
@@ -584,6 +584,7 @@ def main():
             ptn=DYN_PTN.format("*", "retcp"),
             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                          / python_config.TDF)),
+            flt=lambda key, order=ORDER_DYN_RETCP_UTIL: key in order,
             prc=50,
             ylb="Median",
             msg_len=msg_len)
@@ -597,6 +598,7 @@ def main():
             ptn=DYN_PTN.format("*", "retcp"),
             key_fnc=lambda fn: int(round(float(fn.split("-")[7])
                                          / python_config.TDF)),
+            flt=lambda key, order=ORDER_DYN_RETCP_UTIL: key in order,
             prc=99,
             ylb="99th percentile",
             msg_len=msg_len)

@@ -95,11 +95,13 @@ def get_data(rdb_filepath, edr, key, files, key_fnc, msg_len=112, sync=False):
 
 
 def plot_lat(keys, latencies, fln, ylb, ylm=None, xlr=0,
-             odr=path.join(PROGDIR, "graphs")):
+             odr=path.join(PROGDIR, "graphs"), flt=lambda key: True):
     # Sort the data based on the x-values (keys).
     keys, latencies = zip(
         *sorted(zip(keys, latencies), key=lambda p: int(p[0])))
-
+    # Filter.
+    keys, latencies = zip(
+        *[(k, l) for k, l in zip(keys, latencies) if flt(k)])
     x = [keys for _ in xrange(len(latencies[0]))]
     y = zip(*latencies)
 
@@ -183,7 +185,7 @@ def plot_circuit_util(keys, tpts_Gbps_c, fln, xlb, num_racks,
         real_utls = []
         for item in order:
             for idx, possibility in enumerate(keys):
-                if possibility.startswith(item):
+                if possibility == item:
                     real_keys.append(possibility)
                     real_utls.append(utls[idx])
                     break
@@ -256,8 +258,8 @@ def plot_util_vs_latency(tpts, latencies, fln):
     simpleplotlib.plot(x, y, options)
 
 
-def lat(name, edr, odr, ptn, key_fnc, prc, ylb, ylm=None, xlr=0, msg_len=112,
-        sync=False):
+def lat(name, edr, odr, ptn, key_fnc, prc, ylb, ylm=None, xlr=0,
+        flt=lambda key: True, msg_len=112, sync=False):
     print("Plotting: {}".format(name))
     # Names are of the form "<number>_<details>_<specific options>". Experiments
     # where <details> are the same should be based on the same data. Therefore,
@@ -266,7 +268,7 @@ def lat(name, edr, odr, ptn, key_fnc, prc, ylb, ylm=None, xlr=0, msg_len=112,
     data = get_data(path.join(edr, "{}.db".format(basename)), edr, basename,
                     files={basename: ptn}, key_fnc={basename: key_fnc},
                     msg_len=msg_len, sync=sync)
-    plot_lat(data["keys"], data["lat"][prc], name, ylb, ylm, xlr, odr)
+    plot_lat(data["keys"], data["lat"][prc], name, ylb, ylm, xlr, odr, flt)
     pyplot.close()
 
 
