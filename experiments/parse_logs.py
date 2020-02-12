@@ -20,8 +20,8 @@ RTT = python_config.CIRCUIT_LATENCY_s_TDF * 2
 # 1/1000 seconds.
 BIN_SIZE_MS = 1
 # The rack pair to examine when parsing sequence logs. Rack 1 to rack 2.
-SR_RACKS = (1, 2)
-# SR_RACKS = (2, 3)
+# SR_RACKS = (1, 2)
+SR_RACKS = (2, 3)
 
 
 def parse_flowgrind_config(fln):

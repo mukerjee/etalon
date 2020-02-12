@@ -82,9 +82,12 @@ ORDER_STATIC_UTIL = ["4", "8", "16", "32", "64", "128"]
 # ORDER_DYN_CG = ["optimal", "1000", "500", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "1100", "1000", "900", "800", "700", "500", "0",
 #                 "packet only"]
-# ORDER_DYN_CG = ["optimal", "3200", "2800", "2400", "2000", "1600", "800", "400", "0",
+# ORDER_DYN_CG = ["optimal", "3000", "2700", "2400", "2100", "1800", "1200", "600", "0",
 #                 "packet only"]
-ORDER_DYN_CG = ["optimal", "2000", "800", "0", "packet only"]
+ORDER_DYN_CG = ["optimal", "2400", "1800", "600", "0", "packet only"]
+# ORDER_DYN_CG = ["optimal", "300", "250", "200", "150", "100", "50", "0",
+#                 "packet only"]
+# ORDER_DYN_CG = ["optimal", "300", "200", "100", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "7000", "6000", "5000", "4000", "3000", "2000",
 #                 "1000", "0", "packet only"]
 # ORDER_DYN_CG = ["optimal", "10000", "8000", "7000", "6000", "5000", "4000",
@@ -97,7 +100,7 @@ ORDER_DYN_FG_RETCP = ["optimal", "154", "150", "148", "146", "142", "138",
                       "packet only"]
 # The different amounts of dynamic buffer resizing to plot in the multi-variant
 # graphs.
-CHOSEN_DYN_uss = [0, 500, 1000, 1200]
+CHOSEN_DYN_uss = [0, 900, 2100]
 # The order of the lines in the single-variant, multi-resizing experiments.
 ORDER_DYN_uss = (["optimal"] +
                  list(reversed([str(us) for us in CHOSEN_DYN_uss])) +
@@ -113,12 +116,12 @@ CHOSEN_TCP = "cubic"
 DYN_INS = ((600, 820), (35, 275))
 # The x-axis bounds to zoom in on for analyzing circuit teardown.
 # XLM_ZOOM = None
-XLM_ZOOM = (7420, 9700)
+XLM_ZOOM = (2200, 5200)
 # XLM_ZOOM = (1300, 2900)
 # XLM_ZOOM = (9220, 9700)
 # XLM_ZOOM = (4000, 8120)
 # The y-axis bounds to zoom in on for analyzing circuit teardown.
-YLM_ZOOM = None
+YLM_ZOOM = (150, 550)
 # YLM_ZOOM = (750, 1000)
 # YLM_ZOOM = (0, 15000)
 # Dynamic buffer resizing experiments to analyze using chunk mode.
@@ -191,7 +194,9 @@ def main():
             msg_len=msg_len,
             cir_lat_s=CIR_LAT_s,
             log_pos=LOG_POS,
-            voq_agg=True)
+            voq_agg=True,
+            xlm=XLM_ZOOM,
+            ylm=YLM_ZOOM)
 
     def _3():
         rcf_us = 1
@@ -596,6 +601,41 @@ def main():
             ylb="99th percentile",
             msg_len=msg_len)
 
+    def _4():
+        _4_1()
+        _4_2()
+
+    def _5():
+        _5_1()
+        _5_2()
+        _5_3()
+        _5_4()
+
+    def _6():
+        _6_1_1()
+        # _6_1_2()
+        # _6_1_3()
+        _6_2()
+        _6_3()
+        _6_4()
+
+    def _7_():
+        _7_1_1_and_7_2()
+        _7_1_2()
+
+    def _8():
+        _8_1()
+        _8_2()
+        _8_3()
+        _8_4()
+
+    def _9():
+        _9_1_1()
+        # _9_1_2()
+        _9_2()
+        _9_3()
+        _9_4()
+
     # Note: The numbers below have no correlation with the sections or figures
     #       in the paper.
     #
@@ -637,32 +677,16 @@ def main():
     #     (9.2) Utilization
     #     (9.3) Latency 50
     #     (9.4) Latency 99
-    _1()
-    _2()
-    _3()
-    _4_1()
-    _4_2()
-    _5_1()
-    _5_2()
-    _5_3()
-    _5_4()
-    _6_1_1()
-    # _6_1_2()
-    # _6_1_3()
-    _6_2()
-    _6_3()
-    _6_4()
-    _7_1_1_and_7_2()
-    _7_1_2()
-    _8_1()
-    _8_2()
-    _8_3()
-    _8_4()
-    _9_1_1()
-    # _9_1_2()
-    _9_2()
-    _9_3()
-    _9_4()
+
+    # _1()
+    # _2()
+    # _3()
+    # _4()
+    _5()
+    _6()
+    # _7()
+    # _8()
+    # _9()
 
 
 if __name__ == "__main__":
