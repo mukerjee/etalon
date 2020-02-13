@@ -57,18 +57,18 @@ def main():
     # CC modes are the outside loop to minimize how frequently we change the CC
     # mode, since doing so requires restarting the cluster.
     for cc in python_config.CCS:
-        # if cc in ["cubic"]:
-        #     # (1) Old switches.
-        #     cnfs += [{"type": "fake_strobe",
-        #               "num_racks_fake": NUM_RACKS_FAKE,
-        #               "night_len_us": 1000 * python_config.TDF,
-        #               "day_len_us": 9000 * python_config.TDF,
-        #               "cc": cc}]
-        #     # (2) Future switches.
-        #     cnfs += [{"type": "fake_strobe",
-        #               "num_racks_fake": NUM_RACKS_FAKE,
-        #               "night_len_us": 1 * python_config.TDF,
-        #               "day_len_us": 9 * python_config.TDF, "cc": cc}]
+        if cc in ["cubic"]:
+            # (1) Old switches.
+            cnfs += [{"type": "fake_strobe",
+                      "num_racks_fake": NUM_RACKS_FAKE,
+                      "night_len_us": 1000 * python_config.TDF,
+                      "day_len_us": 9000 * python_config.TDF,
+                      "cc": cc}]
+            # (2) Future switches.
+            cnfs += [{"type": "fake_strobe",
+                      "num_racks_fake": NUM_RACKS_FAKE,
+                      "night_len_us": 1 * python_config.TDF,
+                      "day_len_us": 9 * python_config.TDF, "cc": cc}]
         # (3) Static buffers.
         for exp in xrange(2, STATIC_POW_MAX + 1):
             # Only do full sweeps for CUBIC and reTCP, but capture 16 packets
