@@ -1,0 +1,134 @@
+Plotting: 4-1_seq-current-all
+Computing optimal...
+circuit bounds: [4620, 4800, 9420, 9600, 14221, 14401]
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/4-1_seq-current-all.pdf
+Plotting: 4-2_util-lat-current-all_util
+
+raw util data for: 4-2_util-lat-current-all_util
+TCP variant:
+    (bbr: 26.4347509141), (bic: 49.407773728), (cdg: 53.6401513086), (cubic: 48.6681323576), (dctcp: 45.5280979983), (highspeed: 49.9226449221), (htcp: 49.3985011882), (hybla: 50.9580828542), (illinois: 54.5887053702), (lp: 53.1175769898), (nv: 42.0977934584), (reno: 53.2015919923), (scalable: 54.8209029109), (vegas: 51.6268840753), (veno: 52.1194872959), (westwood: 53.3471442274), (yeah: 50.7505959449)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/4-2_util-lat-current-all_util.pdf
+Plotting: 5-1_seq-static-cubic
+Computing optimal...
+circuit bounds: [4620, 4800, 9420, 9600, 14220, 14400]
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/5-1_seq-static-cubic.pdf
+Plotting: 5-2_util-lat-static-cubic_util
+
+raw util data for: 5-2_util-lat-static-cubic_util
+Static buffer size (packets):
+    (4: 21.2514478607), (8: 31.0930893694), (16: 48.6681323576), (32: 76.7432404654), (64: 99.8915083872), (128: 99.9084851223)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/5-2_util-lat-static-cubic_util.pdf
+Plotting: 5-3_util-lat-static-cubic_lat50
+
+raw latency data for: 5-3_util-lat-static-cubic_lat50
+Median:
+    all: (4: 42.0), (8: 69.0), (16: 123.0), (32: 236.0), (64: 453.0), (128: 884.0)
+    circuit: (4: 31.0). (8: 32.0). (16: 33.0). (32: 34.0). (64: 48.0). (128: 286.0)
+    packet: (4: 42.0), (8: 71.0), (16: 127.0), (32: 238.0), (64: 461.0), (128: 906.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/5-3_util-lat-static-cubic_lat50.pdf
+Plotting: 5-4_util-lat-static-cubic_lat99
+
+raw latency data for: 5-4_util-lat-static-cubic_lat99
+99th percentile:
+    all: (4: 52.0), (8: 81.0), (16: 139.0), (32: 254.0), (64: 484.0), (128: 943.0)
+    circuit: (4: 68.0). (8: 95.0). (16: 149.0). (32: 259.0). (64: 484.0). (128: 927.0)
+    packet: (4: 52.0), (8: 81.0), (16: 139.0), (32: 254.0), (64: 484.0), (128: 943.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/5-4_util-lat-static-cubic_lat99.pdf
+Plotting: 6-1-1_seq-dyn-cubic
+Computing optimal...
+circuit bounds: [4620, 4800, 9420, 9600, 14220, 14400]
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/6-1-1_seq-dyn-cubic.pdf
+Plotting: 6-2_util-lat-dyn-cubic_util
+
+raw util data for: 6-2_util-lat-dyn-cubic_util
+Resize time ($\mu$s):
+    (0: 49.2391874981), (300: 60.3302181346), (600: 64.888886183), (900: 71.5695464216), (1200: 78.5569784536), (1500: 85.8680460173), (1800: 91.1010705866), (2100: 95.8895269929), (2400: 97.7459589752), (2700: 97.3984437601), (3000: 96.7200247499)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/6-2_util-lat-dyn-cubic_util.pdf
+Plotting: 6-3_util-lat-dyn-cubic_lat50
+
+raw latency data for: 6-3_util-lat-dyn-cubic_lat50
+Median:
+    all: (0: 123.0), (300: 124.0), (600: 124.0), (900: 127.0), (1200: 129.0), (1500: 129.0), (1800: 130.0), (2100: 131.0), (2400: 136.0), (2700: 136.0), (3000: 138.0)
+    circuit: (0: 33.0). (300: 33.0). (600: 33.0). (900: 33.0). (1200: 34.0). (1500: 35.0). (1800: 37.0). (2100: 40.0). (2400: 41.0). (2700: 38.0). (3000: 37.0)
+    packet: (0: 127.0), (300: 128.0), (600: 129.0), (900: 129.0), (1200: 130.0), (1500: 131.0), (1800: 135.0), (2100: 136.0), (2400: 138.0), (2700: 150.0), (3000: 179.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/6-3_util-lat-dyn-cubic_lat50.pdf
+Plotting: 6-4_util-lat-dyn-cubic_lat99
+
+raw latency data for: 6-4_util-lat-dyn-cubic_lat99
+99th percentile:
+    all: (0: 139.0), (300: 149.0), (600: 180.0), (900: 208.0), (1200: 239.0), (1500: 265.0), (1800: 286.0), (2100: 318.0), (2400: 358.0), (2700: 379.0), (3000: 381.0)
+    circuit: (0: 149.0). (300: 171.0). (600: 194.0). (900: 227.0). (1200: 251.0). (1500: 274.0). (1800: 294.0). (2100: 324.0). (2400: 360.0). (2700: 382.0). (3000: 387.0)
+    packet: (0: 139.0), (300: 143.0), (600: 175.0), (900: 208.0), (1200: 237.0), (1500: 261.0), (1800: 282.0), (2100: 316.0), (2400: 357.0), (2700: 377.0), (3000: 381.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/6-4_util-lat-dyn-cubic_lat99.pdf
+Plotting: 7-2_util-lat-dyn-all-1200us_util
+
+raw util data for: 7-2_util-lat-dyn-all-1200us_util
+TCP variant:
+    (bbr: 42.8126499696), (bic: 87.4415809262), (cdg: 93.3769610719), (cubic: 78.5569784536), (dctcp: 87.9366411877), (highspeed: 88.5761847546), (htcp: 89.467430686), (hybla: 89.0986702667), (illinois: 90.9289695676), (lp: 95.7929472994), (nv: 54.1179210414), (reno: 95.4782426426), (scalable: 94.6768300704), (vegas: 91.932767946), (veno: 89.0944300118), (westwood: 96.5143976198), (yeah: 88.4168777913)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/7-2_util-lat-dyn-all-1200us_util.pdf
+Plotting: 8-1_seq-static-retcp
+Computing optimal...
+circuit bounds: [4620, 4800, 9420, 9600, 14220, 14400]
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/8-1_seq-static-retcp.pdf
+Plotting: 8-2_util-lat-static-retcp_util
+
+raw util data for: 8-2_util-lat-static-retcp_util
+Static buffer size (packets):
+    (4: 23.9663535723), (8: 33.8794884513), (16: 52.6648582692), (32: 83.2223428763), (64: 99.822322856), (128: 99.8987458054)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/8-2_util-lat-static-retcp_util.pdf
+Plotting: 8-3_util-lat-static-retcp_lat50
+
+raw latency data for: 8-3_util-lat-static-retcp_lat50
+Median:
+    all: (4: 40.0), (8: 66.0), (16: 122.0), (32: 230.0), (64: 437.0), (128: 834.0)
+    circuit: (4: 31.0). (8: 32.0). (16: 33.0). (32: 36.0). (64: 50.0). (128: 332.0)
+    packet: (4: 41.0), (8: 69.0), (16: 124.0), (32: 237.0), (64: 453.0), (128: 869.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/8-3_util-lat-static-retcp_lat50.pdf
+Plotting: 8-4_util-lat-static-retcp_lat99
+
+raw latency data for: 8-4_util-lat-static-retcp_lat99
+99th percentile:
+    all: (4: 52.0), (8: 81.0), (16: 139.0), (32: 254.0), (64: 484.0), (128: 945.0)
+    circuit: (4: 68.0). (8: 97.0). (16: 151.0). (32: 259.0). (64: 495.0). (128: 933.0)
+    packet: (4: 52.0), (8: 81.0), (16: 139.0), (32: 254.0), (64: 484.0), (128: 945.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/8-4_util-lat-static-retcp_lat99.pdf
+Plotting: 9-1_seq-dyn-retcp
+Computing optimal...
+circuit bounds: [4620, 4800, 9420, 9600, 14220, 14400]
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/9-1_seq-dyn-retcp.pdf
+Plotting: 9-2_util-lat-dyn-retcp_util
+
+raw util data for: 9-2_util-lat-dyn-retcp_util
+Resize time ($\mu$s):
+    (0: 79.698570467), (50: 87.2699516406), (100: 91.0865532859), (150: 92.7175336353), (200: 93.8808467615), (250: 92.7726855962), (300: 93.2573713105)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/9-2_util-lat-dyn-retcp_util.pdf
+Plotting: 9-3_util-lat-dyn-retcp_lat50
+
+raw latency data for: 9-3_util-lat-dyn-retcp_lat50
+Median:
+    all: (0: 122.0), (50: 114.0), (100: 114.0), (150: 121.0), (200: 122.0), (250: 116.0), (300: 116.0)
+    circuit: (0: 38.0). (50: 40.0). (100: 39.0). (150: 40.0). (200: 39.0). (250: 38.0). (300: 38.0)
+    packet: (0: 126.0), (50: 121.0), (100: 121.0), (150: 124.0), (200: 126.0), (250: 121.0), (300: 121.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/9-3_util-lat-dyn-retcp_lat50.pdf
+Plotting: 9-4_util-lat-dyn-retcp_lat99
+
+raw latency data for: 9-4_util-lat-dyn-retcp_lat99
+99th percentile:
+    all: (0: 139.0), (50: 139.0), (100: 139.0), (150: 147.0), (200: 177.0), (250: 199.0), (300: 237.0)
+    circuit: (0: 144.0). (50: 141.0). (100: 141.0). (150: 162.0). (200: 191.0). (250: 228.0). (300: 260.0)
+    packet: (0: 139.0), (50: 139.0), (100: 139.0), (150: 139.0), (200: 140.0), (250: 162.0), (300: 195.0)
+
+/home/ccanel/src/etalon/experiments/buffers/graphs/nsdi2020/9-4_util-lat-dyn-retcp_lat99.pdf
