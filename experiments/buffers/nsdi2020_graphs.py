@@ -108,21 +108,21 @@ DYNS_TO_EXAMINE = [0, 25, 50, 75, 100, 125, 150, 175, 200, 225]
 CHOSEN_TCP = "cubic"
 # Inset window bounds.
 DYN_INS = ((600, 820), (35, 275))
-# The x-axis bounds to zoom in on for analyzing circuit teardown.
+# Bounds for zooming in on the graphs.
 # XLM_ZOOM = None
 XLM_ZOOM = (2200, 5200)
 # XLM_ZOOM = (1300, 2900)
 # XLM_ZOOM = (9220, 9700)
 # XLM_ZOOM = (4000, 8120)
-# The y-axis bounds to zoom in on for analyzing circuit teardown.
+# YLM_ZOOM = None
 YLM_ZOOM = (150, 550)
 # YLM_ZOOM = (750, 1000)
 # YLM_ZOOM = (0, 15000)
-
-XLM_ZOOM_STATIC = (4000, 5200)
+XLM_ZOOM_STATIC = (4100, 5150)
 YLM_ZOOM_STATIC = (300, 500)
-XLM_ZOOM_RETCP = (4000, 5200)
-YLM_ZOOM_RETCP = (300, 500)
+XLM_ZOOM_RETCP = XLM_ZOOM_STATIC
+YLM_ZOOM_RETCP = YLM_ZOOM_STATIC
+
 
 def main():
     num_args = len(sys.argv)
@@ -397,19 +397,19 @@ def main():
     def _7_1_1_and_7_2():
         for us in CHOSEN_DYN_uss:
             us_tdf = int(round(us * python_config.TDF))
-            # sg.seq(
-            #     sync=SYNC,
-            #     name="7-1-1_seq-dyn-all-{}us".format(us),
-            #     edr=edr,
-            #     odr=odr,
-            #     ptn=DYN_PTN.format(us_tdf, "*"),
-            #     key_fnc=lambda fn: fn.split("-")[8],
-            #     dur=DUR_us,
-            #     flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
-            #     order=ORDER_VARS,
-            #     msg_len=msg_len,
-            #     cir_lat_s=CIR_LAT_s,
-            #     log_pos=LOG_POS)
+            sg.seq(
+                sync=SYNC,
+                name="7-1-1_seq-dyn-all-{}us".format(us),
+                edr=edr,
+                odr=odr,
+                ptn=DYN_PTN.format(us_tdf, "*"),
+                key_fnc=lambda fn: fn.split("-")[8],
+                dur=DUR_us,
+                flt=lambda idx, label, ccs=ORDER_VARS: label in ccs,
+                order=ORDER_VARS,
+                msg_len=msg_len,
+                cir_lat_s=CIR_LAT_s,
+                log_pos=LOG_POS)
             buffers_graphs.util(
                 sync=SYNC,
                 name="7-2_util-lat-dyn-all-{}us_util".format(us),
@@ -575,14 +575,13 @@ def main():
     def _6():
         _6_1_1()
         # _6_1_2()
-        # _6_1_3()
         _6_2()
         _6_3()
         _6_4()
 
     def _7():
         _7_1_1_and_7_2()
-        # _7_1_2()
+        _7_1_2()
 
     def _8():
         _8_1()
@@ -638,12 +637,12 @@ def main():
     # _1()
     # _2()
     # _3()
-    # _4()
+    _4()
     _5()
     _6()
-    # _7()
-    # _8()
-    # _9()
+    _7()
+    _8()
+    _9()
 
 
 if __name__ == "__main__":
