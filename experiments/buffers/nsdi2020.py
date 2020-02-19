@@ -35,6 +35,11 @@ RESIZE_SHORT_DELTA_us = 50
 # VOQ capacities.
 SMALL_QUEUE_CAP = 16
 BIG_QUEUE_CAP = 50
+# Vary night len.
+NIGHT_LEN_POW_MIN = 3
+NIGHT_LEN_POW_MAX = 9
+# Duration of prebuffering required for reTCP to achieve high utilization.
+RETCP_RESIZE_us = 150
 
 
 def maybe(fnc, do=not DRY_RUN):
@@ -50,6 +55,7 @@ def main():
     #     switches.
     # (3) Short nights/days, static buffers, all TCP variants.
     # (4) Short nights/days, dynamic buffers, all TCP variants.
+    # (5) Vary night/day length, static buffers + CUBIC and dynamic buffers + reTCP.
 
     # Assemble configurations. Generate the list of configurations first so that
     # we know the total number of experiments.
@@ -99,6 +105,34 @@ def main():
                           "queue_resize": True,
                           "in_advance": int(round(us * python_config.TDF)),
                           "cc": cc}]
+        # (5) Vary night len.
+        for exp in xrange(NIGHT_LEN_POW_MIN, NIGHT_LEN_POW_MAX + 1):
+            night_len_us = int(round(2**exp * python_config.TDF))
+            day_len_us = 9 * night_len_us
+            # CUBIC with static buffers.
+            if cc == "cubic":
+                cnfs += [{"type": "fake_strobe",
+                          "num_racks_fake": NUM_RACKS_FAKE,
+                          "small_queue_cap": SMALL_QUEUE_CAP,
+                          "big_queue_cap": SMALL_QUEUE_CAP,
+                          "night_len_us": night_len_us,
+                          "day_len_us": day_len_us,
+                          "cc": cc}]
+            # reTCP with dynamic buffers.
+            if cc == "retcp":
+                cnfs += [{"type": "fake_strobe",
+                          "num_racks_fake": NUM_RACKS_FAKE,
+                          "small_queue_cap": SMALL_QUEUE_CAP,
+                          "big_queue_cap": BIG_QUEUE_CAP,
+                          "night_len_us": night_len_us,
+                          "day_len_us": day_len_us,
+                          "queue_resize": True,
+                          "in_advance": int(round(
+                              min(day_len_us / python_config.TDF,
+                                  RETCP_RESIZE_us) *
+                              python_config.TDF)),
+                          "cc": cc}]
+
     # Set paramters that apply to all configurations.
     for cnf in cnfs:
         # Enable the hybrid switch's packet log. This should already be enabled
