@@ -74,10 +74,6 @@ def main():
             # Only do full sweeps for CUBIC and reTCP, but capture 16 packets
             # for all variants.
             if cc in ["cubic", "retcp"] or exp == 4:
-                # Note that this configuration does not use buffer resizing, so
-                # we do not *need* to set "big_queue_cap". We set
-                # "big_queue_cap" anyway to improve error checking in the Click
-                # element RunSchedule.
                 cnfs += [{"type": "fake_strobe",
                           "num_racks_fake": NUM_RACKS_FAKE,
                           "small_queue_cap": 2**exp,
