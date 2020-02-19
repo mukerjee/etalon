@@ -149,7 +149,8 @@ def main():
     tot = len(cnfs)
     # Estimated total duration.
     dur = sum([stg["dur"] for cnf, stg in cnfs]) * python_config.TDF
-    print("Estimated total duration: >{} seconds".format(dur))
+    print("Estimated total duration: > {:.2f} seconds, > {:.2f} hours".format(
+        dur, dur / 3600.))
     # Run experiments. Use the first experiment's CC mode to avoid unnecessarily
     # restarting the cluster.
     maybe(lambda: common.initializeExperiment(
