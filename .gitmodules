@@ -1,12 +1,12 @@
+[submodule "click-etalon"]
+	path = click-etalon
+	url = https://github.com/mukerjee/click-etalon.git
+[submodule "flowgrind-etalon"]
+	path = flowgrind-etalon
+	url = https://github.com/mukerjee/flowgrind-etalon.git
 [submodule "libVT"]
 	path = libVT
 	url = https://github.com/mukerjee/libVT
-[submodule "click-etalon"]
-	path = click-etalon
-	url = https://github.com/ccanel/click-etalon
-[submodule "flowgrind-etalon"]
-	path = flowgrind-etalon
-	url = https://github.com/ccanel/flowgrind-etalon
 [submodule "ns3-etalon"]
 	path = ns3-etalon
 	url = https://github.com/Flasew/ns3-etalon.git
