@@ -11,12 +11,9 @@ switching ([c-Through](https://dl.acm.org/citation.cfm?id=1851222),
 [Mordia](https://dl.acm.org/citation.cfm?id=2486007), etc.), or free-space
 optics ([FireFly](https://dl.acm.org/citation.cfm?id=2626328),
 [ProjecToR](https://dl.acm.org/citation.cfm?id=2934911)). Some of these
-proposals incorporate a packet switch, which we model as well.
-
-With Etalon, we wish to provide a platform where repeatable end-to-end
-experiments on RDCN can be emulated at scale. We have a paper focused on
-end-to-end challenges on RDCNs in submission. We recommend emailing us
-(```mukerjee at cs cmu edu```) for a draft to better understand the context.
+proposals incorporate a packet switch, which we model as well. With Etalon, 
+we wish to provide a platform where repeatable end-to-end
+experiments on RDCN can be emulated at scale.
 
 
 ## Overview
@@ -46,51 +43,10 @@ See our paper for more information.
 
 ## Instructions
 
-We assume experiments are going to be run on CloudLab (Apt cluster) on r320
-nodes. Some things may need to be adjusted if not, as we have not tested Etalon
-on other testbeds. Please send us pull requests if you find/solve issues on
-other testbeds.
-
-
-Initial Setup
+Cluster Setup
 -------------
 
-1. git clone this repo on your local machine.
-
-2. Create an experiment on a testbed (e.g., use the “Etalon” profile on CloudLab
-  to launch an experiment).
-
-3. Nicely ask the network administrator to set your network to MTU 9126 and
-   turn on Ethernet flow control. (For CloudLab Apt machines, ask to enable
-   Ethernet. Ask if other ethernet experiments are running on the same switch.
-   If so, ask to be in your own VLAN.)
-
-4. Update the host information in etalon/etc/handles on your local machine.
-
-5. Enable ssh agent forwarding on your local machine (e.g., run ```ssh-add``` on
-  your local machine).
-
-6. If not using the pre-made Etalon profile on Cloudlab, log into each node and
-  install the reTCP kernel using ```etalon/bin/kernel_install.sh``` (The
-  cloudlab profile has this already installed on the nodes). This script assumes
-  there is an etalon repo in your home directory.
-
-7. Log into each node (after doing step 4, you can use the handles to log in,
-e.g., go to ```etalon/bin``` and type ```./s host1```, ```./s switch```, etc.):
-
-   - On the switch machine, run etalon/bin/switch_install.sh (either clone the
-    repo, or if on cloudlab, just run
-    ```/local/etalon-master/bin/switch_install.sh```).
-
-   - On the other machines, run etalon/bin/node_install.sh (either clone the
-     repo, or if on cloudlab, just run
-     ```/local/etalon-master/bin/node_install.sh```).
-
-     - This may take about a half an hour (or longer) depending on internet
-       connectivity.
-
-8. The machines will reboot after the previous step is done. At this point there
-  should be no need to log into the individual nodes, only the switch.
+Coming soon...
 
 
 Running An Experiment
